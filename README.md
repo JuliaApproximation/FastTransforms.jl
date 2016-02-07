@@ -1,5 +1,7 @@
 # FastTransforms.jl
 
+[![Build Status](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl)
+
 The aim of this package is to provide a new class of fast transforms
 based on the use of asymptotic formulae to relate the transforms to a small
 number of fast Fourier transforms. This new class of fast transforms does not
