@@ -25,11 +25,11 @@ N = 20
 f(x) = exp(x)
 
 x,w = FastTransforms.fejer1(N,0.,0.)
-@test norm(dot(f(x),w)-2sinh(1)) < eps()
+@test norm(dot(f(x),w)-2sinh(1)) ≤ 4eps()
 x,w = FastTransforms.fejer2(N,0.,0.)
-@test norm(dot(f(x),w)-2sinh(1)) ≤ 2eps()
+@test norm(dot(f(x),w)-2sinh(1)) ≤ 4eps()
 x,w = FastTransforms.clenshawcurtis(N,0.,0.)
-@test norm(dot(f(x),w)-2sinh(1)) ≤ 2eps()
+@test norm(dot(f(x),w)-2sinh(1)) ≤ 4eps()
 
 #=
 x = Fun(identity)
@@ -38,11 +38,11 @@ val = sum(g)
 =#
 
 x,w = FastTransforms.fejer1(N,0.25,0.35)
-@test norm(dot(f(x),w)-2.0351088204147243) ≤ 2eps()
+@test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
 x,w = FastTransforms.fejer2(N,0.25,0.35)
-@test norm(dot(f(x),w)-2.0351088204147243) ≤ 2eps()
+@test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
 x,w = FastTransforms.clenshawcurtis(N,0.25,0.35)
-@test norm(dot(f(x),w)-2.0351088204147243) ≤ 2eps()
+@test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
 
 Nr = 10
 v = zeros(Nr)
