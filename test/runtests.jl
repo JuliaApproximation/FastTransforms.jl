@@ -44,9 +44,9 @@ x,w = FastTransforms.fejer2(N,0.25,0.35)
 x,w = FastTransforms.clenshawcurtis(N,0.25,0.35)
 @test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
 
-Nr = 10
+Nr = 5
 v = zeros(Nr)
-Na,Nb = 10,10
+Na,Nb = 5,5
 V = zeros(Na,Nb)
 
 for N in round(Int,logspace(1,3,3))
@@ -54,7 +54,7 @@ for N in round(Int,logspace(1,3,3))
     println("N = ",N)
     println("")
     for αi=1:Na, βi=1:Nb
-        α,β = -0.45+(αi-1)/10,-0.45+(βi-1)/10
+        α,β = -0.45+(αi-1)/Na,-0.45+(βi-1)/Nb
         p1,p2 = plan_cjt(rand(N),α,β),plan_icjt(rand(N),α,β)
         for i=1:Nr
             c = rand(N)
