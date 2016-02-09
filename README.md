@@ -12,6 +12,8 @@ The Chebyshev—Jacobi transform and its inverse are implemented. This
 allows the fast conversion of Chebyshev expansion coefficients to Jacobi expansion
 coefficients and back.
 ```julia
+julia> Pkg.clone("https://github.com/MikaelSlevinsky/FastTransforms.jl.git")
+
 julia> using FastTransforms
 
 julia> c = rand(10000);
