@@ -1,4 +1,4 @@
-function cjt(c::Vector,α,β)
+function cjt(c::Vector,α,β,plan)
     N = length(c)
     a,b = (α-0.5)%1+0.5,(β-0.5)%1+0.5
     A,B = α-a,β-b
@@ -23,16 +23,16 @@ function cjt(c::Vector,α,β)
         return ret
     #elseif α == β
         # Ultraspherical line
-    #    ret = jac2cheb(c,α,β,plan_cjt(c,α,β))
+    #    ret = jac2cheb(c,α,β,plan)
     #    return ret
     else
         # General half-open square
-        ret = jac2cheb(c,α,β,plan_cjt(c,α,β))
+        ret = jac2cheb(c,α,β,plan)
         return ret
     end
 end
 
-function icjt(c::Vector,α,β)
+function icjt(c::Vector,α,β,plan)
     N = length(c)
     a,b = (α-0.5)%1+0.5,(β-0.5)%1+0.5
     A,B = α-a,β-b
@@ -61,17 +61,17 @@ function icjt(c::Vector,α,β)
         end
     #elseif α == β
         # Ultraspherical line
-    #    ret = cheb2jac(c,α,β,plan_icjt(c,α,β))
+    #    ret = cheb2jac(c,α,β,plan)
     #    return ret
     else
         # General half-open square
-        ret = cheb2jac(c,α,β,plan_icjt(c,α,β))
+        ret = cheb2jac(c,α,β,plan)
         return ret
     end
 end
 
-cjt(c::Vector,α,β,plan) = jac2cheb(c,α,β,plan)
-icjt(c::Vector,α,β,plan) = cheb2jac(c,α,β,plan)
+cjt(c::Vector,α,β) = cjt(c,α,β,plan_cjt(c,α,β))
+icjt(c::Vector,α,β) = icjt(c,α,β,plan_icjt(c,α,β))
 jjt(c::Vector,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
 
 plan_cjt(c::Vector,α,β;M::Int=7) = ForwardChebyshevJacobiPlan(c,α,β,M)

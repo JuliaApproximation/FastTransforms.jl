@@ -41,4 +41,4 @@ restricted to the half-open square `(α,β) ∈ (-1/2,1/2]^2`.
 
    1.	N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, SIAM J. Sci. Comput., 36:A148—A167, 2014.
 
-   2.	R. M. Slevinsky. <a href="http://arxiv.org/abs/1602.3320">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev--Jacobi transform</a>, available on arXiv shortly, 2016.
+   2.	R. M. Slevinsky. <a href="http://arxiv.org/abs/1602.02618">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, arXiv:1602.02618, 2016.

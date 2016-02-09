@@ -13,6 +13,7 @@ end
 
 function ChebyshevJacobiConstants{T}(c::Vector{T},α::T,β::T;M::Int=7,D::Bool=FORWARD)
     N = length(c)-1
+    if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiConstants{D,T}(α,β,M,N,0,zero(T),0) end
     if D == FORWARD
         nM₀ = floor(Int,min((eps(T)*2.0^(2M-1)*sqrtpi/absf(α,β,M,1/2))^(-1/(M+1/2)),N))
         αN = min(one(T)/log(N/nM₀),one(T)/2)
@@ -106,11 +107,17 @@ type ChebyshevJacobiPlan{D,T,DCT,DST}
         P.pr = pr
         P
     end
+    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T})
+        P = new()
+        P.CJC = CJC
+        P
+    end
 end
 
 function ForwardChebyshevJacobiPlan{T}(c_jac::Vector{T},α::T,β::T,M::Int)
     # Initialize constants
     CJC = ChebyshevJacobiConstants(c_jac,α,β;M=M,D=FORWARD)
+    if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiPlan{FORWARD,T,Any,Any}(CJC) end
     M,N,nM₀,αN,K = getconstants(CJC)
 
     # Initialize DCT-I and DST-I plans
@@ -147,6 +154,7 @@ end
 function BackwardChebyshevJacobiPlan{T}(c_cheb::Vector{T},α::T,β::T,M::Int)
     # Initialize constants
     CJC = ChebyshevJacobiConstants(c_cheb,α,β;M=M,D=BACKWARD)
+    if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiPlan{BACKWARD,T,Any,Any}(CJC) end
     M,N,nM₀,αN,K = getconstants(CJC)
 
     # Array of almost double the size of the coefficients
