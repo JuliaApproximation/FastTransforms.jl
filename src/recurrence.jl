@@ -198,7 +198,7 @@ function reinsch_b1{V}(c::AbstractVector,N::Int,cpθ::Number,plan::RecurrencePla
     xp1 = 2cpθ^2
     ukp1, dkp1 = zero(T), zero(T)
 
-    for k=N:-1:2
+    @inbounds for k=N:-1:2
         ck, Ak, Ck, rk = c[k], A[k], C[k], r[k-1]
         dk = muladd(Ak*xp1,ukp1,muladd(Ck,dkp1,ck))*rk
         uk = (dk+ukp1)/rk
