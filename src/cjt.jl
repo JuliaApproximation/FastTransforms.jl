@@ -1,18 +1,11 @@
 function cjt(c::Vector,α,β,plan)
     N = length(c)
-    a,b = (α-0.5)%1+0.5,(β-0.5)%1+0.5
-    A,B = α-a,β-b
-
     if α^2 == 0.25 && β^2 == 0.25
         ret = copy(c)
         if α == -0.5 && β == 0.5
-            N > 1 && (ret[N] *= 2)
-            @inbounds for i=N-1:-1:2 ret[i] = 2(ret[i] - (i-0.5)/2i*ret[i+1]) end
-            N > 1 && (ret[1] -= 0.25ret[2])
+            decrementβ!(ret,α,β)
         elseif α == 0.5 && β == -0.5
-            N > 1 && (ret[N] *= 2)
-            @inbounds for i=N-1:-1:2 ret[i] = 2(ret[i] + (i-0.5)/2i*ret[i+1]) end
-            N > 1 && (ret[1] += 0.25ret[2])
+            decrementα!(ret,α,β)
         elseif α == 0.5 && β == 0.5
             N > 1 && (ret[N] *= (4N-2)/N)
             N > 2 && (ret[N-1] *= (4N-6)/(N-1))
@@ -27,28 +20,22 @@ function cjt(c::Vector,α,β,plan)
     #    return ret
     else
         # General half-open square
-        ret = jac2cheb(c,α,β,plan)
+        ret = tosquare!(copy(c),α,β)
+        ret = jac2cheb(ret,α,β,plan)
         return ret
     end
 end
 
 function icjt(c::Vector,α,β,plan)
     N = length(c)
-    a,b = (α-0.5)%1+0.5,(β-0.5)%1+0.5
-    A,B = α-a,β-b
-
     if α^2 == 0.25 && β^2 == 0.25
         ret = copy(c)
         for i=1:N ret[i] *= sqrtpi/Cx(i-1.0) end
         if α == -0.5 && β == 0.5
-            N > 1 && (ret[1] += 0.25ret[2])
-            @inbounds for i=2:N-1 ret[i] = 0.5ret[i] + (i-0.5)/2i*ret[i+1] end
-            N > 1 && (ret[N] = 0.5ret[N])
+            incrementβ!(ret,α,β-1)
             return ret
         elseif α == 0.5 && β == -0.5
-            N > 1 && (ret[1] -= 0.25ret[2])
-            @inbounds for i=2:N-1 ret[i] = 0.5ret[i] - (i-0.5)/2i*ret[i+1] end
-            N > 1 && (ret[N] *= 0.5)
+            incrementα!(ret,α-1,β)
             return ret
         elseif α == 0.5 && β == 0.5
             N > 2 && (ret[1] -= 0.1875ret[3])
@@ -65,7 +52,9 @@ function icjt(c::Vector,α,β,plan)
     #    return ret
     else
         # General half-open square
-        ret = cheb2jac(c,α,β,plan)
+        a,b = modαβ(α),modαβ(β)
+        ret = cheb2jac(c,a,b,plan)
+        fromsquare!(ret,α,β)
         return ret
     end
 end
@@ -74,8 +63,16 @@ cjt(c::Vector,α,β) = cjt(c,α,β,plan_cjt(c,α,β))
 icjt(c::Vector,α,β) = icjt(c,α,β,plan_icjt(c,α,β))
 jjt(c::Vector,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
 
-plan_cjt(c::Vector,α,β;M::Int=7) = ForwardChebyshevJacobiPlan(c,α,β,M)
-plan_icjt(c::Vector,α,β;M::Int=7) = BackwardChebyshevJacobiPlan(c,α,β,M)
+function plan_cjt(c::Vector,α,β;M::Int=7)
+    P = ForwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
+    P.CJC.α,P.CJC.β = α,β
+    P
+end
+function plan_icjt(c::Vector,α,β;M::Int=7)
+    P = BackwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
+    P.CJC.α,P.CJC.β = α,β
+    P
+end
 
 *{T}(p::ChebyshevJacobiPlan{FORWARD,T},c::Vector{T}) = cjt(c,getplanαβ(p)...,p)
 *{T}(p::ChebyshevJacobiPlan{BACKWARD,T},c::Vector{T}) = icjt(c,getplanαβ(p)...,p)

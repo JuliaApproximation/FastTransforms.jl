@@ -376,3 +376,128 @@ function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     end
     μ
 end
+
+# Compute the bi-diagonal increment/decrement operators to incrementally change Jacobi bases in-place.
+## TODO: check incrementαβ! and decrementαβ!.
+# incrementα! : domain space is Pₙ^(α,β), and range space Pₙ^(α+1,β)
+# incrementβ! : domain space is Pₙ^(α,β), and range space Pₙ^(α,β+1)
+# incrementαβ! : domain space is Pₙ^(α,α), and range space Pₙ^(α+1,α+1)
+# decrementα! : domain space is Pₙ^(α,β), and range space Pₙ^(α-1,β)
+# decrementβ! : domain space is Pₙ^(α,β), and range space Pₙ^(α,β-1)
+# decrementαβ! : domain space is Pₙ^(α,α), and range space Pₙ^(α-1,α-1)
+
+function incrementα!(c::AbstractVector,α,β)
+    αβ,N = α+β,length(c)
+    N > 1 && (c[1] -= (β+1)/(αβ+3)*c[2])
+    @inbounds for i=2:N-1 c[i] = (αβ+i)/(αβ+2i-1)*c[i] - (β+i)/(αβ+2i+1)*c[i+1] end
+    N > 1 && (c[N] *= (αβ+N)/(αβ+2N-1))
+    c
+end
+
+function incrementβ!(c::AbstractVector,α,β)
+    αβ,N = α+β,length(c)
+    N > 1 && (c[1] += (α+1)/(αβ+3)*c[2])
+    @inbounds for i=2:N-1 c[i] = (αβ+i)/(αβ+2i-1)*c[i] + (α+i)/(αβ+2i+1)*c[i+1] end
+    N > 1 && (c[N] *= (αβ+N)/(αβ+2N-1))
+    c
+end
+#=
+function incrementαβ!(c::AbstractVector,α,β)
+    @assert α == β
+    N = length(c)
+    @inbounds for i=1:N-2 c[i] = (2α+i-2)*(2α+i-1)/(2α+2i-1)/(2α+2i)*c[i] - (α+i+1)/(4α+4i+2)*c[i+2] end
+    N > 1 && (c[N-1] *= (2α+N-3)*(2α+N-2)/(2α+2N-3)/(2α+2N-2))
+    N > 2 && (c[N] *= (2α+N-2)*(2α+N-1)/(2α+2N-1)/(2α+2N))
+    c
+end
+=#
+function decrementα!(c::AbstractVector,α,β)
+    αβ,N = α+β,length(c)
+    N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N))
+    @inbounds for i=N-1:-1:2 c[i] = (αβ+2i-2)/(αβ+i-1)*c[i] + (αβ+2i-2)/(αβ+2i)*(β+i)/(αβ+i-1)*c[i+1] end
+    N > 1 && (c[1] += (β+1)/(αβ+2)*c[2])
+    c
+end
+
+function decrementβ!(c::AbstractVector,α,β)
+    αβ,N = α+β,length(c)
+    N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N))
+    @inbounds for i=N-1:-1:2 c[i] = (αβ+2i-2)/(αβ+i-1)*c[i] - (αβ+2i-2)/(αβ+2i)*(α+i)/(αβ+i-1)*c[i+1] end
+    N > 1 && (c[1] -= (α+1)/(αβ+2)*c[2])
+    c
+end
+#=
+function decrementαβ!(c::AbstractVector,α,β)
+    @assert α == β
+    N = length(c)
+    N > 1 && (c[N-1] *= (2α+2N-5)*(2α+2N-4)/(2α+N-5)/(2α+N-4))
+    N > 2 && (c[N] *= (2α+2N-3)*(2α+2N-2)/(2α+N-4)/(2α+N-3))
+    @inbounds for i=N-2:-1:1 c[i] = (2α+2i-3)*(2α+2i-2)/(2α+i-4)/(2α+i-3)*(c[i] + (α+i)/(4α+4i-2)*c[i+2])  end
+    c
+end
+=#
+
+function modαβ(α)
+    if -0.5 < α ≤ 0.5
+        a = α
+    else
+        a = α%1
+        a > 0.5 && (a-=1)
+        a ≤ -0.5 && (a+=1)
+    end
+    a
+end
+
+function tosquare!(ret::AbstractVector,α,β)
+    a,b = modαβ(α),modαβ(β)
+    A,B = α-a,β-b
+    if α ≤ -0.5 && β ≤ -0.5
+        incrementα!(ret,α,β)
+        incrementβ!(ret,a,β)
+    elseif α ≤ -0.5
+        incrementα!(ret,α,β)
+        for j=B:-1:1
+            decrementβ!(ret,a,j+b)
+        end
+    elseif β ≤ -0.5
+        incrementβ!(ret,α,β)
+        for i=A:-1:1
+            decrementα!(ret,i+a,b)
+        end
+    else
+        for i=A:-1:1
+            decrementα!(ret,i+a,β)
+        end
+        for j=B:-1:1
+            decrementβ!(ret,a,j+b)
+        end
+    end
+    ret
+end
+
+function fromsquare!(ret::AbstractVector,α,β)
+    a,b = modαβ(α),modαβ(β)
+    A,B = α-a,β-b
+    if α ≤ -0.5 && β ≤ -0.5
+        decrementα!(ret,a,b)
+        decrementβ!(ret,α,b)
+    elseif α ≤ -0.5
+        decrementα!(ret,a,b)
+        for j=0:B-1
+            incrementβ!(ret,α,j+b)
+        end
+    elseif β ≤ -0.5
+        decrementβ!(ret,a,b)
+        for i=0:A-1
+            incrementα!(ret,i+a,β)
+        end
+    else
+        for i=0:A-1
+            incrementα!(ret,i+a,b)
+        end
+        for j=0:B-1
+            incrementβ!(ret,α,j+b)
+        end
+    end
+    ret
+end

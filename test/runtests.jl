@@ -87,3 +87,42 @@ c_11 = [1.13031820798497,0.7239875720908708,0.21281687927358628,0.04004015866217
 @test norm(icjt(c_cheb,-0.5,0.5)-c_01,Inf) < eps()
 @test norm(icjt(c_cheb,0.5,-0.5)-c_10,Inf) < eps()
 @test norm(icjt(c_cheb,0.5,0.5)-c_11,Inf) < eps()
+
+
+c = exp(-collect(1:100)./3)
+
+println("Test increment/decrement operators for α,β ≤ -0.5")
+
+α,β = -0.9,-0.6
+
+@test norm(FastTransforms.fromsquare!(FastTransforms.tosquare!(copy(c),α,β),α,β)-c,Inf) < 10eps()
+@test norm(icjt(cjt(c,α,β),α,β)-c,Inf) < 200eps()
+p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
+@test norm(p2*(p1*c)-c,Inf) < 200eps()
+
+println("Test increment/decrement operators for α ≤ -0.5, β > -0.5")
+
+α,β = -0.9,3.1
+
+@test norm(FastTransforms.fromsquare!(FastTransforms.tosquare!(copy(c),α,β),α,β)-c,Inf) < 10eps()
+@test norm(icjt(cjt(c,α,β),α,β)-c,Inf) < 200eps()
+p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
+@test norm(p2*(p1*c)-c,Inf) < 200eps()
+
+println("Test increment/decrement operators for α > -0.5, β ≤ -0.5")
+
+α,β = 2.4,-0.75
+
+@test norm(FastTransforms.fromsquare!(FastTransforms.tosquare!(copy(c),α,β),α,β)-c,Inf) < 10eps()
+@test norm(icjt(cjt(c,α,β),α,β)-c,Inf) < 200eps()
+p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
+@test norm(p2*(p1*c)-c,Inf) < 200eps()
+
+println("Test increment/decrement operators for α > -0.5, β > -0.5")
+
+α,β = 2.4,3.6
+
+@test norm(FastTransforms.fromsquare!(FastTransforms.tosquare!(copy(c),α,β),α,β)-c,Inf) < 10eps()
+@test norm(icjt(cjt(c,α,β),α,β)-c,Inf) < 200eps()
+p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
+@test norm(p2*(p1*c)-c,Inf) < 200eps()

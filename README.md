@@ -36,8 +36,9 @@ The design and implementation is analogous to FFTW: there is a type `ChebyshevJa
 that stores pre-planned optimized DCT-I and DST-I plans, recurrence coefficients,
 and temporary arrays to allow the execution of either the `cjt` or the `icjt` allocation-free.
 This type is constructed with either `plan_cjt` or `plan_icjt`. Composition of transforms
-allows the Jacobi—Jacobi transform, computed via `jjt`. Currently, the Jacobi parameters are
-restricted to the half-open square `(α,β) ∈ (-1/2,1/2]^2`.
+allows the Jacobi—Jacobi transform, computed via `jjt`. For any regularity, the Jacobi parameters are
+restricted to the half-open square `(α,β) ∈ (-1/2,1/2]^2`, but if the coefficients decay geometrically,
+then (not exceedingly) larger or smaller parameters can be used.
 
 # References:
 
