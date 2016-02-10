@@ -413,7 +413,7 @@ end
 =#
 function decrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
-    N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N))
+    N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N-1))
     @inbounds for i=N-1:-1:2 c[i] = (αβ+2i-2)/(αβ+i-1)*c[i] + (αβ+2i-2)/(αβ+2i)*(β+i)/(αβ+i-1)*c[i+1] end
     N > 1 && (c[1] += (β+1)/(αβ+2)*c[2])
     c
@@ -421,7 +421,7 @@ end
 
 function decrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
-    N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N))
+    N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N-1))
     @inbounds for i=N-1:-1:2 c[i] = (αβ+2i-2)/(αβ+i-1)*c[i] - (αβ+2i-2)/(αβ+2i)*(α+i)/(αβ+i-1)*c[i+1] end
     N > 1 && (c[1] -= (α+1)/(αβ+2)*c[2])
     c

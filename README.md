@@ -16,19 +16,19 @@ julia> Pkg.clone("https://github.com/MikaelSlevinsky/FastTransforms.jl.git")
 
 julia> using FastTransforms
 
-julia> c = rand(10000);
+julia> c = rand(10001);
 
 julia> @time norm(icjt(cjt(c,0.1,-0.2),0.1,-0.2)-c,Inf)
-  0.468768 seconds (501 allocations: 5.289 MB)
-2.4257817976547358e-12
+  0.435853 seconds (507 allocations: 5.366 MB)
+1.4830359162942841e-12
 
 julia> p1 = plan_cjt(c,0.1,-0.2);
 
 julia> p2 = plan_icjt(c,0.1,-0.2);
 
 julia> @time norm(p2*(p1*c)-c,Inf)
-  0.445823 seconds (99 allocations: 395.016 KB)
-2.4257817976547358e-12
+  0.396803 seconds (101 allocations: 473.281 KB)
+1.4830359162942841e-12
 
 ```
 
@@ -36,9 +36,10 @@ The design and implementation is analogous to FFTW: there is a type `ChebyshevJa
 that stores pre-planned optimized DCT-I and DST-I plans, recurrence coefficients,
 and temporary arrays to allow the execution of either the `cjt` or the `icjt` allocation-free.
 This type is constructed with either `plan_cjt` or `plan_icjt`. Composition of transforms
-allows the Jacobi—Jacobi transform, computed via `jjt`. For any regularity, the Jacobi parameters are
-restricted to the half-open square `(α,β) ∈ (-1/2,1/2]^2`, but if the coefficients decay geometrically,
-then (not exceedingly) larger or smaller parameters can be used.
+allows the Jacobi—Jacobi transform, computed via `jjt`. The remainder in Hahn's asymptotic expansion
+is valid for the half-open square `(α,β) ∈ (-1/2,1/2]^2`. Therefore, the fast transform works best
+when the parameters are inside. If the parameters `(α,β)` are not exceptionally beyond the square,
+then increment/decrement operators are used with linear complexity (and linear conditioning) in the degree.
 
 # References:
 

@@ -1,4 +1,5 @@
-function cjt(c::Vector,α,β,plan)
+function cjt(c::Vector,plan)
+    α,β = getplanαβ(plan)
     N = length(c)
     if α^2 == 0.25 && β^2 == 0.25
         ret = copy(c)
@@ -21,12 +22,13 @@ function cjt(c::Vector,α,β,plan)
     else
         # General half-open square
         ret = tosquare!(copy(c),α,β)
-        ret = jac2cheb(ret,α,β,plan)
+        ret = jac2cheb(ret,modαβ(α),modαβ(β),plan)
         return ret
     end
 end
 
-function icjt(c::Vector,α,β,plan)
+function icjt(c::Vector,plan)
+    α,β = getplanαβ(plan)
     N = length(c)
     if α^2 == 0.25 && β^2 == 0.25
         ret = copy(c)
@@ -52,15 +54,14 @@ function icjt(c::Vector,α,β,plan)
     #    return ret
     else
         # General half-open square
-        a,b = modαβ(α),modαβ(β)
-        ret = cheb2jac(c,a,b,plan)
+        ret = cheb2jac(c,modαβ(α),modαβ(β),plan)
         fromsquare!(ret,α,β)
         return ret
     end
 end
 
-cjt(c::Vector,α,β) = cjt(c,α,β,plan_cjt(c,α,β))
-icjt(c::Vector,α,β) = icjt(c,α,β,plan_icjt(c,α,β))
+cjt(c::Vector,α,β) = cjt(c,plan_cjt(c,α,β))
+icjt(c::Vector,α,β) = icjt(c,plan_icjt(c,α,β))
 jjt(c::Vector,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
 
 function plan_cjt(c::Vector,α,β;M::Int=7)
@@ -74,8 +75,8 @@ function plan_icjt(c::Vector,α,β;M::Int=7)
     P
 end
 
-*{T}(p::ChebyshevJacobiPlan{FORWARD,T},c::Vector{T}) = cjt(c,getplanαβ(p)...,p)
-*{T}(p::ChebyshevJacobiPlan{BACKWARD,T},c::Vector{T}) = icjt(c,getplanαβ(p)...,p)
+*{T}(p::ChebyshevJacobiPlan{FORWARD,T},c::Vector{T}) = cjt(c,p)
+*{T}(p::ChebyshevJacobiPlan{BACKWARD,T},c::Vector{T}) = icjt(c,p)
 
 """
     cjt(c,α,β)
