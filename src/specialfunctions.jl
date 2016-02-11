@@ -349,7 +349,7 @@ end
 #
 # Modified Chebyshev moments of the first and second kind with respect to the Jacobi weight
 #
-# ∫₁¹ T_n(x) (1-x)^α(1+x)^β dx,  and  ∫₁¹ U_n(x) (1-x)^α(1+x)^β dx.
+# ∫-₁¹ T_n(x) (1-x)^α(1+x)^β dx,  and  ∫-₁¹ U_n(x) (1-x)^α(1+x)^β dx.
 #
 
 
