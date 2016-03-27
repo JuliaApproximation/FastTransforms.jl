@@ -11,17 +11,17 @@ type ChebyshevJacobiConstants{D,T}
     K::Int
 end
 
-function ChebyshevJacobiConstants{T}(c::Vector{T},α::T,β::T;M::Int=7,D::Bool=FORWARD)
+function ChebyshevJacobiConstants{T}(c::AbstractVector{T},α::T,β::T;M::Int=7,D::Bool=FORWARD)
     N = length(c)-1
     if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiConstants{D,T}(α,β,M,N,0,zero(T),0) end
     if D == FORWARD
         nM₀ = floor(Int,min((eps(T)*2.0^(2M-1)*sqrtpi/absf(α,β,M,1/2))^(-1/(M+1/2)),N))
         αN = min(one(T)/log(N/nM₀),one(T)/2)
-        K = ceil(Int,log(N/nM₀)/log(1/αN))
+        K = N > 0 ? ceil(Int,log(N/nM₀)/log(1/αN)) : 0
     else#if D == BACKWARD
         nM₀ = floor(Int,min((eps(T)*2.0^(2M-1)*sqrtpi/absf(α,β,M,1/2))^(-1/(M+1/2)),2N))
         αN = min(one(T)/log(2N/nM₀),one(T)/2)
-        K = ceil(Int,log(2N/nM₀)/log(1/αN))
+        K = N > 0 ? ceil(Int,log(2N/nM₀)/log(1/αN)) : 0
     end
     ChebyshevJacobiConstants{D,T}(α,β,M,N,nM₀,αN,K)
 end
@@ -114,7 +114,7 @@ type ChebyshevJacobiPlan{D,T,DCT,DST}
     end
 end
 
-function ForwardChebyshevJacobiPlan{T}(c_jac::Vector{T},α::T,β::T,M::Int)
+function ForwardChebyshevJacobiPlan{T}(c_jac::AbstractVector{T},α::T,β::T,M::Int)
     # Initialize constants
     CJC = ChebyshevJacobiConstants(c_jac,α,β;M=M,D=FORWARD)
     if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiPlan{FORWARD,T,Any,Any}(CJC) end
@@ -133,7 +133,7 @@ function ForwardChebyshevJacobiPlan{T}(c_jac::Vector{T},α::T,β::T,M::Int)
     cfs = init_cfs(α,β,M)
 
     # Clenshaw-Curtis points
-    θ = T[k/N for k=zero(T):N]
+    θ = N > 0 ? T[k/N for k=zero(T):N] : T[0]
 
     # Initialize sines and cosines
     tempsin = sinpi(θ/2)
@@ -151,14 +151,14 @@ function ForwardChebyshevJacobiPlan{T}(c_jac::Vector{T},α::T,β::T,M::Int)
     ChebyshevJacobiPlan{FORWARD,T,typeof(p₁),typeof(p₂)}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ)
 end
 
-function BackwardChebyshevJacobiPlan{T}(c_cheb::Vector{T},α::T,β::T,M::Int)
+function BackwardChebyshevJacobiPlan{T}(c_cheb::AbstractVector{T},α::T,β::T,M::Int)
     # Initialize constants
     CJC = ChebyshevJacobiConstants(c_cheb,α,β;M=M,D=BACKWARD)
     if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiPlan{BACKWARD,T,Any,Any}(CJC) end
     M,N,nM₀,αN,K = getconstants(CJC)
 
     # Array of almost double the size of the coefficients
-    c_cheb2 = zeros(T,2N+1)
+    c_cheb2 = N > 0 ? zeros(T,2N+1) : T[0]
 
     # Initialize DCT-I and DST-I plans
     p₁,p₂ = applyTN_plan(c_cheb2),applyUN_plan(c_cheb2)
@@ -173,8 +173,8 @@ function BackwardChebyshevJacobiPlan{T}(c_cheb::Vector{T},α::T,β::T,M::Int)
     cfs = init_cfs(α,β,M)
 
     # Clenshaw-Curtis nodes and weights
-    θ = T[k/2N for k=zero(T):2N]
-    w = clenshawcurtisweights(2N+1,α,β,p₁)
+    θ = N > 0 ? T[k/2N for k=zero(T):2N] : T[0]
+    w = N > 0 ? clenshawcurtisweights(2N+1,α,β,p₁) : T[0]
 
     # Initialize sines and cosines
     tempsin = sinpi(θ/2)

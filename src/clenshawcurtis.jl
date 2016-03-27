@@ -1,6 +1,6 @@
 # Compute nodes and weights of the Clenshaw-Curtis quadrature rule with a Jacobi weight using modified Chebyshev moments.
 
-clenshawcurtis_plan(μ) = FFTW.plan_r2r!(μ, FFTW.REDFT00)
+clenshawcurtis_plan(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
 
 clenshawcurtis{T<:AbstractFloat}(N::Int,α::T,β::T) = clenshawcurtis(N,α,β,clenshawcurtis_plan(zeros(T,N)))
 clenshawcurtis{T<:AbstractFloat}(N::Int,α::T,β::T,plan) = T[cospi(k/(N-one(T))) for k=0:N-1],clenshawcurtisweights(N,α,β,plan)
@@ -16,7 +16,7 @@ end
 
 # Chebyshev-T coefficients to values at Clenshaw-Curtis nodes
 
-applyTN_plan(x) = FFTW.plan_r2r!(x, FFTW.REDFT00)
+applyTN_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : ones(x)'
 
 applyTN!{T<:AbstractFloat}(x::Vector{T}) = applyTN!(x,applyTN_plan(x))
 function applyTN!{T<:AbstractFloat}(x::Vector{T},plan)
@@ -29,7 +29,7 @@ applyTN{T<:AbstractFloat}(x::Vector{T}) = applyTN!(copy(x))
 
 # Values at Clenshaw-Curtis nodes to Chebyshev-T coefficients
 
-applyTNinv_plan(x) = FFTW.plan_r2r!(x, FFTW.REDFT00)
+applyTNinv_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : ones(x)'
 
 applyTNinv!{T<:AbstractFloat}(x::Vector{T}) = applyTNinv!(x,applyTNinv_plan(x))
 function applyTNinv!{T<:AbstractFloat}(x::Vector{T},plan)
@@ -42,7 +42,7 @@ applyTNinv{T<:AbstractFloat}(x::Vector{T}) = applyTNinv!(copy(x))
 
 # sin(nθ) coefficients to values at Clenshaw-Curtis nodes
 
-applyUN_plan(x) = FFTW.plan_r2r!(slice(x,2:length(x)-1), FFTW.RODFT00)
+applyUN_plan(x) = length(x) > 2 ? FFTW.plan_r2r!(slice(x,2:length(x)-1), FFTW.RODFT00) : ones(x)'
 
 applyUN!{T<:AbstractFloat}(x::Vector{T}) = applyUN!(x,applyUN_plan(x))
 function applyUN!{T<:AbstractFloat}(x::Vector{T},plan)

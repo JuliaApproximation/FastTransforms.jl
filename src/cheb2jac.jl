@@ -1,8 +1,8 @@
-cheb2jac{T<:AbstractFloat}(c::Vector{T},α::Number,β::Number) = cheb2jac(c,convert(T,α),convert(T,β))
+cheb2jac{T<:AbstractFloat}(c::AbstractVector{T},α::Number,β::Number) = cheb2jac(c,convert(T,α),convert(T,β))
 
-cheb2jac{T<:AbstractFloat}(c::Vector{T},α::T,β::T) = cheb2jac(c,α,β,BackwardChebyshevJacobiPlan(c,α,β))
+cheb2jac{T<:AbstractFloat}(c::AbstractVector{T},α::T,β::T) = cheb2jac(c,α,β,BackwardChebyshevJacobiPlan(c,α,β))
 
-function cheb2jac{T<:AbstractFloat}(c_cheb::Vector{T},α::T,β::T,plan::ChebyshevJacobiPlan{BACKWARD,T})
+function cheb2jac{T<:AbstractFloat}(c_cheb::AbstractVector{T},α::T,β::T,plan::ChebyshevJacobiPlan{BACKWARD,T})
     #if α == β return cheb2jac(c_cheb,α) end
 
     M,N,nM₀,αN,K = getconstants(plan)
@@ -74,7 +74,7 @@ end
 
 # If α == β == λ - 1/2
 #=
-function cheb2jac{T<:AbstractFloat}(c_jac::Vector{T},λ::T)
+function cheb2jac{T<:AbstractFloat}(c_jac::AbstractVector{T},λ::T)
     M,N,λ = 7,length(c_jac)-1,λ+one(T)/2
 
     θ = T[k/N for k=zero(T):N] # Clenshaw-Curtis points

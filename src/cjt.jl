@@ -1,6 +1,7 @@
-function cjt(c::Vector,plan)
+function cjt(c::AbstractVector,plan)
     α,β = getplanαβ(plan)
     N = length(c)
+    N ≤ 1 && return c
     if α^2 == 0.25 && β^2 == 0.25
         ret = copy(c)
         if α == -0.5 && β == 0.5
@@ -27,9 +28,10 @@ function cjt(c::Vector,plan)
     end
 end
 
-function icjt(c::Vector,plan)
+function icjt(c::AbstractVector,plan)
     α,β = getplanαβ(plan)
     N = length(c)
+    N ≤ 1 && return c
     if α^2 == 0.25 && β^2 == 0.25
         ret = copy(c)
         for i=1:N ret[i] *= sqrtpi/Cx(i-1.0) end
@@ -60,23 +62,54 @@ function icjt(c::Vector,plan)
     end
 end
 
-cjt(c::Vector,α,β) = cjt(c,plan_cjt(c,α,β))
-icjt(c::Vector,α,β) = icjt(c,plan_icjt(c,α,β))
-jjt(c::Vector,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
+jjt(c,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
 
-function plan_cjt(c::Vector,α,β;M::Int=7)
+function plan_cjt(c::AbstractVector,α,β;M::Int=7)
     P = ForwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
     P.CJC.α,P.CJC.β = α,β
     P
 end
-function plan_icjt(c::Vector,α,β;M::Int=7)
+function plan_icjt(c::AbstractVector,α,β;M::Int=7)
     P = BackwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
     P.CJC.α,P.CJC.β = α,β
     P
 end
 
-*{T}(p::ChebyshevJacobiPlan{FORWARD,T},c::Vector{T}) = cjt(c,p)
-*{T}(p::ChebyshevJacobiPlan{BACKWARD,T},c::Vector{T}) = icjt(c,p)
+*{T<:AbstractFloat}(p::ChebyshevJacobiPlan{FORWARD,T},c::AbstractVector{T}) = cjt(c,p)
+*{T<:AbstractFloat}(p::ChebyshevJacobiPlan{BACKWARD,T},c::AbstractVector{T}) = icjt(c,p)
+
+
+for (op,plan_op) in ((:cjt,:plan_cjt),(:icjt,:plan_icjt))
+    @eval begin
+        $op{T<:AbstractFloat}(c::AbstractVector{T},α,β) = $op(c,$plan_op(c,α,β))
+        function $op{T<:AbstractFloat}(c::AbstractVector{Complex{T}},α,β)
+            cr,ci = reim(c)
+            p = $plan_op(cr,α,β)
+            complex(p*cr,p*ci)
+        end
+        function $op{T<:AbstractFloat}(c::AbstractMatrix{T},α,β)
+            m,n = size(c)
+            p = $plan_op(slice(c,1:m),α,β)
+            ret = zero(c)
+            for j=1:n
+                ret[:,j] = p*slice(c,1:m,j)
+            end
+            ret
+        end
+        function $op{T<:AbstractFloat}(c::AbstractMatrix{Complex{T}},α,β)
+            m,n = size(c)
+            p = $plan_op(real(slice(c,1:m)),α,β)
+            ret = zero(c)
+            for j=1:n
+                cs = slice(c,1:m,j)
+                cr,ci = reim(cs)
+                ret[:,j] = complex(p*cr,p*ci)
+            end
+            ret
+        end
+    end
+end
+
 
 """
     cjt(c,α,β)

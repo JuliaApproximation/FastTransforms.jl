@@ -66,6 +66,20 @@ for N in round(Int,logspace(1,3,3))
     println("This is the mean log(||Error||_∞/Estimate): ",mean(V)," and the standard deviation: ",std(V))
 end
 
+println("Testing the special cases length(c) = 0,1,2:")
+
+c = [1.5]
+@test cjt(c,0.12,0.34) == c
+@test icjt(c,0.12,0.34) == c
+
+pop!(c)
+
+@test cjt(c,0.12,0.34) == c
+@test icjt(c,0.12,0.34) == c
+
+c = [1.0;2.0]
+@test norm(jjt(c,0.12,0.34,0.12,0.34)-c,Inf) ≤ 2eps()
+
 println("Testing the special cases (α,β) = (±0.5,±0.5)")
 
 # Chebyshev coefficients of exp
@@ -126,3 +140,28 @@ println("Test increment/decrement operators for α > -0.5, β > -0.5")
 @test norm(icjt(cjt(c,α,β),α,β)-c,Inf) < 2e5eps()
 p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
 @test norm(p2*(p1*c)-c,Inf) < 2e5eps()
+
+println("Test for complex coefficients")
+
+α,β = 0.12,0.34
+c = complex(rand(100),rand(100))
+
+@test cjt(c,α,β) == complex(cjt(real(c),α,β),cjt(imag(c),α,β))
+@test icjt(c,α,β) == complex(icjt(real(c),α,β),icjt(imag(c),α,β))
+@test jjt(c,α,β,α,β) == complex(jjt(real(c),α,β,α,β),jjt(imag(c),α,β,α,β))
+@test norm(jjt(c,α,β,α,β)-c,Inf) < 200eps()
+
+println("Test for Vector{Float32}")
+
+c64 = rand(100)
+c32 = map(Float32,c64)
+
+cL64 = cjt(c64,0.,0.)
+cL32 = cjt(c32,0.f0,0.f0)
+
+@test norm(cL32-cL64,Inf) < 20eps(Float32)
+
+println("Test for Matrix of coefficients")
+
+c = rand(100,100)
+@test maxabs(jjt(c,α,β,α,β)-c) < 10000eps()
