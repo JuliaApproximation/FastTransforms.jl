@@ -75,41 +75,26 @@ function plan_icjt(c::AbstractVector,α,β;M::Int=7)
     P
 end
 
-*{T<:AbstractFloat}(p::ChebyshevJacobiPlan{FORWARD,T},c::AbstractVector{T}) = cjt(c,p)
-*{T<:AbstractFloat}(p::ChebyshevJacobiPlan{BACKWARD,T},c::AbstractVector{T}) = icjt(c,p)
-
-
-for (op,plan_op) in ((:cjt,:plan_cjt),(:icjt,:plan_icjt))
+for (op,plan_op,D) in ((:cjt,:plan_cjt,:FORWARD),(:icjt,:plan_icjt,:BACKWARD))
     @eval begin
-        $op{T<:AbstractFloat}(c::AbstractVector{T},α,β) = $op(c,$plan_op(c,α,β))
-        function $op{T<:AbstractFloat}(c::AbstractVector{Complex{T}},α,β)
-            cr,ci = reim(c)
-            p = $plan_op(cr,α,β)
-            complex(p*cr,p*ci)
-        end
-        function $op{T<:AbstractFloat}(c::AbstractMatrix{T},α,β)
-            m,n = size(c)
-            p = $plan_op(slice(c,1:m),α,β)
-            ret = zero(c)
-            for j=1:n
-                ret[:,j] = p*slice(c,1:m,j)
-            end
-            ret
-        end
-        function $op{T<:AbstractFloat}(c::AbstractMatrix{Complex{T}},α,β)
-            m,n = size(c)
-            p = $plan_op(real(slice(c,1:m)),α,β)
-            ret = zero(c)
-            for j=1:n
-                cs = slice(c,1:m,j)
-                cr,ci = reim(cs)
-                ret[:,j] = complex(p*cr,p*ci)
-            end
-            ret
-        end
+        $op(c,α,β) = $plan_op(c,α,β)*c
+        *{T<:AbstractFloat}(p::ChebyshevJacobiPlan{$D,T},c::AbstractVector{T}) = $op(c,p)
+        $plan_op{T<:AbstractFloat}(c::AbstractVector{Complex{T}},α,β;M::Int=7) = $plan_op(real(c),α,β;M=M)
+        $plan_op(c::AbstractMatrix,α,β;M::Int=7) = $plan_op(slice(c,1:size(c,1)),α,β;M=M)
     end
 end
 
+function *{D,T<:AbstractFloat}(p::ChebyshevJacobiPlan{D,T},c::AbstractVector{Complex{T}})
+    cr,ci = reim(c)
+    complex(p*cr,p*ci)
+end
+
+function *(p::ChebyshevJacobiPlan,c::AbstractMatrix)
+    m,n = size(c)
+    ret = zero(c)
+    for j=1:n ret[:,j] = p*slice(c,1:m,j) end
+    ret
+end
 
 """
     cjt(c,α,β)
