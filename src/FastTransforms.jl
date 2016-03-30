@@ -6,6 +6,7 @@ using Base
 import Base: *
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
+export gaunt
 
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
@@ -26,5 +27,7 @@ include("jac2cheb.jl")
 include("cheb2jac.jl")
 
 include("cjt.jl")
+
+include("gaunt.jl")
 
 end # module

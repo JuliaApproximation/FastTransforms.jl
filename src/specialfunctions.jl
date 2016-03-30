@@ -1,6 +1,7 @@
 import Base.Math: @horner
 
 const sqrtpi = 1.772453850905516027298
+const edivsqrt2pi = 1.084437551419227546612
 
 # Pochhhammer symbol (x)ₙ for the rising factorial. From ApproxFun.
 
