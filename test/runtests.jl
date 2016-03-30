@@ -1,7 +1,7 @@
 using FastTransforms
 using Base.Test
 
-# Tests
+println("Testing special functions")
 n = 0:1000_000
 λ = 0.123
 @time FastTransforms.Cnλ(n,λ);
@@ -43,6 +43,8 @@ x,w = FastTransforms.fejer2(N,0.25,0.35)
 @test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
 x,w = FastTransforms.clenshawcurtis(N,0.25,0.35)
 @test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
+
+println("Testing the Chebyshev–Jacobi transform")
 
 Nr = 5
 v = zeros(Nr)
@@ -105,7 +107,7 @@ c_11 = [1.13031820798497,0.7239875720908708,0.21281687927358628,0.04004015866217
 
 c = exp(-collect(1:1000)./30)
 
-println("Test increment/decrement operators for α,β ≤ -0.5")
+println("Testing increment/decrement operators for α,β ≤ -0.5")
 
 α,β = -0.9,-0.6
 
@@ -114,7 +116,7 @@ println("Test increment/decrement operators for α,β ≤ -0.5")
 p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
 @test norm(p2*(p1*c)-c,Inf) < 2000eps()
 
-println("Test increment/decrement operators for α ≤ -0.5, β > -0.5")
+println("Testing increment/decrement operators for α ≤ -0.5, β > -0.5")
 
 α,β = -0.9,3.1
 
@@ -123,7 +125,7 @@ println("Test increment/decrement operators for α ≤ -0.5, β > -0.5")
 p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
 @test norm(p2*(p1*c)-c,Inf) < 2000eps()
 
-println("Test increment/decrement operators for α > -0.5, β ≤ -0.5")
+println("Testing increment/decrement operators for α > -0.5, β ≤ -0.5")
 
 α,β = 2.4,-0.75
 
@@ -132,7 +134,7 @@ println("Test increment/decrement operators for α > -0.5, β ≤ -0.5")
 p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
 @test norm(p2*(p1*c)-c,Inf) < 1e6eps()
 
-println("Test increment/decrement operators for α > -0.5, β > -0.5")
+println("Testing increment/decrement operators for α > -0.5, β > -0.5")
 
 α,β = 2.4,3.6
 
@@ -141,7 +143,7 @@ println("Test increment/decrement operators for α > -0.5, β > -0.5")
 p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
 @test norm(p2*(p1*c)-c,Inf) < 2e5eps()
 
-println("Test for complex coefficients")
+println("Testing for complex coefficients")
 
 α,β = 0.12,0.34
 c = complex(rand(100),rand(100))
@@ -151,7 +153,7 @@ c = complex(rand(100),rand(100))
 @test jjt(c,α,β,α,β) == complex(jjt(real(c),α,β,α,β),jjt(imag(c),α,β,α,β))
 @test norm(jjt(c,α,β,α,β)-c,Inf) < 200eps()
 
-println("Test for Vector{Float32}")
+println("Testing for Vector{Float32}")
 
 c64 = rand(100)
 c32 = map(Float32,c64)
@@ -161,7 +163,11 @@ cL32 = cjt(c32,0.f0,0.f0)
 
 @test norm(cL32-cL64,Inf) < 20eps(Float32)
 
-println("Test for Matrix of coefficients")
+println("Testing for Matrix of coefficients")
 
 c = rand(100,100)
 @test maxabs(jjt(c,α,β,α,β)-c) < 10000eps()
+
+println("Testing Gaunt coefficients")
+
+include("gaunttest.jl")
