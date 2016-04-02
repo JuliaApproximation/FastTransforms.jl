@@ -64,7 +64,7 @@ function fft_pow2!{T<:BigFloat}(x::Vector{T})
     end
     logn = 2
     while logn < n
-        θ=big2/logn
+        θ=-big2/logn
         wtemp = sinpi(θ/2)
         wpr, wpi = -2wtemp^2, sinpi(θ)
         wr, wi = one(T), zero(T)

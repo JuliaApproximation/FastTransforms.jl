@@ -1,6 +1,10 @@
 using FastTransforms
 using Base.Test
 
+c = collect(linspace(-big(1.0),1,16))
+@test norm(fft(c) - fft(map(Float64,c))) < 3Float64(norm(c))*eps()
+@test norm(ifft(c) - ifft(map(Float64,c))) < 3Float64(norm(c))*eps()
+
 c = collect(linspace(-big(1.0),1.0,201))
 @test norm(ifft(fft(c))-c) < 200norm(c)eps(BigFloat)
 
