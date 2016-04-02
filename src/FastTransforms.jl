@@ -17,6 +17,8 @@ export gaunt
 #export fejer2, fejer_plan2, fejerweights2
 #export RecurrencePlan, forward_recurrence!, backward_recurrence
 
+include("fftBigFloat.jl")
+
 include("specialfunctions.jl")
 include("clenshawcurtis.jl")
 include("fejer.jl")

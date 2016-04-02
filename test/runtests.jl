@@ -171,3 +171,7 @@ c = rand(100,100)
 println("Testing Gaunt coefficients")
 
 include("gaunttest.jl")
+
+println("Testing BigFloat support of FFT and DCT methods")
+
+include("fftBigFloattest.jl")
