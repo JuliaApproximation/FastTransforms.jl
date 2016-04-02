@@ -65,8 +65,8 @@ function fft_pow2!{T<:BigFloat}(x::Vector{T})
     logn = 2
     while logn < n
         θ=big2/logn
-		wtemp = sinpi(θ/2)
-		wpr, wpi = -2wtemp^2, sinpi(θ)
+        wtemp = sinpi(θ/2)
+        wpr, wpi = -2wtemp^2, sinpi(θ)
         wr, wi = one(T), zero(T)
         for m=1:2:logn-1
             for i=m:2logn:n
@@ -75,8 +75,8 @@ function fft_pow2!{T<:BigFloat}(x::Vector{T})
                 x[j], x[j+1] = x[i]-mixr, x[i+1]-mixi
                 x[i], x[i+1] = x[i]+mixr, x[i+1]+mixi
             end
-			wr = (wtemp=wr)*wpr-wi*wpi+wr
-			wi = wi*wpr+wtemp*wpi+wi
+            wr = (wtemp=wr)*wpr-wi*wpi+wr
+            wi = wi*wpr+wtemp*wpi+wi
         end
         logn = logn << 1
     end
