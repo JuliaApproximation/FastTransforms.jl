@@ -24,9 +24,15 @@ include("clenshawcurtis.jl")
 include("fejer.jl")
 include("recurrence.jl")
 
+abstract FastTransformPlan{D,T}
+
 include("ChebyshevJacobiPlan.jl")
 include("jac2cheb.jl")
 include("cheb2jac.jl")
+
+include("ChebyshevUltrasphericalPlan.jl")
+include("ultra2cheb.jl")
+include("cheb2ultra.jl")
 
 include("cjt.jl")
 

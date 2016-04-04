@@ -1,5 +1,8 @@
 import Base.Math: @horner
 
+const FORWARD  =  true
+const BACKWARD = false
+
 const sqrtpi = 1.772453850905516027298
 const edivsqrt2pi = 1.084437551419227546612
 

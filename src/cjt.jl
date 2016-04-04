@@ -1,4 +1,4 @@
-function cjt(c::AbstractVector,plan)
+function cjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
     α,β = getplanαβ(plan)
     N = length(c)
     N ≤ 1 && return c
@@ -16,10 +16,6 @@ function cjt(c::AbstractVector,plan)
         end
         for i=1:N ret[i] *= Cx(i-1.0)/sqrtpi end
         return ret
-    #elseif α == β
-        # Ultraspherical line
-    #    ret = jac2cheb(c,α,β,plan)
-    #    return ret
     else
         # General half-open square
         ret = tosquare!(copy(c),α,β)
@@ -28,7 +24,28 @@ function cjt(c::AbstractVector,plan)
     end
 end
 
-function icjt(c::AbstractVector,plan)
+function cjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
+    λ = getplanλ(plan)
+    N = length(c)
+    N ≤ 1 && return c
+    if λ == 0 || λ == 1
+        ret = copy(c)
+        if λ == 1
+            N > 1 && (ret[N] *= (4N-2)/N)
+            N > 2 && (ret[N-1] *= (4N-6)/(N-1))
+            @inbounds for i=N-2:-1:2 ret[i] = (4i-2)/i*(ret[i]+(2i+1)/(8i+8)*ret[i+2]) end
+            N > 2 && (ret[1] += 0.1875ret[3])
+        end
+        for i=1:N ret[i] *= Cx(i-1.0)/sqrtpi end
+        return ret
+    else
+        # Ultraspherical line
+        ret = ultra2cheb(c,λ,plan)
+        return ret
+    end
+end
+
+function icjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
     α,β = getplanαβ(plan)
     N = length(c)
     N ≤ 1 && return c
@@ -50,10 +67,6 @@ function icjt(c::AbstractVector,plan)
         else
             return ret
         end
-    #elseif α == β
-        # Ultraspherical line
-    #    ret = cheb2jac(c,α,β,plan)
-    #    return ret
     else
         # General half-open square
         ret = cheb2jac(c,modαβ(α),modαβ(β),plan)
@@ -62,34 +75,73 @@ function icjt(c::AbstractVector,plan)
     end
 end
 
+function icjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
+    λ = getplanλ(plan)
+    N = length(c)
+    N ≤ 1 && return c
+    if λ == 0 || λ == 1
+        ret = copy(c)
+        for i=1:N ret[i] *= sqrtpi/Cx(i-1.0) end
+        if λ == 1
+            N > 2 && (ret[1] -= 0.1875ret[3])
+            @inbounds for i=2:N-2 ret[i] = i/(4i-2)*ret[i] - (2i+1)/(8i+8)*ret[i+2] end
+            N > 2 && (ret[N-1] *= (N-1)/(4N-6))
+            N > 1 && (ret[N] *= N/(4N-2))
+            return ret
+        else
+            return ret
+        end
+    else
+        # Ultraspherical line
+        ret = cheb2ultra(c,λ,plan)
+        return ret
+    end
+end
+
 jjt(c,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
 
 function plan_cjt(c::AbstractVector,α,β;M::Int=7)
+    α == β && return plan_cjt(c,α+one(α)/2;M=M)
     P = ForwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
     P.CJC.α,P.CJC.β = α,β
     P
 end
 function plan_icjt(c::AbstractVector,α,β;M::Int=7)
+    α == β && return plan_icjt(c,α+one(α)/2;M=M)
     P = BackwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
     P.CJC.α,P.CJC.β = α,β
+    P
+end
+
+function plan_cjt(c::AbstractVector,λ;M::Int=7)
+    P = ForwardChebyshevUltrasphericalPlan(c,λ,M)
+    P.CUC.λ = λ
+    P
+end
+function plan_icjt(c::AbstractVector,λ;M::Int=7)
+    P = BackwardChebyshevUltrasphericalPlan(c,λ,M)
+    P.CUC.λ = λ
     P
 end
 
 for (op,plan_op,D) in ((:cjt,:plan_cjt,:FORWARD),(:icjt,:plan_icjt,:BACKWARD))
     @eval begin
         $op(c,α,β) = $plan_op(c,α,β)*c
-        *{T<:AbstractFloat}(p::ChebyshevJacobiPlan{$D,T},c::AbstractVector{T}) = $op(c,p)
+        $op(c,λ) = $plan_op(c,λ)*c
+        *{T<:AbstractFloat}(p::FastTransformPlan{$D,T},c::AbstractVector{T}) = $op(c,p)
         $plan_op{T<:AbstractFloat}(c::AbstractVector{Complex{T}},α,β;M::Int=7) = $plan_op(real(c),α,β;M=M)
+        $plan_op{T<:AbstractFloat}(c::AbstractVector{Complex{T}},λ;M::Int=7) = $plan_op(real(c),λ;M=M)
         $plan_op(c::AbstractMatrix,α,β;M::Int=7) = $plan_op(slice(c,1:size(c,1)),α,β;M=M)
+        $plan_op(c::AbstractMatrix,λ;M::Int=7) = $plan_op(slice(c,1:size(c,1)),λ;M=M)
     end
 end
 
-function *{D,T<:AbstractFloat}(p::ChebyshevJacobiPlan{D,T},c::AbstractVector{Complex{T}})
+function *{D,T<:AbstractFloat}(p::FastTransformPlan{D,T},c::AbstractVector{Complex{T}})
     cr,ci = reim(c)
     complex(p*cr,p*ci)
 end
 
-function *(p::ChebyshevJacobiPlan,c::AbstractMatrix)
+function *(p::FastTransformPlan,c::AbstractMatrix)
     m,n = size(c)
     ret = zero(c)
     for j=1:n ret[:,j] = p*slice(c,1:m,j) end

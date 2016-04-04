@@ -1,6 +1,3 @@
-const FORWARD  =  true
-const BACKWARD = false
-
 type ChebyshevJacobiConstants{D,T}
     α::T
     β::T
@@ -56,7 +53,7 @@ function ChebyshevJacobiIndices{D,T}(α::T,β::T,CJC::ChebyshevJacobiConstants{D
     ChebyshevJacobiIndices(i₁,i₂,j₁,j₂)
 end
 
-type ChebyshevJacobiPlan{D,T,DCT,DST}
+type ChebyshevJacobiPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
     CJC::ChebyshevJacobiConstants{D,T}
     CJI::ChebyshevJacobiIndices
     p₁::DCT
