@@ -15,6 +15,11 @@ function Base.fft{T<:BigFloats}(x::Vector{T})
     return Wks.*conv(xq,wq)[n+1:2n]
 end
 
+function Base.fft!{T<:BigFloats}(x::Vector{T})
+    x[:] = fft(x)
+    return x
+end
+
 # add rfft for BigFloat, by calling fft
 #  this creates ToeplitzMatrices.rfft, so avoids changing Base.rfft
 Base.rfft{T<:BigFloats}(v::Vector{T})=fft(v)[1:div(length(v),2)+1]
@@ -28,8 +33,7 @@ end
 
 Base.ifft{T<:BigFloats}(x::Vector{T}) = conj!(fft(conj(x)))/length(x)
 function Base.ifft!{T<:BigFloats}(x::Vector{T})
-    y = conj!(fft(conj!(x)))/length(x)
-    x[:] = y
+    x[:] = ifft(x)
     return x
 end
 
