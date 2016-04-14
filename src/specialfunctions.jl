@@ -405,16 +405,17 @@ function incrementβ!(c::AbstractVector,α,β)
     N > 1 && (c[N] *= (αβ+N)/(αβ+2N-1))
     c
 end
-#=
+
 function incrementαβ!(c::AbstractVector,α,β)
     @assert α == β
     N = length(c)
-    @inbounds for i=1:N-2 c[i] = (2α+i-2)*(2α+i-1)/(2α+2i-1)/(2α+2i)*c[i] - (α+i+1)/(4α+4i+2)*c[i+2] end
-    N > 1 && (c[N-1] *= (2α+N-3)*(2α+N-2)/(2α+2N-3)/(2α+2N-2))
-    N > 2 && (c[N] *= (2α+N-2)*(2α+N-1)/(2α+2N-1)/(2α+2N))
+    N > 2 && (c[1] -= (α+2)/(4α+10)*c[3])
+    @inbounds for i=2:N-2 c[i] = (2α+i)*(2α+i+1)/(2α+2i-1)/(2α+2i)*c[i] - (α+i+1)/(4α+4i+6)*c[i+2] end
+    N > 1 && (c[N-1] *= (2α+N-1)*(2α+N)/(2α+2N-3)/(2α+2N-2))
+    N > 0 && (c[N] *= (2α+N)*(2α+N+1)/(2α+2N-1)/(2α+2N))
     c
 end
-=#
+
 function decrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
     N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N-1))
@@ -430,16 +431,17 @@ function decrementβ!(c::AbstractVector,α,β)
     N > 1 && (c[1] -= (α+1)/(αβ+2)*c[2])
     c
 end
-#=
+
 function decrementαβ!(c::AbstractVector,α,β)
     @assert α == β
     N = length(c)
-    N > 1 && (c[N-1] *= (2α+2N-5)*(2α+2N-4)/(2α+N-5)/(2α+N-4))
-    N > 2 && (c[N] *= (2α+2N-3)*(2α+2N-2)/(2α+N-4)/(2α+N-3))
-    @inbounds for i=N-2:-1:1 c[i] = (2α+2i-3)*(2α+2i-2)/(2α+i-4)/(2α+i-3)*(c[i] + (α+i)/(4α+4i-2)*c[i+2])  end
+    N > 0 && (c[N] *= (2α+2N-3)*(2α+2N-2)/(2α+N-2)/(2α+N-1))
+    N > 1 && (c[N-1] *= (2α+2N-5)*(2α+2N-4)/(2α+N-3)/(2α+N-2))
+    @inbounds for i=N-2:-1:2 c[i] = (2α+2i-3)*(2α+2i-2)/(2α+i-2)/(2α+i-1)*(c[i] + (α+i)/(4α+4i+2)*c[i+2]) end
+    N > 2 && (c[1] += (α+1)/(4α+6)*c[3])
     c
 end
-=#
+
 
 function modαβ(α)
     if -0.5 < α ≤ 0.5
@@ -450,6 +452,16 @@ function modαβ(α)
         a ≤ -0.5 && (a+=1)
     end
     a
+end
+
+function modλ(λ)
+    if 0 ≤ λ < 1
+        l = λ
+    else
+        l = λ%1
+        l < 0 && (l+=1)
+    end
+    l
 end
 
 function tosquare!(ret::AbstractVector,α,β)
@@ -501,6 +513,35 @@ function fromsquare!(ret::AbstractVector,α,β)
         end
         for j=0:B-1
             incrementβ!(ret,α,j+b)
+        end
+    end
+    ret
+end
+
+
+function toline!(ret::AbstractVector,α,β)
+    @assert α == β
+    a,b = modαβ(α),modαβ(β)
+    A,B = α-a,β-b
+    if α ≤ -0.5
+        incrementαβ!(ret,α,β)
+    else
+        for i=A:-1:1
+            decrementαβ!(ret,i+a,i+a)
+        end
+    end
+    ret
+end
+
+function fromline!(ret::AbstractVector,α,β)
+    @assert α == β
+    a,b = modαβ(α),modαβ(β)
+    A,B = α-a,β-b
+    if α ≤ -0.5
+        decrementαβ!(ret,a,b)
+    else
+        for i=0:A-1
+            incrementαβ!(ret,i+a,i+a)
         end
     end
     ret

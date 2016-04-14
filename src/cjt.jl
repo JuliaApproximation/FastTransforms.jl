@@ -9,10 +9,7 @@ function cjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
         elseif α == 0.5 && β == -0.5
             decrementα!(ret,α,β)
         elseif α == 0.5 && β == 0.5
-            N > 1 && (ret[N] *= (4N-2)/N)
-            N > 2 && (ret[N-1] *= (4N-6)/(N-1))
-            @inbounds for i=N-2:-1:2 ret[i] = (4i-2)/i*(ret[i]+(2i+1)/(8i+8)*ret[i+2]) end
-            N > 2 && (ret[1] += 0.1875ret[3])
+            decrementαβ!(ret,α,β)
         end
         for i=1:N ret[i] *= Cx(i-1.0)/sqrtpi end
         return ret
@@ -30,17 +27,13 @@ function cjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
     N ≤ 1 && return c
     if λ == 0 || λ == 1
         ret = copy(c)
-        if λ == 1
-            N > 1 && (ret[N] *= (4N-2)/N)
-            N > 2 && (ret[N-1] *= (4N-6)/(N-1))
-            @inbounds for i=N-2:-1:2 ret[i] = (4i-2)/i*(ret[i]+(2i+1)/(8i+8)*ret[i+2]) end
-            N > 2 && (ret[1] += 0.1875ret[3])
-        end
+        λ == 1 && decrementαβ!(ret,λ-one(λ)/2,λ-one(λ)/2)
         for i=1:N ret[i] *= Cx(i-1.0)/sqrtpi end
         return ret
     else
         # Ultraspherical line
-        ret = ultra2cheb(c,λ,plan)
+        ret = toline!(copy(c),λ-one(λ)/2,λ-one(λ)/2)
+        ret = ultra2cheb(ret,modλ(λ),plan)
         return ret
     end
 end
@@ -59,10 +52,7 @@ function icjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
             incrementα!(ret,α-1,β)
             return ret
         elseif α == 0.5 && β == 0.5
-            N > 2 && (ret[1] -= 0.1875ret[3])
-            @inbounds for i=2:N-2 ret[i] = i/(4i-2)*ret[i] - (2i+1)/(8i+8)*ret[i+2] end
-            N > 2 && (ret[N-1] *= (N-1)/(4N-6))
-            N > 1 && (ret[N] *= N/(4N-2))
+            incrementαβ!(ret,α-1,β-1)
             return ret
         else
             return ret
@@ -82,18 +72,12 @@ function icjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
     if λ == 0 || λ == 1
         ret = copy(c)
         for i=1:N ret[i] *= sqrtpi/Cx(i-1.0) end
-        if λ == 1
-            N > 2 && (ret[1] -= 0.1875ret[3])
-            @inbounds for i=2:N-2 ret[i] = i/(4i-2)*ret[i] - (2i+1)/(8i+8)*ret[i+2] end
-            N > 2 && (ret[N-1] *= (N-1)/(4N-6))
-            N > 1 && (ret[N] *= N/(4N-2))
-            return ret
-        else
-            return ret
-        end
+        λ == 1 && incrementαβ!(ret,λ-3one(λ)/2,λ-3one(λ)/2)
+        return ret
     else
         # Ultraspherical line
-        ret = cheb2ultra(c,λ,plan)
+        ret = cheb2ultra(c,modλ(λ),plan)
+        fromline!(ret,λ-one(λ)/2,λ-one(λ)/2)
         return ret
     end
 end
@@ -114,12 +98,12 @@ function plan_icjt(c::AbstractVector,α,β;M::Int=7)
 end
 
 function plan_cjt(c::AbstractVector,λ;M::Int=7)
-    P = ForwardChebyshevUltrasphericalPlan(c,λ,M)
+    P = ForwardChebyshevUltrasphericalPlan(c,modλ(λ),M)
     P.CUC.λ = λ
     P
 end
 function plan_icjt(c::AbstractVector,λ;M::Int=7)
-    P = BackwardChebyshevUltrasphericalPlan(c,λ,M)
+    P = BackwardChebyshevUltrasphericalPlan(c,modλ(λ),M)
     P.CUC.λ = λ
     P
 end
