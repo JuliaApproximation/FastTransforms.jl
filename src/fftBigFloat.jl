@@ -134,19 +134,34 @@ type DummyirFFTPlan{T,inplace} <: Base.DFT.Plan{T} end
 type DummyDCTPlan{T,inplace} <: Base.DFT.Plan{T} end
 type DummyiDCTPlan{T,inplace} <: Base.DFT.Plan{T} end
 
-*{T,N}(p::DummyFFTPlan{T,true}, x::StridedArray{T,N})=fft!(x)
-*{T,N}(p::DummyiFFTPlan{T,true}, x::StridedArray{T,N})=ifft!(x)
-*{T,N}(p::DummyrFFTPlan{T,true}, x::StridedArray{T,N})=rfft!(x)
-*{T,N}(p::DummyirFFTPlan{T,true}, x::StridedArray{T,N})=irfft!(x)
-*{T,N}(p::DummyDCTPlan{T,true}, x::StridedArray{T,N})=dct!(x)
-*{T,N}(p::DummyiDCTPlan{T,true}, x::StridedArray{T,N})=idct!(x)
+for (Plan,iPlan) in ((:DummyFFTPlan,:DummyiFFTPlan),
+                     (:DummyrFFTPlan,:DummyirFFTPlan),
+                     (:DummyDCTPlan,:DummyiDCTPlan))
+   @eval begin
+       Base.inv{T,inplace}(::$Plan{T,inplace})=$iPlan{T,inplace}()
+       Base.inv{T,inplace}(::$iPlan{T,inplace})=$Plan{T,inplace}()
+    end
+end
 
-*{T,N}(p::DummyFFTPlan{T,false}, x::StridedArray{T,N})=fft(x)
-*{T,N}(p::DummyiFFTPlan{T,false}, x::StridedArray{T,N})=ifft(x)
-*{T,N}(p::DummyrFFTPlan{T,false}, x::StridedArray{T,N})=rfft(x)
-*{T,N}(p::DummyirFFTPlan{T,false}, x::StridedArray{T,N})=irfft(x)
-*{T,N}(p::DummyDCTPlan{T,false}, x::StridedArray{T,N})=dct(x)
-*{T,N}(p::DummyiDCTPlan{T,false}, x::StridedArray{T,N})=idct(x)
+
+for (Plan,ff,ff!) in ((:DummyFFTPlan,:fft,:fft!),
+                      (:DummyiFFTPlan,:ifft,:ifft!),
+                      (:DummyrFFTPlan,:rfft,:rfft!),
+                      (:DummyirFFTPlan,:irfft,:irfft!),
+                      (:DummyDCTPlan,:dct,:dct!),
+                      (:DummyiDCTPlan,:idct,:idct!))
+    @eval begin
+        *{T,N}(p::$Plan{T,true}, x::StridedArray{T,N})=$ff!(x)
+        *{T,N}(p::$Plan{T,false}, x::StridedArray{T,N})=$ff(x)
+        function Base.A_mul_B!(C::StridedVector,p::$Plan,x::StridedVector)
+            C[:]=$ff(x)
+            C
+        end
+    end
+end
+
+
+
 
 Base.plan_fft!{T<:BigFloats}(x::Vector{T}) = DummyFFTPlan{Complex{BigFloat},true}()
 Base.plan_ifft!{T<:BigFloats}(x::Vector{T}) = DummyiFFTPlan{Complex{BigFloat},true}()
