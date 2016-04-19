@@ -1,0 +1,9 @@
+site_name:           FastTransforms.jl
+repo_url:            https://github.com/MikaelSlevinsky/FastTransforms.jl
+site_description:    Julia package for a new class of fast transforms based on asymptotic formulae
+site_author:         Richard Mikael Slevinsky
+theme:               readthedocs
+markdown_extensions: [tables, fenced_code]
+pages:
+- Introduction: index.md
+- API: api/FastTransforms.md

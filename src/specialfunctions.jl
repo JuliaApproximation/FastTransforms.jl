@@ -6,8 +6,10 @@ const BACKWARD = false
 const sqrtpi = 1.772453850905516027298
 const edivsqrt2pi = 1.084437551419227546612
 
-# Pochhhammer symbol (x)ₙ for the rising factorial. From ApproxFun.
 
+"""
+Pochhammer symbol (x)_n = Γ(x+n)/Γ(x) for the rising factorial.
+"""
 function pochhammer(x::Number,n::Integer)
     ret = one(x)
     if n≥0
@@ -350,13 +352,13 @@ function init_c₁c₂!(c₁::Vector,c₂::Vector,u::Vector,v::Vector,c::Vector,
     end
 end
 
-#
-# Modified Chebyshev moments of the first and second kind with respect to the Jacobi weight
-#
-# ∫-₁¹ T_n(x) (1-x)^α(1+x)^β dx,  and  ∫-₁¹ U_n(x) (1-x)^α(1+x)^β dx.
-#
 
+"""
+Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
+    ∫₋₁⁺¹ T_n(x) (1-x)^α(1+x)^β dx.
+
+"""
 function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ = zeros(T,N)
     N > 0 && (μ[1] = 2.^(α+β+1)*beta(α+1,β+1))
@@ -369,6 +371,12 @@ function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
+"""
+Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
+
+    ∫₋₁⁺¹ U_n(x) (1-x)^α(1+x)^β dx.
+
+"""
 function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ = zeros(T,N)
     N > 0 && (μ[1] = 2.^(α+β+1)*beta(α+1,β+1))

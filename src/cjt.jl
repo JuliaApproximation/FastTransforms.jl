@@ -82,20 +82,6 @@ function icjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
     end
 end
 
-jjt(c,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
-
-function plan_cjt(c::AbstractVector,α,β;M::Int=7)
-    α == β && return plan_cjt(c,α+one(α)/2;M=M)
-    P = ForwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
-    P.CJC.α,P.CJC.β = α,β
-    P
-end
-function plan_icjt(c::AbstractVector,α,β;M::Int=7)
-    α == β && return plan_icjt(c,α+one(α)/2;M=M)
-    P = BackwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
-    P.CJC.α,P.CJC.β = α,β
-    P
-end
 
 function plan_cjt(c::AbstractVector,λ;M::Int=7)
     P = ForwardChebyshevUltrasphericalPlan(c,modλ(λ),M)
@@ -110,7 +96,6 @@ end
 
 for (op,plan_op,D) in ((:cjt,:plan_cjt,:FORWARD),(:icjt,:plan_icjt,:BACKWARD))
     @eval begin
-        $op(c,α,β) = $plan_op(c,α,β)*c
         $op(c,λ) = $plan_op(c,λ)*c
         *{T<:AbstractFloat}(p::FastTransformPlan{$D,T},c::AbstractVector{T}) = $op(c,p)
         $plan_op{T<:AbstractFloat}(c::AbstractVector{Complex{T}},α,β;M::Int=7) = $plan_op(real(c),α,β;M=M)
@@ -132,39 +117,32 @@ function *(p::FastTransformPlan,c::AbstractMatrix)
     ret
 end
 
-"""
-    cjt(c,α,β)
 
+"""
 Computes the Chebyshev expansion coefficients
 given the Jacobi expansion coefficients ``c`` with parameters ``α`` and ``β``.
 
-See also [`icjt`](:func:`icjt`) and [`jjt`](:func:`jjt`).
+See also [`icjt`](#method__icjt.1) and [`jjt`](#method__jjt.1).
 """
-cjt
+cjt(c,α,β) = plan_cjt(c,α,β)*c
 
 """
-    icjt(c,α,β)
-
 Computes the Jacobi expansion coefficients with parameters ``α`` and ``β``
 given the Chebyshev expansion coefficients ``c``.
 
-See also [`cjt`](:func:`cjt`) and [`jjt`](:func:`jjt`).
+See also [`cjt`](#method__cjt.1) and [`jjt`](#method__jjt.1).
 """
-icjt
+icjt(c,α,β) = plan_icjt(c,α,β)*c
 
 """
-    jjt(c,α,β,γ,δ)
-
 Computes the Jacobi expansion coefficients with parameters ``γ`` and ``δ``
 given the Jacobi expansion coefficients ``c`` with parameters ``α`` and ``β``.
 
-See also [`cjt`](:func:`cjt`) and [`icjt`](:func:`icjt`).
+See also [`cjt`](#method__cjt.1) and [`icjt`](#method__icjt.1).
 """
-jjt
+jjt(c,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
 
 """
-    plan_cjt(c,α,β;M=7)
-
 Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary
 arrays, normalization constants, and recurrence coefficients for a forward Chebyshev—Jacobi transform.
 
@@ -176,11 +154,14 @@ Optionally:
 
 ``M`` determines the number of terms in Hahn's asymptotic expansion.
 """
-plan_cjt
+function plan_cjt(c::AbstractVector,α,β;M::Int=7)
+    α == β && return plan_cjt(c,α+one(α)/2;M=M)
+    P = ForwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
+    P.CJC.α,P.CJC.β = α,β
+    P
+end
 
 """
-    plan_icjt(c,α,β;M=7)
-
 Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary
 arrays, normalization constants, and recurrence coefficients for an inverse Chebyshev—Jacobi transform.
 
@@ -192,4 +173,9 @@ Optionally:
 
 ``M`` determines the number of terms in Hahn's asymptotic expansion.
 """
-plan_icjt
+function plan_icjt(c::AbstractVector,α,β;M::Int=7)
+    α == β && return plan_icjt(c,α+one(α)/2;M=M)
+    P = BackwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
+    P.CJC.α,P.CJC.β = α,β
+    P
+end
