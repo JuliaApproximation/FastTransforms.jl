@@ -1,6 +1,6 @@
 # FastTransforms.jl
 
-[![Build Status](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl)
+[![Build Status](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl) [![Documentation Status](https://readthedocs.org/projects/fasttransformsjl/badge/?version=latest)](http://fasttransformsjl.readthedocs.org/en/latest/?badge=latest)
 
 The aim of this package is to provide a new class of fast transforms
 based on the use of asymptotic formulae to relate the transforms to a small
