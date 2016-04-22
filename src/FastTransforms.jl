@@ -1,7 +1,7 @@
 __precompile__()
 module FastTransforms
 
-using Base
+using Base, ToeplitzMatrices
 
 import Base: *
 
