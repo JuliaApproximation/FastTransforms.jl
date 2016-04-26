@@ -13,7 +13,7 @@ See also [`icjt`](#method__icjt.1) and [`jjt`](#method__jjt.1).
 
 
 *source:*
-[FastTransforms/src/cjt.jl:127](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/cjt.jl#L127)
+[FastTransforms/src/cjt.jl:127](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/cjt.jl#L127)
 
 ---
 
@@ -23,7 +23,7 @@ Calculates the Gaunt coefficients in 64-bit floating-point arithmetic.
 
 
 *source:*
-[FastTransforms/src/gaunt.jl:24](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/gaunt.jl#L24)
+[FastTransforms/src/gaunt.jl:24](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/gaunt.jl#L24)
 
 ---
 
@@ -43,7 +43,7 @@ This is a Julia implementation of the stable recurrence described in:
 
 
 *source:*
-[FastTransforms/src/gaunt.jl:14](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/gaunt.jl#L14)
+[FastTransforms/src/gaunt.jl:14](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/gaunt.jl#L14)
 
 ---
 
@@ -56,7 +56,7 @@ See also [`cjt`](#method__cjt.1) and [`jjt`](#method__jjt.1).
 
 
 *source:*
-[FastTransforms/src/cjt.jl:135](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/cjt.jl#L135)
+[FastTransforms/src/cjt.jl:135](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/cjt.jl#L135)
 
 ---
 
@@ -69,7 +69,7 @@ See also [`cjt`](#method__cjt.1) and [`icjt`](#method__icjt.1).
 
 
 *source:*
-[FastTransforms/src/cjt.jl:143](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/cjt.jl#L143)
+[FastTransforms/src/cjt.jl:143](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/cjt.jl#L143)
 
 ---
 
@@ -88,7 +88,7 @@ Optionally:
 
 
 *source:*
-[FastTransforms/src/cjt.jl:157](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/cjt.jl#L157)
+[FastTransforms/src/cjt.jl:157](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/cjt.jl#L157)
 
 ---
 
@@ -107,7 +107,7 @@ Optionally:
 
 
 *source:*
-[FastTransforms/src/cjt.jl:176](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/cjt.jl#L176)
+[FastTransforms/src/cjt.jl:176](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/cjt.jl#L176)
 
 ## Internal
 
@@ -122,7 +122,7 @@ Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:362](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/specialfunctions.jl#L362)
+[FastTransforms/src/specialfunctions.jl:366](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/specialfunctions.jl#L366)
 
 ---
 
@@ -135,7 +135,7 @@ Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:380](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/specialfunctions.jl#L380)
+[FastTransforms/src/specialfunctions.jl:384](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/specialfunctions.jl#L384)
 
 ---
 
@@ -145,7 +145,7 @@ Compute weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.
 
 
 *source:*
-[FastTransforms/src/clenshawcurtis.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/clenshawcurtis.jl#L12)
+[FastTransforms/src/clenshawcurtis.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/clenshawcurtis.jl#L12)
 
 ---
 
@@ -155,7 +155,7 @@ Compute nodes and weights of the Clenshaw—Curtis quadrature rule with a Jacobi
 
 
 *source:*
-[FastTransforms/src/clenshawcurtis.jl:6](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/clenshawcurtis.jl#L6)
+[FastTransforms/src/clenshawcurtis.jl:6](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/clenshawcurtis.jl#L6)
 
 ---
 
@@ -165,7 +165,7 @@ Compute nodes and weights of Fejer's first quadrature rule with a Jacobi weight.
 
 
 *source:*
-[FastTransforms/src/fejer.jl:7](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/fejer.jl#L7)
+[FastTransforms/src/fejer.jl:7](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/fejer.jl#L7)
 
 ---
 
@@ -175,7 +175,7 @@ Compute nodes and weights of Fejer's second quadrature rule with a Jacobi weight
 
 
 *source:*
-[FastTransforms/src/fejer.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/fejer.jl#L12)
+[FastTransforms/src/fejer.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/fejer.jl#L12)
 
 ---
 
@@ -185,7 +185,7 @@ Compute weights of Fejer's first quadrature rule with a Jacobi weight.
 
 
 *source:*
-[FastTransforms/src/fejer.jl:21](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/fejer.jl#L21)
+[FastTransforms/src/fejer.jl:21](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/fejer.jl#L21)
 
 ---
 
@@ -195,7 +195,7 @@ Compute weights of Fejer's second quadrature rule with a Jacobi weight.
 
 
 *source:*
-[FastTransforms/src/fejer.jl:26](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/fejer.jl#L26)
+[FastTransforms/src/fejer.jl:26](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/fejer.jl#L26)
 
 ---
 
@@ -205,5 +205,5 @@ Pochhammer symbol (x)_n = Γ(x+n)/Γ(x) for the rising factorial.
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:13](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/b1dce339ed19119766d44b5ec44d954932da58d3/src/specialfunctions.jl#L13)
+[FastTransforms/src/specialfunctions.jl:17](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/6efacfac1164ed74c673ec2325a5bbba3197aa71/src/specialfunctions.jl#L17)
 

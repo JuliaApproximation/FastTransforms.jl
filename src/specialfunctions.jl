@@ -6,6 +6,10 @@ const BACKWARD = false
 const sqrtpi = 1.772453850905516027298
 const edivsqrt2pi = 1.084437551419227546612
 
+half(x::Number) = oftype(x,0.5)
+half{T<:Number}(::Type{T}) = convert(T,0.5)
+two(x::Number) = oftype(x,2)
+two{T<:Number}(::Type{T}) = convert(T,2)
 
 """
 Pochhammer symbol (x)_n = Γ(x+n)/Γ(x) for the rising factorial.
@@ -120,7 +124,7 @@ Anαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Anαβ(n[i,j]
 #
 # I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss--Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83--C101, 2012.
 #
-Cx(x::Number) = exp(lgamma(x+1/2)-lgamma(x+1))
+Cx(x::Number) = exp(lgamma(x+half(x))-lgamma(x+one(x)))
 function Cx(x::Float64)
     if x > 9.84475
         xp = x+0.25
@@ -132,12 +136,12 @@ end
 @vectorize_1arg Number Cx
 
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Cx(n+λ)
-Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(convert(typeof(λ),π))*Cx(n+λ)
+Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Cx(n+λ)
 function Cnλ{T<:Integer}(n::UnitRange{T},λ::Number)
     ret = Vector{typeof(λ)}(length(n))
     ret[1] = Cnλ(first(n),λ)
     for i=2:length(n)
-        ret[i] = (n[i]+λ-1/2)/(n[i]+λ)*ret[i-1]
+        ret[i] = (n[i]+λ-half(λ))/(n[i]+λ)*ret[i-1]
     end
     ret
 end
@@ -199,7 +203,7 @@ end
 function absf(α::Number,β::Number,m::Int,θ::Number)
     ret = zero(θ)
     for l=0:m
-        ret += pochhammer(1/2+α,l)*pochhammer(1/2-α,l)*pochhammer(1/2+β,m-l)*pochhammer(1/2-β,m-l)/factorial(l)/factorial(m-l)/sinpi(θ/2)^(l+α+1/2)/cospi(θ/2)^(m-l+β+1/2)
+        ret += pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)/sinpi(θ/2)^(l+α+half(α))/cospi(θ/2)^(m-l+β+half(β))
     end
     ret
 end
@@ -213,10 +217,10 @@ function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
     ret = zero(θ)
     cfs = zeros(T,m+1)
     for l=0:m
-        @inbounds cfs[l+1] = pochhammer(1/2+α,l)*pochhammer(1/2-α,l)*pochhammer(1/2+β,m-l)*pochhammer(1/2-β,m-l)/factorial(l)/factorial(m-l)
+        @inbounds cfs[l+1] = pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)
     end
     @inbounds for i=1:length(θ),l=0:m
-        ret[i] += cfs[l+1]/sinpi(θ[i]/2)^(l+α+1/2)/cospi(θ[i]/2)^(m-l+β+1/2)
+        ret[i] += cfs[l+1]/sinpi(θ[i]/2)^(l+α+half(α))/cospi(θ[i]/2)^(m-l+β+half(β))
     end
     ret
 end
@@ -245,12 +249,12 @@ end
 function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int64})
     @inbounds for i in ir
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
-        ϑ = (α+1/2)/2-(α+β+m+1)*θ[i]/2
+        ϑ = (α+half(α))/2-(α+β+m+1)*θ[i]/2
         um[i] = cfs[m+1,1]*cospi(ϑ)*temp
         vm[i] = cfs[m+1,1]*sinpi(ϑ)*temp
         @inbounds for l=1:m
             temp *= tempcos[i]/tempsin[i]
-            ϑ = (α+l+1/2)/2-(α+β+m+1)*θ[i]/2
+            ϑ = (α+l+half(α))/2-(α+β+m+1)*θ[i]/2
             um[i] += cfs[m+1,l+1]*cospi(ϑ)*temp
             vm[i] += cfs[m+1,l+1]*sinpi(ϑ)*temp
         end
@@ -260,7 +264,7 @@ end
 function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsin::Vector{T},tempsinλ::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int64})
     @inbounds for i in ir
         temp = inv(tempsin[i]^m*tempsinλ[i])
-        ϑ = (m+λ)*(1/2-θ[i])
+        ϑ = (m+λ)*(half(T)-θ[i])
         um[i] = cospi(ϑ)*temp
         vm[i] = sinpi(ϑ)*temp
     end
@@ -325,7 +329,7 @@ end
 function init_cfs{T<:AbstractFloat}(α::T,β::T,M::Int)
     cfs = zeros(T,M+1,M+1)
     @inbounds for m=0:M,l=0:m
-        cfs[m+1,l+1] = pochhammer(1/2+α,l)*pochhammer(1/2-α,l)*pochhammer(1/2+β,m-l)*pochhammer(1/2-β,m-l)/factorial(l)/factorial(m-l)
+        cfs[m+1,l+1] = pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)
     end
     cfs
 end
