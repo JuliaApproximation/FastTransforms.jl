@@ -41,17 +41,26 @@ end
 
 
 # Plan a multiply by DL*(T.*H)*DR
-immutable ToepltizHankelPlan{T}
-    T::TriangularToeplitz{T}
-    C::Matrix{T}   # A cholesky factorization of H: H=CC'
-    DL::Vector{T}
-    DR::Vector{T}
+immutable ToeplitzHankelPlan{TT}
+    T::TriangularToeplitz{TT}
+    C::Matrix{TT}   # A cholesky factorization of H: H=CC'
+    DL::Vector{TT}
+    DR::Vector{TT}
+
+    ToeplitzHankelPlan(T,C,DL,DR)=new(T,C,DL,DR)
 end
 
-ToepltizHankelPlan(T::TriangularToeplitz,C::Matrix)=ToepltizHankelPlan(T,C,ones(size(T,1)),ones(size(T,2)))
-ToepltizHankelPlan(T::TriangularToeplitz,H::Hankel,D...)=ToepltizHankelPlan(T,partialchol(H),D...)
 
-*(P::ToepltizHankelPlan,v::Vector)=P.DL.*toeplitzcholmult(P.T,P.C,P.DR.*v)
+function ToeplitzHankelPlan(T::TriangularToeplitz,C::Matrix,DL::AbstractVector,DR::AbstractVector)
+    TT=promote_type(eltype(T),eltype(C),eltype(DL),eltype(DR))
+    ToeplitzHankelPlan{TT}(T,C,collect(TT,DL),collect(TT,DR))
+end
+ToeplitzHankelPlan(T::TriangularToeplitz,C::Matrix) =
+    ToeplitzHankelPlan(T,C,ones(size(T,1)),ones(size(T,2)))
+ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,D...) =
+    ToeplitzHankelPlan(T,partialchol(H),D...)
+
+*(P::ToeplitzHankelPlan,v::Vector)=P.DL.*toeplitzcholmult(P.T,P.C,P.DR.*v)
 
 
 
@@ -87,16 +96,16 @@ end
 Λ(z::AbstractArray)=Λ(eltype(z),z)
 
 
-function leg2chebuTH(n)
-    λ=Λ(0:0.5:n-1)
-    t=zeros(n)
+function leg2chebuTH{TT}(::Type{TT},n)
+    λ=Λ(TT,0:0.5:n-1)
+    t=zeros(TT,n)
     t[1:2:end]=λ[1:2:n]./(((1:2:n)-2))
     T=TriangularToeplitz(-2/π*t,:U)
     H=Hankel(λ[1:n]./((1:n)+1),λ[n:end]./((n:2n-1)+1))
     T,H
 end
 
-leg2chebuplan(n)=ToepltizHankelPlan(leg2chebuTH(n)...,1:n,ones(n))
+th_leg2chebuplan{TT}(::Type{TT},n)=ToeplitzHankelPlan(leg2chebuTH(TT,n)...,1:n,ones(TT,n))
 
 function leg2chebTH{TT}(::Type{TT},n)
     λ=Λ(TT,0:0.5:n-1)
@@ -109,18 +118,19 @@ function leg2chebTH{TT}(::Type{TT},n)
     T,H,DL
 end
 
-leg2chebplan{TT}(::Type{TT},n)=ToepltizHankelPlan(leg2chebTH(TT,n)...,ones(TT,n))
+th_leg2chebplan{TT}(::Type{TT},n)=ToeplitzHankelPlan(leg2chebTH(TT,n)...,ones(TT,n))
 
-function leg2chebTHslow(n)
-    λ=map(Λ,0:0.5:n-1)
-    t=zeros(n)
-    t[1:2:end]=λ[1:2:n]
-    T=TriangularToeplitz(2/π*t,:U)
-    H=Hankel(λ[1:n],λ[n:end])
-    DL=ones(n)
-    DL[1]*=0.5
-    T,H,DL
-end
+# function leg2chebTHslow(n)
+#     λ=map(Λ,0:0.5:n-1)
+#     t=zeros(n)
+#     t[1:2:end]=λ[1:2:n]
+#     T=TriangularToeplitz(2/π*t,:U)
+#     H=Hankel(λ[1:n],λ[n:end])
+#     DL=ones(n)
+#     DL[1]*=0.5
+#     T,H,DL
+# end
 
 
-leg2cheb(v)=leg2chebplan(eltype(v),length(v))*v
+th_leg2cheb(v)=th_leg2chebplan(eltype(v),length(v))*v
+th_leg2chebu(v)=th_leg2chebuplan(eltype(v),length(v))*v

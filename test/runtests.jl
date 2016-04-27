@@ -175,3 +175,8 @@ include("gaunttest.jl")
 println("Testing BigFloat support of FFT and DCT methods")
 
 include("fftBigFloattest.jl")
+
+r=rand(1000)
+@test_approx_eq leg2cheb(r) cjt(r,0.,0.)
+
+@test_approx_eq leg2chebu([1.0,2,3,4,5])  [0.546875,0.5,0.5390625,1.25,1.3671875]

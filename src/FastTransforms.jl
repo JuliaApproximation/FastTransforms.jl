@@ -6,6 +6,7 @@ using Base, ToeplitzMatrices
 import Base: *
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
+export leg2cheb,leg2chebu
 export gaunt
 
 # Other module methods and constants:
@@ -37,5 +38,14 @@ include("cheb2ultra.jl")
 include("cjt.jl")
 
 include("gaunt.jl")
+
+
+include("toeplitzhankel.jl")
+
+leg2cheb(x...)=th_leg2cheb(x...)
+leg2chebu(x...)=th_leg2chebu(x...)
+
+
+
 
 end # module
