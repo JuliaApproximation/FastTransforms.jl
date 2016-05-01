@@ -1,40 +1,41 @@
 function partialchol(H::Hankel)
     # Assumes positive definite
-    σ=Array(eltype(H),0)
+    σ=eltype(H)[]
     n=size(H,1)
-    C=Array(eltype(H),n,n)
+    C=Vector{eltype(H)}[]
     v=[H[:,1];vec(H[end,2:end])]
     d=diag(H)
-
     @assert length(v) ≥ 2n-1
-
-    tol=1E-14
+    tol=eps(eltype(H))*log(n)
     for k=1:n
         mx,idx=findmax(d)
-        if mx ≤ tol
-            break
-        end
-        push!(σ,1/mx)
-        @simd for p=1:n
-            @inbounds C[p,k]= v[p+idx-1]             # H[p,idx]
-        end
-        for j=1:k-1,p=1:n
-            @inbounds C[p,k]-=C[p,j]*C[idx,j]*σ[j]
+        if mx ≤ tol break end
+        push!(σ,inv(mx))
+        push!(C,v[idx:n+idx-1])
+        for j=1:k-1
+            nCjidxσj = -C[j][idx]*σ[j]
+            Base.axpy!(nCjidxσj, C[j], C[k])
         end
         @simd for p=1:n
-            @inbounds d[p]-=C[p,k]^2/mx
+            @inbounds d[p]-=C[k][p]^2/mx
         end
     end
-    for k=1:length(σ),p=1:n
-        @inbounds C[p,k]*=sqrt(σ[k])
-    end
-    C[:,1:length(σ)]
+    for k=1:length(σ) scale!(C[k],sqrt(σ[k])) end
+    C
 end
 
 function toeplitzcholmult(T,C,v)
-    ret=C[:,1].*(T*(C[:,1].*v))
-    for j=2:size(C,2)
-        ret+=C[:,j].*(T*(C[:,j].*v))
+    n,K = length(v),length(C)
+    ret,temp1,temp2 = zero(v),zero(v),zero(v)
+    un,ze = one(eltype(v)),zero(eltype(v))
+    broadcast!(*, temp1, C[K], v)
+    A_mul_B!(un, T, temp1, ze, temp2)
+    broadcast!(*, ret, C[K], temp2)
+    for k=K-1:-1:1
+        broadcast!(*, temp1, C[k], v)
+        A_mul_B!(un, T, temp1, ze, temp2)
+        broadcast!(*, temp1, C[k], temp2)
+        broadcast!(+, ret, ret, temp1)
     end
     ret
 end
@@ -43,7 +44,7 @@ end
 # Plan a multiply by DL*(T.*H)*DR
 immutable ToeplitzHankelPlan{TT}
     T::TriangularToeplitz{TT}
-    C::Matrix{TT}   # A cholesky factorization of H: H=CC'
+    C::Vector{Vector{TT}}   # A cholesky factorization of H: H=CC'
     DL::Vector{TT}
     DR::Vector{TT}
 
@@ -51,8 +52,8 @@ immutable ToeplitzHankelPlan{TT}
 end
 
 
-function ToeplitzHankelPlan(T::TriangularToeplitz,C::Matrix,DL::AbstractVector,DR::AbstractVector)
-    TT=promote_type(eltype(T),eltype(C),eltype(DL),eltype(DR))
+function ToeplitzHankelPlan(T::TriangularToeplitz,C::Vector,DL::AbstractVector,DR::AbstractVector)
+    TT=promote_type(eltype(T),eltype(C[1]),eltype(DL),eltype(DR))
     ToeplitzHankelPlan{TT}(T,C,collect(TT,DL),collect(TT,DR))
 end
 ToeplitzHankelPlan(T::TriangularToeplitz,C::Matrix) =
@@ -66,7 +67,9 @@ ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,D...) =
 
 # Legendre transforms
 
+Λ = Cx
 
+#=
 Λ{T}(::Type{T},z)=z<5?gamma(z+one(T)/2)/gamma(z+one(T)):exp(lgamma(z+one(T)/2)-lgamma(z+one(T)))
 
 # use recurrence to construct Λ fast on a range of values
@@ -94,10 +97,10 @@ end
 
 Λ(z::Number)=Λ(typeof(z),z)
 Λ(z::AbstractArray)=Λ(eltype(z),z)
-
+=#
 
 function leg2chebuTH{TT}(::Type{TT},n)
-    λ=Λ(TT,0:0.5:n-1)
+    λ=Λ(0:half(TT):n-1)
     t=zeros(TT,n)
     t[1:2:end]=λ[1:2:n]./(((1:2:n)-2))
     T=TriangularToeplitz(-2/π*t,:U)
@@ -108,7 +111,7 @@ end
 th_leg2chebuplan{TT}(::Type{TT},n)=ToeplitzHankelPlan(leg2chebuTH(TT,n)...,1:n,ones(TT,n))
 
 function leg2chebTH{TT}(::Type{TT},n)
-    λ=Λ(TT,0:0.5:n-1)
+    λ=Λ(0:half(TT):n-1)
     t=zeros(TT,n)
     t[1:2:end]=λ[1:2:n]
     T=TriangularToeplitz(2/π*t,:U)

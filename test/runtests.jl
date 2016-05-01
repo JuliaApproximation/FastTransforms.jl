@@ -176,7 +176,11 @@ println("Testing BigFloat support of FFT and DCT methods")
 
 include("fftBigFloattest.jl")
 
-r=rand(1000)
-@test_approx_eq leg2cheb(r) cjt(r,0.,0.)
+println("Testing equivalence of CXN and ASY methods")
+
+for k in round(Int,logspace(1,4,20))
+    r = randn(k)./sqrt(1:k) # Proven O(1) error for ASY method.
+    @test_approx_eq leg2cheb(r) cjt(r,0.,0.)
+end
 
 @test_approx_eq leg2chebu([1.0,2,3,4,5])  [0.546875,0.5,0.5390625,1.25,1.3671875]
