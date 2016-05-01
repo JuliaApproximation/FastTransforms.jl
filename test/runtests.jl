@@ -178,6 +178,10 @@ include("fftBigFloattest.jl")
 
 println("Testing equivalence of CXN and ASY methods")
 
+r = ones(10)./sqrt(1:10)
+println("This is cjt: ",cjt(r,0.,0.))
+println("This is leg2cheb: ",leg2cheb(r))
+
 for k in round(Int,logspace(1,4,20))
     r = randn(k)./sqrt(1:k) # Proven O(1) error for ASY method.
     @test_approx_eq leg2cheb(r) cjt(r,0.,0.)
