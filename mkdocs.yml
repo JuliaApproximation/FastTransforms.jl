@@ -7,3 +7,4 @@ markdown_extensions: [tables, fenced_code]
 pages:
 - Introduction: index.md
 - API: api/FastTransforms.md
+- API Index: api/index.md

@@ -8,7 +8,7 @@ n = 0:1000_000
 @time FastTransforms.Cnλ(n,λ);
 
 x = linspace(0,20,81);
-@test norm(FastTransforms.Cx(x)./FastTransforms.Cx(big(x))-1,Inf) < 2eps()
+@test norm(FastTransforms.Λ(x)./FastTransforms.Λ(big(x))-1,Inf) < 2eps()
 
 n = 0:1000
 α = 0.125
@@ -183,7 +183,7 @@ println("This is cjt: ",cjt(r,0.,0.))
 println("This is leg2cheb: ",leg2cheb(r))
 
 for k in round(Int,logspace(1,4,20))
-    r = randn(k)./sqrt(1:k) # Proven O(1) error for ASY method.
+    r = randn(k)./√(1:k) # Proven 𝒪(√(log N)) error for ASY method.
     @test_approx_eq leg2cheb(r) cjt(r,0.,0.)
 end
 

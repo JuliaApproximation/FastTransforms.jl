@@ -67,8 +67,6 @@ ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,D...) =
 
 # Legendre transforms
 
-Λ = Cx
-
 #=
 Λ{T}(::Type{T},z)=z<5?gamma(z+one(T)/2)/gamma(z+one(T)):exp(lgamma(z+one(T)/2)-lgamma(z+one(T)))
 

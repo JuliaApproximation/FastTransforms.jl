@@ -6,10 +6,25 @@ const BACKWARD = false
 const sqrtpi = 1.772453850905516027298
 const edivsqrt2pi = 1.084437551419227546612
 
+"""
+Compute a typed 0.5.
+"""
 half(x::Number) = oftype(x,0.5)
+half(x::Integer) = half(float(x))
 half{T<:Number}(::Type{T}) = convert(T,0.5)
+half{T<:Integer}(::Type{T}) = half(AbstractFloat)
+
+"""
+Compute a typed 2.
+"""
 two(x::Number) = oftype(x,2)
 two{T<:Number}(::Type{T}) = convert(T,2)
+
+"""
+The Kronecker δ function.
+"""
+δ(k::Integer,j::Integer) = k == j ? 1 : 0
+@vectorize_2arg Integer δ
 
 """
 Pochhammer symbol (x)_n = Γ(x+n)/Γ(x) for the rising factorial.
@@ -42,8 +57,9 @@ function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
     ret
 end
 
-# Stirling series for Γ(z)
-
+"""
+Stirling series for Γ(z).
+"""
 stirlingseries(z) = gamma(z)*sqrt((z/π)/2)*exp(z)/z^z
 
 function stirlingseries(z::Float64)
@@ -119,24 +135,27 @@ Anαβ{T<:Integer}(n::AbstractVector{T},α::Number,β::Number) = [ Anαβ(n[i],�
 Anαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Anαβ(n[i,j],α,β) for i=1:size(n,1), j=1:size(n,2) ]
 
 
-#
-# This uses the asymptotic series for τ in Appendix B of
-#
-# I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss--Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83--C101, 2012.
-#
-Cx(x::Number) = exp(lgamma(x+half(x))-lgamma(x+one(x)))
-function Cx(x::Float64)
+"""
+The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.
+"""
+Λ(x::Number) = exp(lgamma(x+half(x))-lgamma(x+one(x)))
+"""
+For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for τ in Appendix B of
+
+    I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83–C101, 2012.
+"""
+function Λ(x::Float64)
     if x > 9.84475
         xp = x+0.25
         @horner(inv(xp^2),1.0,-1.5625e-02,2.5634765625e-03,-1.2798309326171875e-03,1.343511044979095458984375e-03,-2.432896639220416545867919921875e-03,6.7542375336415716446936130523681640625e-03)/sqrt(xp)
     else
-        (x+1.0)*Cx(x+1.0)/(x+0.5)
+        (x+1.0)*Λ(x+1.0)/(x+0.5)
     end
 end
-@vectorize_1arg Number Cx
+@vectorize_1arg Number Λ
 
-Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Cx(n+λ)
-Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Cx(n+λ)
+Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
+Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)
 function Cnλ{T<:Integer}(n::UnitRange{T},λ::Number)
     ret = Vector{typeof(λ)}(length(n))
     ret[1] = Cnλ(first(n),λ)
@@ -393,15 +412,9 @@ function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-# Compute the bi-diagonal increment/decrement operators to incrementally change Jacobi bases in-place.
-## TODO: check incrementαβ! and decrementαβ!.
-# incrementα! : domain space is Pₙ^(α,β), and range space Pₙ^(α+1,β)
-# incrementβ! : domain space is Pₙ^(α,β), and range space Pₙ^(α,β+1)
-# incrementαβ! : domain space is Pₙ^(α,α), and range space Pₙ^(α+1,α+1)
-# decrementα! : domain space is Pₙ^(α,β), and range space Pₙ^(α-1,β)
-# decrementβ! : domain space is Pₙ^(α,β), and range space Pₙ^(α,β-1)
-# decrementαβ! : domain space is Pₙ^(α,α), and range space Pₙ^(α-1,α-1)
-
+"""
+Compute Jacobi expansion coefficients in Pₙ^(α+1,β) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+"""
 function incrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
     N > 1 && (c[1] -= (β+1)/(αβ+3)*c[2])
@@ -410,6 +423,9 @@ function incrementα!(c::AbstractVector,α,β)
     c
 end
 
+"""
+Compute Jacobi expansion coefficients in Pₙ^(α,β+1) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+"""
 function incrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
     N > 1 && (c[1] += (α+1)/(αβ+3)*c[2])
@@ -418,6 +434,9 @@ function incrementβ!(c::AbstractVector,α,β)
     c
 end
 
+"""
+Compute Jacobi expansion coefficients in Pₙ^(α+1,α+1) given Jacobi expansion coefficients in Pₙ^(α,α) in-place.
+"""
 function incrementαβ!(c::AbstractVector,α,β)
     @assert α == β
     N = length(c)
@@ -428,6 +447,9 @@ function incrementαβ!(c::AbstractVector,α,β)
     c
 end
 
+"""
+Compute Jacobi expansion coefficients in Pₙ^(α-1,β) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+"""
 function decrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
     N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N-1))
@@ -436,6 +458,9 @@ function decrementα!(c::AbstractVector,α,β)
     c
 end
 
+"""
+Compute Jacobi expansion coefficients in Pₙ^(α,β-1) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+"""
 function decrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
     N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N-1))
@@ -444,6 +469,9 @@ function decrementβ!(c::AbstractVector,α,β)
     c
 end
 
+"""
+Compute Jacobi expansion coefficients in Pₙ^(α-1,α-1) given Jacobi expansion coefficients in Pₙ^(α,α) in-place.
+"""
 function decrementαβ!(c::AbstractVector,α,β)
     @assert α == β
     N = length(c)

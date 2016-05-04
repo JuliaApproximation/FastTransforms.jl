@@ -24,7 +24,7 @@ cd(dirname(@__FILE__)) do
     for mod in modules
         update!(index, save(joinpath(api_directory, "$(mod).md"), mod))
     end
-    #save(joinpath(api_directory, "index.md"), index; md_subheader = :category)
+    save(joinpath(api_directory, "index.md"), index; md_subheader = :category)
 
     # Add a reminder not to edit the generated files.
     open(joinpath(api_directory, "README.md"), "w") do f
