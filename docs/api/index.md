@@ -69,3 +69,9 @@
 
 [δ(k::Integer,  j::Integer)](FastTransforms.md#method__948.1)  The Kronecker δ function.
 
+---
+
+## Types [Internal]
+
+[FastTransforms.ToeplitzHankelPlan{S}](FastTransforms.md#type__toeplitzhankelplan.1)  Store a diagonally-scaled Toeplitz∘Hankel matrix:
+

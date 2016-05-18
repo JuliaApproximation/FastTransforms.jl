@@ -184,10 +184,6 @@ include("fftBigFloattest.jl")
 
 println("Testing equivalence of CXN and ASY methods")
 
-r = ones(10)./sqrt(1:10)
-println("This is cjt: ",cjt(r,0.,0.))
-println("This is leg2cheb: ",leg2cheb(r))
-
 for k in round(Int,logspace(1,4,20))
     r = randn(k)./√(1:k) # Proven 𝒪(√(log N)) error for ASY method.
     @test_approx_eq leg2cheb(r) cjt(r,0.,0.)
@@ -195,5 +191,11 @@ end
 
 @test_approx_eq leg2chebu([1.0,2,3,4,5])  [0.546875,0.5,0.5390625,1.25,1.3671875]
 
-c = randn(1000);
+c = randn(1000)./√(1:1000);
+
+@test_approx_eq leg2cheb(cheb2leg(c)) c
+@test_approx_eq cheb2leg(leg2cheb(c)) c
+
 @test norm(jac2jac(c,0.,√2/2,-1/4,√2/2)-jjt(c,0.,√2/2,-1/4,√2/2),Inf) < 10length(c)*eps()
+
+@test norm(ultra2ultra(ultra2ultra(c,.5,.75),.75,.5)-c,Inf) < 10length(c)*eps()

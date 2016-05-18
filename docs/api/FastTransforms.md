@@ -13,7 +13,7 @@ See also [`icjt`](#method__icjt.1) and [`jjt`](#method__jjt.1).
 
 
 *source:*
-[FastTransforms/src/cjt.jl:127](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/cjt.jl#L127)
+[FastTransforms/src/cjt.jl:127](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/cjt.jl#L127)
 
 ---
 
@@ -23,7 +23,7 @@ Calculates the Gaunt coefficients in 64-bit floating-point arithmetic.
 
 
 *source:*
-[FastTransforms/src/gaunt.jl:24](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/gaunt.jl#L24)
+[FastTransforms/src/gaunt.jl:24](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/gaunt.jl#L24)
 
 ---
 
@@ -43,7 +43,7 @@ This is a Julia implementation of the stable recurrence described in:
 
 
 *source:*
-[FastTransforms/src/gaunt.jl:14](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/gaunt.jl#L14)
+[FastTransforms/src/gaunt.jl:14](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/gaunt.jl#L14)
 
 ---
 
@@ -56,7 +56,7 @@ See also [`cjt`](#method__cjt.1) and [`jjt`](#method__jjt.1).
 
 
 *source:*
-[FastTransforms/src/cjt.jl:135](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/cjt.jl#L135)
+[FastTransforms/src/cjt.jl:135](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/cjt.jl#L135)
 
 ---
 
@@ -69,7 +69,7 @@ See also [`cjt`](#method__cjt.1) and [`icjt`](#method__icjt.1).
 
 
 *source:*
-[FastTransforms/src/cjt.jl:143](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/cjt.jl#L143)
+[FastTransforms/src/cjt.jl:143](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/cjt.jl#L143)
 
 ---
 
@@ -88,7 +88,7 @@ Optionally:
 
 
 *source:*
-[FastTransforms/src/cjt.jl:157](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/cjt.jl#L157)
+[FastTransforms/src/cjt.jl:157](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/cjt.jl#L157)
 
 ---
 
@@ -107,7 +107,7 @@ Optionally:
 
 
 *source:*
-[FastTransforms/src/cjt.jl:176](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/cjt.jl#L176)
+[FastTransforms/src/cjt.jl:176](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/cjt.jl#L176)
 
 ## Internal
 
@@ -122,7 +122,7 @@ Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:399](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L399)
+[FastTransforms/src/specialfunctions.jl:399](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L399)
 
 ---
 
@@ -135,7 +135,7 @@ Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:417](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L417)
+[FastTransforms/src/specialfunctions.jl:417](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L417)
 
 ---
 
@@ -145,7 +145,7 @@ Compute weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.
 
 
 *source:*
-[FastTransforms/src/clenshawcurtis.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/clenshawcurtis.jl#L12)
+[FastTransforms/src/clenshawcurtis.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/clenshawcurtis.jl#L12)
 
 ---
 
@@ -155,7 +155,7 @@ Compute nodes and weights of the Clenshaw—Curtis quadrature rule with a Jacobi
 
 
 *source:*
-[FastTransforms/src/clenshawcurtis.jl:6](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/clenshawcurtis.jl#L6)
+[FastTransforms/src/clenshawcurtis.jl:6](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/clenshawcurtis.jl#L6)
 
 ---
 
@@ -165,7 +165,7 @@ Compute Jacobi expansion coefficients in Pₙ^(α-1,β) given Jacobi expansion c
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:467](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L467)
+[FastTransforms/src/specialfunctions.jl:467](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L467)
 
 ---
 
@@ -175,7 +175,7 @@ Compute Jacobi expansion coefficients in Pₙ^(α-1,α-1) given Jacobi expansion
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:489](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L489)
+[FastTransforms/src/specialfunctions.jl:489](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L489)
 
 ---
 
@@ -185,7 +185,7 @@ Compute Jacobi expansion coefficients in Pₙ^(α,β-1) given Jacobi expansion c
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:478](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L478)
+[FastTransforms/src/specialfunctions.jl:478](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L478)
 
 ---
 
@@ -195,7 +195,7 @@ Compute nodes and weights of Fejer's first quadrature rule with a Jacobi weight.
 
 
 *source:*
-[FastTransforms/src/fejer.jl:7](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/fejer.jl#L7)
+[FastTransforms/src/fejer.jl:7](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/fejer.jl#L7)
 
 ---
 
@@ -205,7 +205,7 @@ Compute nodes and weights of Fejer's second quadrature rule with a Jacobi weight
 
 
 *source:*
-[FastTransforms/src/fejer.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/fejer.jl#L12)
+[FastTransforms/src/fejer.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/fejer.jl#L12)
 
 ---
 
@@ -215,7 +215,7 @@ Compute weights of Fejer's first quadrature rule with a Jacobi weight.
 
 
 *source:*
-[FastTransforms/src/fejer.jl:21](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/fejer.jl#L21)
+[FastTransforms/src/fejer.jl:21](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/fejer.jl#L21)
 
 ---
 
@@ -225,7 +225,7 @@ Compute weights of Fejer's second quadrature rule with a Jacobi weight.
 
 
 *source:*
-[FastTransforms/src/fejer.jl:26](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/fejer.jl#L26)
+[FastTransforms/src/fejer.jl:26](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/fejer.jl#L26)
 
 ---
 
@@ -235,7 +235,7 @@ Compute a typed 0.5.
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L12)
+[FastTransforms/src/specialfunctions.jl:12](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L12)
 
 ---
 
@@ -245,7 +245,7 @@ Compute Jacobi expansion coefficients in Pₙ^(α+1,β) given Jacobi expansion c
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:432](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L432)
+[FastTransforms/src/specialfunctions.jl:432](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L432)
 
 ---
 
@@ -255,7 +255,7 @@ Compute Jacobi expansion coefficients in Pₙ^(α+1,α+1) given Jacobi expansion
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:454](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L454)
+[FastTransforms/src/specialfunctions.jl:454](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L454)
 
 ---
 
@@ -265,7 +265,7 @@ Compute Jacobi expansion coefficients in Pₙ^(α,β+1) given Jacobi expansion c
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:443](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L443)
+[FastTransforms/src/specialfunctions.jl:443](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L443)
 
 ---
 
@@ -275,7 +275,7 @@ Pochhammer symbol (x)_n = Γ(x+n)/Γ(x) for the rising factorial.
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:32](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L32)
+[FastTransforms/src/specialfunctions.jl:32](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L32)
 
 ---
 
@@ -285,7 +285,7 @@ Stirling series for Γ(z).
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:63](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L63)
+[FastTransforms/src/specialfunctions.jl:63](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L63)
 
 ---
 
@@ -295,7 +295,7 @@ Compute a typed 2.
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:20](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L20)
+[FastTransforms/src/specialfunctions.jl:20](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L20)
 
 ---
 
@@ -307,7 +307,7 @@ For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic se
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:147](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L147)
+[FastTransforms/src/specialfunctions.jl:147](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L147)
 
 ---
 
@@ -317,7 +317,7 @@ The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:141](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L141)
+[FastTransforms/src/specialfunctions.jl:141](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L141)
 
 ---
 
@@ -327,7 +327,7 @@ The Lambda function Λ(z,λ₁,λ₂) = Γ(z+λ₁)/Γ(z+λ₂) for the ratio of
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:160](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L160)
+[FastTransforms/src/specialfunctions.jl:160](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L160)
 
 ---
 
@@ -337,5 +337,19 @@ The Kronecker δ function.
 
 
 *source:*
-[FastTransforms/src/specialfunctions.jl:26](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/059ac0ba6b7b0216a19f5441660845326102abd1/src/specialfunctions.jl#L26)
+[FastTransforms/src/specialfunctions.jl:26](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/specialfunctions.jl#L26)
+
+---
+
+<a id="type__toeplitzhankelplan.1" class="lexicon_definition"></a>
+#### FastTransforms.ToeplitzHankelPlan{S} [¶](#type__toeplitzhankelplan.1)
+Store a diagonally-scaled Toeplitz∘Hankel matrix:
+
+    DL(T∘H)DR
+
+where the Hankel matrix `H` is non-negative definite. This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
+
+
+*source:*
+[FastTransforms/src/toeplitzhankel.jl:8](https://github.com/MikaelSlevinsky/FastTransforms.jl/tree/de98925b4223787b107b1806ba5f045d1d543dc7/src/toeplitzhankel.jl#L8)
 
