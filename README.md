@@ -46,3 +46,5 @@ then increment/decrement operators are used with linear complexity (and linear c
    1.	N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, SIAM J. Sci. Comput., 36:A148—A167, 2014.
 
    2.	R. M. Slevinsky. <a href="http://arxiv.org/abs/1602.02618">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, arXiv:1602.02618, 2016.
+
+   3.	A. Townsend, M. Webb, and S. Olver. <a href="http://arxiv.org/abs/1604.07486">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, arXiv:1604.07486, 2016.

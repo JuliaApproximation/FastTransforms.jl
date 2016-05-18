@@ -1,6 +1,8 @@
 using FastTransforms
 using Base.Test
 
+import FastTransforms: δ
+
 println("Testing Table 2 of Y.-l. Xu, JCAM 85:53–65, 1997.")
 
 for (m,n) in ((0,2),(1,2),(1,8),(6,8),(3,18),
@@ -9,8 +11,6 @@ for (m,n) in ((0,2),(1,2),(1,8),(6,8),(3,18),
               (80,120),(23,150),(88,150))
     @test norm(gaunt(m,n,-m,n)[end]./(big(-1.0)^m/(2n+1))-1, Inf) < 400eps()
 end
-
-δ(k::Int,j::Int) = k == j ? 1 : 0
 
 println("Testing Table 3 of Y.-l. Xu, JCAM 85:53–65, 1997.")
 
