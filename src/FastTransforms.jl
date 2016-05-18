@@ -1,4 +1,4 @@
-#__precompile__()
+__precompile__()
 module FastTransforms
 
 using Base, ToeplitzMatrices
@@ -37,9 +37,6 @@ include("cheb2ultra.jl")
 
 include("cjt.jl")
 
-include("gaunt.jl")
-
-
 include("toeplitzhankel.jl")
 
 leg2cheb(x...)=th_leg2cheb(x...)
@@ -48,7 +45,6 @@ leg2chebu(x...)=th_leg2chebu(x...)
 ultra2ultra(x...)=th_ultra2ultra(x...)
 jac2jac(x...)=th_jac2jac(x...)
 
-
-
+include("gaunt.jl")
 
 end # module
