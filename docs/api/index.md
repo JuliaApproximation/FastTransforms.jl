@@ -63,7 +63,9 @@
 
 [Λ(x::Float64)](FastTransforms.md#method__923.1)  For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for τ in Appendix B of
 
-[Λ(x::Number)](FastTransforms.md#method__923.2)  The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.
+[Λ(z::Number)](FastTransforms.md#method__923.2)  The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.
+
+[Λ(z::Number,  λ₁::Number,  λ₂::Number)](FastTransforms.md#method__923.3)  The Lambda function Λ(z,λ₁,λ₂) = Γ(z+λ₁)/Γ(z+λ₂) for the ratio of gamma functions.
 
 [δ(k::Integer,  j::Integer)](FastTransforms.md#method__948.1)  The Kronecker δ function.
 

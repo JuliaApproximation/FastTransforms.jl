@@ -8,7 +8,13 @@ n = 0:1000_000
 @time FastTransforms.Cnλ(n,λ);
 
 x = linspace(0,20,81);
-@test norm(FastTransforms.Λ(x)./FastTransforms.Λ(big(x))-1,Inf) < 2eps()
+@test norm((FastTransforms.Λ(x)-FastTransforms.Λ(big(x)))./FastTransforms.Λ(big(x)),Inf) < 2eps()
+
+x = 0:0.5:10_000
+λ₁,λ₂ = 0.125,0.875
+@test norm((FastTransforms.Λ(x,λ₁,λ₂)-FastTransforms.Λ(big(x),big(λ₁),big(λ₂)))./FastTransforms.Λ(big(x),big(λ₁),big(λ₂)),Inf) < 4eps()
+λ₁,λ₂ = 1//3,2//3
+@test norm((FastTransforms.Λ(x,Float64(λ₁),Float64(λ₂))-FastTransforms.Λ(big(x),big(λ₁),big(λ₂)))./FastTransforms.Λ(big(x),big(λ₁),big(λ₂)),Inf) < 4eps()
 
 n = 0:1000
 α = 0.125
@@ -188,3 +194,6 @@ for k in round(Int,logspace(1,4,20))
 end
 
 @test_approx_eq leg2chebu([1.0,2,3,4,5])  [0.546875,0.5,0.5390625,1.25,1.3671875]
+
+c = randn(1000);
+@test norm(jac2jac(c,0.,√2/2,-1/4,√2/2)-jjt(c,0.,√2/2,-1/4,√2/2),Inf) < 10length(c)*eps()

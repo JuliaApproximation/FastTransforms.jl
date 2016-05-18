@@ -42,19 +42,19 @@ end
 
 
 # Plan a multiply by DL*(T.*H)*DR
-immutable ToeplitzHankelPlan{TT}
-    T::TriangularToeplitz{TT}
-    C::Vector{Vector{TT}}   # A cholesky factorization of H: H=CC'
-    DL::Vector{TT}
-    DR::Vector{TT}
+immutable ToeplitzHankelPlan{S}
+    T::TriangularToeplitz{S}
+    C::Vector{Vector{S}}   # A cholesky factorization of H: H=CC'
+    DL::Vector{S}
+    DR::Vector{S}
 
     ToeplitzHankelPlan(T,C,DL,DR)=new(T,C,DL,DR)
 end
 
 
 function ToeplitzHankelPlan(T::TriangularToeplitz,C::Vector,DL::AbstractVector,DR::AbstractVector)
-    TT=promote_type(eltype(T),eltype(C[1]),eltype(DL),eltype(DR))
-    ToeplitzHankelPlan{TT}(T,C,collect(TT,DL),collect(TT,DR))
+    S=promote_type(eltype(T),eltype(C[1]),eltype(DL),eltype(DR))
+    ToeplitzHankelPlan{S}(T,C,collect(S,DL),collect(S,DR))
 end
 ToeplitzHankelPlan(T::TriangularToeplitz,C::Matrix) =
     ToeplitzHankelPlan(T,C,ones(size(T,1)),ones(size(T,2)))
@@ -67,71 +67,40 @@ ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,D...) =
 
 # Legendre transforms
 
-#=
-Λ{T}(::Type{T},z)=z<5?gamma(z+one(T)/2)/gamma(z+one(T)):exp(lgamma(z+one(T)/2)-lgamma(z+one(T)))
-
-# use recurrence to construct Λ fast on a range of values
-function Λ{T}(::Type{T},r::UnitRange)
-    n=length(r)
-    ret=Array(T,n)
-    ret[1]=Λ(T,r[1])
-    for k=2:n
-        ret[k]=ret[k-1]*(r[k-1]+one(T)/2)/r[k]
-    end
-    ret
+function leg2chebTH{S}(::Type{S},n)
+    λ=Λ(0:half(S):n-1)
+    t=zeros(S,n)
+    t[1:2:end]=λ[1:2:n]
+    T=TriangularToeplitz(2/π*t,:U)
+    H=Hankel(λ[1:n],λ[n:end])
+    DL=ones(S,n)
+    DL[1]/=2
+    T,H,DL
 end
 
-function Λ{T}(::Type{T},r::FloatRange)
-    @assert step(r)==0.5
-    n=length(r)
-    ret=Array(T,n)
-    ret[1]=Λ(T,r[1])
-    ret[2]=Λ(T,r[2])
-    for k=3:n
-        ret[k]=ret[k-2]*(r[k-2]+one(T)/2)/r[k]
-    end
-    ret
-end
-
-Λ(z::Number)=Λ(typeof(z),z)
-Λ(z::AbstractArray)=Λ(eltype(z),z)
-=#
-
-function leg2chebuTH{TT}(::Type{TT},n)
-    λ=Λ(0:half(TT):n-1)
-    t=zeros(TT,n)
+function leg2chebuTH{S}(::Type{S},n)
+    λ=Λ(0:half(S):n-1)
+    t=zeros(S,n)
     t[1:2:end]=λ[1:2:n]./(((1:2:n)-2))
     T=TriangularToeplitz(-2/π*t,:U)
     H=Hankel(λ[1:n]./((1:n)+1),λ[n:end]./((n:2n-1)+1))
     T,H
 end
 
-th_leg2chebuplan{TT}(::Type{TT},n)=ToeplitzHankelPlan(leg2chebuTH(TT,n)...,1:n,ones(TT,n))
-
-function leg2chebTH{TT}(::Type{TT},n)
-    λ=Λ(0:half(TT):n-1)
-    t=zeros(TT,n)
-    t[1:2:end]=λ[1:2:n]
-    T=TriangularToeplitz(2/π*t,:U)
-    H=Hankel(λ[1:n],λ[n:end])
-    DL=ones(TT,n)
-    DL[1]/=2
-    T,H,DL
+function jac2jacTH{S}(::Type{S},n,α,β,γ,δ)
+    @assert β == δ
+    jk = zero(S):n-one(S)
+    DL = (2jk+γ+β+one(S)).*Λ(jk,γ+β+one(S),β+one(S))
+    T = TriangularToeplitz(Λ(jk,α-γ,one(S)),:U)
+    H = Hankel(Λ(jk,α+β+one(S),γ+β+two(S)),Λ(jk+n-1,α+β+one(S),γ+β+two(S)))
+    DR = Λ(jk,β+one(S),α+β+one(S))/gamma(α-γ)
+    T,H,DL,DR
 end
 
-th_leg2chebplan{TT}(::Type{TT},n)=ToeplitzHankelPlan(leg2chebTH(TT,n)...,ones(TT,n))
-
-# function leg2chebTHslow(n)
-#     λ=map(Λ,0:0.5:n-1)
-#     t=zeros(n)
-#     t[1:2:end]=λ[1:2:n]
-#     T=TriangularToeplitz(2/π*t,:U)
-#     H=Hankel(λ[1:n],λ[n:end])
-#     DL=ones(n)
-#     DL[1]*=0.5
-#     T,H,DL
-# end
-
+th_leg2chebplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebTH(S,n)...,ones(S,n))
+th_leg2chebuplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebuTH(S,n)...,1:n,ones(S,n))
+th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ)=ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)
 
 th_leg2cheb(v)=th_leg2chebplan(eltype(v),length(v))*v
 th_leg2chebu(v)=th_leg2chebuplan(eltype(v),length(v))*v
+th_jac2jac(v,α,β,γ,δ)=th_jac2jacplan(eltype(v),length(v),α,β,γ,δ)*v

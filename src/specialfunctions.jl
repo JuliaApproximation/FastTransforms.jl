@@ -138,7 +138,7 @@ Anαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Anαβ(n[i,j]
 """
 The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.
 """
-Λ(x::Number) = exp(lgamma(x+half(x))-lgamma(x+one(x)))
+Λ(z::Number) = exp(lgamma(z+half(z))-lgamma(z+one(z)))
 """
 For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for τ in Appendix B of
 
@@ -153,6 +153,20 @@ function Λ(x::Float64)
     end
 end
 @vectorize_1arg Number Λ
+
+"""
+The Lambda function Λ(z,λ₁,λ₂) = Γ(z+λ₁)/Γ(z+λ₂) for the ratio of gamma functions.
+"""
+Λ(z::Number,λ₁::Number,λ₂::Number) = exp(lgamma(z+λ₁)-lgamma(z+λ₂))
+function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
+    if min(x+λ₁,x+λ₂) ≥ 8.979120323411497
+        exp(λ₂-λ₁+(x-.5)*log1p((λ₁-λ₂)/(x+λ₂)))*(x+λ₁)^λ₁/(x+λ₂)^λ₂*stirlingseries(x+λ₁)/stirlingseries(x+λ₂)
+    else
+        (x+λ₂)/(x+λ₁)*Λ(x+1.,λ₁,λ₂)
+    end
+end
+Λ{T<:Number}(x::AbstractArray{T},λ₁::Number,λ₂::Number) = promote_type(T,typeof(λ₁),typeof(λ₂))[ Λ(x[i],λ₁,λ₂) for i in eachindex(x) ]
+
 
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
 Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)
