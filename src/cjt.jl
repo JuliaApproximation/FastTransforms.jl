@@ -140,7 +140,14 @@ given the Jacobi expansion coefficients ``c`` with parameters ``α`` and ``β``.
 
 See also [`cjt`](#method__cjt.1) and [`icjt`](#method__icjt.1).
 """
-jjt(c,α,β,γ,δ) = icjt(cjt(c,α,β),γ,δ)
+function jjt(c,α,β,γ,δ)
+    if isapprox(α,γ) && isapprox(β,δ)
+        copy(c)
+    else
+        icjt(cjt(c,α,β),γ,δ)
+    end
+end
+
 
 """
 Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary

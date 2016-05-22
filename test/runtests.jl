@@ -88,6 +88,12 @@ pop!(c)
 c = [1.0;2.0]
 @test norm(jjt(c,0.12,0.34,0.12,0.34)-c,Inf) ≤ 2eps()
 
+
+# test same parameters
+
+c=[0.,1.]
+@test jjt(c,1.5,-0.5,1.5,-0.5) == c
+
 println("Testing the special cases (α,β) = (±0.5,±0.5)")
 
 # Chebyshev coefficients of exp
