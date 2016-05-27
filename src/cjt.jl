@@ -10,8 +10,8 @@ function cjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
             decrementα!(ret,α,β)
         elseif α == 0.5 && β == 0.5
             decrementαβ!(ret,α,β)
-        else
-            tosquare!(ret,α,β)
+        elseif α != -0.5 && β != -0.5
+            decrementαβ!(tosquare!(ret,α,β),half(α),half(β))
         end
         for i=1:N ret[i] *= Λ(i-1.0)/sqrtpi end
         return ret
@@ -28,7 +28,8 @@ function cjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
     N = length(c)
     N ≤ 1 && return c
     if modλ(λ) == 0
-        ret = toline!(copy(c),λ-one(λ)/2,λ-one(λ)/2)
+        ret = copy(c)
+        λ != 0.0 && (ret = decrementαβ!(toline!(ret,λ-one(λ)/2,λ-one(λ)/2),half(λ),half(λ)))
         for i=1:N ret[i] *= Λ(i-1.0)/sqrtpi end
         return ret
     else
@@ -55,8 +56,8 @@ function icjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
         elseif α == 0.5 && β == 0.5
             incrementαβ!(ret,α-1,β-1)
             return ret
-        else
-            return fromsquare!(ret,α,β)
+        elseif α != -0.5 && β != -0.5
+            return fromsquare!(incrementαβ!(ret,-half(α),-half(β)),α,β)
         end
     else
         # General half-open square
@@ -73,7 +74,7 @@ function icjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
     if modλ(λ) == 0
         ret = copy(c)
         for i=1:N ret[i] *= sqrtpi/Λ(i-1.0) end
-        fromline!(ret,λ-one(λ)/2,λ-one(λ)/2)
+        λ != 0.0 && fromline!(incrementαβ!(ret,-half(λ),-half(λ)),λ-one(λ)/2,λ-one(λ)/2)
         return ret
     else
         # Ultraspherical line
