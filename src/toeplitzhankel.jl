@@ -32,10 +32,10 @@ function partialchol(H::Hankel)
     v=[H[:,1];vec(H[end,2:end])]
     d=diag(H)
     @assert length(v) ≥ 2n-1
-    tol=eps(eltype(H))*log(n)
+    reltol=maxabs(d)*eps(eltype(H))*log(n)
     for k=1:n
         mx,idx=findmax(d)
-        if mx ≤ tol break end
+        if mx ≤ reltol break end
         push!(σ,inv(mx))
         push!(C,v[idx:n+idx-1])
         for j=1:k-1

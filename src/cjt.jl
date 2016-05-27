@@ -2,7 +2,7 @@ function cjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
     α,β = getplanαβ(plan)
     N = length(c)
     N ≤ 1 && return c
-    if α^2 == 0.25 && β^2 == 0.25
+    if modαβ(α) == 0.5 && modαβ(β) == 0.5
         ret = copy(c)
         if α == -0.5 && β == 0.5
             decrementβ!(ret,α,β)
@@ -10,6 +10,8 @@ function cjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
             decrementα!(ret,α,β)
         elseif α == 0.5 && β == 0.5
             decrementαβ!(ret,α,β)
+        else
+            tosquare!(ret,α,β)
         end
         for i=1:N ret[i] *= Λ(i-1.0)/sqrtpi end
         return ret
@@ -25,9 +27,8 @@ function cjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
     λ = getplanλ(plan)
     N = length(c)
     N ≤ 1 && return c
-    if λ == 0 || λ == 1
-        ret = copy(c)
-        λ == 1 && decrementαβ!(ret,λ-one(λ)/2,λ-one(λ)/2)
+    if modλ(λ) == 0
+        ret = toline!(copy(c),λ-one(λ)/2,λ-one(λ)/2)
         for i=1:N ret[i] *= Λ(i-1.0)/sqrtpi end
         return ret
     else
@@ -42,7 +43,7 @@ function icjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
     α,β = getplanαβ(plan)
     N = length(c)
     N ≤ 1 && return c
-    if α^2 == 0.25 && β^2 == 0.25
+    if modαβ(α) == 0.5 && modαβ(β) == 0.5
         ret = copy(c)
         for i=1:N ret[i] *= sqrtpi/Λ(i-1.0) end
         if α == -0.5 && β == 0.5
@@ -55,7 +56,7 @@ function icjt(c::AbstractVector,plan::ChebyshevJacobiPlan)
             incrementαβ!(ret,α-1,β-1)
             return ret
         else
-            return ret
+            return fromsquare!(ret,α,β)
         end
     else
         # General half-open square
@@ -69,10 +70,10 @@ function icjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
     λ = getplanλ(plan)
     N = length(c)
     N ≤ 1 && return c
-    if λ == 0 || λ == 1
+    if modλ(λ) == 0
         ret = copy(c)
         for i=1:N ret[i] *= sqrtpi/Λ(i-1.0) end
-        λ == 1 && incrementαβ!(ret,λ-3one(λ)/2,λ-3one(λ)/2)
+        fromline!(ret,λ-one(λ)/2,λ-one(λ)/2)
         return ret
     else
         # Ultraspherical line
