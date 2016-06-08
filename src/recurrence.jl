@@ -1,11 +1,15 @@
-type RecurrencePlan{T}
+immutable RecurrencePlan{T}
     A::Vector{T}
     B::Vector{T}
     C::Vector{T}
     rf₀::Vector{T}
     rf₁::Vector{T}
+    rf₀inv::Vector{T}
+    rf₁inv::Vector{T}
     rb₀::Vector{T}
     rb₁::Vector{T}
+    rb₀inv::Vector{T}
+    rb₁inv::Vector{T}
 end
 
 function RecurrencePlan{T}(α::T,β::T,N::Int)
@@ -14,9 +18,13 @@ function RecurrencePlan{T}(α::T,β::T,N::Int)
     C  = T[recC(α,β,k) for k=1:N  ]
     rf₀ = T[rf0(α,β,k) for k=0:N-1]
     rf₁ = T[rf1(α,β,k) for k=0:N-1]
+    rf₀inv = T[inv(rf₀[k]) for k=1:N]
+    rf₁inv = T[inv(rf₁[k]) for k=1:N]
     rb₀ = T[rb0(α,β,k) for k=1:N-1]
     rb₁ = T[rb1(α,β,k) for k=1:N-1]
-    RecurrencePlan(A,B,C,rf₀,rf₁,rb₀,rb₁)
+    rb₀inv = T[inv(rb₀[k]) for k=1:N-1]
+    rb₁inv = T[inv(rb₁[k]) for k=1:N-1]
+    RecurrencePlan(A,B,C,rf₀,rf₁,rf₀inv,rf₁inv,rb₀,rb₁,rb₀inv,rb₁inv)
 end
 
 recA{T}(α::T,β::T,k::Int)=k==0&&((α+β==0)||(α+β==-1))?(α+β)/2+1:(2k+α+β+1)*(2k+α+β+2)/(2*(k+1)*(k+α+β+1))
@@ -78,20 +86,18 @@ function reinsch_f0!{V}(p::AbstractVector,N::Int,spθ::Number,plan::RecurrencePl
     A=plan.A
     C=plan.C
     r=plan.rf₀
+    rinv=plan.rf₀inv
 
     T = promote_type(eltype(p),typeof(spθ),V)
     xm1 = -2spθ^2
-    pk, dk = one(T), zero(T)
-    dkp1 = A[1]*xm1/r[1]
-    pkp1 = (pk+dkp1)*r[1]
-    p[1], p[2] = pk, pkp1
+    p[1] = one(T)
+    dk = A[1]*xm1*rinv[1]
+    p[2] = (p[1]+dk)*r[1]
 
     @inbounds for k = 2:N-1
-        Ak, Ck, rk = A[k], C[k-1], r[k]
-        pk, dk = pkp1, dkp1
-        dkp1 = muladd(Ak*xm1,pk,Ck*dk)/rk
-        pkp1 = (pk+dkp1)*rk
-        p[k+1] = pkp1
+        Ak, Ck, rk, rkinv = A[k], C[k-1], r[k], rinv[k]
+        temp = muladd(Ak*xm1,p[k],Ck*dk)
+        dk, p[k+1] = temp*rkinv, muladd(rk,p[k],temp)
     end
 end
 
@@ -102,20 +108,18 @@ function reinsch_f1!{V}(p::AbstractVector,N::Int,cpθ::Number,plan::RecurrencePl
     A=plan.A
     C=plan.C
     r=plan.rf₁
+    rinv=plan.rf₁inv
 
     T = promote_type(eltype(p),typeof(cpθ),V)
     xp1 = 2cpθ^2
-    pk, dk = one(T), zero(T)
-    dkp1 = A[1]*xp1/r[1]
-    pkp1 = (pk+dkp1)*r[1]
-    p[1], p[2] = pk, pkp1
+    p[1] = one(T)
+    dk = A[1]*xp1*rinv[1]
+    p[2] = (p[1]+dk)*r[1]
 
     @inbounds for k = 2:N-1
-        Ak, Ck, rk = A[k], C[k-1], r[k]
-        pk, dk = pkp1, dkp1
-        dkp1 = muladd(Ak*xp1,pk,Ck*dk)/rk
-        pkp1 = (pk+dkp1)*rk
-        p[k+1] = pkp1
+        Ak, Ck, rk, rkinv = A[k], C[k-1], r[k], rinv[k]
+        temp = muladd(Ak*xp1,p[k],Ck*dk)
+        dk, p[k+1] = temp*rkinv, muladd(rk,p[k],temp)
     end
 end
 
@@ -170,20 +174,20 @@ function reinsch_b0{V}(c::AbstractVector,N::Int,spθ::Number,plan::RecurrencePla
     A=plan.A
     C=plan.C
     r=plan.rb₀
+    rinv=plan.rb₀inv
 
     T = promote_type(eltype(c),typeof(spθ),V)
     xm1 = -2spθ^2
-    ukp1, dkp1 = zero(T), zero(T)
+    uk, dk = zero(T), zero(T)
 
     @inbounds for k=N:-1:2
-        ck, Ak, Ck, rk = c[k], A[k], C[k], r[k-1]
-        dk = muladd(Ak*xm1,ukp1,muladd(Ck,dkp1,ck))*rk
-        uk = (dk+ukp1)/rk
-        dkp1, ukp1 = dk, uk
+        ck, Ak, Ck, rk, rkinv = c[k], A[k], C[k], r[k-1], rinv[k-1]
+        temp = muladd(Ak*xm1,uk,muladd(Ck,dk,ck))
+        dk, uk = temp*rk, muladd(rkinv,uk,temp)
     end
 
     @inbounds ck, Ak, Ck = c[1], A[1], C[1]
-    muladd(Ak*xm1,ukp1,muladd(Ck,dkp1,ck))
+    muladd(Ak*xm1,uk,muladd(Ck,dk,ck))
 end
 
 # Modified Clenshaw-Smith algorithm for θ near 1
@@ -193,18 +197,18 @@ function reinsch_b1{V}(c::AbstractVector,N::Int,cpθ::Number,plan::RecurrencePla
     A=plan.A
     C=plan.C
     r=plan.rb₁
+    rinv=plan.rb₁inv
 
     T = promote_type(eltype(c),typeof(cpθ),V)
     xp1 = 2cpθ^2
-    ukp1, dkp1 = zero(T), zero(T)
+    uk, dk = zero(T), zero(T)
 
     @inbounds for k=N:-1:2
-        ck, Ak, Ck, rk = c[k], A[k], C[k], r[k-1]
-        dk = muladd(Ak*xp1,ukp1,muladd(Ck,dkp1,ck))*rk
-        uk = (dk+ukp1)/rk
-        dkp1, ukp1 = dk, uk
+        ck, Ak, Ck, rk, rkinv = c[k], A[k], C[k], r[k-1], rinv[k-1]
+        temp = muladd(Ak*xp1,uk,muladd(Ck,dk,ck))
+        dk, uk = temp*rk, muladd(rkinv,uk,temp)
     end
 
     @inbounds ck, Ak, Ck = c[1], A[1], C[1]
-    muladd(Ak*xp1,ukp1,muladd(Ck,dkp1,ck))
+    muladd(Ak*xp1,uk,muladd(Ck,dk,ck))
 end

@@ -1,7 +1,7 @@
 function cheb2ultra{T<:AbstractFloat}(c_cheb::AbstractVector{T},λ::T,plan::ChebyshevUltrasphericalPlan{BACKWARD,T})
     M,N,nM₀,αN,K = getconstants(plan)
     i₁,i₂,j₁,j₂ = getindices(plan)
-    p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempmindices,cnλ,cnmλ,w,anλ,c_cheb2,pr = getplan(plan)
+    p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempsinλm,tempmindices,cnλ,cnmλ,w,anλ,c_cheb2,pr = getplan(plan)
 
     # Initialize c_cheb2
     @inbounds for i=1:N+1 c_cheb2[i] = c_cheb[i] end
@@ -19,6 +19,7 @@ function cheb2ultra{T<:AbstractFloat}(c_cheb::AbstractVector{T},λ::T,plan::Cheb
     k=0
     for k=1:K
         copy!(cnmλ,cnλ)
+        copy!(tempsinλm,tempsinλ)
 
         j₁[k] < nM₀ && (k-=1; break)
 
@@ -36,20 +37,23 @@ function cheb2ultra{T<:AbstractFloat}(c_cheb::AbstractVector{T},λ::T,plan::Cheb
 
         for m=0:M-1
             # Compute u_m(θ) and v_m(θ)
-            compute_umvm!(um,vm,λ,tempsin,tempsinλ,m,θ,i₁[k+1]:i₂[k+1])
+            compute_umvm!(um,vm,λ,tempsinλm,m,θ,i₁[k+1]:i₂[k+1])
 
             # Multiply point-wise by u_m(θ) and v_m(θ) for valid indices
-            init_c₁c₂!(c₁,c₂,um,vm,c_cheb2,i₁[k+1],i₂[k+1])
+            init_c₁c₂!(c₁,c₂.parent,um,vm,c_cheb2,i₁[k+1],i₂[k+1])
 
             # Apply planned DCT-I and DST-I in-place
-            applyTN!(c₁,p₁),applyUN!(c₂,p₂) # 1 allocation from slicing the Array
+            applyTN!(c₁,p₁);applyUN!(c₂,p₂)
 
             # Compute diagonal 2N-scaling multiplied by local coefficients and zero out excess
-            @inbounds for j=j₁[k]:j₂[k] v_ultra[j] += cnmλ[j]*(c₁[j]+c₂[j]) end
+            @inbounds for j=j₁[k]:j₂[k] v_ultra[j] += cnmλ[j]*(c₁[j]+c₂.parent[j]) end
 
             # Update C_{n,m}^λ by recurrence in m
             cst = (λ+m)/2/(m+1)*(m+1-λ)
             @inbounds for j=1:2N+1 cnmλ[j] *= cst/(j+λ+m) end
+
+            # Update sin^{λ+m}(θ)
+            @inbounds for j=1:2N+1 tempsinλm[j] *= tempsin[j] end
         end
     end
 

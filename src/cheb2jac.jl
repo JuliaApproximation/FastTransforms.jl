@@ -39,13 +39,13 @@ function cheb2jac{T<:AbstractFloat}(c_cheb::AbstractVector{T},α::T,β::T,plan::
             compute_umvm!(um,vm,cfs,α,β,tempcos,tempsin,tempcosβsinα,m,θ,i₁[k+1]:i₂[k+1])
 
             # Multiply point-wise by u_m(θ) and v_m(θ) for valid indices
-            init_c₁c₂!(c₁,c₂,um,vm,c_cheb2,i₁[k+1],i₂[k+1])
+            init_c₁c₂!(c₁,c₂.parent,um,vm,c_cheb2,i₁[k+1],i₂[k+1])
 
             # Apply planned DCT-I and DST-I in-place
-            applyTN!(c₁,p₁),applyUN!(c₂,p₂) # 1 allocation from slicing the Array
+            applyTN!(c₁,p₁);applyUN!(c₂,p₂)
 
             # Compute diagonal 2N-scaling multiplied by local coefficients and zero out excess
-            @inbounds for j=j₁[k]:j₂[k] v_jac[j] += cnmαβ[j]*(c₁[j]+c₂[j]) end
+            @inbounds for j=j₁[k]:j₂[k] v_jac[j] += cnmαβ[j]*(c₁[j]+c₂.parent[j]) end
 
             # Update C_{n,m}^{α,β} by recurrence in m
             @inbounds for j=1:2N+1 cnmαβ[j] /= 2(2j+α+β+m) end

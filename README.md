@@ -19,7 +19,7 @@ julia> using FastTransforms
 julia> c = rand(10001);
 
 julia> @time norm(icjt(cjt(c,0.1,-0.2),0.1,-0.2)-c,Inf)
-  0.435853 seconds (507 allocations: 5.366 MB)
+  0.258390 seconds (431 allocations: 6.278 MB)
 1.4830359162942841e-12
 
 julia> p1 = plan_cjt(c,0.1,-0.2);
@@ -27,7 +27,7 @@ julia> p1 = plan_cjt(c,0.1,-0.2);
 julia> p2 = plan_icjt(c,0.1,-0.2);
 
 julia> @time norm(p2*(p1*c)-c,Inf)
-  0.396803 seconds (101 allocations: 473.281 KB)
+  0.244842 seconds (17 allocations: 469.344 KB)
 1.4830359162942841e-12
 
 ```

@@ -1,4 +1,4 @@
-type ChebyshevJacobiConstants{D,T}
+immutable ChebyshevJacobiConstants{D,T}
     α::T
     β::T
     M::Int
@@ -10,20 +10,20 @@ end
 
 function ChebyshevJacobiConstants{T}(c::AbstractVector{T},α::T,β::T;M::Int=7,D::Bool=FORWARD)
     N = length(c)-1
-    if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiConstants{D,T}(α,β,M,N,0,zero(T),0) end
+    if modαβ(α) == 0.5 && modαβ(β) == 0.5 return ChebyshevJacobiConstants{D,T}(α,β,M,N,0,zero(T),0) end
     if D == FORWARD
-        nM₀ = floor(Int,min((eps(T)*2.0^(2M-1)*sqrtpi/absf(α,β,M,1/2))^(-1/(M+1/2)),N))
-        αN = min(one(T)/log(N/nM₀),one(T)/2)
+        nM₀ = floor(Int,min((eps(T)*2.0^(2M-1)*sqrtpi/absf(modαβ(α),modαβ(β),M,1/2))^(-1/(M+1/2)),N))
+        αN = min(one(T)/log(N/nM₀),half(T))
         K = N > 0 ? ceil(Int,log(N/nM₀)/log(1/αN)) : 0
     else#if D == BACKWARD
-        nM₀ = floor(Int,min((eps(T)*2.0^(2M-1)*sqrtpi/absf(α,β,M,1/2))^(-1/(M+1/2)),2N))
-        αN = min(one(T)/log(2N/nM₀),one(T)/2)
+        nM₀ = floor(Int,min((eps(T)*2.0^(2M-1)*sqrtpi/absf(modαβ(α),modαβ(β),M,1/2))^(-1/(M+1/2)),2N))
+        αN = min(one(T)/log(2N/nM₀),half(T))
         K = N > 0 ? ceil(Int,log(2N/nM₀)/log(1/αN)) : 0
     end
     ChebyshevJacobiConstants{D,T}(α,β,M,N,nM₀,αN,K)
 end
 
-type ChebyshevJacobiIndices
+immutable ChebyshevJacobiIndices
     i₁::Vector{Int}
     i₂::Vector{Int}
     j₁::Vector{Int}
@@ -60,7 +60,7 @@ type ChebyshevJacobiPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
     p₂::DST
     rp::RecurrencePlan{T}
     c₁::Vector{T}
-    c₂::Vector{T}
+    c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1}
     um::Vector{T}
     vm::Vector{T}
     cfs::Matrix{T}
@@ -75,7 +75,7 @@ type ChebyshevJacobiPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
     anαβ::Vector{T}
     c_cheb2::Vector{T}
     pr::Vector{T}
-    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::Vector{T},um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T})
+    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1},um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T})
         P = new()
         P.CJC = CJC
         P.CJI = CJI
@@ -96,7 +96,7 @@ type ChebyshevJacobiPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
         P.cnmαβ = cnmαβ
         P
     end
-    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::Vector{T},um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T},w::Vector{T},anαβ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
+    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1},um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T},w::Vector{T},anαβ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
         P = ChebyshevJacobiPlan{D,T,DCT,DST}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ)
         P.w = w
         P.anαβ = anαβ
@@ -114,17 +114,18 @@ end
 function ForwardChebyshevJacobiPlan{T}(c_jac::AbstractVector{T},α::T,β::T,M::Int)
     # Initialize constants
     CJC = ChebyshevJacobiConstants(c_jac,α,β;M=M,D=FORWARD)
-    if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiPlan{FORWARD,T,Any,Any}(CJC) end
+    if modαβ(α) == 0.5 && modαβ(β) == 0.5 return ChebyshevJacobiPlan{FORWARD,T,Any,Any}(CJC) end
     M,N,nM₀,αN,K = getconstants(CJC)
-
-    # Initialize DCT-I and DST-I plans
-    p₁,p₂ = applyTN_plan(c_jac),applyUN_plan(c_jac)
+    α,β = modαβ(α),modαβ(β)
 
     # Initialize recurrence coefficients
     rp = RecurrencePlan(α,β,N+1)
 
     # Initialize temporary arrays
-    c₁,c₂,um,vm = zero(c_jac),zero(c_jac),zero(c_jac),zero(c_jac)
+    c₁,c₂,um,vm = zero(c_jac),slice(zero(c_jac),2:N),zero(c_jac),zero(c_jac)
+
+    # Initialize DCT-I and DST-I plans
+    p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
 
     # Initialize coefficients of the asymptotic formula
     cfs = init_cfs(α,β,M)
@@ -151,20 +152,21 @@ end
 function BackwardChebyshevJacobiPlan{T}(c_cheb::AbstractVector{T},α::T,β::T,M::Int)
     # Initialize constants
     CJC = ChebyshevJacobiConstants(c_cheb,α,β;M=M,D=BACKWARD)
-    if α^2 == 0.25 && β^2 == 0.25 return ChebyshevJacobiPlan{BACKWARD,T,Any,Any}(CJC) end
+    if modαβ(α) == 0.5 && modαβ(β) == 0.5 return ChebyshevJacobiPlan{BACKWARD,T,Any,Any}(CJC) end
     M,N,nM₀,αN,K = getconstants(CJC)
+    α,β = modαβ(α),modαβ(β)
 
     # Array of almost double the size of the coefficients
     c_cheb2 = N > 0 ? zeros(T,2N+1) : T[0]
-
-    # Initialize DCT-I and DST-I plans
-    p₁,p₂ = applyTN_plan(c_cheb2),applyUN_plan(c_cheb2)
 
     # Initialize recurrence coefficients and temporary array
     rp,pr = RecurrencePlan(α,β,2N+1),zero(c_cheb2)
 
     # Initialize temporary arrays
-    c₁,c₂,um,vm = zero(c_cheb2),zero(c_cheb2),zero(c_cheb2),zero(c_cheb2)
+    c₁,c₂,um,vm = zero(c_cheb2),slice(zero(c_cheb2),2:2N),zero(c_cheb2),zero(c_cheb2)
+
+    # Initialize DCT-I and DST-I plans
+    p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
 
     # Initialize coefficients of the asymptotic formula
     cfs = init_cfs(α,β,M)

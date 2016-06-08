@@ -1,4 +1,4 @@
-type ChebyshevUltrasphericalConstants{D,T}
+immutable ChebyshevUltrasphericalConstants{D,T}
     λ::T
     M::Int
     N::Int
@@ -9,20 +9,21 @@ end
 
 function ChebyshevUltrasphericalConstants{T}(c::AbstractVector{T},λ::T;M::Int=7,D::Bool=FORWARD)
     N = length(c)-1
-    if λ == 0 || λ == 1 return ChebyshevUltrasphericalConstants{D,T}(λ,M,N,0,zero(T),0) end
+    if modλ(λ) == 0 return ChebyshevUltrasphericalConstants{D,T}(λ,M,N,0,zero(T),0) end
+    λm = modλ(λ)
     if D == FORWARD
-        nM₀ = min(floor(Int,(eps(T)*sqrtpi*2^(M-λ-1)*factorial(M)/pochhammer(λ,M)/pochhammer(1-λ,M))^(-1/(M+1/2))),N)
-        αN = min(one(T)/log(N/nM₀),one(T)/2)
+        nM₀ = min(floor(Int,(eps(T)*sqrtpi*2^(M-λm-1)*factorial(M)/pochhammer(λm,M)/pochhammer(1-λm,M))^(-1/(M+1/2))),N)
+        αN = min(one(T)/log(N/nM₀),half(T))
         K = N > 0 ? ceil(Int,log(N/nM₀)/log(1/αN)) : 0
     else#if D == BACKWARD
-        nM₀ = min(floor(Int,(eps(T)*sqrtpi*2^(M-λ-1)*factorial(M)/pochhammer(λ,M)/pochhammer(1-λ,M))^(-1/(M+1/2))),2N)
-        αN = min(one(T)/log(2N/nM₀),one(T)/2)
+        nM₀ = min(floor(Int,(eps(T)*sqrtpi*2^(M-λm-1)*factorial(M)/pochhammer(λm,M)/pochhammer(1-λm,M))^(-1/(M+1/2))),2N)
+        αN = min(one(T)/log(2N/nM₀),half(T))
         K = N > 0 ? ceil(Int,log(2N/nM₀)/log(1/αN)) : 0
     end
     ChebyshevUltrasphericalConstants{D,T}(λ,M,N,nM₀,αN,K)
 end
 
-type ChebyshevUltrasphericalIndices
+immutable ChebyshevUltrasphericalIndices
     i₁::Vector{Int}
     i₂::Vector{Int}
     j₁::Vector{Int}
@@ -59,13 +60,14 @@ type ChebyshevUltrasphericalPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
     p₂::DST
     rp::RecurrencePlan{T}
     c₁::Vector{T}
-    c₂::Vector{T}
+    c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1}
     um::Vector{T}
     vm::Vector{T}
     θ::Vector{T}
     tempsin::Vector{T}
     tempsin2::Vector{T}
     tempsinλ::Vector{T}
+    tempsinλm::Vector{T}
     tempmindices::Vector{T}
     cnλ::Vector{T}
     cnmλ::Vector{T}
@@ -73,7 +75,7 @@ type ChebyshevUltrasphericalPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
     anλ::Vector{T}
     c_cheb2::Vector{T}
     pr::Vector{T}
-    function ChebyshevUltrasphericalPlan(CUC::ChebyshevUltrasphericalConstants{D,T},CUI::ChebyshevUltrasphericalIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::Vector{T},um::Vector{T},vm::Vector{T},θ::Vector{T},tempsin::Vector{T},tempsin2::Vector{T},tempsinλ::Vector{T},tempmindices::Vector{T},cnλ::Vector{T},cnmλ::Vector{T})
+    function ChebyshevUltrasphericalPlan(CUC::ChebyshevUltrasphericalConstants{D,T},CUI::ChebyshevUltrasphericalIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1},um::Vector{T},vm::Vector{T},θ::Vector{T},tempsin::Vector{T},tempsin2::Vector{T},tempsinλ::Vector{T},tempsinλm::Vector{T},tempmindices::Vector{T},cnλ::Vector{T},cnmλ::Vector{T})
         P = new()
         P.CUC = CUC
         P.CUI = CUI
@@ -88,13 +90,14 @@ type ChebyshevUltrasphericalPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
         P.tempsin = tempsin
         P.tempsin2 = tempsin2
         P.tempsinλ = tempsinλ
+        P.tempsinλm = tempsinλm
         P.tempmindices = tempmindices
         P.cnλ = cnλ
         P.cnmλ = cnmλ
         P
     end
-    function ChebyshevUltrasphericalPlan(CUC::ChebyshevUltrasphericalConstants{D,T},CUI::ChebyshevUltrasphericalIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::Vector{T},um::Vector{T},vm::Vector{T},θ::Vector{T},tempsin::Vector{T},tempsin2::Vector{T},tempsinλ::Vector{T},tempmindices::Vector{T},cnλ::Vector{T},cnmλ::Vector{T},w::Vector{T},anλ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
-        P = ChebyshevUltrasphericalPlan{D,T,DCT,DST}(CUC,CUI,p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempmindices,cnλ,cnmλ)
+    function ChebyshevUltrasphericalPlan(CUC::ChebyshevUltrasphericalConstants{D,T},CUI::ChebyshevUltrasphericalIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1},um::Vector{T},vm::Vector{T},θ::Vector{T},tempsin::Vector{T},tempsin2::Vector{T},tempsinλ::Vector{T},tempsinλm::Vector{T},tempmindices::Vector{T},cnλ::Vector{T},cnmλ::Vector{T},w::Vector{T},anλ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
+        P = ChebyshevUltrasphericalPlan{D,T,DCT,DST}(CUC,CUI,p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempsinλm,tempmindices,cnλ,cnmλ)
         P.w = w
         P.anλ = anλ
         P.c_cheb2 = c_cheb2
@@ -111,17 +114,18 @@ end
 function ForwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T,M::Int)
     # Initialize constants
     CUC = ChebyshevUltrasphericalConstants(c_ultra,λ;M=M,D=FORWARD)
-    if λ == 0 || λ == 1 return ChebyshevUltrasphericalPlan{FORWARD,T,Any,Any}(CUC) end
+    if modλ(λ) == 0 return ChebyshevUltrasphericalPlan{FORWARD,T,Any,Any}(CUC) end
     M,N,nM₀,αN,K = getconstants(CUC)
-
-    # Initialize DCT-I and DST-I plans
-    p₁,p₂ = applyTN_plan(c_ultra),applyUN_plan(c_ultra)
+    λ = modλ(λ)
 
     # Initialize recurrence coefficients
-    rp = RecurrencePlan(λ-one(T)/2,λ-one(T)/2,N+1)
+    rp = RecurrencePlan(λ-half(λ),λ-half(λ),N+1)
 
     # Initialize temporary arrays
-    c₁,c₂,um,vm = zero(c_ultra),zero(c_ultra),zero(c_ultra),zero(c_ultra)
+    c₁,c₂,um,vm = zero(c_ultra),slice(zero(c_ultra),2:N),zero(c_ultra),zero(c_ultra)
+
+    # Initialize DCT-I and DST-I plans
+    p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
 
     # Clenshaw-Curtis points
     θ = N > 0 ? T[k/N for k=zero(T):N] : T[0]
@@ -132,6 +136,7 @@ function ForwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T,
     tempsin2 = sinpi(θ/2)
     tempsinλ,tempmindices = zero(c_ultra),zero(c_ultra)
     @inbounds for i=1:N+1 tempsinλ[i] = tempsin[i]^λ end
+    tempsinλm = similar(tempsinλ)
 
     # Initialize normalizing constant
     cnλ = Cnλ(0:N,λ)
@@ -140,30 +145,31 @@ function ForwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T,
     # Get indices
     CUI = ChebyshevUltrasphericalIndices(λ,CUC,tempmindices,tempsin,tempsinλ)
 
-    ChebyshevUltrasphericalPlan{FORWARD,T,typeof(p₁),typeof(p₂)}(CUC,CUI,p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempmindices,cnλ,cnmλ)
+    ChebyshevUltrasphericalPlan{FORWARD,T,typeof(p₁),typeof(p₂)}(CUC,CUI,p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempsinλm,tempmindices,cnλ,cnmλ)
 end
 
 function BackwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T,M::Int)
     # Initialize constants
     CUC = ChebyshevUltrasphericalConstants(c_ultra,λ;M=M,D=BACKWARD)
-    if λ == 0 || λ == 1 return ChebyshevUltrasphericalPlan{BACKWARD,T,Any,Any}(CUC) end
+    if modλ(λ) == 0 return ChebyshevUltrasphericalPlan{BACKWARD,T,Any,Any}(CUC) end
     M,N,nM₀,αN,K = getconstants(CUC)
+    λ = modλ(λ)
 
     # Array of almost double the size of the coefficients
     c_cheb2 = N > 0 ? zeros(T,2N+1) : T[0]
 
-    # Initialize DCT-I and DST-I plans
-    p₁,p₂ = applyTN_plan(c_cheb2),applyUN_plan(c_cheb2)
-
     # Initialize recurrence coefficients
-    rp,pr = RecurrencePlan(λ-one(T)/2,λ-one(T)/2,2N+1),zero(c_cheb2)
+    rp,pr = RecurrencePlan(λ-half(λ),λ-half(λ),2N+1),zero(c_cheb2)
 
     # Initialize temporary arrays
-    c₁,c₂,um,vm = zero(c_cheb2),zero(c_cheb2),zero(c_cheb2),zero(c_cheb2)
+    c₁,c₂,um,vm = zero(c_cheb2),slice(zero(c_cheb2),2:2N),zero(c_cheb2),zero(c_cheb2)
+
+    # Initialize DCT-I and DST-I plans
+    p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
 
     # Clenshaw-Curtis nodes and weights
     θ = N > 0 ? T[k/2N for k=zero(T):2N] : T[0]
-    w = N > 0 ? clenshawcurtisweights(2N+1,λ-one(T)/2,λ-one(T)/2,p₁) : T[0]
+    w = N > 0 ? clenshawcurtisweights(2N+1,λ-half(λ),λ-half(λ),p₁) : T[0]
 
     # Initialize sines and cosines
     tempsin = sinpi(θ)
@@ -171,18 +177,19 @@ function BackwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T
     tempsin2 = sinpi(θ/2)
     tempsinλ,tempmindices = zero(c_cheb2),zero(c_cheb2)
     @inbounds for i=1:2N+1 tempsinλ[i] = tempsin[i]^λ end
+    tempsinλm = similar(tempsinλ)
 
     # Initialize normalizing constant
     cnλ = Cnλ(0:2N,λ)
     cnmλ = similar(cnλ)
 
     # Initialize orthonormality constants
-    anλ = Anαβ(0:N,λ-one(T)/2,λ-one(T)/2)
+    anλ = Anαβ(0:N,λ-half(λ),λ-half(λ))
 
     # Get indices
     CUI = ChebyshevUltrasphericalIndices(λ,CUC,tempmindices,tempsin,tempsinλ)
 
-    ChebyshevUltrasphericalPlan{BACKWARD,T,typeof(p₁),typeof(p₂)}(CUC,CUI,p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempmindices,cnλ,cnmλ,w,anλ,c_cheb2,pr)
+    ChebyshevUltrasphericalPlan{BACKWARD,T,typeof(p₁),typeof(p₂)}(CUC,CUI,p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempsinλm,tempmindices,cnλ,cnmλ,w,anλ,c_cheb2,pr)
 end
 
 getplanλ(CUC::ChebyshevUltrasphericalConstants) = CUC.λ
@@ -194,5 +201,5 @@ getconstants(plan::ChebyshevUltrasphericalPlan) = getconstants(plan.CUC)
 getindices(CUI::ChebyshevUltrasphericalIndices) = CUI.i₁,CUI.i₂,CUI.j₁,CUI.j₂
 getindices(plan::ChebyshevUltrasphericalPlan) = getindices(plan.CUI)
 
-getplan(plan::ChebyshevUltrasphericalPlan{FORWARD})  = plan.p₁,plan.p₂,plan.rp,plan.c₁,plan.c₂,plan.um,plan.vm,plan.θ,plan.tempsin,plan.tempsin2,plan.tempsinλ,plan.tempmindices,plan.cnλ,plan.cnmλ
-getplan(plan::ChebyshevUltrasphericalPlan{BACKWARD}) = plan.p₁,plan.p₂,plan.rp,plan.c₁,plan.c₂,plan.um,plan.vm,plan.θ,plan.tempsin,plan.tempsin2,plan.tempsinλ,plan.tempmindices,plan.cnλ,plan.cnmλ,plan.w,plan.anλ,plan.c_cheb2,plan.pr
+getplan(plan::ChebyshevUltrasphericalPlan{FORWARD})  = plan.p₁,plan.p₂,plan.rp,plan.c₁,plan.c₂,plan.um,plan.vm,plan.θ,plan.tempsin,plan.tempsin2,plan.tempsinλ,plan.tempsinλm,plan.tempmindices,plan.cnλ,plan.cnmλ
+getplan(plan::ChebyshevUltrasphericalPlan{BACKWARD}) = plan.p₁,plan.p₂,plan.rp,plan.c₁,plan.c₂,plan.um,plan.vm,plan.θ,plan.tempsin,plan.tempsin2,plan.tempsinλ,plan.tempsinλm,plan.tempmindices,plan.cnλ,plan.cnmλ,plan.w,plan.anλ,plan.c_cheb2,plan.pr

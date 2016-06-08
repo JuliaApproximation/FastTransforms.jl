@@ -294,9 +294,9 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix
     end
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsin::Vector{T},tempsinλ::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int64})
-    @inbounds for i in ir
-        temp = inv(tempsin[i]^m*tempsinλ[i])
+function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int64})
+    @inbounds @simd for i in ir
+        temp = inv(tempsinλm[i])
         ϑ = (m+λ)*(half(T)-θ[i])
         um[i] = cospi(ϑ)*temp
         vm[i] = sinpi(ϑ)*temp

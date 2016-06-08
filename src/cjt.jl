@@ -85,16 +85,8 @@ function icjt(c::AbstractVector,plan::ChebyshevUltrasphericalPlan)
 end
 
 
-function plan_cjt(c::AbstractVector,λ;M::Int=7)
-    P = ForwardChebyshevUltrasphericalPlan(c,modλ(λ),M)
-    P.CUC.λ = λ
-    P
-end
-function plan_icjt(c::AbstractVector,λ;M::Int=7)
-    P = BackwardChebyshevUltrasphericalPlan(c,modλ(λ),M)
-    P.CUC.λ = λ
-    P
-end
+plan_cjt(c::AbstractVector,λ;M::Int=7) = ForwardChebyshevUltrasphericalPlan(c,λ,M)
+plan_icjt(c::AbstractVector,λ;M::Int=7) = BackwardChebyshevUltrasphericalPlan(c,λ,M)
 
 for (op,plan_op,D) in ((:cjt,:plan_cjt,:FORWARD),(:icjt,:plan_icjt,:BACKWARD))
     @eval begin
@@ -163,12 +155,7 @@ Optionally:
 
 ``M`` determines the number of terms in Hahn's asymptotic expansion.
 """
-function plan_cjt(c::AbstractVector,α,β;M::Int=7)
-    α == β && return plan_cjt(c,α+one(α)/2;M=M)
-    P = ForwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
-    P.CJC.α,P.CJC.β = α,β
-    P
-end
+plan_cjt(c::AbstractVector,α,β;M::Int=7) = α == β ? plan_cjt(c,α+half(α);M=M) : ForwardChebyshevJacobiPlan(c,α,β,M)
 
 """
 Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary
@@ -182,9 +169,4 @@ Optionally:
 
 ``M`` determines the number of terms in Hahn's asymptotic expansion.
 """
-function plan_icjt(c::AbstractVector,α,β;M::Int=7)
-    α == β && return plan_icjt(c,α+one(α)/2;M=M)
-    P = BackwardChebyshevJacobiPlan(c,modαβ(α),modαβ(β),M)
-    P.CJC.α,P.CJC.β = α,β
-    P
-end
+plan_icjt(c::AbstractVector,α,β;M::Int=7) = α == β ? plan_icjt(c,α+half(α);M=M) : BackwardChebyshevJacobiPlan(c,α,β,M)

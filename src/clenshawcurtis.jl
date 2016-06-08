@@ -26,7 +26,7 @@ applyTN!{T<:AbstractFloat}(x::Vector{T}) = applyTN!(x,applyTN_plan(x))
 function applyTN!{T<:AbstractFloat}(x::Vector{T},plan)
     x[1] *= 2; x[end] *=2
     plan*x
-    scale!(x,one(T)/2)
+    scale!(x,half(T))
 end
 applyTN{T<:AbstractFloat}(x::Vector{T},plan) = applyTN!(copy(x),plan)
 applyTN{T<:AbstractFloat}(x::Vector{T}) = applyTN!(copy(x))
@@ -44,15 +44,14 @@ end
 applyTNinv{T<:AbstractFloat}(x::Vector{T},plan) = applyTNinv!(copy(x),plan)
 applyTNinv{T<:AbstractFloat}(x::Vector{T}) = applyTNinv!(copy(x))
 
-# sin(nθ) coefficients to values at Clenshaw-Curtis nodes
+# sin(nθ) coefficients to values at Clenshaw-Curtis nodes except ±1
 
-applyUN_plan(x) = length(x) > 2 ? FFTW.plan_r2r!(slice(x,2:length(x)-1), FFTW.RODFT00) : ones(x)'
+applyUN_plan(x) = length(x) > 0 ? FFTW.plan_r2r!(x, FFTW.RODFT00) : ones(x)'
 
-applyUN!{T<:AbstractFloat}(x::Vector{T}) = applyUN!(x,applyUN_plan(x))
-function applyUN!{T<:AbstractFloat}(x::Vector{T},plan)
-    x[1] = zero(T); x[end] = zero(T)
-    plan*slice(x,2:length(x)-1)
-    scale!(x,one(T)/2)
+applyUN!{T<:AbstractFloat}(x::AbstractVector{T}) = applyUN!(x,applyUN_plan(x))
+function applyUN!{T<:AbstractFloat}(x::AbstractVector{T},plan)
+    plan*x
+    scale!(x,half(T))
 end
-applyUN{T<:AbstractFloat}(x::Vector{T},plan) = applyUN!(copy(x),plan)
-applyUN{T<:AbstractFloat}(x::Vector{T}) = applyUN!(copy(x))
+applyUN{T<:AbstractFloat}(x::AbstractVector{T},plan) = applyUN!(copy(x),plan)
+applyUN{T<:AbstractFloat}(x::AbstractVector{T}) = applyUN!(copy(x))
