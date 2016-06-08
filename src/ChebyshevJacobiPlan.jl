@@ -53,14 +53,14 @@ function ChebyshevJacobiIndices{D,T}(α::T,β::T,CJC::ChebyshevJacobiConstants{D
     ChebyshevJacobiIndices(i₁,i₂,j₁,j₂)
 end
 
-type ChebyshevJacobiPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
+type ChebyshevJacobiPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
     CJC::ChebyshevJacobiConstants{D,T}
     CJI::ChebyshevJacobiIndices
     p₁::DCT
     p₂::DST
     rp::RecurrencePlan{T}
     c₁::Vector{T}
-    c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1}
+    c₂::SA
     um::Vector{T}
     vm::Vector{T}
     cfs::Matrix{T}
@@ -75,7 +75,7 @@ type ChebyshevJacobiPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
     anαβ::Vector{T}
     c_cheb2::Vector{T}
     pr::Vector{T}
-    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1},um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T})
+    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T})
         P = new()
         P.CJC = CJC
         P.CJI = CJI
@@ -96,8 +96,8 @@ type ChebyshevJacobiPlan{D,T,DCT,DST} <: FastTransformPlan{D,T}
         P.cnmαβ = cnmαβ
         P
     end
-    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SubArray{T,1,Vector{T},Tuple{UnitRange{Int64}},1},um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T},w::Vector{T},anαβ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
-        P = ChebyshevJacobiPlan{D,T,DCT,DST}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ)
+    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T},w::Vector{T},anαβ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
+        P = ChebyshevJacobiPlan{D,T,DCT,DST,SA}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ)
         P.w = w
         P.anαβ = anαβ
         P.c_cheb2 = c_cheb2
@@ -114,7 +114,7 @@ end
 function ForwardChebyshevJacobiPlan{T}(c_jac::AbstractVector{T},α::T,β::T,M::Int)
     # Initialize constants
     CJC = ChebyshevJacobiConstants(c_jac,α,β;M=M,D=FORWARD)
-    if modαβ(α) == 0.5 && modαβ(β) == 0.5 return ChebyshevJacobiPlan{FORWARD,T,Any,Any}(CJC) end
+    if modαβ(α) == 0.5 && modαβ(β) == 0.5 return ChebyshevJacobiPlan{FORWARD,T,Any,Any,Any}(CJC) end
     M,N,nM₀,αN,K = getconstants(CJC)
     α,β = modαβ(α),modαβ(β)
 
@@ -146,13 +146,13 @@ function ForwardChebyshevJacobiPlan{T}(c_jac::AbstractVector{T},α::T,β::T,M::I
     # Get indices
     CJI = ChebyshevJacobiIndices(α,β,CJC,tempmindices,cfs,tempcos,tempsin,tempcosβsinα)
 
-    ChebyshevJacobiPlan{FORWARD,T,typeof(p₁),typeof(p₂)}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ)
+    ChebyshevJacobiPlan{FORWARD,T,typeof(p₁),typeof(p₂),typeof(c₂)}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ)
 end
 
 function BackwardChebyshevJacobiPlan{T}(c_cheb::AbstractVector{T},α::T,β::T,M::Int)
     # Initialize constants
     CJC = ChebyshevJacobiConstants(c_cheb,α,β;M=M,D=BACKWARD)
-    if modαβ(α) == 0.5 && modαβ(β) == 0.5 return ChebyshevJacobiPlan{BACKWARD,T,Any,Any}(CJC) end
+    if modαβ(α) == 0.5 && modαβ(β) == 0.5 return ChebyshevJacobiPlan{BACKWARD,T,Any,Any,Any}(CJC) end
     M,N,nM₀,αN,K = getconstants(CJC)
     α,β = modαβ(α),modαβ(β)
 
@@ -191,7 +191,7 @@ function BackwardChebyshevJacobiPlan{T}(c_cheb::AbstractVector{T},α::T,β::T,M:
     # Get indices
     CJI = ChebyshevJacobiIndices(α,β,CJC,tempmindices,cfs,tempcos,tempsin,tempcosβsinα)
 
-    ChebyshevJacobiPlan{BACKWARD,T,typeof(p₁),typeof(p₂)}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ,w,anαβ,c_cheb2,pr)
+    ChebyshevJacobiPlan{BACKWARD,T,typeof(p₁),typeof(p₂),typeof(c₂)}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ,w,anαβ,c_cheb2,pr)
 end
 
 getplanαβ(CJC::ChebyshevJacobiConstants) = CJC.α,CJC.β
