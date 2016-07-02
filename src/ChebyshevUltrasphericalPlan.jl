@@ -122,7 +122,7 @@ function ForwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T,
     rp = RecurrencePlan(λ-half(λ),λ-half(λ),N+1)
 
     # Initialize temporary arrays
-    c₁,c₂,um,vm = zero(c_ultra),slice(zero(c_ultra),2:N),zero(c_ultra),zero(c_ultra)
+    c₁,c₂,um,vm = zero(c_ultra),view(zero(c_ultra),2:N),zero(c_ultra),zero(c_ultra)
 
     # Initialize DCT-I and DST-I plans
     p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
@@ -162,7 +162,7 @@ function BackwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T
     rp,pr = RecurrencePlan(λ-half(λ),λ-half(λ),2N+1),zero(c_cheb2)
 
     # Initialize temporary arrays
-    c₁,c₂,um,vm = zero(c_cheb2),slice(zero(c_cheb2),2:2N),zero(c_cheb2),zero(c_cheb2)
+    c₁,c₂,um,vm = zero(c_cheb2),view(zero(c_cheb2),2:2N),zero(c_cheb2),zero(c_cheb2)
 
     # Initialize DCT-I and DST-I plans
     p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)

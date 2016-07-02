@@ -1,9 +1,10 @@
 __precompile__()
 module FastTransforms
 
-using Base, ToeplitzMatrices
+using Base, ToeplitzMatrices, Compat
 
 import Base: *
+import Compat: view
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac

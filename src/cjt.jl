@@ -94,8 +94,8 @@ for (op,plan_op,D) in ((:cjt,:plan_cjt,:FORWARD),(:icjt,:plan_icjt,:BACKWARD))
         *{T<:AbstractFloat}(p::FastTransformPlan{$D,T},c::AbstractVector{T}) = $op(c,p)
         $plan_op{T<:AbstractFloat}(c::AbstractVector{Complex{T}},α,β;M::Int=7) = $plan_op(real(c),α,β;M=M)
         $plan_op{T<:AbstractFloat}(c::AbstractVector{Complex{T}},λ;M::Int=7) = $plan_op(real(c),λ;M=M)
-        $plan_op(c::AbstractMatrix,α,β;M::Int=7) = $plan_op(slice(c,1:size(c,1)),α,β;M=M)
-        $plan_op(c::AbstractMatrix,λ;M::Int=7) = $plan_op(slice(c,1:size(c,1)),λ;M=M)
+        $plan_op(c::AbstractMatrix,α,β;M::Int=7) = $plan_op(view(c,1:size(c,1)),α,β;M=M)
+        $plan_op(c::AbstractMatrix,λ;M::Int=7) = $plan_op(view(c,1:size(c,1)),λ;M=M)
     end
 end
 
@@ -107,7 +107,7 @@ end
 function *(p::FastTransformPlan,c::AbstractMatrix)
     m,n = size(c)
     ret = zero(c)
-    for j=1:n ret[:,j] = p*slice(c,1:m,j) end
+    for j=1:n ret[:,j] = p*view(c,1:m,j) end
     ret
 end
 

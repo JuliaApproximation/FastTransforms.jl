@@ -137,7 +137,7 @@ function th_cheb2leg(v)
     w = zero(v)
     S,n = eltype(v),length(v)
     w[1:2:end] = -one(S)./(one(S):two(S):n)./(-one(S):two(S):n-two(S))
-    [dot(w,v);th_cheb2legplan(S,n)*slice(v,2:n)]
+    [dot(w,v);th_cheb2legplan(S,n)*view(v,2:n)]
 end
 th_leg2chebu(v)=th_leg2chebuplan(eltype(v),length(v))*v
 th_ultra2ultra(v,λ₁,λ₂)=th_ultra2ultraplan(eltype(v),length(v),λ₁,λ₂)*v
