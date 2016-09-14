@@ -19,8 +19,10 @@ function ToeplitzHankelPlan(T::TriangularToeplitz,C::Vector,DL::AbstractVector,D
 end
 ToeplitzHankelPlan(T::TriangularToeplitz,C::Matrix) =
     ToeplitzHankelPlan(T,C,ones(size(T,1)),ones(size(T,2)))
-ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,D...) =
-    ToeplitzHankelPlan(T,partialchol(H),D...)
+ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,DL::AbstractVector,DR::AbstractVector) =
+    ToeplitzHankelPlan(T,partialchol(H),DL,DR)
+ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,D::AbstractVector,DL::AbstractVector,DR::AbstractVector) =
+    ToeplitzHankelPlan(T,partialchol(H,D),DL,DR)
 
 *(P::ToeplitzHankelPlan,v::AbstractVector)=P.DL.*toeplitzcholmult(P.T,P.C,P.DR.*v)
 
@@ -38,6 +40,33 @@ function partialchol(H::Hankel)
         if mx ≤ reltol break end
         push!(σ,inv(mx))
         push!(C,v[idx:n+idx-1])
+        for j=1:k-1
+            nCjidxσj = -C[j][idx]*σ[j]
+            Base.axpy!(nCjidxσj, C[j], C[k])
+        end
+        @simd for p=1:n
+            @inbounds d[p]-=C[k][p]^2/mx
+        end
+    end
+    for k=1:length(σ) scale!(C[k],sqrt(σ[k])) end
+    C
+end
+
+function partialchol(H::Hankel,D::AbstractVector)
+    # Assumes positive definite
+    T = promote_type(eltype(H),eltype(D))
+    σ=T[]
+    n=size(H,1)
+    C=Vector{T}[]
+    v=[H[:,1];vec(H[end,2:end])]
+    d=diag(H).*D.^2
+    @assert length(v) ≥ 2n-1
+    reltol=maxabs(d)*eps(T)*log(n)
+    for k=1:n
+        mx,idx=findmax(d)
+        if mx ≤ reltol break end
+        push!(σ,inv(mx))
+        push!(C,v[idx:n+idx-1].*D.*D[idx])
         for j=1:k-1
             nCjidxσj = -C[j][idx]*σ[j]
             Base.axpy!(nCjidxσj, C[j], C[k])
@@ -86,9 +115,10 @@ function cheb2legTH{S}(::Type{S},n)
     T = TriangularToeplitz(t,:U)
     h = Λ(1:half(S):n-1,zero(S),3half(S))
     H = Hankel(h[1:n-1],h[n-1:end])
-    DL = 3half(S):n-half(S)
-    DR = -(one(S):n-one(S))/4
-    T,H,DL,DR
+    D = 1:one(S):n-1
+    DL = (3half(S):n-half(S))./D
+    DR = -(one(S):n-one(S))./4D
+    T,H,D,DL,DR
 end
 
 function leg2chebuTH{S}(::Type{S},n)
