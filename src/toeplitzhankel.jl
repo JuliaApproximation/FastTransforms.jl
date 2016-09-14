@@ -156,19 +156,9 @@ function jac2jacTH{S}(::Type{S},n,α,β,γ,δ)
     T,H,DL,DR
 end
 
-th_leg2chebplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebTH(S,n)...,ones(S,n))
-th_cheb2legplan{S}(::Type{S},n)=ToeplitzHankelPlan(cheb2legTH(S,n)...)
-th_leg2chebuplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebuTH(S,n)...,1:n,ones(S,n))
-th_ultra2ultraplan{S}(::Type{S},n,λ₁,λ₂)=ToeplitzHankelPlan(ultra2ultraTH(S,n,λ₁,λ₂)...)
-th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ)=ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)
-
-
 immutable ChebyshevToLegendrePlan{TH}
     toeplitzhankel::TH
 end
-
-ChebyshevToLegendrePlan{S}(::Type{S},n) = ChebyshevToLegendrePlan(th_cheb2legplan(S,n))
-
 
 function *(P::ChebyshevToLegendrePlan,v::AbstractVector)
     w = zero(v)
@@ -177,10 +167,15 @@ function *(P::ChebyshevToLegendrePlan,v::AbstractVector)
     [dot(w,v);P.toeplitzhankel*view(v,2:n)]
 end
 
+th_leg2chebplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebTH(S,n)...,ones(S,n))
+th_cheb2legplan{S}(::Type{S},n)=ChebyshevToLegendrePlan(ToeplitzHankelPlan(cheb2legTH(S,n)...))
+th_leg2chebuplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebuTH(S,n)...,1:n,ones(S,n))
+th_ultra2ultraplan{S}(::Type{S},n,λ₁,λ₂)=ToeplitzHankelPlan(ultra2ultraTH(S,n,λ₁,λ₂)...)
+th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ)=ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)
+
 
 th_leg2cheb(v)=th_leg2chebplan(eltype(v),length(v))*v
-th_cheb2leg(v) = ChebyshevToLegendrePlan(eltype(v),length(v))*v
-
+th_cheb2leg(v) = th_cheb2legplan(eltype(v),length(v))*v
 th_leg2chebu(v)=th_leg2chebuplan(eltype(v),length(v))*v
 th_ultra2ultra(v,λ₁,λ₂)=th_ultra2ultraplan(eltype(v),length(v),λ₁,λ₂)*v
 th_jac2jac(v,α,β,γ,δ)=th_jac2jacplan(eltype(v),length(v),α,β,γ,δ)*v
