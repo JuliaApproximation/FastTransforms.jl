@@ -160,6 +160,8 @@ immutable ChebyshevToLegendrePlan{TH}
     toeplitzhankel::TH
 end
 
+ChebyshevToLegendrePlan{S}(::Type{S},n) = ChebyshevToLegendrePlan(th_cheb2legplan(S,n))
+
 function *(P::ChebyshevToLegendrePlan,v::AbstractVector)
     w = zero(v)
     S,n = eltype(v),length(v)
