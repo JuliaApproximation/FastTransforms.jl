@@ -9,7 +9,8 @@ import Compat: view
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
 export gaunt
-export padtransform, ipadtransform, padpoints, padeval
+export paduatransform, ipaduatransform, paduapoints, paduaeval
+export plan_paduatransform, plan_ipaduatransform
 
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
@@ -25,7 +26,7 @@ include("specialfunctions.jl")
 include("clenshawcurtis.jl")
 include("fejer.jl")
 include("recurrence.jl")
-include("PadTransform.jl")
+include("PaduaTransform.jl")
 
 abstract FastTransformPlan{D,T}
 

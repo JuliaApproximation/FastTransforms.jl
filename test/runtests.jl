@@ -206,26 +206,34 @@ c = randn(1000)./√(1:1000);
 
 @test norm(ultra2ultra(ultra2ultra(c,.5,.75),.75,.5)-c,Inf) < 10length(c)*eps()
 
-println("Testing Pad Transforms and their inverse function property")
-n=100
-N=div((n+1)*(n+2),2)
-v=rand(N) # Length of v is the no. of Padua points
-@test norm(padtransform(ipadtransform(v))-v)< 100eps()
-@test norm(ipadtransform(padtransform(v))-v)< 100eps()
-@test_approx_eq padtransform(ipadtransform(v)) v
-@test_approx_eq ipadtransform(padtransform(v)) v
 
-println("Testing runtimes for Pad Transforms")
-@time padtransform(v)
-@time ipadtransform(v)
+println("Testing (I)Padua Transforms and their inverse function property")
+n=200
+N=div((n+1)*(n+2),2)
+v=rand(N)  #Length of v is the no. of Padua points
+
+@test_approx_eq paduatransform(ipaduatransform(v)) v
+@test_approx_eq ipaduatransform(paduatransform(v)) v
+
+println("Testing runtimes for (I)Padua Transforms")
+@time paduatransform(v)
+@time ipaduatransform(v)
+
+println("Runtimes for Pre-planned (I)Padua Transforms")
+n=300
+v=rand(N)
+Plan=plan_paduatransform(v)
+IPlan=plan_ipaduatransform(v)
+@time paduatransform(Plan,v)
+@time ipaduatransform(IPlan,v)
 
 println("Accuracy of 2d function interpolation at a point")
-f_xy = (x,y) -> x^2*y+x^3
-g_xy = (x,y) -> cos(exp(2*x+y))*sin(y)
+f = (x,y) -> x^2*y+x^3
+g = (x,y) ->cos(exp(2*x+y))*sin(y)
 x=0.1;y=0.2
-m=20
+m=130
 l=80
-f_m=padeval(f_xy,x,y,m)
-g_l=padeval(g_xy,x,y,l)
-@test_approx_eq f_xy(x,y) f_m
-@test_approx_eq g_xy(x,y) g_l
+f_x=paduaeval(f,x,y,m)
+g_x=paduaeval(g,x,y,l)
+@test_approx_eq f(x,y) f_x
+@test_approx_eq g(x,y) g_x
