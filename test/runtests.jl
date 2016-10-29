@@ -205,3 +205,35 @@ c = randn(1000)./√(1:1000);
 @test norm(jac2jac(c,0.,√2/2,-1/4,√2/2)-jjt(c,0.,√2/2,-1/4,√2/2),Inf) < 10length(c)*eps()
 
 @test norm(ultra2ultra(ultra2ultra(c,.5,.75),.75,.5)-c,Inf) < 10length(c)*eps()
+
+
+println("Testing (I)Padua Transforms and their inverse function property")
+n=200
+N=div((n+1)*(n+2),2)
+v=rand(N)  #Length of v is the no. of Padua points
+
+@test_approx_eq paduatransform(ipaduatransform(v)) v
+@test_approx_eq ipaduatransform(paduatransform(v)) v
+
+println("Testing runtimes for (I)Padua Transforms")
+@time paduatransform(v)
+@time ipaduatransform(v)
+
+println("Runtimes for Pre-planned (I)Padua Transforms")
+n=300
+v=rand(N)
+Plan=plan_paduatransform(v)
+IPlan=plan_ipaduatransform(v)
+@time paduatransform(Plan,v)
+@time ipaduatransform(IPlan,v)
+
+println("Accuracy of 2d function interpolation at a point")
+f_xy = (x,y) -> x^2*y+x^3
+g_xy = (x,y) ->cos(exp(2*x+y))*sin(y)
+x=0.1;y=0.2
+m=130
+l=80
+f_m=paduaeval(f_xy,x,y,m)
+g_l=paduaeval(g_xy,x,y,l)
+@test_approx_eq f_xy(x,y) f_m
+@test_approx_eq g_xy(x,y) g_l
