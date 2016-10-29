@@ -228,12 +228,12 @@ IPlan=plan_ipaduatransform(v)
 @time ipaduatransform(IPlan,v)
 
 println("Accuracy of 2d function interpolation at a point")
-f = (x,y) -> x^2*y+x^3
-g = (x,y) ->cos(exp(2*x+y))*sin(y)
+f_xy = (x,y) -> x^2*y+x^3
+g_xy = (x,y) ->cos(exp(2*x+y))*sin(y)
 x=0.1;y=0.2
 m=130
 l=80
-f_x=paduaeval(f,x,y,m)
-g_x=paduaeval(g,x,y,l)
-@test_approx_eq f(x,y) f_x
-@test_approx_eq g(x,y) g_x
+f_m=paduaeval(f_xy,x,y,m)
+g_l=paduaeval(g_xy,x,y,l)
+@test_approx_eq f_xy(x,y) f_m
+@test_approx_eq g_xy(x,y) g_l
