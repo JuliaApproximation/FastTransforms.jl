@@ -96,10 +96,10 @@ function paduatransform{T}(P::PaduaTransformPlan,v::AbstractVector{T})
     tensorcfs=P.dctplan*vals
     m,l=size(tensorcfs)
     scale!(tensorcfs,T(2)/(n*(n+1)))
-    scale!(sub(tensorcfs,1,:),0.5)
-    scale!(sub(tensorcfs,:,1),0.5)
-    scale!(sub(tensorcfs,m,:),0.5)
-    scale!(sub(tensorcfs,:,l),0.5)
+    scale!(view(tensorcfs,1,:),0.5)
+    scale!(view(tensorcfs,:,1),0.5)
+    scale!(view(tensorcfs,m,:),0.5)
+    scale!(view(tensorcfs,:,l),0.5)
     cfs=trianglecfsvec(P,tensorcfs)
     return cfs
 end
@@ -115,11 +115,11 @@ function paduavalsmat(P::PaduaTransformPlan,v::AbstractVector)
         d=div(n+2,2)
         m=0
         @inbounds for i=1:n+1
-            vals[1+mod(i,2):2:n+1+mod(i,2),i]=sub(v,m+1:m+d)
+            vals[1+mod(i,2):2:n+1+mod(i,2),i]=view(v,m+1:m+d)
             m+=d
         end
     else
-        @inbounds vals[1:2:end]=sub(v,:)
+        @inbounds vals[1:2:end]=view(v,:)
     end
     return vals
 end
