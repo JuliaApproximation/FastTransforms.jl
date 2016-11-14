@@ -253,7 +253,6 @@ function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer)
     plan=plan_paduatransform(pvals)
     coeffs=paduatransform(plan,pvals)
     cfs_mat=trianglecfsmat(coeffs)
-    cfs_mat=view(cfs_mat,1:m+1,:)
     f_x=sum([cfs_mat[k,j]*cos((j-1)*acos(x))*cos((k-1)*acos(y)) for k=1:m+1, j=1:m+1])
     return f_x
 end
