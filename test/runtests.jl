@@ -228,13 +228,15 @@ function trianglecfsmat{T}(cfs::AbstractVector{T})
     cfsmat=Array(T,n+2,n+1)
     cfsmat=fill!(cfsmat,0)
     m=1
-    for d=1:n+1, k=1:d
-        j=d-k+1
-        cfsmat[k,j]=cfs[m]
-        if m==N
-            return cfsmat
-        else
-            m+=1
+    for d=1:n+1
+        @inbounds for k=1:d
+            j=d-k+1
+            cfsmat[k,j]=cfs[m]
+            if m==N
+                return cfsmat
+            else
+                m+=1
+            end
         end
     end
     return cfsmat
@@ -245,10 +247,11 @@ Interpolates a 2d function at a given point using 2d Chebyshev series.
 function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer)
     T=promote_type(typeof(x),typeof(y))
     M=div((m+1)*(m+2),2)
+    pvals=Array(T,M)
     p=paduapoints(T,m)
-    map!(f,p,p[:,1],p[:,2])
-    plan=plan_paduatransform(p)
-    coeffs=paduatransform(plan,p)
+    map!(f,pvals,p[:,1],p[:,2])
+    plan=plan_paduatransform(pvals)
+    coeffs=paduatransform(plan,pvals)
     cfs_mat=trianglecfsmat(coeffs)
     cfs_mat=view(cfs_mat,1:m+1,:)
     f_x=sum([cfs_mat[k,j]*cos((j-1)*acos(x))*cos((k-1)*acos(y)) for k=1:m+1, j=1:m+1])
