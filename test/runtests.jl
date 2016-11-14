@@ -211,21 +211,22 @@ println("Testing (I)Padua Transforms and their inverse function property")
 n=200
 N=div((n+1)*(n+2),2)
 v=rand(N)  #Length of v is the no. of Padua points
-
-@test_approx_eq paduatransform(ipaduatransform(v)) v
-@test_approx_eq ipaduatransform(paduatransform(v)) v
+Pl=plan_paduatransform(v)
+IPl=plan_ipaduatransform(v)
+@test_approx_eq paduatransform(Pl,ipaduatransform(IPl,v)) v
+@test_approx_eq ipaduatransform(IPl,paduatransform(Pl,v)) v
 
 println("Testing runtimes for (I)Padua Transforms")
-@time paduatransform(v)
-@time ipaduatransform(v)
+@time paduatransform(Pl,v)
+@time ipaduatransform(IPl,v)
 
-println("Runtimes for Pre-planned (I)Padua Transforms")
-n=300
-v=rand(N)
-Plan=plan_paduatransform(v)
-IPlan=plan_ipaduatransform(v)
-@time paduatransform(Plan,v)
-@time ipaduatransform(IPlan,v)
+# println("Runtimes for Pre-planned (I)Padua Transforms")
+# n=300
+# v=rand(N)
+# Plan=plan_paduatransform(v)
+# IPlan=plan_ipaduatransform(v)
+# @time paduatransform(Plan,v)
+# @time ipaduatransform(IPlan,v)
 
 println("Accuracy of 2d function interpolation at a point")
 function trianglecfsmat{T}(cfs::AbstractVector{T})

@@ -162,9 +162,3 @@ function paduapoints{T}(::Type{T},n::Integer)
     end
     return MM
 end
-
-# v=collect(1.:6.)
-# P=plan_ipaduatransform(v)
-# @code_warntype ipaduatransform(P,v)
-# M=plan_paduatransform(v)
-# @code_warntype paduatransform(M,v)
