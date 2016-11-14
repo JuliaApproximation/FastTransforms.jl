@@ -36,13 +36,15 @@ function trianglecfsmat(P::IPaduaTransformPlan,cfs::AbstractVector)
     n=Int(cld(-3+sqrt(1+8N),2))
     cfsmat=fill!(P.cfsmat,0)
     m=1
-    @inbounds for d=1:n+1, k=1:d
-        j=d-k+1
-        cfsmat[k,j]=cfs[m]
-        if m==N
-            return cfsmat
-        else
-            m+=1
+    for d=1:n+1
+        @inbounds for k=1:d
+            j=d-k+1
+            cfsmat[k,j]=cfs[m]
+            if m==N
+                return cfsmat
+            else
+                m+=1
+            end
         end
     end
     return cfsmat
@@ -57,12 +59,11 @@ function paduavec(P::IPaduaTransformPlan,padmat::Matrix)
     if iseven(n)>0
         d=div(n+2,2)
         m=0
-    @inbounds for i=1:n+1
-                  P.padvals[m+1:m+d]=view(padmat,1+mod(i,2):2:N-1+mod(i,2),i)
-                  m+=d
-              end
+        @inbounds for i=1:n+1
+            P.padvals[m+1:m+d]=view(padmat,1+mod(i,2):2:N-1+mod(i,2),i)
+            m+=d
+        end
     else
-
         @inbounds  P.padvals[:]=view(padmat,1:2:N-1)
     end
     return P.padvals
@@ -113,12 +114,12 @@ function paduavalsmat(P::PaduaTransformPlan,v::AbstractVector)
     if iseven(n)>0
         d=div(n+2,2)
         m=0
-    @inbounds for i=1:n+1
+        @inbounds for i=1:n+1
             vals[1+mod(i,2):2:end-1+mod(i,2),i]=view(v,m+1:m+d)
             m+=d
         end
     else
-    @inbounds vals[1:2:end]=view(v,:)
+        @inbounds vals[1:2:end]=view(v,:)
     end
     return vals
 end
@@ -129,10 +130,12 @@ Creates length (n+1)(n+2)/2 vector from matrix of triangle Chebyshev coefficient
 function trianglecfsvec(P::PaduaTransformPlan,cfs::Matrix)
     m=size(cfs,2)
     l=1
-    @inbounds for d=1:m,k=1:d
-        j=d-k+1
-        P.retvec[l]=cfs[k,j]
-        l+=1
+    for d=1:m
+        @inbounds for k=1:d
+            j=d-k+1
+            P.retvec[l]=cfs[k,j]
+            l+=1
+        end
     end
     return P.retvec
 end

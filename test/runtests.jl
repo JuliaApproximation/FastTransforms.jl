@@ -220,14 +220,6 @@ println("Testing runtimes for (I)Padua Transforms")
 @time paduatransform(Pl,v)
 @time ipaduatransform(IPl,v)
 
-# println("Runtimes for Pre-planned (I)Padua Transforms")
-# n=300
-# v=rand(N)
-# Plan=plan_paduatransform(v)
-# IPlan=plan_ipaduatransform(v)
-# @time paduatransform(Plan,v)
-# @time ipaduatransform(IPlan,v)
-
 println("Accuracy of 2d function interpolation at a point")
 function trianglecfsmat{T}(cfs::AbstractVector{T})
     N=length(cfs)
