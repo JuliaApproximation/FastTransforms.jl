@@ -228,6 +228,40 @@ IPlan=plan_ipaduatransform(v)
 @time ipaduatransform(IPlan,v)
 
 println("Accuracy of 2d function interpolation at a point")
+function trianglecfsmat{T}(cfs::AbstractVector{T})
+    N=length(cfs)
+    n=Int(cld(-3+sqrt(1+8N),2))
+    @assert N==div((n+1)*(n+2),2)
+    cfsmat=Array(T,n+2,n+1)
+    cfsmat=fill!(cfsmat,0)
+    m=1
+    for d=1:n+1, k=1:d
+        j=d-k+1
+        cfsmat[k,j]=cfs[m]
+        if m==N
+            return cfsmat
+        else
+            m+=1
+        end
+    end
+    return cfsmat
+end
+"""
+Interpolates a 2d function at a given point using 2d Chebyshev series.
+"""
+function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer)
+    T=promote_type(typeof(x),typeof(y))
+    M=div((m+1)*(m+2),2)
+    pvals=Array(T,M)
+    p=paduapoints(m)
+    pvals=map!(f,p[:,1],p[:,2])
+    plan=plan_paduatransform(pvals)
+    coeffs=paduatransform(plan,pvals)
+    cfs_mat=trianglecfsmat(coeffs)
+    cfs_mat=view(cfs_mat,1:m+1,:)
+    f_x=sum([cfs_mat[k,j]*cos((j-1)*acos(x))*cos((k-1)*acos(y)) for k=1:m+1, j=1:m+1])
+    return f_x
+end
 f_xy = (x,y) -> x^2*y+x^3
 g_xy = (x,y) ->cos(exp(2*x+y))*sin(y)
 x=0.1;y=0.2

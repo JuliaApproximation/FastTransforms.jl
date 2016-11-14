@@ -9,7 +9,7 @@ import Compat: view
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
 export gaunt
-export paduatransform, ipaduatransform, paduapoints, paduaeval
+export paduatransform, ipaduatransform, paduapoints
 export plan_paduatransform, plan_ipaduatransform
 
 # Other module methods and constants:
