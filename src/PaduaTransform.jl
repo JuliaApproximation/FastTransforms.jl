@@ -7,13 +7,16 @@ immutable IPaduaTransformPlan{IDCTPLAN,T}
     idctplan::IDCTPLAN
 end
 
-function plan_ipaduatransform{T}(v::AbstractVector{T})
-    N=length(v)
+function plan_ipaduatransform{T}(::Type{T},N::Integer)
     n=Int(cld(-3+sqrt(1+8N),2))
-    @assert N==div((n+1)*(n+2),2)
+    if N ≠ div((n+1)*(n+2),2)
+        error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
+    end
     IPaduaTransformPlan(Array{T}(n+2,n+1),Array{T}(N),
         FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00))
 end
+
+plan_ipaduatransform{T}(v::AbstractVector{T}) = plan_ipaduatransform(eltype(v),length(v))
 
 """
 Inverse Padua Transform maps the 2D Chebyshev coefficients to the values of the interpolation polynomial at the Padua points.
@@ -80,13 +83,16 @@ immutable PaduaTransformPlan{DCTPLAN,T}
     dctplan::DCTPLAN
 end
 
-function plan_paduatransform{T}(v::AbstractVector{T})
-    N=length(v)
+function plan_paduatransform{T}(::Type{T},N::Integer)
     n=Int(cld(-3+sqrt(1+8N),2))
-    @assert N==div((n+1)*(n+2),2)
+    if N ≠ ((n+1)*(n+2))÷2
+        error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
+    end
     PaduaTransformPlan(Array{T}(n+2,n+1),Array{T}(N),
         FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00))
 end
+
+plan_paduatransform{T}(v::AbstractVector{T}) = plan_paduatransform(eltype(v),length(v))
 
 """
 Padua Transform maps from interpolant values at the Padua points to the 2D Chebyshev coefficients.
@@ -169,3 +175,5 @@ function paduapoints{T}(::Type{T},n::Integer)
     end
     return MM
 end
+
+paduapoints(n::Integer) = paduapoints(Float64,n)
