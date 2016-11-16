@@ -9,8 +9,8 @@ import Compat: view
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
 export gaunt
-export paduatransform, ipaduatransform, paduapoints
-export plan_paduatransform, plan_ipaduatransform
+export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
+export plan_paduatransform!, plan_ipaduatransform!
 
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac

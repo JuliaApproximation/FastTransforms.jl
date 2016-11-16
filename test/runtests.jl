@@ -211,12 +211,23 @@ println("Testing (I)Padua Transforms and their inverse function property")
 n=200
 N=div((n+1)*(n+2),2)
 v=rand(N)  #Length of v is the no. of Padua points
-Pl=plan_paduatransform(v)
-IPl=plan_ipaduatransform(v)
-@test_approx_eq Pl*(IPl*v) v
-@test_approx_eq IPl*(Pl*v) v
-@test_approx_eq Pl*v paduatransform(v)
-@test_approx_eq IPl*v ipaduatransform(v)
+Pl=plan_paduatransform!(v)
+IPl=plan_ipaduatransform!(v)
+@test_approx_eq Pl*(IPl*copy(v)) v
+@test_approx_eq IPl*(Pl*copy(v)) v
+@test_approx_eq Pl*copy(v) paduatransform(v)
+@test_approx_eq IPl*copy(v) ipaduatransform(v)
+
+# check that the return vector is NOT reused
+Pl=plan_paduatransform!(v)
+x=Pl*v
+y=Pl*rand(N)
+@test x ≠ y
+
+IPl=plan_ipaduatransform!(v)
+x=IPl*v
+y=IPl*rand(N)
+@test x ≠ y
 
 println("Testing runtimes for (I)Padua Transforms")
 @time Pl*v
@@ -234,7 +245,7 @@ function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer,lex)
     p=paduapoints(T,m)
     map!(f,pvals,p[:,1],p[:,2])
     coeffs=paduatransform(pvals,lex)
-    plan=plan_ipaduatransform(pvals,lex)
+    plan=plan_ipaduatransform!(pvals,lex)
     cfs_mat=FastTransforms.trianglecfsmat(plan,coeffs)
     f_x=sum([cfs_mat[k,j]*cos((j-1)*acos(x))*cos((k-1)*acos(y)) for k=1:m+1, j=1:m+1])
     return f_x
