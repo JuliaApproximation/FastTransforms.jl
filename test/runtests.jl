@@ -223,37 +223,19 @@ println("Testing runtimes for (I)Padua Transforms")
 @time IPl*v
 
 println("Accuracy of 2d function interpolation at a point")
-function trianglecfsmat{T}(cfs::AbstractVector{T})
-    N=length(cfs)
-    n=Int(cld(-3+sqrt(1+8N),2))
-    @assert N==div((n+1)*(n+2),2)
-    cfsmat=Array(T,n+2,n+1)
-    cfsmat=fill!(cfsmat,0)
-    m=1
-    for d=1:n+1
-        @inbounds for k=1:d
-            j=d-k+1
-            cfsmat[k,j]=cfs[m]
-            if m==N
-                return cfsmat
-            else
-                m+=1
-            end
-        end
-    end
-    return cfsmat
-end
+
 """
 Interpolates a 2d function at a given point using 2d Chebyshev series.
 """
-function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer)
+function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer,lex)
     T=promote_type(typeof(x),typeof(y))
     M=div((m+1)*(m+2),2)
     pvals=Array(T,M)
     p=paduapoints(T,m)
     map!(f,pvals,p[:,1],p[:,2])
-    coeffs=paduatransform(pvals)
-    cfs_mat=trianglecfsmat(coeffs)
+    coeffs=paduatransform(pvals,lex)
+    plan=plan_ipaduatransform(pvals,lex)
+    cfs_mat=FastTransforms.trianglecfsmat(plan,coeffs)
     f_x=sum([cfs_mat[k,j]*cos((j-1)*acos(x))*cos((k-1)*acos(y)) for k=1:m+1, j=1:m+1])
     return f_x
 end
@@ -262,7 +244,13 @@ g_xy = (x,y) ->cos(exp(2*x+y))*sin(y)
 x=0.1;y=0.2
 m=130
 l=80
-f_m=paduaeval(f_xy,x,y,m)
-g_l=paduaeval(g_xy,x,y,l)
+f_m=paduaeval(f_xy,x,y,m,Val{true})
+g_l=paduaeval(g_xy,x,y,l,Val{true})
+@test_approx_eq f_xy(x,y) f_m
+@test_approx_eq g_xy(x,y) g_l
+
+
+f_m=paduaeval(f_xy,x,y,m,Val{false})
+g_l=paduaeval(g_xy,x,y,l,Val{false})
 @test_approx_eq f_xy(x,y) f_m
 @test_approx_eq g_xy(x,y) g_l

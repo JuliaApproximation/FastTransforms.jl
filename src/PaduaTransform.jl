@@ -1,22 +1,29 @@
 """
 Pre-plan an Inverse Padua Transform.
 """
-immutable IPaduaTransformPlan{IDCTPLAN,T}
+# lex indicates if its lexigraphical (i.e., x, y) or reverse (y, x)
+immutable IPaduaTransformPlan{lex,IDCTPLAN,T}
     cfsmat::Matrix{T}
     padvals::Vector{T}
     idctplan::IDCTPLAN
 end
 
-function plan_ipaduatransform{T}(::Type{T},N::Integer)
+IPaduaTransformPlan{T,lex}(cfsmat::Matrix{T},padvals::Vector{T},idctplan,::Type{Val{lex}}) =
+    IPaduaTransformPlan{lex,typeof(idctplan),T}(cfsmat,padvals,idctplan)
+
+function plan_ipaduatransform{T}(::Type{T},N::Integer,lex)
     n=Int(cld(-3+sqrt(1+8N),2))
     if N ≠ div((n+1)*(n+2),2)
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
     end
     IPaduaTransformPlan(Array{T}(n+2,n+1),Array{T}(N),
-        FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00))
+        FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00),lex)
 end
 
-plan_ipaduatransform{T}(v::AbstractVector{T}) = plan_ipaduatransform(eltype(v),length(v))
+
+plan_ipaduatransform{T}(::Type{T},N::Integer) = plan_ipaduatransform(T,N,Val{true})
+
+plan_ipaduatransform{T}(v::AbstractVector{T},lex...) = plan_ipaduatransform(eltype(v),length(v),lex...)
 
 """
 Inverse Padua Transform maps the 2D Chebyshev coefficients to the values of the interpolation polynomial at the Padua points.
@@ -31,18 +38,37 @@ function *{T}(P::IPaduaTransformPlan,v::AbstractVector{T})
     return paduavals
 end
 
-ipaduatransform(v::AbstractVector) = plan_ipaduatransform(v)*v
+ipaduatransform(v::AbstractVector,lex...) = plan_ipaduatransform(v,lex...)*v
 
 """
 Creates (n+2)x(n+1) Chebyshev coefficient matrix from triangle coefficients.
 """
-function trianglecfsmat(P::IPaduaTransformPlan,cfs::AbstractVector)
+function trianglecfsmat(P::IPaduaTransformPlan{true},cfs::AbstractVector)
     N=length(cfs)
     n=Int(cld(-3+sqrt(1+8N),2))
     cfsmat=fill!(P.cfsmat,0)
     m=1
     for d=1:n+1
         @inbounds for k=1:d
+            j=d-k+1
+            cfsmat[k,j]=cfs[m]
+            if m==N
+                return cfsmat
+            else
+                m+=1
+            end
+        end
+    end
+    return cfsmat
+end
+
+function trianglecfsmat(P::IPaduaTransformPlan{false},cfs::AbstractVector)
+    N=length(cfs)
+    n=Int(cld(-3+sqrt(1+8N),2))
+    cfsmat=fill!(P.cfsmat,0)
+    m=1
+    for d=1:n+1
+        @inbounds for k=d:-1:1
             j=d-k+1
             cfsmat[k,j]=cfs[m]
             if m==N
@@ -77,22 +103,26 @@ end
 """
 Pre-plan a Padua Transform.
 """
-immutable PaduaTransformPlan{DCTPLAN,T}
+immutable PaduaTransformPlan{lex,DCTPLAN,T}
     vals::Matrix{T}
     retvec::Vector{T}
     dctplan::DCTPLAN
 end
 
-function plan_paduatransform{T}(::Type{T},N::Integer)
+PaduaTransformPlan{T,lex}(vals::Matrix{T},retvec::Vector{T},dctplan,::Type{Val{lex}}) =
+    PaduaTransformPlan{lex,typeof(dctplan),T}(vals,retvec,dctplan)
+
+function plan_paduatransform{T}(::Type{T},N::Integer,lex)
     n=Int(cld(-3+sqrt(1+8N),2))
     if N ≠ ((n+1)*(n+2))÷2
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
     end
     PaduaTransformPlan(Array{T}(n+2,n+1),Array{T}(N),
-        FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00))
+        FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00),lex)
 end
 
-plan_paduatransform{T}(v::AbstractVector{T}) = plan_paduatransform(eltype(v),length(v))
+plan_paduatransform{T}(::Type{T},N::Integer) = plan_paduatransform(T,N,Val{true})
+plan_paduatransform{T}(v::AbstractVector{T},lex...) = plan_paduatransform(eltype(v),length(v),lex...)
 
 """
 Padua Transform maps from interpolant values at the Padua points to the 2D Chebyshev coefficients.
@@ -112,7 +142,7 @@ function *{T}(P::PaduaTransformPlan,v::AbstractVector{T})
     return cfs
 end
 
-paduatransform(v::AbstractVector) = plan_paduatransform(v)*v
+paduatransform(v::AbstractVector,lex...) = plan_paduatransform(v,lex...)*v
 
 """
 Creates (n+2)x(n+1) matrix of interpolant values on the tensor grid at the (n+1)(n+2)/2 Padua points.
@@ -137,11 +167,24 @@ end
 """
 Creates length (n+1)(n+2)/2 vector from matrix of triangle Chebyshev coefficients.
 """
-function trianglecfsvec(P::PaduaTransformPlan,cfs::Matrix)
+function trianglecfsvec(P::PaduaTransformPlan{true},cfs::Matrix)
     m=size(cfs,2)
     l=1
     for d=1:m
         @inbounds for k=1:d
+            j=d-k+1
+            P.retvec[l]=cfs[k,j]
+            l+=1
+        end
+    end
+    return P.retvec
+end
+
+function trianglecfsvec(P::PaduaTransformPlan{false},cfs::Matrix)
+    m=size(cfs,2)
+    l=1
+    for d=1:m
+        @inbounds for k=d:-1:1
             j=d-k+1
             P.retvec[l]=cfs[k,j]
             l+=1
