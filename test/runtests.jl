@@ -213,12 +213,14 @@ N=div((n+1)*(n+2),2)
 v=rand(N)  #Length of v is the no. of Padua points
 Pl=plan_paduatransform(v)
 IPl=plan_ipaduatransform(v)
-@test_approx_eq paduatransform(Pl,ipaduatransform(IPl,v)) v
-@test_approx_eq ipaduatransform(IPl,paduatransform(Pl,v)) v
+@test_approx_eq Pl*(IPl*v) v
+@test_approx_eq IPl*(Pl*v) v
+@test_approx_eq Pl*v paduatransform(v)
+@test_approx_eq IPl*v ipaduatransform(v)
 
 println("Testing runtimes for (I)Padua Transforms")
-@time paduatransform(Pl,v)
-@time ipaduatransform(IPl,v)
+@time Pl*v
+@time IPl*v
 
 println("Accuracy of 2d function interpolation at a point")
 function trianglecfsmat{T}(cfs::AbstractVector{T})
@@ -250,8 +252,7 @@ function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer)
     pvals=Array(T,M)
     p=paduapoints(T,m)
     map!(f,pvals,p[:,1],p[:,2])
-    plan=plan_paduatransform(pvals)
-    coeffs=paduatransform(plan,pvals)
+    coeffs=paduatransform(pvals)
     cfs_mat=trianglecfsmat(coeffs)
     f_x=sum([cfs_mat[k,j]*cos((j-1)*acos(x))*cos((k-1)*acos(y)) for k=1:m+1, j=1:m+1])
     return f_x

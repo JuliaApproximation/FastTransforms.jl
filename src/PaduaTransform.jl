@@ -18,7 +18,7 @@ end
 """
 Inverse Padua Transform maps the 2D Chebyshev coefficients to the values of the interpolation polynomial at the Padua points.
 """
-function ipaduatransform{T}(P::IPaduaTransformPlan,v::AbstractVector{T})
+function *{T}(P::IPaduaTransformPlan,v::AbstractVector{T})
     cfsmat=trianglecfsmat(P,v)
     n,m=size(cfsmat)
     scale!(view(cfsmat,:,2:m-1),0.5)
@@ -27,6 +27,8 @@ function ipaduatransform{T}(P::IPaduaTransformPlan,v::AbstractVector{T})
     paduavals=paduavec(P,tensorvals)
     return paduavals
 end
+
+ipaduatransform(v::AbstractVector) = plan_ipaduatransform(v)*v
 
 """
 Creates (n+2)x(n+1) Chebyshev coefficient matrix from triangle coefficients.
@@ -89,7 +91,7 @@ end
 """
 Padua Transform maps from interpolant values at the Padua points to the 2D Chebyshev coefficients.
 """
-function paduatransform{T}(P::PaduaTransformPlan,v::AbstractVector{T})
+function *{T}(P::PaduaTransformPlan,v::AbstractVector{T})
     N=length(v)
     n=Int(cld(-3+sqrt(1+8N),2))
     vals=paduavalsmat(P,v)
@@ -103,6 +105,8 @@ function paduatransform{T}(P::PaduaTransformPlan,v::AbstractVector{T})
     cfs=trianglecfsvec(P,tensorcfs)
     return cfs
 end
+
+paduatransform(v::AbstractVector) = plan_paduatransform(v)*v
 
 """
 Creates (n+2)x(n+1) matrix of interpolant values on the tensor grid at the (n+1)(n+2)/2 Padua points.
