@@ -1,7 +1,7 @@
 __precompile__()
 module FastTransforms
 
-using Base, ToeplitzMatrices, Compat
+using Base, ToeplitzMatrices, Compat, LambertW
 
 import Base: *
 import Compat: view
@@ -11,8 +11,8 @@ export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
 export gaunt
 export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
 export plan_paduatransform!, plan_ipaduatransform!
-export nufft, nufft1, nufft2, nufft3
-export nufft_plan nufft1_plan, nufft2_plan, nufft3_plan
+export nufft, nufft1, nufft2
+export nufft_plan, nufft1_plan, nufft2_plan
 
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
