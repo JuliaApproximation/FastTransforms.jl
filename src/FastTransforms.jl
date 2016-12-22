@@ -11,6 +11,8 @@ export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
 export gaunt
 export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
 export plan_paduatransform!, plan_ipaduatransform!
+export nufft, nufft1, nufft2, nufft3
+export nufft_plan nufft1_plan, nufft2_plan, nufft3_plan
 
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
@@ -37,6 +39,7 @@ include("cheb2jac.jl")
 include("ChebyshevUltrasphericalPlan.jl")
 include("ultra2cheb.jl")
 include("cheb2ultra.jl")
+include("nufft.jl")
 
 include("cjt.jl")
 
