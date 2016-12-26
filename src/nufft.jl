@@ -1,15 +1,20 @@
 function nufft1_plan{T<:AbstractFloat}( x::AbstractVector{T}, ϵ::T )
-(s_vec, t_idx, γ) = FindAlgorithmicParameters( x )
+#(s_vec, t_idx, γ) = FindAlgorithmicParameters( x )
+t_idx = AssignClosestEquispacedFFTpoint( x )
+γ = PerturbationParameter( x, AssignClosestEquispacedGridpoint( x ) )
 K = FindK(γ, ϵ)   
-(u, v) = constructAK(x, K)
+u = constructU(x, K)
+v = constructV(x, K)
 p( c ) = (u.*(fft(Diagonal(c)*v,1)[t_idx,:]))*ones(K)
 end
 
 function nufft2_plan{T<:AbstractFloat}( ω::AbstractVector{T}, ϵ::T )
 N = size(ω, 1)
-(s_vec, t_idx, γ) = FindAlgorithmicParameters( ω/N )
+t_idx = AssignClosestEquispacedFFTpoint( ω/N )
+γ = PerturbationParameter( ω/N, AssignClosestEquispacedGridpoint( ω/N ) )
 K = FindK(γ, ϵ) 
-(u, v) = constructAK(ω/N, K) 
+u = constructU( ω/N, K)
+v = constructV( ω/N, K) 
 In = speye(eltype(c),  N, N)
 p( c ) = (v.*(N*conj(ifft(In[:,t_idx]*conj(Diagonal(c)*u),1))))*ones(K)
 end
@@ -20,32 +25,29 @@ nufft1{T<:AbstractFloat}( c::AbstractVector, x::AbstractVector{T}, ϵ::T ) = nuf
 nufft2{T<:AbstractFloat}( c::AbstractVector, ω::AbstractVector{T}, ϵ::T ) = nufft2_plan(ω, ϵ)(c)
 
 FindK{T<:AbstractFloat}(γ::T, ϵ::T) = Int( ceil(5.0*γ.*exp(lambertw(log(10.0/ϵ)./γ/7.0))) )
+AssignClosestEquispacedGridpoint{T<:AbstractFloat}( x::AbstractVector{T} )::AbstractVector{T} = round(size(x,1)*x)
+AssignClosestEquispacedFFTpoint{T<:AbstractFloat}( x::AbstractVector{T} )::Array{Int64,1} = mod(round(Int64, size(x,1)*x), size(x,1)) + 1
+PerturbationParameter{T<:AbstractFloat}( x::AbstractVector{T}, s_vec::AbstractVector{T} )::AbstractFloat = norm( size(x,1)*x - s_vec, Inf)
 
-function FindAlgorithmicParameters{T<:AbstractFloat}( x::AbstractVector{T} )
-N = size(x, 1)
-Nx = N*x
-s_vec = round(Nx)
-t_idx = mod(round(Int64, Nx), N) + 1
-γ = norm(Nx - s_vec, Inf)
-return (s_vec, t_idx, γ)
-end
-
-function constructAK{T<:AbstractFloat}(x::AbstractVector{T}, K::Int64) 
+function constructU{T<:AbstractFloat}(x::AbstractVector{T}, K::Int64) 
 # Construct a low rank approximation, using Chebyshev expansions 
 # for AK = exp(-2*pi*1im*(x[j]-j/N)*k): 
 
 N = size(x, 1)
-(s_vec, t_idx, γ) = FindAlgorithmicParameters( x ) 
+#(s_vec, t_idx, γ) = FindAlgorithmicParameters( x ) 
+s_vec = AssignClosestEquispacedGridpoint( x )
 er = N*x - s_vec
+γ = norm( er, Inf )
 
 # colspace vectors:
 u = Diagonal(exp(-1im*pi*er))*ChebyshevP(K-1, er/γ)*Bessel_coeffs(K, γ)
-
-# rowspace vectors:
-v = ChebyshevP(K-1, 2.0*collect(0:N-1)/N - ones(N) )
-
-return (u, v)
 end 
+
+function constructV{T<:AbstractFloat}(x::AbstractVector{T}, K::Int64)
+
+N = size(x, 1)
+v = complex(ChebyshevP(K-1, 2.0*collect(0:N-1)/N - ones(N) ))
+end
 
 function Bessel_coeffs(K::Int64, γ::Float64)::Array{Complex{Float64},2}
 # Calculate the Chebyshev coefficients of exp(-2*pi*1im*x*y) on [-gam,gam]x[0,1]
