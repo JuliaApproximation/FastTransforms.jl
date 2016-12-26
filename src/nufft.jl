@@ -1,5 +1,5 @@
 function nufft1_plan{T<:AbstractFloat}( x::AbstractVector{T}, ϵ::T )
-#(s_vec, t_idx, γ) = FindAlgorithmicParameters( x )
+
 t_idx = AssignClosestEquispacedFFTpoint( x )
 γ = PerturbationParameter( x, AssignClosestEquispacedGridpoint( x ) )
 K = FindK(γ, ϵ)   
@@ -9,13 +9,14 @@ p( c ) = (u.*(fft(Diagonal(c)*v,1)[t_idx,:]))*ones(K)
 end
 
 function nufft2_plan{T<:AbstractFloat}( ω::AbstractVector{T}, ϵ::T )
+
 N = size(ω, 1)
 t_idx = AssignClosestEquispacedFFTpoint( ω/N )
 γ = PerturbationParameter( ω/N, AssignClosestEquispacedGridpoint( ω/N ) )
 K = FindK(γ, ϵ) 
 u = constructU( ω/N, K)
 v = constructV( ω/N, K) 
-In = speye(eltype(c),  N, N)
+In = speye(Complex{T},  N, N)
 p( c ) = (v.*(N*conj(ifft(In[:,t_idx]*conj(Diagonal(c)*u),1))))*ones(K)
 end
 
@@ -49,7 +50,7 @@ N = size(x, 1)
 v = complex(ChebyshevP(K-1, 2.0*collect(0:N-1)/N - ones(N) ))
 end
 
-function Bessel_coeffs(K::Int64, γ::Float64)::Array{Complex{Float64},2}
+function Bessel_coeffs{T<:AbstractFloat}(K::Int64, γ::T)::Array{Complex{T},2}
 # Calculate the Chebyshev coefficients of exp(-2*pi*1im*x*y) on [-gam,gam]x[0,1]
 
 cfs = complex(zeros( K, K ))
