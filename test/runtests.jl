@@ -266,6 +266,3 @@ g_l=paduaeval(g_xy,x,y,l,Val{false})
 @test_approx_eq f_xy(x,y) f_m
 @test_approx_eq g_xy(x,y) g_l
 
-
-println("Test Nonuniform FFTs") 
-include("test_nufft.jl")
