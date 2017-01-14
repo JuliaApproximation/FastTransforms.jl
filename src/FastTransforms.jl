@@ -50,4 +50,8 @@ jac2jac(x...)=th_jac2jac(x...)
 
 include("gaunt.jl")
 
+
+include("precompile.jl")
+_precompile_()
+ 
 end # module
