@@ -10,7 +10,7 @@ function Base.fft{T<:BigFloats}(x::Vector{T})
     n = length(x)
     ispow2(n) && return fft_pow2(x)
     ks = linspace(zero(real(T)),n-one(real(T)),n)
-    Wks = exp(-im*convert(T,π)*ks.^2/n)
+    Wks = exp.((-im).*convert(T,π).*ks.^2./n)
     xq,wq = x.*Wks,conj([exp(-im*convert(T,π)*n);reverse(Wks);Wks[2:end]])
     return Wks.*conv(xq,wq)[n+1:2n]
 end
@@ -90,14 +90,14 @@ end
 function fft_pow2{T<:BigFloat}(x::Vector{Complex{T}})
     y = interlace(real(x),imag(x))
     fft_pow2!(y)
-    return complex(y[1:2:end],y[2:2:end])
+    return complex.(y[1:2:end],y[2:2:end])
 end
 fft_pow2{T<:BigFloat}(x::Vector{T}) = fft_pow2(complex(x))
 
 function ifft_pow2{T<:BigFloat}(x::Vector{Complex{T}})
     y = interlace(real(x),-imag(x))
     fft_pow2!(y)
-    return complex(y[1:2:end],-y[2:2:end])/length(x)
+    return complex.(y[1:2:end],-y[2:2:end])/length(x)
 end
 
 
