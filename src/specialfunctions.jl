@@ -165,12 +165,11 @@ function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
         (x+λ₂)/(x+λ₁)*Λ(x+1.,λ₁,λ₂)
     end
 end
-Λ{T<:Number}(x::AbstractArray{T},λ₁::Number,λ₂::Number) = promote_type(T,typeof(λ₁),typeof(λ₂))[ Λ(x[i],λ₁,λ₂) for i in eachindex(x) ]
 
 
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
 Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)
-function Cnλ{T<:Integer}(n::UnitRange{T},λ::Number)
+function broadcast{T<:Integer}(::typeof(Cnλ),n::UnitRange{T},λ::Number)
     ret = Vector{typeof(λ)}(length(n))
     ret[1] = Cnλ(first(n),λ)
     for i=2:length(n)
@@ -179,9 +178,6 @@ function Cnλ{T<:Integer}(n::UnitRange{T},λ::Number)
     ret
 end
 
-Cnλ{T<:Integer}(n::AbstractVector{T},λ::Number) = [ Cnλ(n[i],λ) for i=1:length(n) ]
-Cnλ{T<:Integer}(n::AbstractMatrix{T},λ::Number) = [ Cnλ(n[i,j],λ) for i=1:size(n,1), j=1:size(n,2) ]
-
 function Cnmλ(n::Integer,m::Integer,λ::Number)
     if m == 0
         Cnλ(n,λ)
@@ -189,9 +185,6 @@ function Cnmλ(n::Integer,m::Integer,λ::Number)
         (λ+m-1)/2/m*(m-λ)/(n+λ+m)*Cnmλ(n,m-1,λ)
     end
 end
-
-Cnmλ{T<:Integer}(n::AbstractVector{T},m::Integer,λ::Number) = [ Cnmλ(n[i],m,λ) for i=1:length(n) ]
-
 
 function Cnαβ(n::Integer,α::Number,β::Number)
     if n==0
@@ -213,9 +206,6 @@ function Cnαβ(n::Integer,α::Float64,β::Float64)
     end
 end
 
-Cnαβ{T<:Integer}(n::AbstractVector{T},α::Number,β::Number) = [ Cnαβ(n[i],α,β) for i=1:length(n) ]
-Cnαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Cnαβ(n[i,j],α,β) for i=1:size(n,1), j=1:size(n,2) ]
-
 function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
     if m == 0
         Cnαβ(n,α,β)
@@ -223,15 +213,6 @@ function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
         Cnmαβ(n,m-1,α,β)/2(2n+α+β+m+1)
     end
 end
-
-Cnmαβ{T<:Integer}(n::AbstractVector{T},m::Integer,α::Number,β::Number) = [ Cnmαβ(n[i],m,α,β) for i=1:length(n) ]
-Cnmαβ{T<:Integer}(n::AbstractMatrix{T},m::Integer,α::Number,β::Number) = [ Cnmαβ(n[i,j],m,α,β) for i=1:size(n,1), j=1:size(n,2) ]
-
-function Cnmαβ{T<:Number}(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T})
-    shp = promote_shape(size(α),size(β))
-    reshape([ Cnmαβ(n,m,α[i],β[i]) for i in eachindex(α,β) ], shp)
-end
-
 
 function absf(α::Number,β::Number,m::Int,θ::Number)
     ret = zero(θ)
@@ -241,12 +222,7 @@ function absf(α::Number,β::Number,m::Int,θ::Number)
     ret
 end
 
-function absf{T<:Number}(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number)
-    shp = promote_shape(size(α),size(β))
-    reshape([ absf(α[i],β[i],m,θ) for i in eachindex(α,β) ], shp)
-end
-
-function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
+function broadcast{T<:Number}(::typeof(absf),α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
     ret = zero(θ)
     cfs = zeros(T,m+1)
     for l=0:m
@@ -257,8 +233,6 @@ function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
     end
     ret
 end
-absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
-absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T}) = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
 
 function compute_absf!{T<:AbstractFloat}(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int)
     @inbounds for i=1:length(ret)

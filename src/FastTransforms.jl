@@ -3,8 +3,7 @@ module FastTransforms
 
 using Base, ToeplitzMatrices
 
-import Base: *
-import Base: view
+import Base: *, view, broadcast
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
