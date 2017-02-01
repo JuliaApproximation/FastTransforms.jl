@@ -99,7 +99,7 @@ end
 # Diagonally-scaled Toeplitz∘Hankel polynomial transforms
 
 function leg2chebTH{S}(::Type{S},n)
-    λ = Λ(0:half(S):n-1)
+    λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]
     T = TriangularToeplitz(2t/π,:U)
@@ -122,9 +122,9 @@ function cheb2legTH{S}(::Type{S},n)
 end
 
 function leg2chebuTH{S}(::Type{S},n)
-    λ = Λ(0:half(S):n-1)
+    λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
-    t[1:2:end] = λ[1:2:n]./(((1:2:n)-2))
+    t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
     T = TriangularToeplitz(-2t/π,:U)
     H = Hankel(λ[1:n]./((1:n)+1),λ[n:end]./((n:2n-1)+1))
     T,H

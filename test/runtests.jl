@@ -57,7 +57,7 @@ v = zeros(Nr)
 Na,Nb = 5,5
 V = zeros(Na,Nb)
 
-for N in round.(Int,logspace(1,3,3))
+for N in round.([Int],logspace(1,3,3))
     println("")
     println("N = ",N)
     println("")
