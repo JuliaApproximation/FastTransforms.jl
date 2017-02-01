@@ -8,7 +8,7 @@ n = 0:1000_000
 @time FastTransforms.Cnλ.(n,λ);
 
 x = linspace(0,20,81);
-@test norm((FastTransforms.Λ.(x)-FastTransforms.Λ.(big.(x)))./FastTransforms.Λ.(big.(x)),Inf) < 2eps()
+@test norm((FastTransforms.Λ.(x).-FastTransforms.Λ.(big.(x)))./FastTransforms.Λ.(big.(x)),Inf) < 2eps()
 
 x = 0:0.5:10_000
 λ₁,λ₂ = 0.125,0.875
@@ -20,11 +20,11 @@ n = 0:1000
 α = 0.125
 β = 0.375
 
-@time FastTransforms.Cnαβ(n,α,β);
-@test norm(FastTransforms.Cnαβ(n,α,β)./FastTransforms.Cnαβ(n,big(α),big(β))-1,Inf) < 3eps()
+@time FastTransforms.Cnαβ.(n,α,β);
+@test norm(FastTransforms.Cnαβ.(n,α,β)./FastTransforms.Cnαβ.(n,big(α),big(β))-1,Inf) < 3eps()
 
-@time FastTransforms.Anαβ(n,α,β);
-@test norm(FastTransforms.Anαβ(n,α,β)./FastTransforms.Anαβ(n,big(α),big(β))-1,Inf) < 4eps()
+@time FastTransforms.Anαβ.(n,α,β);
+@test norm(FastTransforms.Anαβ.(n,α,β)./FastTransforms.Anαβ.(n,big(α),big(β))-1,Inf) < 4eps()
 
 
 N = 20

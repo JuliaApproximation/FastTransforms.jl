@@ -139,7 +139,7 @@ function ForwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T,
     tempsinλm = similar(tempsinλ)
 
     # Initialize normalizing constant
-    cnλ = Cnλ(0:N,λ)
+    cnλ = Cnλ.(0:N,λ)  # broadcast is overloaded
     cnmλ = similar(cnλ)
 
     # Get indices
@@ -180,7 +180,7 @@ function BackwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T
     tempsinλm = similar(tempsinλ)
 
     # Initialize normalizing constant
-    cnλ = Cnλ(0:2N,λ)
+    cnλ = Cnλ.(0:2N,λ) # broadcast is overloaded
     cnmλ = similar(cnλ)
 
     # Initialize orthonormality constants
