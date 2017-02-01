@@ -140,7 +140,7 @@ function ForwardChebyshevJacobiPlan{T}(c_jac::AbstractVector{T},α::T,β::T,M::I
     @inbounds for i=1:N+1 tempcosβsinα[i] = tempcos[i]^(β+1/2)*tempsin[i]^(α+1/2) end
 
     # Initialize normalizing constant
-    cnαβ = Cnαβ.(0:N,α,β)
+    cnαβ = Cnαβ(0:N,α,β)
     cnmαβ = zero(cnαβ)
 
     # Get indices
@@ -182,11 +182,11 @@ function BackwardChebyshevJacobiPlan{T}(c_cheb::AbstractVector{T},α::T,β::T,M:
     @inbounds for i=1:2N+1 tempcosβsinα[i] = tempcos[i]^(β+1/2)*tempsin[i]^(α+1/2) end
 
     # Initialize normalizing constant
-    cnαβ = Cnαβ.(0:2N,α,β)
+    cnαβ = Cnαβ(0:2N,α,β)
     cnmαβ = zero(cnαβ)
 
     # Initialize orthonormality constants
-    anαβ = Anαβ.(0:N,α,β)
+    anαβ = Anαβ(0:N,α,β)
 
     # Get indices
     CJI = ChebyshevJacobiIndices(α,β,CJC,tempmindices,cfs,tempcos,tempsin,tempcosβsinα)
