@@ -4,8 +4,8 @@ using Base.Test
 println("Testing special functions")
 n = 0:1000_000
 λ = 0.123
-@time FastTransforms.Cnλ.(n,λ);
-@time FastTransforms.Cnλ.(n,λ);
+@time FastTransforms.Cnλ(n,λ);
+@time FastTransforms.Cnλ(n,λ);
 
 x = linspace(0,20,81);
 @test norm((FastTransforms.Λ.(x)-FastTransforms.Λ.(big.(x)))./FastTransforms.Λ.(big.(x)),Inf) < 2eps()
@@ -57,7 +57,7 @@ v = zeros(Nr)
 Na,Nb = 5,5
 V = zeros(Na,Nb)
 
-for N in round.([Int],logspace(1,3,3))
+for N in round.(Int,logspace(1,3,3))
     println("")
     println("N = ",N)
     println("")
