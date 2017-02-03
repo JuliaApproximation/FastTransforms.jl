@@ -131,9 +131,9 @@ function ForwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T,
     θ = N > 0 ? T[k/N for k=zero(T):N] : T[0]
 
     # Initialize sines and cosines
-    tempsin = sinpi(θ)
+    tempsin = sinpi.(θ)
     @inbounds for i = 1:N÷2 tempsin[N+2-i] = tempsin[i] end
-    tempsin2 = sinpi(θ/2)
+    tempsin2 = sinpi.(θ./2)
     tempsinλ,tempmindices = zero(c_ultra),zero(c_ultra)
     @inbounds for i=1:N+1 tempsinλ[i] = tempsin[i]^λ end
     tempsinλm = similar(tempsinλ)
@@ -172,9 +172,9 @@ function BackwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T
     w = N > 0 ? clenshawcurtisweights(2N+1,λ-half(λ),λ-half(λ),p₁) : T[0]
 
     # Initialize sines and cosines
-    tempsin = sinpi(θ)
+    tempsin = sinpi.(θ)
     @inbounds for i = 1:N tempsin[2N+2-i] = tempsin[i] end
-    tempsin2 = sinpi(θ/2)
+    tempsin2 = sinpi.(θ/2)
     tempsinλ,tempmindices = zero(c_cheb2),zero(c_cheb2)
     @inbounds for i=1:2N+1 tempsinλ[i] = tempsin[i]^λ end
     tempsinλm = similar(tempsinλ)

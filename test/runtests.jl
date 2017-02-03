@@ -8,13 +8,13 @@ n = 0:1000_000
 @time FastTransforms.Cnλ(n,λ);
 
 x = linspace(0,20,81);
-@test norm((FastTransforms.Λ(x)-FastTransforms.Λ(big(x)))./FastTransforms.Λ(big(x)),Inf) < 2eps()
+@test norm((FastTransforms.Λ.(x)-FastTransforms.Λ.(big.(x)))./FastTransforms.Λ.(big.(x)),Inf) < 2eps()
 
 x = 0:0.5:10_000
 λ₁,λ₂ = 0.125,0.875
-@test norm((FastTransforms.Λ(x,λ₁,λ₂)-FastTransforms.Λ(big(x),big(λ₁),big(λ₂)))./FastTransforms.Λ(big(x),big(λ₁),big(λ₂)),Inf) < 4eps()
+@test norm((FastTransforms.Λ.(x,λ₁,λ₂).-FastTransforms.Λ.(big.(x),big(λ₁),big(λ₂)))./FastTransforms.Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
 λ₁,λ₂ = 1//3,2//3
-@test norm((FastTransforms.Λ(x,Float64(λ₁),Float64(λ₂))-FastTransforms.Λ(big(x),big(λ₁),big(λ₂)))./FastTransforms.Λ(big(x),big(λ₁),big(λ₂)),Inf) < 4eps()
+@test norm((FastTransforms.Λ.(x,Float64(λ₁),Float64(λ₂))-FastTransforms.Λ.(big.(x),big(λ₁),big(λ₂)))./FastTransforms.Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
 
 n = 0:1000
 α = 0.125
@@ -31,11 +31,11 @@ N = 20
 f(x) = exp(x)
 
 x,w = FastTransforms.fejer1(N,0.,0.)
-@test norm(dot(f(x),w)-2sinh(1)) ≤ 4eps()
+@test norm(dot(f.(x),w)-2sinh(1)) ≤ 4eps()
 x,w = FastTransforms.fejer2(N,0.,0.)
-@test norm(dot(f(x),w)-2sinh(1)) ≤ 4eps()
+@test norm(dot(f.(x),w)-2sinh(1)) ≤ 4eps()
 x,w = FastTransforms.clenshawcurtis(N,0.,0.)
-@test norm(dot(f(x),w)-2sinh(1)) ≤ 4eps()
+@test norm(dot(f.(x),w)-2sinh(1)) ≤ 4eps()
 
 #=
 x = Fun(identity)
@@ -44,11 +44,11 @@ val = sum(g)
 =#
 
 x,w = FastTransforms.fejer1(N,0.25,0.35)
-@test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
+@test norm(dot(f.(x),w)-2.0351088204147243) ≤ 4eps()
 x,w = FastTransforms.fejer2(N,0.25,0.35)
-@test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
+@test norm(dot(f.(x),w)-2.0351088204147243) ≤ 4eps()
 x,w = FastTransforms.clenshawcurtis(N,0.25,0.35)
-@test norm(dot(f(x),w)-2.0351088204147243) ≤ 4eps()
+@test norm(dot(f.(x),w)-2.0351088204147243) ≤ 4eps()
 
 println("Testing the Chebyshev–Jacobi transform")
 
@@ -57,7 +57,7 @@ v = zeros(Nr)
 Na,Nb = 5,5
 V = zeros(Na,Nb)
 
-for N in round(Int,logspace(1,3,3))
+for N in round.([Int],logspace(1,3,3))
     println("")
     println("N = ",N)
     println("")
@@ -117,7 +117,7 @@ c_11 = [1.13031820798497,0.7239875720908708,0.21281687927358628,0.04004015866217
 @test norm(icjt(c_cheb,0.5,0.5)-c_11,Inf) < eps()
 
 
-c = exp(-collect(1:1000)./30)
+c = exp.(collect(1:1000)./(-30))
 
 println("Testing increment/decrement operators for α,β ≤ -0.5")
 
@@ -158,11 +158,11 @@ p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
 println("Testing for complex coefficients")
 
 α,β = 0.12,0.34
-c = complex(rand(100),rand(100))
+c = complex.(rand(100),rand(100))
 
-@test cjt(c,α,β) == complex(cjt(real(c),α,β),cjt(imag(c),α,β))
-@test icjt(c,α,β) == complex(icjt(real(c),α,β),icjt(imag(c),α,β))
-@test jjt(c,α,β,α,β) == complex(jjt(real(c),α,β,α,β),jjt(imag(c),α,β,α,β))
+@test cjt(c,α,β) == complex.(cjt(real(c),α,β),cjt(imag(c),α,β))
+@test icjt(c,α,β) == complex.(icjt(real(c),α,β),icjt(imag(c),α,β))
+@test jjt(c,α,β,α,β) == complex.(jjt(real(c),α,β,α,β),jjt(imag(c),α,β,α,β))
 @test norm(jjt(c,α,β,α,β)-c,Inf) < 200eps()
 
 println("Testing for Vector{Float32}")
@@ -178,7 +178,7 @@ cL32 = cjt(c32,0.f0,0.f0)
 println("Testing for Matrix of coefficients")
 
 c = rand(100,100)
-@test maxabs(jjt(c,α,β,α,β)-c) < 10000eps()
+@test maximum(abs,jjt(c,α,β,α,β)-c) < 10000eps()
 
 println("Testing Gaunt coefficients")
 
@@ -190,17 +190,17 @@ include("fftBigFloattest.jl")
 
 println("Testing equivalence of CXN and ASY methods")
 
-for k in round(Int,logspace(1,4,20))
-    r = randn(k)./√(1:k) # Proven 𝒪(√(log N)) error for ASY method.
-    @test_approx_eq leg2cheb(r) cjt(r,0.,0.)
+for k in round.([Int],logspace(1,4,20))
+    r = randn(k)./(√).(1:k) # Proven 𝒪(√(log N)) error for ASY method.
+    @test leg2cheb(r) ≈ cjt(r,0.,0.)
 end
 
-@test_approx_eq leg2chebu([1.0,2,3,4,5])  [0.546875,0.5,0.5390625,1.25,1.3671875]
+@test leg2chebu([1.0,2,3,4,5])  ≈ [0.546875,0.5,0.5390625,1.25,1.3671875]
 
-c = randn(1000)./√(1:1000);
+c = randn(1000)./(√).(1:1000);
 
-@test_approx_eq leg2cheb(cheb2leg(c)) c
-@test_approx_eq cheb2leg(leg2cheb(c)) c
+@test leg2cheb(cheb2leg(c)) ≈ c
+@test cheb2leg(leg2cheb(c)) ≈ c
 
 @test norm(jac2jac(c,0.,√2/2,-1/4,√2/2)-jjt(c,0.,√2/2,-1/4,√2/2),Inf) < 10length(c)*eps()
 
@@ -213,10 +213,10 @@ N=div((n+1)*(n+2),2)
 v=rand(N)  #Length of v is the no. of Padua points
 Pl=plan_paduatransform!(v)
 IPl=plan_ipaduatransform!(v)
-@test_approx_eq Pl*(IPl*copy(v)) v
-@test_approx_eq IPl*(Pl*copy(v)) v
-@test_approx_eq Pl*copy(v) paduatransform(v)
-@test_approx_eq IPl*copy(v) ipaduatransform(v)
+@test Pl*(IPl*copy(v)) ≈ v
+@test IPl*(Pl*copy(v)) ≈ v
+@test Pl*copy(v) ≈ paduatransform(v)
+@test IPl*copy(v) ≈ ipaduatransform(v)
 
 # check that the return vector is NOT reused
 Pl=plan_paduatransform!(v)
@@ -241,7 +241,7 @@ Interpolates a 2d function at a given point using 2d Chebyshev series.
 function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer,lex)
     T=promote_type(typeof(x),typeof(y))
     M=div((m+1)*(m+2),2)
-    pvals=Array(T,M)
+    pvals=Vector{T}(M)
     p=paduapoints(T,m)
     map!(f,pvals,p[:,1],p[:,2])
     coeffs=paduatransform(pvals,lex)
@@ -257,11 +257,11 @@ m=130
 l=80
 f_m=paduaeval(f_xy,x,y,m,Val{true})
 g_l=paduaeval(g_xy,x,y,l,Val{true})
-@test_approx_eq f_xy(x,y) f_m
-@test_approx_eq g_xy(x,y) g_l
+@test f_xy(x,y) ≈ f_m
+@test g_xy(x,y) ≈ g_l
 
 
 f_m=paduaeval(f_xy,x,y,m,Val{false})
 g_l=paduaeval(g_xy,x,y,l,Val{false})
-@test_approx_eq f_xy(x,y) f_m
-@test_approx_eq g_xy(x,y) g_l
+@test f_xy(x,y) ≈ f_m
+@test g_xy(x,y) ≈ g_l

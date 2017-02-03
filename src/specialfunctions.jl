@@ -24,7 +24,7 @@ two{T<:Number}(::Type{T}) = convert(T,2)
 The Kronecker δ function.
 """
 δ(k::Integer,j::Integer) = k == j ? 1 : 0
-@vectorize_2arg Integer δ
+
 
 """
 Pochhammer symbol (x)_n = Γ(x+n)/Γ(x) for the rising factorial.
@@ -96,7 +96,7 @@ function stirlingseries(z::Float64)
     end
 end
 
-@vectorize_1arg Number stirlingseries
+
 
 stirlingremainder(z::Number,N::Int) = (1+zeta(N))*gamma(N)/((2π)^(N+1)*z^N)/stirlingseries(z)
 stirlingremainder{T<:Number}(z::AbstractVector{T},N::Int) = (1+zeta(N))*gamma(N)/(2π)^(N+1)./z.^N./stirlingseries(z)
@@ -152,7 +152,7 @@ function Λ(x::Float64)
         (x+1.0)*Λ(x+1.0)/(x+0.5)
     end
 end
-@vectorize_1arg Number Λ
+
 
 """
 The Lambda function Λ(z,λ₁,λ₂) = Γ(z+λ₁)/Γ(z+λ₂) for the ratio of gamma functions.

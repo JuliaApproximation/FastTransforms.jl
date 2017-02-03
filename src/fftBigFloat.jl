@@ -10,7 +10,7 @@ function Base.fft{T<:BigFloats}(x::Vector{T})
     n = length(x)
     ispow2(n) && return fft_pow2(x)
     ks = linspace(zero(real(T)),n-one(real(T)),n)
-    Wks = exp(-im*convert(T,π)*ks.^2/n)
+    Wks = exp.((-im).*convert(T,π).*ks.^2./n)
     xq,wq = x.*Wks,conj([exp(-im*convert(T,π)*n);reverse(Wks);Wks[2:end]])
     return Wks.*conv(xq,wq)[n+1:2n]
 end
@@ -90,21 +90,22 @@ end
 function fft_pow2{T<:BigFloat}(x::Vector{Complex{T}})
     y = interlace(real(x),imag(x))
     fft_pow2!(y)
-    return complex(y[1:2:end],y[2:2:end])
+    return complex.(y[1:2:end],y[2:2:end])
 end
 fft_pow2{T<:BigFloat}(x::Vector{T}) = fft_pow2(complex(x))
 
 function ifft_pow2{T<:BigFloat}(x::Vector{Complex{T}})
     y = interlace(real(x),-imag(x))
     fft_pow2!(y)
-    return complex(y[1:2:end],-y[2:2:end])/length(x)
+    return complex.(y[1:2:end],-y[2:2:end])/length(x)
 end
 
 
 function Base.dct(a::AbstractArray{Complex{BigFloat}})
 	N = big(length(a))
     c = fft([a; flipdim(a,1)])
-    d = c[1:N] .* exp(-im*big(pi)*(0:N-1)/(2*N))
+    d = c[1:N]
+    d .*= exp.((-im*big(pi)).*(0:N-1)./(2*N))
     d[1] = d[1] / sqrt(big(2))
     scale!(inv(sqrt(2N)), d)
 end
@@ -115,7 +116,7 @@ function Base.idct(a::AbstractArray{Complex{BigFloat}})
     N = big(length(a))
     b = a * sqrt(2*N)
     b[1] = b[1] * sqrt(big(2))
-    b = b .* exp(im*big(pi)*(0:N-1)/(2*N))
+    b .*= exp.((im*big(pi)).*(0:N-1)./(2*N))
     b = [b; 0; conj(flipdim(b[2:end],1))]
     c = ifft(b)
     c[1:N]
@@ -151,8 +152,8 @@ for (Plan,ff,ff!) in ((:DummyFFTPlan,:fft,:fft!),
                       (:DummyDCTPlan,:dct,:dct!),
                       (:DummyiDCTPlan,:idct,:idct!))
     @eval begin
-        *{T,N}(p::$Plan{T,true}, x::StridedArray{T,N})=$ff!(x)
-        *{T,N}(p::$Plan{T,false}, x::StridedArray{T,N})=$ff(x)
+        *{T,N}(p::$Plan{T,true}, x::StridedArray{T,N}) = $ff!(x)
+        *{T,N}(p::$Plan{T,false}, x::StridedArray{T,N}) = $ff(x)
         function Base.A_mul_B!(C::StridedVector,p::$Plan,x::StridedVector)
             C[:]=$ff(x)
             C

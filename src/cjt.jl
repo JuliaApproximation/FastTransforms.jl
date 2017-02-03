@@ -101,7 +101,7 @@ end
 
 function *{D,T<:AbstractFloat}(p::FastTransformPlan{D,T},c::AbstractVector{Complex{T}})
     cr,ci = reim(c)
-    complex(p*cr,p*ci)
+    complex.(p*cr,p*ci)
 end
 
 function *(p::FastTransformPlan,c::AbstractMatrix)
