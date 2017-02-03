@@ -34,7 +34,7 @@ function partialchol(H::Hankel)
     v=[H[:,1];vec(H[end,2:end])]
     d=diag(H)
     @assert length(v) ≥ 2n-1
-    reltol=maxabs(d)*eps(eltype(H))*log(n)
+    reltol=maximum(abs,d)*eps(eltype(H))*log(n)
     for k=1:n
         mx,idx=findmax(d)
         if mx ≤ reltol break end
@@ -61,7 +61,7 @@ function partialchol(H::Hankel,D::AbstractVector)
     v=[H[:,1];vec(H[end,2:end])]
     d=diag(H).*D.^2
     @assert length(v) ≥ 2n-1
-    reltol=maxabs(d)*eps(T)*log(n)
+    reltol=maximum(abs,d)*eps(T)*log(n)
     for k=1:n
         mx,idx=findmax(d)
         if mx ≤ reltol break end

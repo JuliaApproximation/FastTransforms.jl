@@ -190,17 +190,17 @@ include("fftBigFloattest.jl")
 
 println("Testing equivalence of CXN and ASY methods")
 
-for k in round(Int,logspace(1,4,20))
-    r = randn(k)./√(1:k) # Proven 𝒪(√(log N)) error for ASY method.
-    @test_approx_eq leg2cheb(r) cjt(r,0.,0.)
+for k in round.([Int],logspace(1,4,20))
+    r = randn(k)./(√).(1:k) # Proven 𝒪(√(log N)) error for ASY method.
+    @test leg2cheb(r) ≈ cjt(r,0.,0.)
 end
 
-@test_approx_eq leg2chebu([1.0,2,3,4,5])  [0.546875,0.5,0.5390625,1.25,1.3671875]
+@test leg2chebu([1.0,2,3,4,5])  ≈ [0.546875,0.5,0.5390625,1.25,1.3671875]
 
-c = randn(1000)./√(1:1000);
+c = randn(1000)./(√).(1:1000);
 
-@test_approx_eq leg2cheb(cheb2leg(c)) c
-@test_approx_eq cheb2leg(leg2cheb(c)) c
+@test leg2cheb(cheb2leg(c)) ≈ c
+@test cheb2leg(leg2cheb(c)) ≈ c
 
 @test norm(jac2jac(c,0.,√2/2,-1/4,√2/2)-jjt(c,0.,√2/2,-1/4,√2/2),Inf) < 10length(c)*eps()
 
@@ -213,10 +213,10 @@ N=div((n+1)*(n+2),2)
 v=rand(N)  #Length of v is the no. of Padua points
 Pl=plan_paduatransform!(v)
 IPl=plan_ipaduatransform!(v)
-@test_approx_eq Pl*(IPl*copy(v)) v
-@test_approx_eq IPl*(Pl*copy(v)) v
-@test_approx_eq Pl*copy(v) paduatransform(v)
-@test_approx_eq IPl*copy(v) ipaduatransform(v)
+@test Pl*(IPl*copy(v)) ≈ v
+@test IPl*(Pl*copy(v)) ≈ v
+@test Pl*copy(v) ≈ paduatransform(v)
+@test IPl*copy(v) ≈ ipaduatransform(v)
 
 # check that the return vector is NOT reused
 Pl=plan_paduatransform!(v)
@@ -241,7 +241,7 @@ Interpolates a 2d function at a given point using 2d Chebyshev series.
 function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer,lex)
     T=promote_type(typeof(x),typeof(y))
     M=div((m+1)*(m+2),2)
-    pvals=Array(T,M)
+    pvals=Vector{T}(M)
     p=paduapoints(T,m)
     map!(f,pvals,p[:,1],p[:,2])
     coeffs=paduatransform(pvals,lex)
@@ -257,11 +257,11 @@ m=130
 l=80
 f_m=paduaeval(f_xy,x,y,m,Val{true})
 g_l=paduaeval(g_xy,x,y,l,Val{true})
-@test_approx_eq f_xy(x,y) f_m
-@test_approx_eq g_xy(x,y) g_l
+@test f_xy(x,y) ≈ f_m
+@test g_xy(x,y) ≈ g_l
 
 
 f_m=paduaeval(f_xy,x,y,m,Val{false})
 g_l=paduaeval(g_xy,x,y,l,Val{false})
-@test_approx_eq f_xy(x,y) f_m
-@test_approx_eq g_xy(x,y) g_l
+@test f_xy(x,y) ≈ f_m
+@test g_xy(x,y) ≈ g_l

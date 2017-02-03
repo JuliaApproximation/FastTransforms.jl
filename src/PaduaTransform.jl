@@ -194,7 +194,7 @@ Returns coordinates of the (n+1)(n+2)/2 Padua points.
 """
 function paduapoints{T}(::Type{T},n::Integer)
     N=div((n+1)*(n+2),2)
-    MM=Array(T,N,2)
+    MM=Matrix{T}(N,2)
     m=0
     delta=0
     NN=fld(n+2,2)

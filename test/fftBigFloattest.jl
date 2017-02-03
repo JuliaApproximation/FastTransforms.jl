@@ -12,9 +12,9 @@ p = plan_dct(c)
 @test norm(dct(c) - p*c) == 0
 
 pi = plan_idct!(c)
-@test norm(pi*dct(c) - c) < 400norm(c)*eps(BigFloat)
+@test norm(pi*dct(c) - c) < 500norm(c)*eps(BigFloat)
 
 @test norm(dct(c)-dct(map(Float64,c)),Inf) < 10eps()
 
-cc = cis(c)
+cc = cis.(c)
 @test norm(dct(cc)-dct(map(Complex{Float64},cc)),Inf) < 10eps()
