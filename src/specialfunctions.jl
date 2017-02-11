@@ -27,7 +27,7 @@ The Kronecker δ function.
 
 
 """
-Pochhammer symbol (x)_n = Γ(x+n)/Γ(x) for the rising factorial.
+Pochhammer symbol $(x)_n = \frac{\Gamma(x+n)}{\Gamma(x)}$ for the rising factorial.
 """
 function pochhammer(x::Number,n::Integer)
     ret = one(x)
