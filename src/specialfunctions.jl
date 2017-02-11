@@ -26,7 +26,7 @@ The Kronecker δ function.
 δ(k::Integer,j::Integer) = k == j ? 1 : 0
 
 
-"""
+doc"""
 Pochhammer symbol $(x)_n = \frac{\Gamma(x+n)}{\Gamma(x)}$ for the rising factorial.
 """
 function pochhammer(x::Number,n::Integer)
