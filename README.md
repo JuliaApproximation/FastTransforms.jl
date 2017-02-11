@@ -1,11 +1,13 @@
 # FastTransforms.jl
 
-[![Build Status](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl) [![Documentation Status](https://readthedocs.org/projects/fasttransformsjl/badge/?version=latest)](http://fasttransformsjl.readthedocs.org/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/latest)
 
-The aim of this package is to provide a new class of fast transforms
-based on the use of asymptotic formulae to relate the transforms to a small
-number of fast Fourier transforms. This new class of fast transforms does not
-require large pre-computation for fast execution, and they are designed
+The aim of this package is to provide new classes of fast transforms with low
+pre-computation. One approach is based on the use of asymptotic formulae to
+relate the transforms to a small number of fast Fourier transforms. Another
+approach is based on a Toeplitz-dot-Hankel decomposition of the matrix of
+connection coefficients. Both new classes of fast transforms do not
+require large pre-computation for fast execution and they are designed
 to work on expansions of functions with any degree of regularity.
 
 The Chebyshev—Jacobi transform and its inverse are implemented. This
@@ -40,6 +42,11 @@ allows the Jacobi—Jacobi transform, computed via `jjt`. The remainder in Hahn'
 is valid for the half-open square `(α,β) ∈ (-1/2,1/2]^2`. Therefore, the fast transform works best
 when the parameters are inside. If the parameters `(α,β)` are not exceptionally beyond the square,
 then increment/decrement operators are used with linear complexity (and linear conditioning) in the degree.
+
+The Padua transform and its inverse are also implemented thanks to
+[Michael Clarke](https://github.com/MikeAClarke). These are optimized methods
+designed for computing the bivariate Chebyshev coefficients by interpolating a
+bivariate function at the Padua points on `[-1,1]^2`.
 
 # References:
 
