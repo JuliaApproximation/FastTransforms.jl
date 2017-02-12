@@ -6,7 +6,7 @@ const BACKWARD = false
 const sqrtpi = 1.772453850905516027298
 const edivsqrt2pi = 1.084437551419227546612
 
-"""
+doc"""
 Compute a typed 0.5.
 """
 half(x::Number) = oftype(x,0.5)
@@ -14,13 +14,13 @@ half(x::Integer) = half(float(x))
 half{T<:Number}(::Type{T}) = convert(T,0.5)
 half{T<:Integer}(::Type{T}) = half(AbstractFloat)
 
-"""
+doc"""
 Compute a typed 2.
 """
 two(x::Number) = oftype(x,2)
 two{T<:Number}(::Type{T}) = convert(T,2)
 
-"""
+doc"""
 The Kronecker δ function.
 """
 δ(k::Integer,j::Integer) = k == j ? 1 : 0
@@ -57,7 +57,7 @@ function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
     ret
 end
 
-"""
+doc"""
 Stirling series for Γ(z).
 """
 stirlingseries(z) = gamma(z)*sqrt((z/π)/2)*exp(z)/z^z
@@ -135,11 +135,11 @@ Anαβ{T<:Integer}(n::AbstractVector{T},α::Number,β::Number) = [ Anαβ(n[i],�
 Anαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Anαβ(n[i,j],α,β) for i=1:size(n,1), j=1:size(n,2) ]
 
 
-"""
+doc"""
 The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.
 """
 Λ(z::Number) = exp(lgamma(z+half(z))-lgamma(z+one(z)))
-"""
+doc"""
 For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for τ in Appendix B of
 
     I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83–C101, 2012.
@@ -154,7 +154,7 @@ function Λ(x::Float64)
 end
 
 
-"""
+doc"""
 The Lambda function Λ(z,λ₁,λ₂) = Γ(z+λ₁)/Γ(z+λ₂) for the ratio of gamma functions.
 """
 Λ(z::Number,λ₁::Number,λ₂::Number) = exp(lgamma(z+λ₁)-lgamma(z+λ₂))
@@ -390,7 +390,7 @@ function init_c₁c₂!(c₁::Vector,c₂::Vector,u::Vector,v::Vector,c::Vector,
 end
 
 
-"""
+doc"""
 Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
     ∫₋₁⁺¹ T_n(x) (1-x)^α(1+x)^β dx.
@@ -408,7 +408,7 @@ function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-"""
+doc"""
 Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
     ∫₋₁⁺¹ U_n(x) (1-x)^α(1+x)^β dx.
@@ -426,7 +426,7 @@ function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-"""
+doc"""
 Compute Jacobi expansion coefficients in Pₙ^(α+1,β) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
 """
 function incrementα!(c::AbstractVector,α,β)
@@ -437,7 +437,7 @@ function incrementα!(c::AbstractVector,α,β)
     c
 end
 
-"""
+doc"""
 Compute Jacobi expansion coefficients in Pₙ^(α,β+1) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
 """
 function incrementβ!(c::AbstractVector,α,β)
@@ -448,7 +448,7 @@ function incrementβ!(c::AbstractVector,α,β)
     c
 end
 
-"""
+doc"""
 Compute Jacobi expansion coefficients in Pₙ^(α+1,α+1) given Jacobi expansion coefficients in Pₙ^(α,α) in-place.
 """
 function incrementαβ!(c::AbstractVector,α,β)
@@ -461,7 +461,7 @@ function incrementαβ!(c::AbstractVector,α,β)
     c
 end
 
-"""
+doc"""
 Compute Jacobi expansion coefficients in Pₙ^(α-1,β) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
 """
 function decrementα!(c::AbstractVector,α,β)
@@ -472,7 +472,7 @@ function decrementα!(c::AbstractVector,α,β)
     c
 end
 
-"""
+doc"""
 Compute Jacobi expansion coefficients in Pₙ^(α,β-1) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
 """
 function decrementβ!(c::AbstractVector,α,β)
@@ -483,7 +483,7 @@ function decrementβ!(c::AbstractVector,α,β)
     c
 end
 
-"""
+doc"""
 Compute Jacobi expansion coefficients in Pₙ^(α-1,α-1) given Jacobi expansion coefficients in Pₙ^(α,α) in-place.
 """
 function decrementαβ!(c::AbstractVector,α,β)

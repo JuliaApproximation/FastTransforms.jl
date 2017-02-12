@@ -1,4 +1,4 @@
-"""
+doc"""
 Calculates the Gaunt coefficients, defined by:
 
     a(m,n,μ,ν,q) = (2(n+ν-2q)+1)/2 (n+ν-2q-m-μ)!/(n+ν-2q+m+μ)! ∫₋₁⁺¹ P_m^n(x) P_ν^μ(x) P_{n+ν-2q}^{m+μ}(x) dx.
@@ -18,7 +18,7 @@ function gaunt{T}(::Type{T},m::Int,n::Int,μ::Int,ν::Int;normalized::Bool=false
         scale!(normalization(T,m,n,μ,ν),gaunt(T,m,n,μ,ν;normalized=true))
     end
 end
-"""
+doc"""
 Calculates the Gaunt coefficients in 64-bit floating-point arithmetic.
 """
 gaunt(m::Int,n::Int,μ::Int,ν::Int;kwds...) = gaunt(Float64,m,n,μ,ν;kwds...)

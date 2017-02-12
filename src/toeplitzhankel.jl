@@ -1,4 +1,4 @@
-"""
+doc"""
 Store a diagonally-scaled Toeplitz∘Hankel matrix:
 
     DL(T∘H)DR
