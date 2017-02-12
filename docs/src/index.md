@@ -45,56 +45,56 @@ plan_ipaduatransform!
 gaunt
 ```
 
-## Internal Methods
-
-```@docs
-clenshawcurtis
-```
-
-```@docs
-clenshawcurtisweights
-```
-
-```@docs
-fejer1
-```
-
-```@docs
-fejer2
-```
-
-```@docs
-fejerweights1
-```
-
-```@docs
-fejerweights2
-```
-
 ```@docs
 paduapoints
 ```
 
+## Internal Methods
+
 ```@docs
-half
+FastTransforms.clenshawcurtis
 ```
 
 ```@docs
-two
+FastTransforms.clenshawcurtisweights
 ```
 
 ```@docs
-δ
+FastTransforms.fejer1
 ```
 
 ```@docs
-Λ
+FastTransforms.fejer2
 ```
 
 ```@docs
-pochhammer
+FastTransforms.fejerweights1
 ```
 
 ```@docs
-stirlingseries
+FastTransforms.fejerweights2
+```
+
+```@docs
+FastTransforms.half
+```
+
+```@docs
+FastTransforms.two
+```
+
+```@docs
+FastTransforms.δ
+```
+
+```@docs
+FastTransforms.Λ
+```
+
+```@docs
+FastTransforms.pochhammer
+```
+
+```@docs
+FastTransforms.stirlingseries
 ```
