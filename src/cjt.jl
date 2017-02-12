@@ -114,25 +114,31 @@ end
 
 doc"""
 Computes the Chebyshev expansion coefficients
-given the Jacobi expansion coefficients ``c`` with parameters ``α`` and ``β``.
+given the Jacobi expansion coefficients ``c`` with parameters ``\alpha`` and ``\beta``:
 
-See also [`icjt`](#method__icjt.1) and [`jjt`](#method__jjt.1).
+```math
+{\rm CJT} : \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x) \to \sum_{n=0}^N c_n^{\rm cheb}T_n(x).
+```
 """
 cjt(c,α,β) = plan_cjt(c,α,β)*c
 
 doc"""
-Computes the Jacobi expansion coefficients with parameters ``α`` and ``β``
-given the Chebyshev expansion coefficients ``c``.
+Computes the Jacobi expansion coefficients with parameters ``\alpha`` and ``\beta``
+given the Chebyshev expansion coefficients ``c``:
 
-See also [`cjt`](#method__cjt.1) and [`jjt`](#method__jjt.1).
+```math
+{\rm iCJT} : \sum_{n=0}^N c_n^{\rm cheb}T_n(x) \to \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x).
+```
 """
 icjt(c,α,β) = plan_icjt(c,α,β)*c
 
 doc"""
-Computes the Jacobi expansion coefficients with parameters ``γ`` and ``δ``
-given the Jacobi expansion coefficients ``c`` with parameters ``α`` and ``β``.
+Computes the Jacobi expansion coefficients with parameters ``\gamma`` and ``\delta``
+given the Jacobi expansion coefficients ``c`` with parameters ``\alpha`` and ``\beta``:
 
-See also [`cjt`](#method__cjt.1) and [`icjt`](#method__icjt.1).
+```math
+{\rm JJT} : \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x) \to \sum_{n=0}^N c_n^{\rm jac}P_n^{(\gamma,\delta)}(x).
+```
 """
 function jjt(c,α,β,γ,δ)
     if isapprox(α,γ) && isapprox(β,δ)
@@ -149,7 +155,7 @@ arrays, normalization constants, and recurrence coefficients for a forward Cheby
 
 ``c`` is the vector of coefficients; and,
 
-``α`` and ``β`` are the Jacobi parameters.
+``\alpha`` and ``\beta`` are the Jacobi parameters.
 
 Optionally:
 
@@ -163,7 +169,7 @@ arrays, normalization constants, and recurrence coefficients for an inverse Cheb
 
 ``c`` is the vector of coefficients; and,
 
-``α`` and ``β`` are the Jacobi parameters.
+``\alpha`` and ``\beta`` are the Jacobi parameters.
 
 Optionally:
 

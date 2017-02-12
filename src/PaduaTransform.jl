@@ -41,7 +41,7 @@ Inverse Padua Transform maps the 2D Chebyshev coefficients to the values of the 
 ipaduatransform(v::AbstractVector,lex...) = plan_ipaduatransform!(v,lex...)*copy(v)
 
 doc"""
-Creates (n+2)x(n+1) Chebyshev coefficient matrix from triangle coefficients.
+Creates ``(n+2)x(n+1)`` Chebyshev coefficient matrix from triangle coefficients.
 """
 function trianglecfsmat(P::IPaduaTransformPlan{true},cfs::AbstractVector)
     N=length(cfs)
@@ -146,7 +146,7 @@ Padua Transform maps from interpolant values at the Padua points to the 2D Cheby
 paduatransform(v::AbstractVector,lex...) = plan_paduatransform!(v,lex...)*copy(v)
 
 doc"""
-Creates (n+2)x(n+1) matrix of interpolant values on the tensor grid at the (n+1)(n+2)/2 Padua points.
+Creates ``(n+2)x(n+1)`` matrix of interpolant values on the tensor grid at the ``(n+1)(n+2)/2`` Padua points.
 """
 function paduavalsmat(P::PaduaTransformPlan,v::AbstractVector)
     N=length(v)
@@ -166,7 +166,7 @@ function paduavalsmat(P::PaduaTransformPlan,v::AbstractVector)
 end
 
 doc"""
-Creates length (n+1)(n+2)/2 vector from matrix of triangle Chebyshev coefficients.
+Creates length ``(n+1)(n+2)/2`` vector from matrix of triangle Chebyshev coefficients.
 """
 function trianglecfsvec!(v,P::PaduaTransformPlan{true},cfs::Matrix)
     m=size(cfs,2)
@@ -195,7 +195,7 @@ function trianglecfsvec!(v,P::PaduaTransformPlan{false},cfs::Matrix)
 end
 
 doc"""
-Returns coordinates of the (n+1)(n+2)/2 Padua points.
+Returns coordinates of the ``(n+1)(n+2)/2`` Padua points.
 """
 function paduapoints{T}(::Type{T},n::Integer)
     N=div((n+1)*(n+2),2)

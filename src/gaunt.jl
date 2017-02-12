@@ -1,15 +1,18 @@
 doc"""
 Calculates the Gaunt coefficients, defined by:
 
-    a(m,n,μ,ν,q) = (2(n+ν-2q)+1)/2 (n+ν-2q-m-μ)!/(n+ν-2q+m+μ)! ∫₋₁⁺¹ P_m^n(x) P_ν^μ(x) P_{n+ν-2q}^{m+μ}(x) dx.
-
+```math
+a(m,n,\mu,\nu,q) = \frac{2(n+\nu-2q)+1}{2} \frac{(n+\nu-2q-m-\mu)!}{(n+\nu-2q+m+\mu)!} \int_{-1}^{+1} P_m^n(x) P_\nu^\mu(x) P_{n+\nu-2q}^{m+\mu}(x) {\rm\,d}x.
+```
 or defined by:
 
-    P_n^m(x) P_ν^μ(x) = ∑_{q=0}^{q_{max}} a(m,n,μ,ν,q) P_{n+ν-2q}^{m+μ}(x)
+```math
+P_n^m(x) P_\nu^\mu(x) = \sum_{q=0}^{q_{\rm max}} a(m,n,\mu,\nu,q) P_{n+\nu-2q}^{m+\mu}(x)
+```
 
 This is a Julia implementation of the stable recurrence described in:
 
-    Y.-l. Xu, "Fast evaluation of Gaunt coefficients: recursive approach", J. Comp. Appl. Math., 85:53–65, 1997.
+Y.-l. Xu, Fast evaluation of Gaunt coefficients: recursive approach, *J. Comp. Appl. Math.*, **85**:53–65, 1997.
 """
 function gaunt{T}(::Type{T},m::Int,n::Int,μ::Int,ν::Int;normalized::Bool=false)
     if normalized

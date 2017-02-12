@@ -21,13 +21,17 @@ two(x::Number) = oftype(x,2)
 two{T<:Number}(::Type{T}) = convert(T,2)
 
 doc"""
-The Kronecker δ function.
+The Kronecker ``\delta`` function:
+
+```math
+\delta_{k,j} = \left\{\begin{array}{ccc} 1 & {\rm for} & k = j,\\ 0 & {\rm for} & k \ne j.\end{array}\right.
+```
 """
 δ(k::Integer,j::Integer) = k == j ? 1 : 0
 
 
 doc"""
-Pochhammer symbol $(x)_n = \frac{\Gamma(x+n)}{\Gamma(x)}$ for the rising factorial.
+Pochhammer symbol ``(x)_n = \frac{\Gamma(x+n)}{\Gamma(x)}`` for the rising factorial.
 """
 function pochhammer(x::Number,n::Integer)
     ret = one(x)
@@ -58,7 +62,7 @@ function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
 end
 
 doc"""
-Stirling series for Γ(z).
+Stirling's asymptotic series for ``\Gamma(z)``.
 """
 stirlingseries(z) = gamma(z)*sqrt((z/π)/2)*exp(z)/z^z
 
@@ -136,13 +140,13 @@ Anαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Anαβ(n[i,j]
 
 
 doc"""
-The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.
+The Lambda function ``\Lambda(z) = \frac{\Gamma(z+\frac{1}{2})}{\Gamma(z+1)}`` for the ratio of gamma functions.
 """
 Λ(z::Number) = exp(lgamma(z+half(z))-lgamma(z+one(z)))
 doc"""
-For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for τ in Appendix B of
+For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for ``\tau`` in Appendix B of
 
-    I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83–C101, 2012.
+I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, *SIAM J. Sci. Comput.*, **34**:C83–C101, 2012.
 """
 function Λ(x::Float64)
     if x > 9.84475
@@ -153,9 +157,8 @@ function Λ(x::Float64)
     end
 end
 
-
 doc"""
-The Lambda function Λ(z,λ₁,λ₂) = Γ(z+λ₁)/Γ(z+λ₂) for the ratio of gamma functions.
+The Lambda function ``\Lambda(z,λ₁,λ₂) = \frac{\Gamma(z+\lambda_1)}{Γ(z+\lambda_2)}`` for the ratio of gamma functions.
 """
 Λ(z::Number,λ₁::Number,λ₂::Number) = exp(lgamma(z+λ₁)-lgamma(z+λ₂))
 function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
@@ -393,8 +396,9 @@ end
 doc"""
 Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
-    ∫₋₁⁺¹ T_n(x) (1-x)^α(1+x)^β dx.
-
+```math
+    \int_{-1}^{+1} T_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
+```
 """
 function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ = zeros(T,N)
@@ -411,8 +415,9 @@ end
 doc"""
 Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
-    ∫₋₁⁺¹ U_n(x) (1-x)^α(1+x)^β dx.
-
+```math
+    \int_{-1}^{+1} U_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
+```
 """
 function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ = zeros(T,N)
@@ -427,7 +432,7 @@ function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
 end
 
 doc"""
-Compute Jacobi expansion coefficients in Pₙ^(α+1,β) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function incrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -438,7 +443,7 @@ function incrementα!(c::AbstractVector,α,β)
 end
 
 doc"""
-Compute Jacobi expansion coefficients in Pₙ^(α,β+1) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha,\beta+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function incrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -449,7 +454,7 @@ function incrementβ!(c::AbstractVector,α,β)
 end
 
 doc"""
-Compute Jacobi expansion coefficients in Pₙ^(α+1,α+1) given Jacobi expansion coefficients in Pₙ^(α,α) in-place.
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\alpha+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\alpha)}(x)`` in-place.
 """
 function incrementαβ!(c::AbstractVector,α,β)
     @assert α == β
@@ -462,7 +467,7 @@ function incrementαβ!(c::AbstractVector,α,β)
 end
 
 doc"""
-Compute Jacobi expansion coefficients in Pₙ^(α-1,β) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha-1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function decrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -473,7 +478,7 @@ function decrementα!(c::AbstractVector,α,β)
 end
 
 doc"""
-Compute Jacobi expansion coefficients in Pₙ^(α,β-1) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha,\beta-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function decrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -484,7 +489,7 @@ function decrementβ!(c::AbstractVector,α,β)
 end
 
 doc"""
-Compute Jacobi expansion coefficients in Pₙ^(α-1,α-1) given Jacobi expansion coefficients in Pₙ^(α,α) in-place.
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha-1,\alpha-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\alpha)}(x)`` in-place.
 """
 function decrementαβ!(c::AbstractVector,α,β)
     @assert α == β

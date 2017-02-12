@@ -52,6 +52,30 @@ paduapoints
 ## Internal Methods
 
 ```@docs
+FastTransforms.half
+```
+
+```@docs
+FastTransforms.two
+```
+
+```@docs
+FastTransforms.δ
+```
+
+```@docs
+FastTransforms.Λ
+```
+
+```@docs
+FastTransforms.pochhammer
+```
+
+```@docs
+FastTransforms.stirlingseries
+```
+
+```@docs
 FastTransforms.clenshawcurtis
 ```
 
@@ -76,25 +100,33 @@ FastTransforms.fejerweights2
 ```
 
 ```@docs
-FastTransforms.half
+FastTransforms.chebyshevjacobimoments1
 ```
 
 ```@docs
-FastTransforms.two
+FastTransforms.chebyshevjacobimoments2
 ```
 
 ```@docs
-FastTransforms.δ
+FastTransforms.incrementα!
 ```
 
 ```@docs
-FastTransforms.Λ
+FastTransforms.incrementβ!
 ```
 
 ```@docs
-FastTransforms.pochhammer
+FastTransforms.incrementαβ!
 ```
 
 ```@docs
-FastTransforms.stirlingseries
+FastTransforms.decrementα!
+```
+
+```@docs
+FastTransforms.decrementβ!
+```
+
+```@docs
+FastTransforms.decrementαβ!
 ```
