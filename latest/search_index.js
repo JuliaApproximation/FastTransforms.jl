@@ -105,14 +105,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Other-Exported-Methods-1",
-    "page": "Home",
-    "title": "Other Exported Methods",
-    "category": "section",
-    "text": "gaunt"
-},
-
-{
     "location": "index.html#FastTransforms.paduapoints",
     "page": "Home",
     "title": "FastTransforms.paduapoints",
@@ -121,11 +113,115 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#Other-Exported-Methods-1",
+    "page": "Home",
+    "title": "Other Exported Methods",
+    "category": "section",
+    "text": "gauntpaduapoints"
+},
+
+{
+    "location": "index.html#FastTransforms.clenshawcurtis",
+    "page": "Home",
+    "title": "FastTransforms.clenshawcurtis",
+    "category": "Function",
+    "text": "Compute nodes and weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.clenshawcurtisweights",
+    "page": "Home",
+    "title": "FastTransforms.clenshawcurtisweights",
+    "category": "Function",
+    "text": "Compute weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.fejer1",
+    "page": "Home",
+    "title": "FastTransforms.fejer1",
+    "category": "Function",
+    "text": "Compute nodes and weights of Fejer's first quadrature rule with a Jacobi weight.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.fejer2",
+    "page": "Home",
+    "title": "FastTransforms.fejer2",
+    "category": "Function",
+    "text": "Compute nodes and weights of Fejer's second quadrature rule with a Jacobi weight.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.fejerweights1",
+    "page": "Home",
+    "title": "FastTransforms.fejerweights1",
+    "category": "Function",
+    "text": "Compute weights of Fejer's first quadrature rule with a Jacobi weight.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.fejerweights2",
+    "page": "Home",
+    "title": "FastTransforms.fejerweights2",
+    "category": "Function",
+    "text": "Compute weights of Fejer's second quadrature rule with a Jacobi weight.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.half",
+    "page": "Home",
+    "title": "FastTransforms.half",
+    "category": "Function",
+    "text": "Compute a typed 0.5.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.two",
+    "page": "Home",
+    "title": "FastTransforms.two",
+    "category": "Function",
+    "text": "Compute a typed 2.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.δ",
+    "page": "Home",
+    "title": "FastTransforms.δ",
+    "category": "Function",
+    "text": "The Kronecker δ function.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.Λ",
+    "page": "Home",
+    "title": "FastTransforms.Λ",
+    "category": "Function",
+    "text": "The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.\n\n\n\nFor 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for τ in Appendix B of\n\nI. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83–C101, 2012.\n\n\n\nThe Lambda function Λ(z,λ₁,λ₂) = Γ(z+λ₁)/Γ(z+λ₂) for the ratio of gamma functions.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.pochhammer",
+    "page": "Home",
+    "title": "FastTransforms.pochhammer",
+    "category": "Function",
+    "text": "Pochhammer symbol (x)_n = fracGamma(x+n)Gamma(x) for the rising factorial.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.stirlingseries",
+    "page": "Home",
+    "title": "FastTransforms.stirlingseries",
+    "category": "Function",
+    "text": "Stirling series for Γ(z).\n\n\n\n"
+},
+
+{
     "location": "index.html#Internal-Methods-1",
     "page": "Home",
     "title": "Internal Methods",
     "category": "section",
-    "text": "clenshawcurtisclenshawcurtisweightsfejer1fejer2fejerweights1fejerweights2paduapointshalftwoδΛpochhammerstirlingseries"
+    "text": "FastTransforms.clenshawcurtisFastTransforms.clenshawcurtisweightsFastTransforms.fejer1FastTransforms.fejer2FastTransforms.fejerweights1FastTransforms.fejerweights2FastTransforms.halfFastTransforms.twoFastTransforms.δFastTransforms.ΛFastTransforms.pochhammerFastTransforms.stirlingseries"
 },
 
 ]}
