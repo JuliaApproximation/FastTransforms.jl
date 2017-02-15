@@ -1,7 +1,7 @@
 __precompile__()
 module FastTransforms
 
-using Base, ToeplitzMatrices
+using Base, ToeplitzMatrices, Compat
 
 import Base: *
 import Base: view
@@ -28,7 +28,7 @@ include("fejer.jl")
 include("recurrence.jl")
 include("PaduaTransform.jl")
 
-abstract FastTransformPlan{D,T}
+@compat abstract type FastTransformPlan{D,T} end
 
 include("ChebyshevJacobiPlan.jl")
 include("jac2cheb.jl")

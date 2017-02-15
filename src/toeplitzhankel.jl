@@ -10,7 +10,7 @@ immutable ToeplitzHankelPlan{S}
     C::Vector{Vector{S}}
     DL::Vector{S}
     DR::Vector{S}
-    ToeplitzHankelPlan(T,C,DL,DR)=new(T,C,DL,DR)
+    (::Type{ToeplitzHankelPlan{S}}){S}(T,C,DL,DR) = new{S}(T,C,DL,DR)
 end
 
 function ToeplitzHankelPlan(T::TriangularToeplitz,C::Vector,DL::AbstractVector,DR::AbstractVector)

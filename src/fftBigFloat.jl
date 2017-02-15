@@ -1,4 +1,4 @@
-typealias BigFloats Union{BigFloat,Complex{BigFloat}}
+const BigFloats = Union{BigFloat,Complex{BigFloat}}
 
 real(x...)=Base.real(x...)
 real{T<:Real}(::Type{T})=T

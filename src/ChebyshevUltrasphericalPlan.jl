@@ -75,8 +75,8 @@ type ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
     anλ::Vector{T}
     c_cheb2::Vector{T}
     pr::Vector{T}
-    function ChebyshevUltrasphericalPlan(CUC::ChebyshevUltrasphericalConstants{D,T},CUI::ChebyshevUltrasphericalIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},θ::Vector{T},tempsin::Vector{T},tempsin2::Vector{T},tempsinλ::Vector{T},tempsinλm::Vector{T},tempmindices::Vector{T},cnλ::Vector{T},cnmλ::Vector{T})
-        P = new()
+    function (::Type{ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA}}){D,T,DCT,DST,SA}(CUC::ChebyshevUltrasphericalConstants{D,T},CUI::ChebyshevUltrasphericalIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},θ::Vector{T},tempsin::Vector{T},tempsin2::Vector{T},tempsinλ::Vector{T},tempsinλm::Vector{T},tempmindices::Vector{T},cnλ::Vector{T},cnmλ::Vector{T})
+        P = new{D,T,DCT,DST,SA}()
         P.CUC = CUC
         P.CUI = CUI
         P.p₁ = p₁
@@ -96,7 +96,7 @@ type ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
         P.cnmλ = cnmλ
         P
     end
-    function ChebyshevUltrasphericalPlan(CUC::ChebyshevUltrasphericalConstants{D,T},CUI::ChebyshevUltrasphericalIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},θ::Vector{T},tempsin::Vector{T},tempsin2::Vector{T},tempsinλ::Vector{T},tempsinλm::Vector{T},tempmindices::Vector{T},cnλ::Vector{T},cnmλ::Vector{T},w::Vector{T},anλ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
+    function (::Type{ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA}}){D,T,DCT,DST,SA}(CUC::ChebyshevUltrasphericalConstants{D,T},CUI::ChebyshevUltrasphericalIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},θ::Vector{T},tempsin::Vector{T},tempsin2::Vector{T},tempsinλ::Vector{T},tempsinλm::Vector{T},tempmindices::Vector{T},cnλ::Vector{T},cnmλ::Vector{T},w::Vector{T},anλ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
         P = ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA}(CUC,CUI,p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempsinλm,tempmindices,cnλ,cnmλ)
         P.w = w
         P.anλ = anλ
@@ -104,8 +104,8 @@ type ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
         P.pr = pr
         P
     end
-    function ChebyshevUltrasphericalPlan(CUC::ChebyshevUltrasphericalConstants{D,T})
-        P = new()
+    function (::Type{ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA}}){D,T,DCT,DST,SA}(CUC::ChebyshevUltrasphericalConstants{D,T})
+        P = new{D,T,DCT,DST,SA}()
         P.CUC = CUC
         P
     end

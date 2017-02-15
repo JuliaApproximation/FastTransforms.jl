@@ -75,8 +75,9 @@ type ChebyshevJacobiPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
     anαβ::Vector{T}
     c_cheb2::Vector{T}
     pr::Vector{T}
-    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T})
-        P = new()
+    function (::Type{ChebyshevJacobiPlan{D,T,DCT,DST,SA}}){D,T,DCT,DST,SA}(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},
+                                                tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T})
+        P = new{D,T,DCT,DST,SA}()
         P.CJC = CJC
         P.CJI = CJI
         P.p₁ = p₁
@@ -96,7 +97,8 @@ type ChebyshevJacobiPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
         P.cnmαβ = cnmαβ
         P
     end
-    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T},w::Vector{T},anαβ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
+    function (::Type{ChebyshevJacobiPlan{D,T,DCT,DST,SA}}){D,T,DCT,DST,SA}(CJC::ChebyshevJacobiConstants{D,T},CJI::ChebyshevJacobiIndices,p₁::DCT,p₂::DST,rp::RecurrencePlan{T},c₁::Vector{T},c₂::SA,um::Vector{T},vm::Vector{T},cfs::Matrix{T},θ::Vector{T},tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},tempmindices::Vector{T},cnαβ::Vector{T},cnmαβ::Vector{T},
+                                                 w::Vector{T},anαβ::Vector{T},c_cheb2::Vector{T},pr::Vector{T})
         P = ChebyshevJacobiPlan{D,T,DCT,DST,SA}(CJC,CJI,p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ)
         P.w = w
         P.anαβ = anαβ
@@ -104,8 +106,8 @@ type ChebyshevJacobiPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
         P.pr = pr
         P
     end
-    function ChebyshevJacobiPlan(CJC::ChebyshevJacobiConstants{D,T})
-        P = new()
+    function (::Type{ChebyshevJacobiPlan{D,T,DCT,DST,SA}}){D,T,DCT,DST,SA}(CJC::ChebyshevJacobiConstants{D,T})
+        P = new{D,T,DCT,DST,SA}()
         P.CJC = CJC
         P
     end
