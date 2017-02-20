@@ -25,7 +25,7 @@ end
 Base.rfft{T<:BigFloats}(v::Vector{T})=fft(v)[1:div(length(v),2)+1]
 function Base.irfft{T<:BigFloats}(v::Vector{T},n::Integer)
     @assert n==2length(v)-1
-    r=Array(Complex{BigFloat},n)
+    r = Vector{Complex{BigFloat}}(n)
     r[1:length(v)]=v
     r[length(v)+1:end]=reverse(conj(v[2:end]))
     real(ifft(r))
