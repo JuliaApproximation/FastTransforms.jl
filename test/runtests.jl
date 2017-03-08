@@ -124,9 +124,9 @@ println("Testing increment/decrement operators for α,β ≤ -0.5")
 α,β = -0.9,-0.6
 
 @test norm(FastTransforms.fromsquare!(FastTransforms.tosquare!(copy(c),α,β),α,β)-c,Inf) < 10eps()
-@test norm(icjt(cjt(c,α,β),α,β)-c,Inf) < 2000eps()
+@test norm(icjt(cjt(c,α,β),α,β)-c,Inf) < 20000eps()
 p1,p2 = plan_cjt(c,α,β),plan_icjt(c,α,β)
-@test norm(p2*(p1*c)-c,Inf) < 2000eps()
+@test norm(p2*(p1*c)-c,Inf) < 20000eps()
 
 println("Testing increment/decrement operators for α ≤ -0.5, β > -0.5")
 
