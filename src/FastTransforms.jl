@@ -1,13 +1,15 @@
 __precompile__()
 module FastTransforms
 
-using Base, ToeplitzMatrices, Compat
+using Base, ToeplitzMatrices, HierarchicalMatrices, Compat
 
-import Base: *
-import Base: view
+import Base: *, view
+
+import HierarchicalMatrices: HierarchicalMatrix
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
+export plan_leg2cheb, plan_cheb2leg
 export gaunt
 export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
 export plan_paduatransform!, plan_ipaduatransform!
@@ -42,11 +44,13 @@ include("cjt.jl")
 
 include("toeplitzhankel.jl")
 
-leg2cheb(x...)=th_leg2cheb(x...)
-cheb2leg(x...)=th_cheb2leg(x...)
+#leg2cheb(x...)=th_leg2cheb(x...)
+#cheb2leg(x...)=th_cheb2leg(x...)
 leg2chebu(x...)=th_leg2chebu(x...)
 ultra2ultra(x...)=th_ultra2ultra(x...)
 jac2jac(x...)=th_jac2jac(x...)
+
+include("hierarchical.jl")
 
 include("gaunt.jl")
 
