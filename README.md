@@ -50,8 +50,10 @@ bivariate function at the Padua points on `[-1,1]^2`.
 
 # References:
 
-   1.	N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, SIAM J. Sci. Comput., 36:A148—A167, 2014.
+   1.   B. Alpert and V. Rokhlin. <a href="http://dx.doi.org/10.1137/0912009">A fast algorithm for the evaluation of Legendre expansions</a>, *SIAM J. Sci. Stat. Comput.*, **12**:158—179, 1991.
 
-   2.	R. M. Slevinsky. <a href="http://arxiv.org/abs/1602.02618">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, arXiv:1602.02618, 2016.
+   2.	N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, *SIAM J. Sci. Comput.*, **36**:A148—A167, 2014.
 
-   3.	A. Townsend, M. Webb, and S. Olver. <a href="http://arxiv.org/abs/1604.07486">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, arXiv:1604.07486, 2016.
+   3.	R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, published online in *IMA J. Numer. Anal.*, 2017.
+
+   4.	A. Townsend, M. Webb, and S. Olver. <a href="http://arxiv.org/abs/1604.07486">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, arXiv:1604.07486, 2016.

@@ -3,13 +3,17 @@ module FastTransforms
 
 using Base, ToeplitzMatrices, HierarchicalMatrices, Compat
 
-import Base: *, view
+import Base: *, size, view, A_mul_B!, Ac_mul_B!, At_mul_B!
+import Base: getindex, setindex!
 
-import HierarchicalMatrices: HierarchicalMatrix
+import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
+export normleg2cheb, cheb2normleg, normleg12cheb2, cheb22normleg1
 export plan_leg2cheb, plan_cheb2leg
+export plan_normleg2cheb, plan_cheb2normleg
+export plan_normleg12cheb2, plan_cheb22normleg1
 export gaunt
 export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
 export plan_paduatransform!, plan_ipaduatransform!
@@ -51,6 +55,7 @@ ultra2ultra(x...)=th_ultra2ultra(x...)
 jac2jac(x...)=th_jac2jac(x...)
 
 include("hierarchical.jl")
+include("SphericalHarmonics/slowplan.jl")
 
 include("gaunt.jl")
 
