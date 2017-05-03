@@ -1,12 +1,51 @@
 import Base.LinAlg: Givens, AbstractRotation
 
+function A_mul_B!{T<:Real}(G::Givens{T}, A::AbstractVecOrMat)
+    m, n = size(A, 1), size(A, 2)
+    if G.i2 > m
+        throw(DimensionMismatch("column indices for rotation are outside the matrix"))
+    end
+    @inbounds @simd for i = 1:n
+        a1, a2 = A[G.i1,i], A[G.i2,i]
+        A[G.i1,i] =  G.c*a1 + G.s*a2
+        A[G.i2,i] = -G.s*a1 + G.c*a2
+    end
+    return A
+end
+
+function A_mul_B!(A::AbstractMatrix, G::Givens)
+    m, n = size(A, 1), size(A, 2)
+    if G.i2 > n
+        throw(DimensionMismatch("column indices for rotation are outside the matrix"))
+    end
+    @inbounds @simd for i = 1:m
+        a1, a2 = A[i,G.i1], A[i,G.i2]
+        A[i,G.i1] =       G.c *a1 + G.s*a2
+        A[i,G.i2] = -conj(G.s)*a1 + G.c*a2
+    end
+    return A
+end
+
+function A_mul_B!{T<:Real}(A::AbstractMatrix, G::Givens{T})
+    m, n = size(A, 1), size(A, 2)
+    if G.i2 > n
+        throw(DimensionMismatch("column indices for rotation are outside the matrix"))
+    end
+    @inbounds @simd for i = 1:m
+        a1, a2 = A[i,G.i1], A[i,G.i2]
+        A[i,G.i1] =  G.c*a1 + G.s*a2
+        A[i,G.i2] = -G.s*a1 + G.c*a2
+    end
+    return A
+end
+
 immutable Pnmp2toPlm{T} <: AbstractRotation{T}
     rotations::Vector{Givens{T}}
 end
 
 function Pnmp2toPlm{T}(::Type{T}, n::Int, m::Int)
     G = Vector{Givens{T}}(n)
-    for ℓ = 1:n
+    @inbounds for ℓ = 1:n
         c = sqrt((2ℓ+2m+3)/(ℓ+2m+3)*(2m+2)/(ℓ+2m+2))
         s = sqrt((ℓ+1)/(ℓ+2m+3)*ℓ/(ℓ+2m+2))
         G[n+1-ℓ] = Givens(ℓ, ℓ+2, c, s)
@@ -15,11 +54,18 @@ function Pnmp2toPlm{T}(::Type{T}, n::Int, m::Int)
 end
 
 @inline length(P::Pnmp2toPlm) = length(P.rotations)
-@inline getindex(P::Pnmp2toPlm,i::Int) = P.rotations[i]
+@inline getindex(P::Pnmp2toPlm, i::Int) = P.rotations[i]
 
 function A_mul_B!(C::Pnmp2toPlm,A::AbstractVecOrMat)
-    for i = 1:length(C)
+    @inbounds for i = 1:length(C)
         A_mul_B!(C.rotations[i], A)
+    end
+    A
+end
+
+function A_mul_B!(A::AbstractMatrix, C::Pnmp2toPlm)
+    @inbounds for i = length(C):-1:1
+        A_mul_B!(A, C.rotations[i])
     end
     A
 end
@@ -31,7 +77,7 @@ end
 
 function RotationPlan{T}(::Type{T}, n::Int)
     layers = Vector{Pnmp2toPlm{T}}(n-1)
-    for m = 0:n-2
+    @inbounds for m = 0:n-2
         layers[m+1] = Pnmp2toPlm(T, n-1-m, m)
     end
     RotationPlan(layers)
@@ -54,7 +100,7 @@ function A_mul_B!(P::RotationPlan, A::AbstractMatrix)
     A
 end
 
-function Ac_mul_B!(P::RotationPlan, A::AbstractMatrix)
+function At_mul_B!(P::RotationPlan, A::AbstractMatrix)
     n = length(P.layers)+1
 
     @inbounds for m = 0:n-2
@@ -70,6 +116,8 @@ function Ac_mul_B!(P::RotationPlan, A::AbstractMatrix)
     end
     A
 end
+
+Ac_mul_B!(P::RotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
 
 
 immutable SlowSphericalHarmonicPlan{T}
@@ -101,10 +149,12 @@ function A_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     A_mul_B_even_cols!!(Y, p2, B)
 end
 
-function Ac_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
+function At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
     copy!(B, X)
     A_mul_B_odd_cols!!(Y, p1inv, B)
     A_mul_B_even_cols!!(Y, p2inv, B)
-    Ac_mul_B!(RP, Y)
+    At_mul_B!(RP, Y)
 end
+
+Ac_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, SP, X)
