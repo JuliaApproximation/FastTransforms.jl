@@ -20,8 +20,8 @@ function A_mul_B!(A::AbstractMatrix, G::Givens)
     end
     @inbounds @simd for i = 1:m
         a1, a2 = A[i,G.i1], A[i,G.i2]
-        A[i,G.i1] =       G.c *a1 + G.s*a2
-        A[i,G.i2] = -conj(G.s)*a1 + G.c*a2
+        A[i,G.i1] = G.c*a1 - conj(G.s)*a2
+        A[i,G.i2] = G.s*a1 +       G.c*a2
     end
     return A
 end
@@ -33,8 +33,8 @@ function A_mul_B!{T<:Real}(A::AbstractMatrix, G::Givens{T})
     end
     @inbounds @simd for i = 1:m
         a1, a2 = A[i,G.i1], A[i,G.i2]
-        A[i,G.i1] =  G.c*a1 + G.s*a2
-        A[i,G.i2] = -G.s*a1 + G.c*a2
+        A[i,G.i1] = G.c*a1 - G.s*a2
+        A[i,G.i2] = G.s*a1 + G.c*a2
     end
     return A
 end
@@ -85,7 +85,6 @@ end
 
 function A_mul_B!(P::RotationPlan, A::AbstractMatrix)
     n = length(P.layers)+1
-
     @inbounds for m = n-2:-1:0
         layer = P.layers[m+1]
         for ℓ = m+2:2:n
@@ -102,7 +101,6 @@ end
 
 function At_mul_B!(P::RotationPlan, A::AbstractMatrix)
     n = length(P.layers)+1
-
     @inbounds for m = 0:n-2
         layer = P.layers[m+1]
         for ℓ = m+2:2:n

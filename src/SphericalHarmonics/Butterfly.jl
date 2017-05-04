@@ -1,0 +1,274 @@
+immutable Butterfly{T} <: Factorization{T}
+    columns::Vector{Matrix{T}}
+    factors::Vector{Vector{IDPackedV{T}}}
+    permutations::Vector{Vector{ColumnPermutation}}
+    indices::Vector{Vector{Int64}}
+    temp1::Vector{T}
+    temp2::Vector{T}
+end
+
+function size(B::Butterfly, dim::Integer)
+    if dim == 1
+        m = 0
+        for i = 1:length(B.columns)
+            m += size(B.columns[i], 1)
+        end
+        return m
+    elseif dim == 2
+        n = 0
+        for j = 1:length(B.factors[1])
+            n += size(B.factors[1][j], 2)
+        end
+        return n
+    else
+        return 1
+    end
+end
+
+size(B::Butterfly) = size(B, 1), size(B, 2)
+
+function Butterfly{T}(A::AbstractMatrix{T}, L::Int64)
+    m, n = size(A)
+    tL = 2^L
+
+    LRAOpts = LRAOptions(T; rtol = eps(real(T))*max(m, n))
+
+    columns = Vector{Matrix{T}}(tL)
+    factors = Vector{Vector{IDPackedV{T}}}(L+1)
+    permutations = Vector{Vector{ColumnPermutation}}(L+1)
+    indices = Vector{Vector{Int64}}(L+1)
+    cs = Vector{Vector{Vector{Int64}}}(L+1)
+
+    factors[1] = Vector{IDPackedV{T}}(tL)
+    permutations[1] = Vector{ColumnPermutation}(tL)
+    indices[1] = Vector{Int64}(tL+1)
+    cs[1] = Vector{Vector{Int64}}(tL)
+
+    nd = n÷tL
+    nl = 1
+    nu = nd
+    indices[1][1] = 1
+    for j = 1:tL
+        factors[1][j] = idfact(view(A,:,nl:nu), LRAOpts)
+        permutations[1][j] = factors[1][j][:P]
+        indices[1][j+1] = indices[1][j] + size(factors[1][j], 1)
+        cs[1][j] = factors[1][j].sk+nl-1
+        nl += nd
+        nu += nd
+    end
+
+    ii, jj = 2, (tL>>1)
+    for l = 2:L+1
+        factors[l] = Vector{IDPackedV{T}}(tL)
+        permutations[l] = Vector{ColumnPermutation}(tL)
+        indices[l] = Vector{Int64}(tL+1)
+        cs[l] = Vector{Vector{Int64}}(tL)
+
+        ctr = 0
+        md = m÷ii
+        ml = 1
+        mu = md
+        indices[l][1] = 1
+        for i = 1:ii
+            shft = 2jj*div(ctr,2jj)
+            for j = 1:jj
+                cols = vcat(cs[l-1][2j-1+shft],cs[l-1][2j+shft])
+                factors[l][j+ctr] = idfact(view(A, ml:mu, cols), LRAOpts)
+                permutations[l][j+ctr] = factors[l][j+ctr][:P]
+                indices[l][j+ctr+1] = indices[l][j+ctr] + size(factors[l][j+ctr], 1)
+                cs[l][j+ctr] = cols[factors[l][j+ctr].sk]
+            end
+            ml += md
+            mu += md
+            ctr += jj
+        end
+        ii <<= 1
+        jj >>= 1
+    end
+
+    md = m÷tL
+    ml = 1
+    mu = md
+    for i = 1:tL
+        columns[i] = A[ml:mu,cs[L+1][i]]
+        ml += md
+        mu += md
+    end
+
+    kk = sumkmax(indices)
+
+    Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk))
+end
+
+
+function rowperm!(fwd::Bool, x::StridedVecOrMat, p::Vector{Int}, jstart::Int)
+  n = length(p)
+  jshift = jstart-1
+  scale!(p, -1)
+  if (fwd)
+    for i = 1:n
+      p[i] > 0 && continue
+      j    =    i
+      p[j] = -p[j]
+      k    =  p[j]
+      while p[k] < 0
+        x[jshift+j], x[jshift+k] = x[jshift+k], x[jshift+j]
+        j    =    k
+        p[j] = -p[j]
+        k    =  p[j]
+      end
+    end
+  else
+    for i = 1:n
+      p[i] > 0 && continue
+      p[i] = -p[i]
+      j    =  p[i]
+      while p[j] < 0
+        x[jshift+i], x[jshift+j] = x[jshift+j], x[jshift+i]
+        p[j] = -p[j]
+        j    =  p[j]
+      end
+    end
+  end
+  x
+end
+
+## ColumnPermutation
+A_mul_B!(A::ColPerm, B::StridedVecOrMat, jstart::Int) = rowperm!(false, B, A.p, jstart)
+Ac_mul_B!(A::ColPerm, B::StridedVecOrMat, jstart::Int) = rowperm!(true, B, A.p, jstart)
+
+function A_mul_B!{T<:BlasFloat}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int)
+    k, n = size(A)
+    Ac_mul_B!(P, x, jstart)
+    copy!(y, istart, x, jstart, k)
+    A_mul_B!(y, A.T, x, istart, jstart+k)
+    A_mul_B!(P, x, jstart)
+    y
+end
+
+
+function A_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T})
+    L = length(B.factors) - 1
+    tL = 2^L
+
+    temp1 = B.temp1
+    temp2 = B.temp2
+    fill!(temp1, zero(T))
+    fill!(temp2, zero(T))
+
+    factors = B.factors[1]
+    permutations = B.permutations[1]
+    inds = B.indices[1]
+    nu = 0
+    for j = 1:tL
+        nl = nu+1
+        nu += size(factors[j], 2)
+        A_mul_B!(temp1, factors[j], permutations[j], b, inds[j], nl)
+    end
+
+    ii, jj = 2, (tL>>1)
+    for l = 2:L+1
+        factors = B.factors[l]
+        permutations = B.permutations[l]
+        indsout = B.indices[l]
+        indsin = B.indices[l-1]
+        ctr = 0
+        for i = 1:ii
+            shft = 2jj*div(ctr,2jj)
+            for j = 1:jj
+                A_mul_B!(temp2, factors[j+ctr], permutations[j+ctr], temp1, indsout[j+ctr], indsin[2j+shft-1])
+            end
+            ctr += jj
+        end
+        temp1, temp2 = temp2, fill!(temp1, zero(T))
+        ii <<= 1
+        jj >>= 1
+    end
+
+    columns = B.columns
+    inds = B.indices[L+1]
+    mu = 0
+    for i = 1:tL
+        ml = mu+1
+        mu += size(columns[i], 1)
+        A_mul_B!(u, columns[i], temp1, ml, inds[i])
+    end
+
+    u
+end
+
+function A_mul_B_col_J!{T}(u::Matrix{T}, B::Butterfly{T}, b::Matrix{T}, J::Int)
+    L = length(B.factors) - 1
+    tL = 2^L
+
+    M, N = size(b)
+
+    COLSHIFT = M*(J-1)
+
+    temp1 = B.temp1
+    temp2 = B.temp2
+    fill!(temp1, zero(T))
+    fill!(temp2, zero(T))
+
+    factors = B.factors[1]
+    permutations = B.permutations[1]
+    inds = B.indices[1]
+    nu = 0
+    for j = 1:tL
+        nl = nu+1
+        nu += size(factors[j], 2)
+        A_mul_B!(temp1, factors[j], permutations[j], b, inds[j], nl+COLSHIFT)
+    end
+
+    ii, jj = 2, (tL>>1)
+    for l = 2:L+1
+        factors = B.factors[l]
+        permutations = B.permutations[l]
+        indsout = B.indices[l]
+        indsin = B.indices[l-1]
+        ctr = 0
+        for i = 1:ii
+            shft = 2jj*div(ctr,2jj)
+            for j = 1:jj
+                A_mul_B!(temp2, factors[j+ctr], permutations[j+ctr], temp1, indsout[j+ctr], indsin[2j+shft-1])
+            end
+            ctr += jj
+        end
+        temp1, temp2 = temp2, fill!(temp1, zero(T))
+        ii <<= 1
+        jj >>= 1
+    end
+
+    columns = B.columns
+    inds = B.indices[L+1]
+    mu = 0
+    for i = 1:tL
+        ml = mu+1
+        mu += size(columns[i], 1)
+        A_mul_B!(u, columns[i], temp1, ml+COLSHIFT, inds[i])
+    end
+
+    u
+end
+
+function sumkmax(indices::Vector{Vector{Int64}})
+    ret = 0
+    @inbounds for j = 1:length(indices)
+        ret = max(ret, indices[j][end])
+    end
+    ret
+end
+
+
+function allranks(B::Butterfly)
+    L = length(B.factors)-1
+    tL = 2^L
+    ret = zeros(Int64, tL, L+1)
+    @inbounds for l = 1:L+1
+        for j = 1:tL
+            ret[j,l] = size(B.factors[l][j], 1)
+        end
+    end
+
+    ret
+end

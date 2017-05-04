@@ -1,12 +1,13 @@
 __precompile__()
 module FastTransforms
 
-using Base, ToeplitzMatrices, HierarchicalMatrices, Compat
+using Base, ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, Compat
 
 import Base: *, size, view, A_mul_B!, Ac_mul_B!, At_mul_B!
-import Base: getindex, setindex!
-
+import Base: getindex, setindex!, Factorization, length
+import Base.LinAlg: BlasFloat, BlasInt
 import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
+import LowRankApprox: rowperm!, ColPerm
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
@@ -55,7 +56,7 @@ ultra2ultra(x...)=th_ultra2ultra(x...)
 jac2jac(x...)=th_jac2jac(x...)
 
 include("hierarchical.jl")
-include("SphericalHarmonics/slowplan.jl")
+include("SphericalHarmonics/SphericalHarmonics.jl")
 
 include("gaunt.jl")
 
