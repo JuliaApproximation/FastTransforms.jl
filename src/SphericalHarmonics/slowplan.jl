@@ -84,12 +84,15 @@ function RotationPlan{T}(::Type{T}, n::Int)
 end
 
 function A_mul_B!(P::RotationPlan, A::AbstractMatrix)
-    n = length(P.layers)+1
-    @inbounds for m = n-2:-1:0
+    M, N = size(A)
+    @inbounds for m = N÷2-2:-1:0
         layer = P.layers[m+1]
-        for ℓ = m+2:2:n
+        for ℓ = 2*(m+2):4:N
             @simd for i = 1:length(layer)
                 G = layer[i]
+                a1, a2 = A[G.i1,ℓ], A[G.i2,ℓ]
+                A[G.i1,ℓ] = G.c*a1 + G.s*a2
+                A[G.i2,ℓ] = G.c*a2 - G.s*a1
                 a1, a2 = A[G.i1,ℓ+1], A[G.i2,ℓ+1]
                 A[G.i1,ℓ+1] = G.c*a1 + G.s*a2
                 A[G.i2,ℓ+1] = G.c*a2 - G.s*a1
@@ -100,12 +103,15 @@ function A_mul_B!(P::RotationPlan, A::AbstractMatrix)
 end
 
 function At_mul_B!(P::RotationPlan, A::AbstractMatrix)
-    n = length(P.layers)+1
-    @inbounds for m = 0:n-2
+    M, N = size(A)
+    @inbounds for m = 0:N÷2-2
         layer = P.layers[m+1]
-        for ℓ = m+2:2:n
+        for ℓ = 2*(m+2):4:N
             @simd for i = length(layer):-1:1
                 G = layer[i]
+                a1, a2 = A[G.i1,ℓ], A[G.i2,ℓ]
+                A[G.i1,ℓ] = G.c*a1 - G.s*a2
+                A[G.i2,ℓ] = G.s*a1 + G.c*a2
                 a1, a2 = A[G.i1,ℓ+1], A[G.i2,ℓ+1]
                 A[G.i1,ℓ+1] = G.c*a1 - G.s*a2
                 A[G.i2,ℓ+1] = G.s*a1 + G.c*a2
@@ -128,7 +134,8 @@ immutable SlowSphericalHarmonicPlan{T}
 end
 
 function SlowSphericalHarmonicPlan{T}(A::Matrix{T})
-    m, n = size(A)
+    M, N = size(A)
+    n = (N+1)÷2
     RP = RotationPlan(T, n-1)
     a1 = A[:,1]
     p1 = plan_normleg2cheb(a1)
@@ -143,15 +150,32 @@ function A_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     RP, p1, p2, B = SP.RP, SP.p1, SP.p2, SP.B
     copy!(B, X)
     A_mul_B!(RP, B)
-    A_mul_B_odd_cols!!(Y, p1, B)
-    A_mul_B_even_cols!!(Y, p2, B)
+    M, N = size(X)
+    A_mul_B_col_J!!(Y, p1, B, 1)
+    for J = 2:4:N
+        A_mul_B_col_J!!(Y, p2, B, J)
+        A_mul_B_col_J!!(Y, p2, B, J+1)
+    end
+    for J = 4:4:N
+        A_mul_B_col_J!!(Y, p1, B, J)
+        A_mul_B_col_J!!(Y, p1, B, J+1)
+    end
+    Y
 end
 
 function At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
     copy!(B, X)
-    A_mul_B_odd_cols!!(Y, p1inv, B)
-    A_mul_B_even_cols!!(Y, p2inv, B)
+    M, N = size(X)
+    A_mul_B_col_J!!(Y, p1inv, B, 1)
+    for J = 2:4:N
+        A_mul_B_col_J!!(Y, p2inv, B, J)
+        A_mul_B_col_J!!(Y, p2inv, B, J+1)
+    end
+    for J = 4:4:N
+        A_mul_B_col_J!!(Y, p1inv, B, J)
+        A_mul_B_col_J!!(Y, p1inv, B, J+1)
+    end
     At_mul_B!(RP, Y)
 end
 

@@ -40,6 +40,28 @@ for n in 7:N
 end
 
 N = 10
+A = Vector{Matrix{Float64}}(N)
+for n in 1:N
+    A[n] = Float64[1/(i+j-1) for i = 1:2^n,j=1:2^n]
+    println(n)
+end
+
+for n in 7:N
+    println("N = ", n)
+    @time B = Butterfly(A[n], n-5)
+    b = rand(Float64,2^n)./(1:2^n)
+    u = zero(b)
+    @time uf = A[n]*b
+    @time A_mul_B!(u, B, b)
+    w = zero(b)
+    @time At_mul_B!(w, B, b)
+    println(norm(u-uf)/2^n)
+    println(norm(w-A[n]'b))
+    println(norm(u-w))
+end
+
+
+N = 10
 A = Vector{Matrix{Complex{Float64}}}(N)
 for n in 1:N
     A[n] = randnfft(2^n,2^n,0.1)

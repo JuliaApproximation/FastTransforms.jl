@@ -11,51 +11,27 @@ end
 # A_mul_B!! mutates x while overwriting y. The generic fallback assumes it doesn't mutate x.
 A_mul_B!!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = A_mul_B!(y, P, x)
 A_mul_B!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B!(Y, P, X)
-A_mul_B_odd_cols!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B_odd_cols!(Y, P, X)
-A_mul_B_even_cols!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B_even_cols!(Y, P, X)
+A_mul_B_col_J!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix, J::Int) = A_mul_B_col_J!(Y, P, X, J)
 
 # A_mul_B! falls back to the mutating version with a copy.
 A_mul_B!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = A_mul_B!!(y, P, copy(x))
 A_mul_B!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B!!(Y, P, copy(X))
-A_mul_B_odd_cols!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B_odd_cols!!(Y, P, copy(X))
-A_mul_B_even_cols!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B_even_cols!!(Y, P, copy(X))
+A_mul_B_col_J!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B_col_J!!(Y, P, copy(X), J)
 
-function scale_odd_cols!(b::AbstractVector, A::AbstractMatrix)
+function scale_col_J!(b::AbstractVector, A::AbstractVecOrMat, J::Int)
     m, n = size(A)
-    @inbounds for j = 1:2:n
-        @simd for i = 1:m
-            A[i,j] *= b[i]
-        end
+    COLSHIFT = m*(J-1)
+    @inbounds @simd for i = 1:m
+        A[i+COLSHIFT] *= b[i]
     end
     A
 end
 
-function scale_odd_cols!(b::Number, A::AbstractMatrix)
+function scale_col_J!(b::Number, A::AbstractVecOrMat, J::Int)
     m, n = size(A)
-    @inbounds for j = 1:2:n
-        @simd for i = 1:m
-            A[i,j] *= b
-        end
-    end
-    A
-end
-
-function scale_even_cols!(b::AbstractVector, A::AbstractMatrix)
-    m, n = size(A)
-    @inbounds for j = 2:2:n
-        @simd for i = 1:m
-            A[i,j] *= b[i]
-        end
-    end
-    A
-end
-
-function scale_even_cols!(b::Number, A::AbstractMatrix)
-    m, n = size(A)
-    @inbounds for j = 2:2:n
-        @simd for i = 1:m
-            A[i,j] *= b
-        end
+    COLSHIFT = m*(J-1)
+    @inbounds @simd for i = 1:m
+        A[i+COLSHIFT] *= b
     end
     A
 end
@@ -348,27 +324,23 @@ function A_mul_B!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix)
     scale!(P.scl, Y)
 end
 
-function A_mul_B_odd_cols!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix)
+function A_mul_B_col_J!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix, J::Int)
     m, n = size(X)
-    scale_odd_cols!(P.scl, X)
-    for j = 1:2:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
-    end
-    scale_odd_cols!(2/π, Y)
-    @inbounds @simd for j = 1:2:n
-        Y[1+m*(j-1)] *= 0.5
-    end
+    COLSHIFT = m*(J-1)
+    scale_col_J!(P.scl, X, J)
+    A_mul_B!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
+    A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
+    scale_col_J!(2/π, Y, J)
+    @inbounds Y[1+COLSHIFT] *= 0.5
     Y
 end
 
-function A_mul_B_odd_cols!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix)
+function A_mul_B_col_J!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix, J::Int)
     m, n = size(X)
-    for j = 1:2:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
-    end
-    scale_odd_cols!(P.scl, Y)
+    COLSHIFT = m*(J-1)
+    A_mul_B!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
+    A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
+    scale_col_J!(P.scl, Y, J)
 end
 
 ################################################################################
@@ -468,21 +440,19 @@ function A_mul_B!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix)
     scale!(P.scl, Y)
 end
 
-function A_mul_B_even_cols!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix)
+function A_mul_B_col_J!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix, J::Int)
     m, n = size(X)
-    scale_even_cols!(P.scl, X)
-    for j = 2:2:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
-    end
+    COLSHIFT = m*(J-1)
+    scale_col_J!(P.scl, X, J)
+    A_mul_B!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
+    A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
     Y
 end
 
-function A_mul_B_even_cols!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix)
+function A_mul_B_col_J!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix, J::Int)
     m, n = size(X)
-    for j = 2:2:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
-    end
-    scale_even_cols!(P.scl, Y)
+    COLSHIFT = m*(J-1)
+    A_mul_B!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
+    A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
+    scale_col_J!(P.scl, Y, J)
 end
