@@ -101,6 +101,79 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64)
     Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk), zeros(T, kk))
 end
 
+function orthogonalButterfly{T}(A::AbstractMatrix{T}, L::Int64)
+    m, n = size(A)
+    tL = 2^L
+
+    LRAOpts = LRAOptions(T; rtol = eps(real(T))*max(m, n))
+
+    columns = Vector{Matrix{T}}(tL)
+    factors = Vector{Vector{IDPackedV{T}}}(L+1)
+    permutations = Vector{Vector{ColumnPermutation}}(L+1)
+    indices = Vector{Vector{Int64}}(L+1)
+    cs = Vector{Vector{Vector{Int64}}}(L+1)
+
+    factors[1] = Vector{IDPackedV{T}}(tL)
+    permutations[1] = Vector{ColumnPermutation}(tL)
+    indices[1] = Vector{Int64}(tL+1)
+    cs[1] = Vector{Vector{Int64}}(tL)
+
+    nd = n÷tL
+    nl = 1
+    nu = nd
+    indices[1][1] = 1
+    for j = 1:tL
+        factors[1][j] = IDPackedV{T}(collect(1:nd),Int64[],Array{T}(nd,0))
+        permutations[1][j] = factors[1][j][:P]
+        indices[1][j+1] = indices[1][j] + size(factors[1][j], 1)
+        cs[1][j] = factors[1][j].sk+nl-1
+        nl += nd
+        nu += nd
+    end
+
+    ii, jj = 2, (tL>>1)
+    for l = 2:L+1
+        factors[l] = Vector{IDPackedV{T}}(tL)
+        permutations[l] = Vector{ColumnPermutation}(tL)
+        indices[l] = Vector{Int64}(tL+1)
+        cs[l] = Vector{Vector{Int64}}(tL)
+
+        ctr = 0
+        md = m÷ii
+        ml = 1
+        mu = md
+        indices[l][1] = 1
+        for i = 1:ii
+            shft = 2jj*div(ctr,2jj)
+            for j = 1:jj
+                cols = vcat(cs[l-1][2j-1+shft],cs[l-1][2j+shft])
+                factors[l][j+ctr] = idfact(view(A, ml:mu, cols), LRAOpts)
+                permutations[l][j+ctr] = factors[l][j+ctr][:P]
+                indices[l][j+ctr+1] = indices[l][j+ctr] + size(factors[l][j+ctr], 1)
+                cs[l][j+ctr] = cols[factors[l][j+ctr].sk]
+            end
+            ml += md
+            mu += md
+            ctr += jj
+        end
+        ii <<= 1
+        jj >>= 1
+    end
+
+    md = m÷tL
+    ml = 1
+    mu = md
+    for i = 1:tL
+        columns[i] = A[ml:mu,cs[L+1][i]]
+        ml += md
+        mu += md
+    end
+
+    kk = sumkmax(indices)
+
+    Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk), zeros(T, kk))
+end
+
 function sumkmax(indices::Vector{Vector{Int64}})
     ret = 0
     @inbounds for j = 1:length(indices)

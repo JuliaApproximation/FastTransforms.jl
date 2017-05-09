@@ -77,3 +77,26 @@ for n in 7:N
     @time A_mul_B!(u, B, b)
     println(norm(u-uf)/2^n)
 end
+
+
+N = 14
+A = Vector{Matrix{Complex{Float64}}}(N)
+B = Vector{Butterfly{Complex{Float64}}}(N)
+for n in 7:N
+    A[n] = randnfft(2^n,2^n,0.1)
+    @time B[n] = Butterfly(A[n], n-6)
+    println(n)
+end
+
+for n in 7:N
+    println("N = ", n)
+    b = rand(Complex{Float64},2^n)./(1:2^n)
+    uf = zero(b)
+    u = zero(b)
+    @time for k = 1:100
+        A_mul_B!(uf, A[n], b)
+    end
+    @time for k = 1:100
+        A_mul_B!(u, B[n], b)
+    end
+end

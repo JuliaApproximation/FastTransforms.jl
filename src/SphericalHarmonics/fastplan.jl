@@ -23,13 +23,13 @@ function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int)
     BF = Vector{Butterfly{T}}(n-2)
     for j = 1:2:n-2
         A_mul_B!(Ce, RP.layers[j])
-        BF[j] = Butterfly(Ce, L)
-        println("Level: ",j)
+        BF[j] = orthogonalButterfly(Ce, L)
+        #println("Level: ",j)
     end
     for j = 2:2:n-2
         A_mul_B!(Co, RP.layers[j])
-        BF[j] = Butterfly(Co, L)
-        println("Level: ",j)
+        BF[j] = orthogonalButterfly(Co, L)
+        #println("Level: ",j)
     end
     FastSphericalHarmonicPlan(RP, BF, p1, p2, p1inv, p2inv, B)
 end

@@ -59,13 +59,25 @@ function maxcolnorm(A::AbstractMatrix)
     norm(nrm, Inf)
 end
 
-n = 1023
+function zero_spurious_modes!(A::AbstractMatrix)
+    M, N = size(A)
+    n = N÷2
+    for j = 1:n
+        for i = M-j+1:M
+            A[i,2j] = 0
+            A[i,2j+1] = 0
+        end
+    end
+    A
+end
+
+n = 255
 
 A = sphrandn(Float64, n+1, n+1)
 normalizecolumns!(A)
 Ac = deepcopy(A)
 
-FP = FastSphericalHarmonicPlan(A, 5);
+FP = FastSphericalHarmonicPlan(A, 2);
 
 B = zero(A);
 
@@ -91,20 +103,8 @@ println("The difference between fast plan and original: ", maxcolnorm(A-D))
 println("The difference between slow plan and original: ", maxcolnorm(A-E))
 println("The difference between slow and fast plans: ", maxcolnorm(D-E))
 
-function zero_spurious_modes!(A::AbstractMatrix)
-    M, N = size(A)
-    n = N÷2
-    for j = 1:n
-        for i = M-j+1:M
-            A[i,2j] = 0
-            A[i,2j+1] = 0
-        end
-    end
-    A
-end
-
-zero_spurious_modes!(D)
-zero_spurious_modes!(E)
+zero_spurious_modes!(D);
+zero_spurious_modes!(E);
 
 println("The difference between fast plan and original: ", maxcolnorm(A-D))
 println("The difference between slow plan and original: ", maxcolnorm(A-E))
