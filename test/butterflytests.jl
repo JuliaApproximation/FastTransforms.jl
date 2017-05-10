@@ -79,7 +79,7 @@ for n in 7:N
 end
 
 
-N = 14
+N = 12
 A = Vector{Matrix{Complex{Float64}}}(N)
 B = Vector{Butterfly{Complex{Float64}}}(N)
 for n in 7:N

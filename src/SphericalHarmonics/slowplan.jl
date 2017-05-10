@@ -176,7 +176,7 @@ function At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
         A_mul_B_col_J!!(Y, p1inv, B, J)
         A_mul_B_col_J!!(Y, p1inv, B, J+1)
     end
-    At_mul_B!(RP, Y)
+    zero_spurious_modes!(At_mul_B!(RP, Y))
 end
 
 Ac_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, SP, X)

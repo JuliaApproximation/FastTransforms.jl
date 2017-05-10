@@ -19,6 +19,8 @@ export gaunt
 export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
 export plan_paduatransform!, plan_ipaduatransform!
 
+export SlowSphericalHarmonicPlan, FastSphericalHarmonicPlan, ThinSphericalHarmonicPlan
+
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
 #export sqrtpi, pochhammer, stirlingseries, stirlingremainder, Aratio, Cratio, Anαβ
