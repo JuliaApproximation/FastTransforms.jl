@@ -8,7 +8,7 @@ immutable FastSphericalHarmonicPlan{T}
     B::Matrix{T}
 end
 
-function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int)
+function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     M, N = size(A)
     @assert ispow2(M)
     @assert N == 2M-1
@@ -25,18 +25,18 @@ function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int)
     BF = Vector{Butterfly{T}}(n-2)
     for j = 1:2:n-2
         A_mul_B!(Ce, RP.layers[j])
-        BF[j] = orthogonalButterfly(Ce, L)
+        BF[j] = orthogonalButterfly(Ce, L; opts...)
         println("Layer: ",j)
     end
     for j = 2:2:n-2
         A_mul_B!(Co, RP.layers[j])
-        BF[j] = orthogonalButterfly(Co, L)
+        BF[j] = orthogonalButterfly(Co, L; opts...)
         println("Layer: ",j)
     end
     FastSphericalHarmonicPlan(RP, BF, p1, p2, p1inv, p2inv, B)
 end
 
-FastSphericalHarmonicPlan(A::Matrix) = FastSphericalHarmonicPlan(A, round(Int, log2(size(A, 1)+1)-6))
+FastSphericalHarmonicPlan(A::Matrix; opts...) = FastSphericalHarmonicPlan(A, round(Int, log2(size(A, 1)+1)-6); opts...)
 
 function A_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = FP.RP, FP.BF, FP.p1, FP.p2, FP.B

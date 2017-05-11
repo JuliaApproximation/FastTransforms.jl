@@ -28,11 +28,12 @@ end
 
 size(B::Butterfly) = size(B, 1), size(B, 2)
 
-function Butterfly{T}(A::AbstractMatrix{T}, L::Int64)
+function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; opts...)
     m, n = size(A)
     tL = 2^L
 
-    LRAOpts = LRAOptions(T; rtol = eps(real(T))*max(m, n))
+    LRAOpts = LRAOptions(T; opts...)
+    LRAOpts.rtol = eps(real(T))*max(m, n)
 
     columns = Vector{Matrix{T}}(tL)
     factors = Vector{Vector{IDPackedV{T}}}(L+1)
@@ -50,7 +51,7 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64)
     nu = nd
     indices[1][1] = 1
     for j = 1:tL
-        factors[1][j] = idfact(view(A,:,nl:nu), LRAOpts)
+        factors[1][j] = idfact(A[:,nl:nu], LRAOpts)
         permutations[1][j] = factors[1][j][:P]
         indices[1][j+1] = indices[1][j] + size(factors[1][j], 1)
         cs[1][j] = factors[1][j].sk+nl-1
@@ -74,7 +75,14 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64)
             shft = 2jj*div(ctr,2jj)
             for j = 1:jj
                 cols = vcat(cs[l-1][2j-1+shft],cs[l-1][2j+shft])
-                factors[l][j+ctr] = idfact(view(A, ml:mu, cols), LRAOpts)
+                lc = length(cols)
+                Av = A[ml:mu,cols]
+                if maximum(abs, Av) < realmin(real(T))/eps(real(T))
+                    factors[l][j+ctr] = IDPackedV{T}(Int64[], collect(1:lc), Array{T}(0,lc))
+                else
+                    LRAOpts.rtol = eps(real(T))*max(length(ml:mu),lc)
+                    factors[l][j+ctr] = idfact(Av, LRAOpts)
+                end
                 permutations[l][j+ctr] = factors[l][j+ctr][:P]
                 indices[l][j+ctr+1] = indices[l][j+ctr] + size(factors[l][j+ctr], 1)
                 cs[l][j+ctr] = cols[factors[l][j+ctr].sk]
@@ -101,11 +109,12 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64)
     Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk), zeros(T, kk))
 end
 
-function orthogonalButterfly{T}(A::AbstractMatrix{T}, L::Int64)
+function orthogonalButterfly{T}(A::AbstractMatrix{T}, L::Int64; opts...)
     m, n = size(A)
     tL = 2^L
 
-    LRAOpts = LRAOptions(T; rtol = eps(real(T))*max(m, n))
+    LRAOpts = LRAOptions(T; opts...)
+    LRAOpts.rtol = eps(real(T))*max(m, n)
 
     columns = Vector{Matrix{T}}(tL)
     factors = Vector{Vector{IDPackedV{T}}}(L+1)
@@ -147,7 +156,14 @@ function orthogonalButterfly{T}(A::AbstractMatrix{T}, L::Int64)
             shft = 2jj*div(ctr,2jj)
             for j = 1:jj
                 cols = vcat(cs[l-1][2j-1+shft],cs[l-1][2j+shft])
-                factors[l][j+ctr] = idfact(view(A, ml:mu, cols), LRAOpts)
+                lc = length(cols)
+                Av = A[ml:mu,cols]
+                if maximum(abs, Av) < realmin(real(T))/eps(real(T))
+                    factors[l][j+ctr] = IDPackedV{T}(Int64[], collect(1:lc), Array{T}(0,lc))
+                else
+                    LRAOpts.rtol = eps(real(T))*max(length(ml:mu),lc)
+                    factors[l][j+ctr] = idfact(Av, LRAOpts)
+                end
                 permutations[l][j+ctr] = factors[l][j+ctr][:P]
                 indices[l][j+ctr+1] = indices[l][j+ctr] + size(factors[l][j+ctr], 1)
                 cs[l][j+ctr] = cols[factors[l][j+ctr].sk]
