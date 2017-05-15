@@ -4,7 +4,7 @@
 
 The aim of this package is to provide fast orthogonal polynomial transforms that are designed for expansions of functions with any degree of regularity. There are multiple approaches to the classical connection problem, though the user does not need to know the specifics.
 
-One approach is based on the use of asymptotic formulae to relate the transforms to a small number of fast Fourier transforms. Another approach is based on a Toeplitz-dot-Hankel decomposition of the matrix of connection coefficients. Yet another approach uses a hierarchical decomposition of the matrix of connection coefficients.
+One approach is based on the use of asymptotic formulae to relate the transforms to a small number of fast Fourier transforms. Another approach is based on a Toeplitz-dot-Hankel decomposition of the matrix of connection coefficients. Alternatively, the matrix of connection coefficients may be decomposed hierarchically à la Fast Multipole Method.
 
 ## The Chebyshev—Legendre Transform
 
