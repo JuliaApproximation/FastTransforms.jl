@@ -126,8 +126,10 @@ As with other fast transforms, `plan_sph2fourier` saves effort by caching the pr
 
    [2]  N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, *SIAM J. Sci. Comput.*, **36**:A148—A167, 2014.
 
-   [3]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, published online in *IMA J. Numer. Anal.*, 2017.
+   [3] J. Keiner. <a href="http://dx.doi.org/10.1137/070703065">Computing with expansions in Gegenbauer polynomials</a>, *SIAM J. Sci. Comput.*, **31**:2151—2171, 2009.
 
-   [4]  R. M. Slevinsky. <a href="https://arxiv.org/abs/">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, arXiv, 2017.
+   [4]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, in press at *IMA J. Numer. Anal.*, 2017.
 
-   [5]  A. Townsend, M. Webb, and S. Olver. <a href="http://arxiv.org/abs/1604.07486">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, arXiv:1604.07486, 2016.
+   [5]  R. M. Slevinsky. <a href="https://arxiv.org/abs/">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, arXiv, 2017.
+
+   [6]  A. Townsend, M. Webb, and S. Olver. <a href="https://doi.org/10.1090/mcom/3277">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, in press at *Math. Comp.*, 2017.

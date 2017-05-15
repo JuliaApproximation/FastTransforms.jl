@@ -439,3 +439,31 @@ ChebyshevToNormalizedLegendrePlan(v::VecOrMat) = ChebyshevToNormalizedLegendrePl
 
 NormalizedLegendre1ToChebyshev2Plan(v::VecOrMat) = NormalizedLegendre1ToChebyshev2Plan(plan_even_normleg12cheb2(v), plan_odd_normleg12cheb2(v), eltype(v)[sqrt((j+0.5)/(j*(j+1))) for j in 1:size(v, 1)])
 Chebyshev2ToNormalizedLegendre1Plan(v::VecOrMat) = Chebyshev2ToNormalizedLegendre1Plan(plan_even_cheb22normleg1(v), plan_odd_cheb22normleg1(v), eltype(v)[sqrt(i*(i+1)/(i+0.5)) for i in 1:size(v, 1)])
+
+doc"""
+Computes the Chebyshev expansion coefficients given the Legendre expansion coefficients:
+
+```math
+{\rm CLT} : \sum_{n=0}^N c_n^{\rm leg}P_n(x) \to \sum_{n=0}^N c_n^{\rm cheb}T_n(x).
+```
+"""
+leg2cheb(::Vector)
+
+doc"""
+Computes the Legendre expansion coefficients given the Chebyshev expansion coefficients:
+
+```math
+{\rm iCLT} : \sum_{n=0}^N c_n^{\rm cheb}T_n(x) \to \sum_{n=0}^N c_n^{\rm leg}P_n(x).
+```
+"""
+cheb2leg(::Vector)
+
+doc"""
+Pre-computes the Legendre--Chebyshev transform.
+"""
+plan_leg2cheb(::Vector)
+
+doc"""
+Pre-computes the Chebyshev--Legendre transform.
+"""
+plan_cheb2leg(::Vector)
