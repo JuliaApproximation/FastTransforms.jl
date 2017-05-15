@@ -94,7 +94,7 @@ julia> @time norm(ipaduatransform(paduatransform(v))-v)
 
 ## The Spherical Harmonic Transform
 
-Let `A` be a matrix of spherical harmonic expansion coefficients arranged by increasing alternating order. Then `sph2fourier` converts the representation into a bivariate Fourier series, and `fourier2sph` converts it back.
+Let `A` be a matrix of spherical harmonic expansion coefficients arranged by increasing order in absolute value, alternating between negative and positive. Then `sph2fourier` converts the representation into a bivariate Fourier series, and `fourier2sph` converts it back.
 ```julia
 julia> A = rand(Float64, 251, 501); FastTransforms.zero_spurious_modes!(A);
 
@@ -103,6 +103,7 @@ julia> B = sph2fourier(A);
 julia> C = fourier2sph(B);
 
 julia> norm(A-C)
+7.422366861016818e-14
 
 julia> A = rand(Float64, 1024, 2047); FastTransforms.zero_spurious_modes!(A);
 
@@ -117,7 +118,7 @@ julia> norm(A-C)
 
 ```
 
-As with other fast transforms, `plan_sph2fourier` saves effort by caching the pre-computation. Be warned that for dimensions larger than `1000`, this is no small feat!
+As with other fast transforms, `plan_sph2fourier` saves effort by caching the pre-computation. Be warned that for dimensions larger than `1,000`, this is no small feat!
 
 # References:
 
