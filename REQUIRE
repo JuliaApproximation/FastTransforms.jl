@@ -3,4 +3,4 @@ ToeplitzMatrices 0.2
 HierarchicalMatrices 0.0.1
 LowRankApprox 0.0.2
 ProgressMeter 0.3.4
-Compat 0.18
+Compat 0.17
