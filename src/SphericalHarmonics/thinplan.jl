@@ -2,7 +2,7 @@ const LAYERSKELETON = 64
 
 checklayer(j::Int) = j÷LAYERSKELETON == j/LAYERSKELETON
 
-immutable ThinSphericalHarmonicPlan{T}
+immutable ThinSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     RP::RotationPlan{T}
     BF::Vector{Butterfly{T}}
     p1::NormalizedLegendreToChebyshevPlan{T}
@@ -18,11 +18,10 @@ function ThinSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     @assert N == 2M-1
     n = (N+1)÷2
     RP = RotationPlan(T, n-1)
-    a1 = A[:,1]
-    p1 = plan_normleg2cheb(a1)
-    p2 = plan_normleg12cheb2(a1)
-    p1inv = plan_cheb2normleg(a1)
-    p2inv = plan_cheb22normleg1(a1)
+    p1 = plan_normleg2cheb(A)
+    p2 = plan_normleg12cheb2(A)
+    p1inv = plan_cheb2normleg(A)
+    p2inv = plan_cheb22normleg1(A)
     B = zeros(A)
     Ce = eye(T, M)
     Co = eye(T, M)

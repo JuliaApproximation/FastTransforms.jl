@@ -9,7 +9,7 @@ C = zero(A);
 D = zero(A);
 E = zero(A);
 
-@time FP = FastSphericalHarmonicPlan(A);
+@time FP = FastSphericalHarmonicPlan(A; sketch = :none);
 @time SP = SlowSphericalHarmonicPlan(A);
 
 @time A_mul_B!(B, SP, A);

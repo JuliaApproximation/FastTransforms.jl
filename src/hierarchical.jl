@@ -40,8 +40,8 @@ end
 
 size(P::HierarchicalPlanWithParity) = (size(P.even, 1)+size(P.odd, 1), size(P.even, 2)+size(P.odd, 2))
 
-evenlength(v::Vector) = (L = length(v); iseven(L) ? L÷2 : (L+1)÷2)
-oddlength(v::Vector) = (L = length(v); iseven(L) ? L÷2 : (L-1)÷2)
+evensize(v::AbstractVecOrMat, d) = (L = size(v, d); iseven(L) ? L÷2 : (L+1)÷2)
+oddsize(v::AbstractVecOrMat, d) = (L = size(v, d); iseven(L) ? L÷2 : (L-1)÷2)
 
 UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, bd::Int64) = UpperTriangularHierarchicalMatrix(T, f, bd, bd)
 UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, b::Int64, d::Int64) = UpperTriangularHierarchicalMatrix(T, f, 1, b, 1, d)
@@ -154,21 +154,6 @@ function getindex(P::ChebyshevToLegendrePlan, i::Int, j::Int)
     end
 end
 
-LegendreToChebyshevPlan(v::Vector) = LegendreToChebyshevPlan(plan_even_leg2cheb(v), plan_odd_leg2cheb(v))
-ChebyshevToLegendrePlan(v::Vector) = ChebyshevToLegendrePlan(plan_even_cheb2leg(v), plan_odd_cheb2leg(v))
-
-plan_leg2cheb(v::Vector) = LegendreToChebyshevPlan(v)
-plan_cheb2leg(v::Vector) = ChebyshevToLegendrePlan(v)
-
-plan_even_leg2cheb(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Meven, evenlength(v))
-plan_odd_leg2cheb(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Modd, oddlength(v))
-
-plan_even_cheb2leg(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Leven, evenlength(v))
-plan_odd_cheb2leg(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Lodd, oddlength(v))
-
-leg2cheb(v::Vector) = plan_leg2cheb(v)*v
-cheb2leg(v::Vector) = plan_cheb2leg(v)*v
-
 function A_mul_B!(y::Vector, P::LegendreToChebyshevPlan, x::AbstractVector)
     HierarchicalMatrices.A_mul_B!(y, P.even, x, 1, 1, 2, 2)
     HierarchicalMatrices.A_mul_B!(y, P.odd, x, 2, 2, 2, 2)
@@ -270,21 +255,6 @@ function getindex(P::ChebyshevToNormalizedLegendrePlan, i::Int, j::Int)
         zero(eltype(P))
     end
 end
-
-NormalizedLegendreToChebyshevPlan(v::Vector) = NormalizedLegendreToChebyshevPlan(plan_even_normleg2cheb(v), plan_odd_normleg2cheb(v), eltype(v)[sqrt(j-0.5) for j in 1:length(v)])
-ChebyshevToNormalizedLegendrePlan(v::Vector) = ChebyshevToNormalizedLegendrePlan(plan_even_cheb2normleg(v), plan_odd_cheb2normleg(v), eltype(v)[sqrt(i-0.5) for i in 1:length(v)])
-
-plan_normleg2cheb(v::Vector) = NormalizedLegendreToChebyshevPlan(v)
-plan_cheb2normleg(v::Vector) = ChebyshevToNormalizedLegendrePlan(v)
-
-plan_even_normleg2cheb(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Mevennorm, evenlength(v))
-plan_odd_normleg2cheb(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Moddnorm, oddlength(v))
-
-plan_even_cheb2normleg(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Levennorm, evenlength(v))
-plan_odd_cheb2normleg(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Loddnorm, oddlength(v))
-
-normleg2cheb(v::Vector) = plan_normleg2cheb(v)*v
-cheb2normleg(v::Vector) = plan_cheb2normleg(v)*v
 
 function A_mul_B!!(y::Vector, P::NormalizedLegendreToChebyshevPlan, x::AbstractVector)
     unsafe_broadcasttimes!(x, P.scl)
@@ -394,21 +364,6 @@ function getindex(P::Chebyshev2ToNormalizedLegendre1Plan, i::Int, j::Int)
     end
 end
 
-NormalizedLegendre1ToChebyshev2Plan(v::Vector) = NormalizedLegendre1ToChebyshev2Plan(plan_even_normleg12cheb2(v), plan_odd_normleg12cheb2(v), eltype(v)[sqrt((j+0.5)/(j*(j+1))) for j in 1:length(v)])
-Chebyshev2ToNormalizedLegendre1Plan(v::Vector) = Chebyshev2ToNormalizedLegendre1Plan(plan_even_cheb22normleg1(v), plan_odd_cheb22normleg1(v), eltype(v)[sqrt(i*(i+1)/(i+0.5)) for i in 1:length(v)])
-
-plan_normleg12cheb2(v::Vector) = NormalizedLegendre1ToChebyshev2Plan(v)
-plan_cheb22normleg1(v::Vector) = Chebyshev2ToNormalizedLegendre1Plan(v)
-
-plan_even_normleg12cheb2(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Mnormeven, evenlength(v))
-plan_odd_normleg12cheb2(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Mnormodd, oddlength(v))
-
-plan_even_cheb22normleg1(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Lnormeven, evenlength(v))
-plan_odd_cheb22normleg1(v::Vector) = UpperTriangularHierarchicalMatrix(eltype(v), Lnormodd, oddlength(v))
-
-normleg12cheb2(v::Vector) = plan_normleg12cheb2(v)*v
-cheb22normleg1(v::Vector) = plan_cheb22normleg1(v)*v
-
 function A_mul_B!!(y::Vector, P::NormalizedLegendre1ToChebyshev2Plan, x::AbstractVector)
     unsafe_broadcasttimes!(x, P.scl)
     HierarchicalMatrices.A_mul_B!(y, P.even, x, 1, 1, 2, 2)
@@ -456,3 +411,31 @@ function A_mul_B_col_J!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Ma
     HierarchicalMatrices.A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
     scale_col_J!(P.scl, Y, J)
 end
+
+### API
+
+for (f, T, feven, fodd) in ((:leg2cheb, :LegendreToChebyshevPlan, :Meven, :Modd),
+                          (:cheb2leg, :ChebyshevToLegendrePlan, :Leven, :Lodd),
+                          (:normleg2cheb, :NormalizedLegendreToChebyshevPlan, :Mevennorm, :Moddnorm),
+                          (:cheb2normleg, :ChebyshevToNormalizedLegendrePlan, :Levennorm, :Loddnorm),
+                          (:normleg12cheb2, :NormalizedLegendre1ToChebyshev2Plan, :Mnormeven, :Mnormodd),
+                          (:cheb22normleg1, :Chebyshev2ToNormalizedLegendre1Plan, :Lnormeven, :Lnormodd))
+    plan_f = parse("plan_"*string(f))
+    plan_even_f = parse("plan_even_"*string(f))
+    plan_odd_f = parse("plan_odd_"*string(f))
+    @eval begin
+        $plan_f(v::VecOrMat) = $T(v)
+        $f(v::VecOrMat) = $plan_f(v)*v
+        $plan_even_f(v::VecOrMat) = UpperTriangularHierarchicalMatrix(eltype(v), $feven, evensize(v, 1))
+        $plan_odd_f(v::VecOrMat) = UpperTriangularHierarchicalMatrix(eltype(v), $fodd, oddsize(v, 1))
+    end
+end
+
+LegendreToChebyshevPlan(v::VecOrMat) = LegendreToChebyshevPlan(plan_even_leg2cheb(v), plan_odd_leg2cheb(v))
+ChebyshevToLegendrePlan(v::VecOrMat) = ChebyshevToLegendrePlan(plan_even_cheb2leg(v), plan_odd_cheb2leg(v))
+
+NormalizedLegendreToChebyshevPlan(v::VecOrMat) = NormalizedLegendreToChebyshevPlan(plan_even_normleg2cheb(v), plan_odd_normleg2cheb(v), eltype(v)[sqrt(j-0.5) for j in 1:size(v, 1)])
+ChebyshevToNormalizedLegendrePlan(v::VecOrMat) = ChebyshevToNormalizedLegendrePlan(plan_even_cheb2normleg(v), plan_odd_cheb2normleg(v), eltype(v)[sqrt(i-0.5) for i in 1:size(v, 1)])
+
+NormalizedLegendre1ToChebyshev2Plan(v::VecOrMat) = NormalizedLegendre1ToChebyshev2Plan(plan_even_normleg12cheb2(v), plan_odd_normleg12cheb2(v), eltype(v)[sqrt((j+0.5)/(j*(j+1))) for j in 1:size(v, 1)])
+Chebyshev2ToNormalizedLegendre1Plan(v::VecOrMat) = Chebyshev2ToNormalizedLegendre1Plan(plan_even_cheb22normleg1(v), plan_odd_cheb22normleg1(v), eltype(v)[sqrt(i*(i+1)/(i+0.5)) for i in 1:size(v, 1)])

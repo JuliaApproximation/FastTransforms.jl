@@ -124,7 +124,7 @@ end
 Ac_mul_B!(P::RotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
 
 
-immutable SlowSphericalHarmonicPlan{T}
+immutable SlowSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     RP::RotationPlan{T}
     p1::NormalizedLegendreToChebyshevPlan{T}
     p2::NormalizedLegendre1ToChebyshev2Plan{T}
@@ -137,11 +137,10 @@ function SlowSphericalHarmonicPlan{T}(A::Matrix{T})
     M, N = size(A)
     n = (N+1)÷2
     RP = RotationPlan(T, n-1)
-    a1 = A[:,1]
-    p1 = plan_normleg2cheb(a1)
-    p2 = plan_normleg12cheb2(a1)
-    p1inv = plan_cheb2normleg(a1)
-    p2inv = plan_cheb22normleg1(a1)
+    p1 = plan_normleg2cheb(A)
+    p2 = plan_normleg12cheb2(A)
+    p1inv = plan_cheb2normleg(A)
+    p2inv = plan_cheb22normleg1(A)
     B = zeros(A)
     SlowSphericalHarmonicPlan(RP, p1, p2, p1inv, p2inv, B)
 end
