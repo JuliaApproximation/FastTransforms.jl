@@ -80,11 +80,11 @@ then increment/decrement operators are used with linear complexity (and linear c
 The Padua transform and its inverse are implemented thanks to [Michael Clarke](https://github.com/MikeAClarke). These are optimized methods designed for computing the bivariate Chebyshev coefficients by interpolating a bivariate function at the Padua points on `[-1,1]^2`.
 
 ```julia
-julia> n=200;
+julia> n = 200;
 
-julia> N=div((n+1)*(n+2),2)
+julia> N = div((n+1)*(n+2),2);
 
-julia> v=rand(N);  #Length of v is the no. of Padua points
+julia> v = rand(N); # The length of v is the number of Padua points
 
 julia> @time norm(ipaduatransform(paduatransform(v))-v)
 0.006571 seconds (846 allocations: 1.746 MiB)
