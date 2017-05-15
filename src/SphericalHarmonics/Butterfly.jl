@@ -28,7 +28,7 @@ end
 
 size(B::Butterfly) = size(B, 1), size(B, 2)
 
-function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; opts...)
+function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false, opts...)
     m, n = size(A)
     tL = 2^L
 
@@ -51,88 +51,11 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; opts...)
     nu = nd
     indices[1][1] = 1
     for j = 1:tL
-        factors[1][j] = idfact(A[:,nl:nu], LRAOpts)
-        permutations[1][j] = factors[1][j][:P]
-        indices[1][j+1] = indices[1][j] + size(factors[1][j], 1)
-        cs[1][j] = factors[1][j].sk+nl-1
-        nl += nd
-        nu += nd
-    end
-
-    ii, jj = 2, (tL>>1)
-    for l = 2:L+1
-        factors[l] = Vector{IDPackedV{T}}(tL)
-        permutations[l] = Vector{ColumnPermutation}(tL)
-        indices[l] = Vector{Int64}(tL+1)
-        cs[l] = Vector{Vector{Int64}}(tL)
-
-        ctr = 0
-        md = m÷ii
-        ml = 1
-        mu = md
-        indices[l][1] = 1
-        for i = 1:ii
-            shft = 2jj*div(ctr,2jj)
-            for j = 1:jj
-                cols = vcat(cs[l-1][2j-1+shft],cs[l-1][2j+shft])
-                lc = length(cols)
-                Av = A[ml:mu,cols]
-                if maximum(abs, Av) < realmin(real(T))/eps(real(T))
-                    factors[l][j+ctr] = IDPackedV{T}(Int64[], collect(1:lc), Array{T}(0,lc))
-                else
-                    LRAOpts.rtol = eps(real(T))*max(length(ml:mu),lc)
-                    factors[l][j+ctr] = idfact(Av, LRAOpts)
-                end
-                permutations[l][j+ctr] = factors[l][j+ctr][:P]
-                indices[l][j+ctr+1] = indices[l][j+ctr] + size(factors[l][j+ctr], 1)
-                cs[l][j+ctr] = cols[factors[l][j+ctr].sk]
-            end
-            ml += md
-            mu += md
-            ctr += jj
+        if isorthogonal
+            factors[1][j] = IDPackedV{T}(collect(1:nd),Int64[],Array{T}(nd,0))
+        else
+            factors[1][j] = idfact!(A[:,nl:nu], LRAOpts)
         end
-        ii <<= 1
-        jj >>= 1
-    end
-
-    md = m÷tL
-    ml = 1
-    mu = md
-    for i = 1:tL
-        columns[i] = A[ml:mu,cs[L+1][i]]
-        ml += md
-        mu += md
-    end
-
-    kk = sumkmax(indices)
-
-    Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk), zeros(T, kk))
-end
-
-function orthogonalButterfly{T}(A::AbstractMatrix{T}, L::Int64; opts...)
-    m, n = size(A)
-    tL = 2^L
-
-    LRAOpts = LRAOptions(T; opts...)
-    LRAOpts.rtol = eps(real(T))*max(m, n)
-
-    columns = Vector{Matrix{T}}(tL)
-    factors = Vector{Vector{IDPackedV{T}}}(L+1)
-    permutations = Vector{Vector{ColumnPermutation}}(L+1)
-    indices = Vector{Vector{Int64}}(L+1)
-    cs = Vector{Vector{Vector{Int64}}}(L+1)
-
-    factors[1] = Vector{IDPackedV{T}}(tL)
-    permutations[1] = Vector{ColumnPermutation}(tL)
-    indices[1] = Vector{Int64}(tL+1)
-    cs[1] = Vector{Vector{Int64}}(tL)
-
-    nd = n÷tL
-    nl = 1
-    nu = nd
-    indices[1][1] = 1
-    for j = 1:tL
-        factors[1][j] = IDPackedV{T}(collect(1:nd),Int64[],Array{T}(nd,0))
         permutations[1][j] = factors[1][j][:P]
         indices[1][j+1] = indices[1][j] + size(factors[1][j], 1)
         cs[1][j] = factors[1][j].sk+nl-1
@@ -162,7 +85,7 @@ function orthogonalButterfly{T}(A::AbstractMatrix{T}, L::Int64; opts...)
                     factors[l][j+ctr] = IDPackedV{T}(Int64[], collect(1:lc), Array{T}(0,lc))
                 else
                     LRAOpts.rtol = eps(real(T))*max(length(ml:mu),lc)
-                    factors[l][j+ctr] = idfact(Av, LRAOpts)
+                    factors[l][j+ctr] = idfact!(Av, LRAOpts)
                 end
                 permutations[l][j+ctr] = factors[l][j+ctr][:P]
                 indices[l][j+ctr+1] = indices[l][j+ctr] + size(factors[l][j+ctr], 1)
@@ -243,7 +166,7 @@ function A_mul_B!{T}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutati
     k, n = size(A)
     At_mul_B!(P, x, jstart)
     copy!(y, istart, x, jstart, k)
-    A_mul_B!(y, A.T, x, istart, jstart+k)
+    HierarchicalMatrices.A_mul_B!(y, A.T, x, istart, jstart+k)
     A_mul_B!(P, x, jstart)
     y
 end
@@ -253,7 +176,7 @@ for f! in (:At_mul_B!, :Ac_mul_B!)
         function $f!{T}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int)
             k, n = size(A)
             copy!(y, istart, x, jstart, k)
-            $f!(y, A.T, x, istart+k, jstart)
+            HierarchicalMatrices.$f!(y, A.T, x, istart+k, jstart)
             A_mul_B!(P, y, istart)
             y
         end
@@ -314,7 +237,7 @@ function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::I
     for i = 1:tL
         ml = mu+1
         mu += size(columns[i], 1)
-        A_mul_B!(u, columns[i], temp1, ml+COLSHIFT, inds[i])
+        HierarchicalMatrices.A_mul_B!(u, columns[i], temp1, ml+COLSHIFT, inds[i])
     end
 
     u
@@ -344,7 +267,7 @@ for f! in (:At_mul_B!,:Ac_mul_B!)
             for i = 1:tL
                 ml = mu+1
                 mu += size(columns[i], 1)
-                $f!(temp1, columns[i], b, inds[i], ml+COLSHIFT)
+                HierarchicalMatrices.$f!(temp1, columns[i], b, inds[i], ml+COLSHIFT)
             end
 
             ii, jj = tL, 1

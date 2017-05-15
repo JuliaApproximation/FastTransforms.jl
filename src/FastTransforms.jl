@@ -1,9 +1,9 @@
 __precompile__()
 module FastTransforms
 
-using Base, ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, Compat
+using Base, ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter, Compat
 
-import Base: *, size, view, A_mul_B!, Ac_mul_B!, At_mul_B!
+import Base: *, size, view, A_mul_B!, At_mul_B!, Ac_mul_B!
 import Base: getindex, setindex!, Factorization, length
 import Base.LinAlg: BlasFloat, BlasInt
 import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!

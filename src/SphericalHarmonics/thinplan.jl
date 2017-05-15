@@ -27,13 +27,16 @@ function ThinSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     Ce = eye(T, M)
     Co = eye(T, M)
     BF = Vector{Butterfly{T}}(n-2)
+    P = Progress(n-2, 0.1, "Pre-computing thin plan...", 50)
     for j = 1:2:n-2
         A_mul_B!(Ce, RP.layers[j])
-        checklayer(j+1) && (BF[j] = orthogonalButterfly(Ce, L; opts...);println("Layer: ",j))
+        checklayer(j+1) && (BF[j] = Butterfly(Ce, L; isorthogonal = true, opts...))
+        next!(P)
     end
     for j = 2:2:n-2
         A_mul_B!(Co, RP.layers[j])
-        checklayer(j) && (BF[j] = orthogonalButterfly(Co, L; opts...);println("Layer: ",j))
+        checklayer(j) && (BF[j] = Butterfly(Co, L; isorthogonal = true, opts...))
+        next!(P)
     end
     ThinSphericalHarmonicPlan(RP, BF, p1, p2, p1inv, p2inv, B)
 end

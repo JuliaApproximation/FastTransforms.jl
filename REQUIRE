@@ -1,3 +1,5 @@
 julia 0.5
 ToeplitzMatrices 0.2
-Compat 0.19
+LowRankApprox 0.0.2
+ProgressMeter 0.3.4
+Compat 0.18

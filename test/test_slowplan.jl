@@ -1,4 +1,4 @@
-N = round.(Int,logspace(1,3,40))
+N = round.(Int,logspace(1,3,20))
 
 t = zeros(length(N))
 err = zeros(length(N))
@@ -20,7 +20,7 @@ for n in N
         nrms[kk] = maxcolnorm(A - Ac)
     end
     t[j] /= Nr
-    err[j] = mean(nrms)#norm(nrms,Inf)
+    err[j] = mean(nrms)
     println("At a bandlimit of ",n,", the maximum 2-norm in the columns over ",Nr," trials is: ",err[j])
     j+=1
 end

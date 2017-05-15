@@ -1,6 +1,8 @@
 using FastTransforms, LowRankApprox
 using Base.Test
 
+println("Butterfly algorithm tests")
+
 import FastTransforms: Butterfly
 
 kernel = (x,y) -> exp(im*x*y)
@@ -60,26 +62,7 @@ for n in 7:N
     println(norm(u-w))
 end
 
-
 N = 10
-A = Vector{Matrix{Complex{Float64}}}(N)
-for n in 1:N
-    A[n] = randnfft(2^n,2^n,0.1)
-    println(n)
-end
-
-for n in 7:N
-    println("N = ", n)
-    @time B = Butterfly(A[n], n-5)
-    b = rand(Complex{Float64},2^n)./(1:2^n)
-    u = zero(b)
-    @time uf = A[n]*b
-    @time A_mul_B!(u, B, b)
-    println(norm(u-uf)/2^n)
-end
-
-
-N = 12
 A = Vector{Matrix{Complex{Float64}}}(N)
 B = Vector{Butterfly{Complex{Float64}}}(N)
 for n in 7:N
@@ -93,10 +76,7 @@ for n in 7:N
     b = rand(Complex{Float64},2^n)./(1:2^n)
     uf = zero(b)
     u = zero(b)
-    @time for k = 1:100
-        A_mul_B!(uf, A[n], b)
-    end
-    @time for k = 1:100
-        A_mul_B!(u, B[n], b)
-    end
+    @time A_mul_B!(uf, A[n], b)
+    @time A_mul_B!(u, B[n], b)
+    println(norm(u-uf))
 end
