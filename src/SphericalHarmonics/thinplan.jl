@@ -42,7 +42,7 @@ end
 
 ThinSphericalHarmonicPlan(A::Matrix; opts...) = ThinSphericalHarmonicPlan(A, round(Int, log2(size(A, 1)+1)-6); opts...)
 
-function A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
+function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = TP.RP, TP.BF, TP.p1, TP.p2, TP.B
     copy!(B, X)
     M, N = size(X)
@@ -98,7 +98,7 @@ function A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
 end
 
 
-function At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
+function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1inv, p2inv, B = TP.RP, TP.BF, TP.p1inv, TP.p2inv, TP.B
     copy!(B, X)
     M, N = size(X)
@@ -153,7 +153,7 @@ function At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     zero_spurious_modes!(Y)
 end
 
-Ac_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, TP, X)
+Base.Ac_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, TP, X)
 
 allranks(TP::ThinSphericalHarmonicPlan) = mapreduce(i->allranks(TP.BF[i]),vcat,sort!([LAYERSKELETON-1:LAYERSKELETON:length(TP.BF);LAYERSKELETON:LAYERSKELETON:length(TP.BF)]))
 

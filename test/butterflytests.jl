@@ -1,7 +1,9 @@
 using FastTransforms, LowRankApprox
 using Base.Test
 
+println()
 println("Butterfly algorithm tests")
+println()
 
 import FastTransforms: Butterfly
 

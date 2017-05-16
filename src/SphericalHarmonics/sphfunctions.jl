@@ -1,4 +1,16 @@
-function sphrand{T}(::Type{T}, m, n)
+function zero_spurious_modes!(A::AbstractMatrix)
+    M, N = size(A)
+    n = N÷2
+    @inbounds for j = 1:n
+        @simd for i = M-j+1:M
+            A[i,2j] = 0
+            A[i,2j+1] = 0
+        end
+    end
+    A
+end
+
+function sphrand{T}(::Type{T}, m::Int, n::Int)
     A = zeros(T, m, 2n-1)
     for i = 1:m
         A[i,1] = rand(T)
@@ -12,7 +24,7 @@ function sphrand{T}(::Type{T}, m, n)
     A
 end
 
-function sphrandn{T}(::Type{T}, m, n)
+function sphrandn{T}(::Type{T}, m::Int, n::Int)
     A = zeros(T, m, 2n-1)
     for i = 1:m
         A[i,1] = randn(T)
@@ -25,6 +37,22 @@ function sphrandn{T}(::Type{T}, m, n)
     end
     A
 end
+
+function sphones{T}(::Type{T}, m::Int, n::Int)
+    A = zeros(T, m, 2n-1)
+    for i = 1:m
+        A[i,1] = one(T)
+    end
+    for j = 1:n
+        for i = 1:m-j
+            A[i,2j] = one(T)
+            A[i,2j+1] = one(T)
+        end
+    end
+    A
+end
+
+sphzeros{T}(::Type{T}, m::Int, n::Int) = zeros(T, m, 2n-1)
 
 function normalizecolumns!(A::AbstractMatrix)
     m, n = size(A)
@@ -54,7 +82,14 @@ function maxcolnorm(A::AbstractMatrix)
     norm(nrm, Inf)
 end
 
-function sphevaluatepi(θ::Number,L::Integer,M::Integer)
+doc"""
+Pointwise evaluation of spherical harmonic ``Y_{\ell}^m(\theta,\varphi)``.
+"""
+sphevaluate(θ, φ, L, M) = sphevaluatepi(θ/π, φ/π, L, M)
+
+sphevaluatepi(θ::Number, φ::Number, L::Integer, M::Integer) = sphevaluatepi(θ,L,M)*sphevaluatepi(φ,M)
+
+function sphevaluatepi(θ::Number, L::Integer, M::Integer)
     ret = one(θ)/sqrt(two(θ))
     if M < 0 M = -M end
     c, s = cospi(θ), sinpi(θ)
@@ -76,3 +111,5 @@ function sphevaluatepi(θ::Number,L::Integer,M::Integer)
         return ret
     end
 end
+
+sphevaluatepi(φ::Number, M::Integer) = complex(cospi(M*φ),sinpi(M*φ))/sqrt(two(φ)*π)

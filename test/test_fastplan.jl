@@ -1,4 +1,4 @@
-import FastTransforms: allranks
+import FastTransforms: allranks, normalizecolumns!, maxcolnorm
 
 n = 511
 

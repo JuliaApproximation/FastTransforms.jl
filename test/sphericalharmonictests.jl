@@ -2,26 +2,74 @@ using FastTransforms, Base.Test
 
 srand(0)
 
-include("sphericalharmonictestfunctions.jl")
-
+println()
 println("Testing slow plan")
+println()
+
 include("test_slowplan.jl")
+
+println()
 println("Testing fast plan")
+println()
+
 include("test_fastplan.jl")
+
+println()
 println("Testing thin plan")
+println()
+
 include("test_thinplan.jl")
 
+println()
+println("Testing pointwise evaluation")
+println()
+
+import FastTransforms: sphevaluatepi, normalizecolumns!, maxcolnorm
+
+n = 255
+A = sphrandn(Float64, n+1, n+1);
+normalizecolumns!(A);
+B = sph2fourier(A);
+
+for θ in (0.123, 0.456)
+    S0 = sum(cospi((ℓ-1)*θ)*B[ℓ,1] for ℓ in 1:n+1)
+    SA = sum(sphevaluatepi(θ,ℓ-1,0)*A[ℓ,1] for ℓ in 1:n+1)
+    @test norm(S0-SA) < 1000eps()
+    push!(nrms, norm(S0-SA))
+    for m in 3:2:n+1
+        S0 = sum(cospi((ℓ-1)*θ)*B[ℓ,2m-2] for ℓ in 1:n+1)
+        SA = sum(sphevaluatepi(θ,ℓ+m-2,m-1)*A[ℓ,2m-2] for ℓ in 1:n+1)
+        @test norm(S0-SA) < 1000eps()
+        S0 = sum(cospi((ℓ-1)*θ)*B[ℓ,2m-1] for ℓ in 1:n+1)
+        SA = sum(sphevaluatepi(θ,ℓ+m-2,m-1)*A[ℓ,2m-1] for ℓ in 1:n+1)
+        @test norm(S0-SA) < 1000eps()
+    end
+end
+
+for θ in (0.123, 0.456), m in 2:2:n+1
+    S1 = sum(sinpi(ℓ*θ)*B[ℓ,2m-2] for ℓ in 1:n+1)
+    SA = sum(sphevaluatepi(θ,ℓ+m-2,m-1)*A[ℓ,2m-2] for ℓ in 1:n+1)
+    @test norm(S1-SA) < 1000eps()
+    S1 = sum(sinpi(ℓ*θ)*B[ℓ,2m-1] for ℓ in 1:n+1)
+    SA = sum(sphevaluatepi(θ,ℓ+m-2,m-1)*A[ℓ,2m-1] for ℓ in 1:n+1)
+    @test norm(S1-SA) < 1000eps()
+end
+
+println()
 println("Testing API")
+println()
+
+import FastTransforms: normalizecolumns!, maxcolnorm
 
 n = 511
 A = sphrandn(Float64, n+1, n+1);
 normalizecolumns!(A);
 
-B = sph2fourier(A; sketch = :none)
-C = fourier2sph(B; sketch = :none)
+B = sph2fourier(A)
+C = fourier2sph(B)
 println("The backward difference between slow plan and original: ", maxcolnorm(A-C))
 
-P = plan_sph2fourier(A; sketch = :none)
+P = plan_sph2fourier(A)
 B = P*A
 C = P\B
 
@@ -33,7 +81,7 @@ normalizecolumns!(A);
 
 B = sph2fourier(A; sketch = :none)
 C = fourier2sph(B; sketch = :none)
-println("The backward difference between slow plan and original: ", maxcolnorm(A-C))
+println("The backward difference between thin plan and original: ", maxcolnorm(A-C))
 
 P = plan_sph2fourier(A; sketch = :none)
 B = P*A

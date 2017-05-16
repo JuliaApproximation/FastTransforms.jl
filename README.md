@@ -96,16 +96,16 @@ julia> @time norm(ipaduatransform(paduatransform(v))-v)
 
 Let `F` be a matrix of spherical harmonic expansion coefficients arranged by increasing order in absolute value, alternating between negative and positive orders. Then `sph2fourier` converts the representation into a bivariate Fourier series, and `fourier2sph` converts it back.
 ```julia
-julia> F = rand(Float64, 251, 501); FastTransforms.zero_spurious_modes!(F);
+julia> F = sphrandn(Float64, 256, 256);
 
 julia> G = sph2fourier(F);
 
 julia> H = fourier2sph(G);
 
 julia> norm(F-H)
-7.422366861016818e-14
+4.950645831278297e-14
 
-julia> F = rand(Float64, 1024, 2047); FastTransforms.zero_spurious_modes!(F);
+julia> F = sphrandn(Float64, 1024, 1024);
 
 julia> G = sph2fourier(F; sketch = :none);
 Pre-computing thin plan...100%|██████████████████████████████████████████████████| Time: 0:00:04
@@ -114,7 +114,7 @@ julia> H = fourier2sph(G; sketch = :none);
 Pre-computing thin plan...100%|██████████████████████████████████████████████████| Time: 0:00:04
 
 julia> norm(F-H)
-1.5062262753260893e-12
+1.1510623098225283e-12
 
 ```
 

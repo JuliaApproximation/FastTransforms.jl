@@ -38,7 +38,7 @@ end
 
 FastSphericalHarmonicPlan(A::Matrix; opts...) = FastSphericalHarmonicPlan(A, round(Int, log2(size(A, 1)+1)-6); opts...)
 
-function A_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
+function Base.A_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = FP.RP, FP.BF, FP.p1, FP.p2, FP.B
     fill!(B, zero(eltype(B)))
     M, N = size(X)
@@ -60,7 +60,7 @@ function A_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     Y
 end
 
-function At_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
+function Base.At_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1inv, p2inv, B = FP.RP, FP.BF, FP.p1inv, FP.p2inv, FP.B
     copy!(B, X)
     M, N = size(X)
@@ -82,6 +82,6 @@ function At_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     zero_spurious_modes!(Y)
 end
 
-Ac_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, FP, X)
+Base.Ac_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, FP, X)
 
 allranks(FP::FastSphericalHarmonicPlan) = mapreduce(allranks,vcat,FP.BF)

@@ -166,7 +166,7 @@ function A_mul_B!{T}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutati
     k, n = size(A)
     At_mul_B!(P, x, jstart)
     copy!(y, istart, x, jstart, k)
-    HierarchicalMatrices.A_mul_B!(y, A.T, x, istart, jstart+k)
+    A_mul_B!(y, A.T, x, istart, jstart+k)
     A_mul_B!(P, x, jstart)
     y
 end
@@ -176,7 +176,7 @@ for f! in (:At_mul_B!, :Ac_mul_B!)
         function $f!{T}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int)
             k, n = size(A)
             copy!(y, istart, x, jstart, k)
-            HierarchicalMatrices.$f!(y, A.T, x, istart+k, jstart)
+            $f!(y, A.T, x, istart+k, jstart)
             A_mul_B!(P, y, istart)
             y
         end
@@ -185,9 +185,9 @@ end
 
 ### A_mul_B!, At_mul_B!, and  Ac_mul_B! for a Butterfly factorization.
 
-A_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = A_mul_B_col_J!(u, B, b, 1)
-At_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = At_mul_B_col_J!(u, B, b, 1)
-Ac_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = Ac_mul_B_col_J!(u, B, b, 1)
+Base.A_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = A_mul_B_col_J!(u, B, b, 1)
+Base.At_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = At_mul_B_col_J!(u, B, b, 1)
+Base.Ac_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = Ac_mul_B_col_J!(u, B, b, 1)
 
 function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int)
     L = length(B.factors) - 1
@@ -237,7 +237,7 @@ function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::I
     for i = 1:tL
         ml = mu+1
         mu += size(columns[i], 1)
-        HierarchicalMatrices.A_mul_B!(u, columns[i], temp1, ml+COLSHIFT, inds[i])
+        A_mul_B!(u, columns[i], temp1, ml+COLSHIFT, inds[i])
     end
 
     u
@@ -267,7 +267,7 @@ for f! in (:At_mul_B!,:Ac_mul_B!)
             for i = 1:tL
                 ml = mu+1
                 mu += size(columns[i], 1)
-                HierarchicalMatrices.$f!(temp1, columns[i], b, inds[i], ml+COLSHIFT)
+                $f!(temp1, columns[i], b, inds[i], ml+COLSHIFT)
             end
 
             ii, jj = tL, 1

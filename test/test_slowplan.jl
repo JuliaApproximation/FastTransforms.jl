@@ -1,3 +1,5 @@
+import FastTransforms: normalizecolumns!, maxcolnorm
+
 N = round.(Int,logspace(1,3,20))
 
 t = zeros(length(N))

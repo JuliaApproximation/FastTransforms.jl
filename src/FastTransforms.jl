@@ -3,10 +3,11 @@ module FastTransforms
 
 using Base, ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter, Compat
 
-import Base: *, \, size, view, A_mul_B!, At_mul_B!, Ac_mul_B!
+import Base: *, \, size, view
 import Base: getindex, setindex!, Factorization, length
 import Base.LinAlg: BlasFloat, BlasInt
 import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
+import HierarchicalMatrices: A_mul_B!, At_mul_B!, Ac_mul_B!
 import LowRankApprox: ColPerm
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
@@ -21,6 +22,7 @@ export plan_paduatransform!, plan_ipaduatransform!
 
 export SlowSphericalHarmonicPlan, FastSphericalHarmonicPlan, ThinSphericalHarmonicPlan
 export sph2fourier, fourier2sph, plan_sph2fourier
+export sphones, sphzeros, sphrand, sphrandn, sphevaluate
 
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac

@@ -1,5 +1,7 @@
 import Base.LinAlg: Givens, AbstractRotation
 
+### These three A_mul_B! should be in Base, but for the time being they do not add methods to Base.A_mul_B!; they add methods to the internal A_mul_B!.
+
 function A_mul_B!{T<:Real}(G::Givens{T}, A::AbstractVecOrMat)
     m, n = size(A, 1), size(A, 2)
     if G.i2 > m
@@ -56,14 +58,14 @@ end
 @inline length(P::Pnmp2toPlm) = length(P.rotations)
 @inline getindex(P::Pnmp2toPlm, i::Int) = P.rotations[i]
 
-function A_mul_B!(C::Pnmp2toPlm,A::AbstractVecOrMat)
+function Base.A_mul_B!(C::Pnmp2toPlm,A::AbstractVecOrMat)
     @inbounds for i = 1:length(C)
         A_mul_B!(C.rotations[i], A)
     end
     A
 end
 
-function A_mul_B!(A::AbstractMatrix, C::Pnmp2toPlm)
+function Base.A_mul_B!(A::AbstractMatrix, C::Pnmp2toPlm)
     @inbounds for i = length(C):-1:1
         A_mul_B!(A, C.rotations[i])
     end
@@ -83,7 +85,7 @@ function RotationPlan{T}(::Type{T}, n::Int)
     RotationPlan(layers)
 end
 
-function A_mul_B!(P::RotationPlan, A::AbstractMatrix)
+function Base.A_mul_B!(P::RotationPlan, A::AbstractMatrix)
     M, N = size(A)
     @inbounds for m = N÷2-2:-1:0
         layer = P.layers[m+1]
@@ -102,7 +104,7 @@ function A_mul_B!(P::RotationPlan, A::AbstractMatrix)
     A
 end
 
-function At_mul_B!(P::RotationPlan, A::AbstractMatrix)
+function Base.At_mul_B!(P::RotationPlan, A::AbstractMatrix)
     M, N = size(A)
     @inbounds for m = 0:N÷2-2
         layer = P.layers[m+1]
@@ -121,7 +123,7 @@ function At_mul_B!(P::RotationPlan, A::AbstractMatrix)
     A
 end
 
-Ac_mul_B!(P::RotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
+Base.Ac_mul_B!(P::RotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
 
 
 immutable SlowSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
@@ -145,7 +147,7 @@ function SlowSphericalHarmonicPlan{T}(A::Matrix{T})
     SlowSphericalHarmonicPlan(RP, p1, p2, p1inv, p2inv, B)
 end
 
-function A_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
+function Base.A_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     RP, p1, p2, B = SP.RP, SP.p1, SP.p2, SP.B
     copy!(B, X)
     A_mul_B!(RP, B)
@@ -162,7 +164,7 @@ function A_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     Y
 end
 
-function At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
+function Base.At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
     copy!(B, X)
     M, N = size(X)
@@ -178,4 +180,4 @@ function At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     zero_spurious_modes!(At_mul_B!(RP, Y))
 end
 
-Ac_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, SP, X)
+Base.Ac_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, SP, X)
