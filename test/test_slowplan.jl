@@ -1,11 +1,11 @@
 import FastTransforms: normalizecolumns!, maxcolnorm
 
-N = round.([Int],logspace(1,3,20))
+N = round.([Int],logspace(1,2.5,10))
 
 t = zeros(length(N))
 err = zeros(length(N))
 
-Nr = 3
+Nr = 2
 
 j = 1
 for n in N
