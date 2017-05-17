@@ -60,7 +60,7 @@ println()
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
-n = 511
+n = VERSION < v"0.6.0-" ? 255 : 511
 A = sphrandn(Float64, n+1, n+1);
 normalizecolumns!(A);
 
@@ -74,16 +74,18 @@ C = P\B
 
 println("The backward difference between slow plan and original: ", maxcolnorm(A-C))
 
-n = 1023
-A = sphrandn(Float64, n+1, n+1);
-normalizecolumns!(A);
+if VERSION ≥ v"0.6.0-"
+    n = 1023
+    A = sphrandn(Float64, n+1, n+1);
+    normalizecolumns!(A);
 
-B = sph2fourier(A; sketch = :none)
-C = fourier2sph(B; sketch = :none)
-println("The backward difference between thin plan and original: ", maxcolnorm(A-C))
+    B = sph2fourier(A; sketch = :none)
+    C = fourier2sph(B; sketch = :none)
+    println("The backward difference between thin plan and original: ", maxcolnorm(A-C))
 
-P = plan_sph2fourier(A; sketch = :none)
-B = P*A
-C = P\B
+    P = plan_sph2fourier(A; sketch = :none)
+    B = P*A
+    C = P\B
 
-println("The backward difference between thin plan and original: ", maxcolnorm(A-C))
+    println("The backward difference between thin plan and original: ", maxcolnorm(A-C))
+end
