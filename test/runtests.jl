@@ -1,6 +1,8 @@
 using FastTransforms
 using Base.Test
 
+srand(0)
+
 println("Testing special functions")
 n = 0:1000_000
 λ = 0.123
@@ -265,3 +267,9 @@ f_m=paduaeval(f_xy,x,y,m,Val{false})
 g_l=paduaeval(g_xy,x,y,l,Val{false})
 @test f_xy(x,y) ≈ f_m
 @test g_xy(x,y) ≈ g_l
+
+include("basictests.jl")
+
+include("butterflytests.jl")
+
+include("sphericalharmonictests.jl")

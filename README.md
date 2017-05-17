@@ -2,22 +2,54 @@
 
 [![Build Status](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/latest)
 
-The aim of this package is to provide new classes of fast transforms with low
-pre-computation. One approach is based on the use of asymptotic formulae to
-relate the transforms to a small number of fast Fourier transforms. Another
-approach is based on a Toeplitz-dot-Hankel decomposition of the matrix of
-connection coefficients. Both new classes of fast transforms do not
-require large pre-computation for fast execution and they are designed
-to work on expansions of functions with any degree of regularity.
+The aim of this package is to provide fast orthogonal polynomial transforms that are designed for expansions of functions with any degree of regularity. There are multiple approaches to the classical connection problem, though the user does not need to know the specifics.
 
-The Chebyshev—Jacobi transform and its inverse are implemented. This
-allows the fast conversion of Chebyshev expansion coefficients to Jacobi expansion
-coefficients and back.
+One approach is based on the use of asymptotic formulae to relate the transforms to a small number of fast Fourier transforms. Another approach is based on a Toeplitz-dot-Hankel decomposition of the matrix of connection coefficients. Alternatively, the matrix of connection coefficients may be decomposed hierarchically à la Fast Multipole Method.
+
+## The Chebyshev—Legendre Transform
+
+The Chebyshev—Legendre transform allows the fast conversion of Chebyshev expansion coefficients to Legendre expansion coefficients and back.
+
 ```julia
 julia> Pkg.add("FastTransforms")
 
 julia> using FastTransforms
 
+julia> c = rand(10001);
+
+julia> leg2cheb(c);
+
+julia> cheb2leg(c);
+
+julia> norm(cheb2leg(leg2cheb(c))-c)
+5.564168202018823e-13
+```
+
+The implementation separates pre-computation into a type of plan. This type is constructed with either `plan_leg2cheb` or `plan_cheb2leg`. Let's see how much faster it is if we pre-compute.
+
+```julia
+julia> p1 = plan_leg2cheb(c);
+
+julia> p2 = plan_cheb2leg(c);
+
+julia> @time leg2cheb(c);
+  0.082615 seconds (11.94 k allocations: 31.214 MiB, 6.75% gc time)
+
+julia> @time p1*c;
+  0.004297 seconds (6 allocations: 78.422 KiB)
+
+julia> @time cheb2leg(c);
+  0.110388 seconds (11.94 k allocations: 31.214 MiB, 8.16% gc time)
+
+julia> @time p2*c;
+  0.004500 seconds (6 allocations: 78.422 KiB)
+```
+
+## The Chebyshev—Jacobi Transform
+
+The Chebyshev—Jacobi transform allows the fast conversion of Chebyshev expansion coefficients to Jacobi expansion coefficients and back.
+
+```julia
 julia> c = rand(10001);
 
 julia> @time norm(icjt(cjt(c,0.1,-0.2),0.1,-0.2)-c,Inf)
@@ -43,15 +75,61 @@ is valid for the half-open square `(α,β) ∈ (-1/2,1/2]^2`. Therefore, the fas
 when the parameters are inside. If the parameters `(α,β)` are not exceptionally beyond the square,
 then increment/decrement operators are used with linear complexity (and linear conditioning) in the degree.
 
-The Padua transform and its inverse are also implemented thanks to
-[Michael Clarke](https://github.com/MikeAClarke). These are optimized methods
-designed for computing the bivariate Chebyshev coefficients by interpolating a
-bivariate function at the Padua points on `[-1,1]^2`.
+## The Padua Transform
+
+The Padua transform and its inverse are implemented thanks to [Michael Clarke](https://github.com/MikeAClarke). These are optimized methods designed for computing the bivariate Chebyshev coefficients by interpolating a bivariate function at the Padua points on `[-1,1]^2`.
+
+```julia
+julia> n = 200;
+
+julia> N = div((n+1)*(n+2),2);
+
+julia> v = rand(N); # The length of v is the number of Padua points
+
+julia> @time norm(ipaduatransform(paduatransform(v))-v)
+0.006571 seconds (846 allocations: 1.746 MiB)
+3.123637691861415e-14
+
+```
+
+## The Spherical Harmonic Transform
+
+Let `F` be a matrix of spherical harmonic expansion coefficients arranged by increasing order in absolute value, alternating between negative and positive orders. Then `sph2fourier` converts the representation into a bivariate Fourier series, and `fourier2sph` converts it back.
+```julia
+julia> F = sphrandn(Float64, 256, 256);
+
+julia> G = sph2fourier(F);
+
+julia> H = fourier2sph(G);
+
+julia> norm(F-H)
+4.950645831278297e-14
+
+julia> F = sphrandn(Float64, 1024, 1024);
+
+julia> G = sph2fourier(F; sketch = :none);
+Pre-computing...100%|███████████████████████████████████████████| Time: 0:00:04
+
+julia> H = fourier2sph(G; sketch = :none);
+Pre-computing...100%|███████████████████████████████████████████| Time: 0:00:04
+
+julia> norm(F-H)
+1.1510623098225283e-12
+
+```
+
+As with other fast transforms, `plan_sph2fourier` saves effort by caching the pre-computation. Be warned that for dimensions larger than `1,000`, this is no small feat!
 
 # References:
 
-   1.	N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, SIAM J. Sci. Comput., 36:A148—A167, 2014.
+   [1]  B. Alpert and V. Rokhlin. <a href="http://dx.doi.org/10.1137/0912009">A fast algorithm for the evaluation of Legendre expansions</a>, *SIAM J. Sci. Stat. Comput.*, **12**:158—179, 1991.
 
-   2.	R. M. Slevinsky. <a href="http://arxiv.org/abs/1602.02618">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, arXiv:1602.02618, 2016.
+   [2]  N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, *SIAM J. Sci. Comput.*, **36**:A148—A167, 2014.
 
-   3.	A. Townsend, M. Webb, and S. Olver. <a href="http://arxiv.org/abs/1604.07486">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, arXiv:1604.07486, 2016.
+   [3] J. Keiner. <a href="http://dx.doi.org/10.1137/070703065">Computing with expansions in Gegenbauer polynomials</a>, *SIAM J. Sci. Comput.*, **31**:2151—2171, 2009.
+
+   [4]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, in press at *IMA J. Numer. Anal.*, 2017.
+
+   [5]  R. M. Slevinsky. <a href="https://arxiv.org/abs/1705.05448">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, arXiv:1705.05448, 2017.
+
+   [6]  A. Townsend, M. Webb, and S. Olver. <a href="https://doi.org/10.1090/mcom/3277">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, in press at *Math. Comp.*, 2017.

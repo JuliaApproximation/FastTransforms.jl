@@ -1,16 +1,28 @@
 __precompile__()
 module FastTransforms
 
-using Base, ToeplitzMatrices, Compat
+using Base, ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter, Compat
 
-import Base: *
-import Base: view
+import Base: *, \, size, view
+import Base: getindex, setindex!, Factorization, length
+import Base.LinAlg: BlasFloat, BlasInt
+import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
+import HierarchicalMatrices: A_mul_B!, At_mul_B!, Ac_mul_B!
+import LowRankApprox: ColPerm
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
+export normleg2cheb, cheb2normleg, normleg12cheb2, cheb22normleg1
+export plan_leg2cheb, plan_cheb2leg
+export plan_normleg2cheb, plan_cheb2normleg
+export plan_normleg12cheb2, plan_cheb22normleg1
 export gaunt
 export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
 export plan_paduatransform!, plan_ipaduatransform!
+
+export SlowSphericalHarmonicPlan, FastSphericalHarmonicPlan, ThinSphericalHarmonicPlan
+export sph2fourier, fourier2sph, plan_sph2fourier
+export sphones, sphzeros, sphrand, sphrandn, sphevaluate
 
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
@@ -42,11 +54,14 @@ include("cjt.jl")
 
 include("toeplitzhankel.jl")
 
-leg2cheb(x...)=th_leg2cheb(x...)
-cheb2leg(x...)=th_cheb2leg(x...)
+#leg2cheb(x...)=th_leg2cheb(x...)
+#cheb2leg(x...)=th_cheb2leg(x...)
 leg2chebu(x...)=th_leg2chebu(x...)
 ultra2ultra(x...)=th_ultra2ultra(x...)
 jac2jac(x...)=th_jac2jac(x...)
+
+include("hierarchical.jl")
+include("SphericalHarmonics/SphericalHarmonics.jl")
 
 include("gaunt.jl")
 
