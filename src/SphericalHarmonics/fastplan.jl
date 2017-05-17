@@ -22,7 +22,7 @@ function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     Ce = eye(T, M)
     Co = eye(T, M)
     BF = Vector{Butterfly{T}}(n-2)
-    P = Progress(n-2, 0.1, "Pre-computing fast plan...", 50)
+    P = Progress(n-2, 0.1, "Pre-computing...", 43)
     for j = 1:2:n-2
         A_mul_B!(Ce, RP.layers[j])
         BF[j] = Butterfly(Ce, L; isorthogonal = true, opts...)

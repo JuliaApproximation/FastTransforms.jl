@@ -35,7 +35,6 @@ for θ in (0.123, 0.456)
     S0 = sum(cospi((ℓ-1)*θ)*B[ℓ,1] for ℓ in 1:n+1)
     SA = sum(sphevaluatepi(θ,ℓ-1,0)*A[ℓ,1] for ℓ in 1:n+1)
     @test norm(S0-SA) < 1000eps()
-    push!(nrms, norm(S0-SA))
     for m in 3:2:n+1
         S0 = sum(cospi((ℓ-1)*θ)*B[ℓ,2m-2] for ℓ in 1:n+1)
         SA = sum(sphevaluatepi(θ,ℓ+m-2,m-1)*A[ℓ,2m-2] for ℓ in 1:n+1)

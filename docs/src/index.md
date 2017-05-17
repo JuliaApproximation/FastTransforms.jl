@@ -6,7 +6,7 @@ In numerical analysis, it is customary to expand a function in a basis:
 ```math
 f(x) \sim \sum_{\ell=0}^{\infty} f_{\ell} \phi_{\ell}(x).
 ```
-It may be more convenient to transform our representation to one in a new basis, say, ``\{\psi_m(x)\}_{m\ge0}``:
+It may be necessary to transform our representation to one in a new basis, say, ``\{\psi_m(x)\}_{m\ge0}``:
 ```math
 f(x) \sim \sum_{m=0}^{\infty} g_m \psi_m(x).
 ```

@@ -108,10 +108,10 @@ julia> norm(F-H)
 julia> F = sphrandn(Float64, 1024, 1024);
 
 julia> G = sph2fourier(F; sketch = :none);
-Pre-computing thin plan...100%|██████████████████████████████████████████████████| Time: 0:00:04
+Pre-computing...100%|███████████████████████████████████████████| Time: 0:00:04
 
 julia> H = fourier2sph(G; sketch = :none);
-Pre-computing thin plan...100%|██████████████████████████████████████████████████| Time: 0:00:04
+Pre-computing...100%|███████████████████████████████████████████| Time: 0:00:04
 
 julia> norm(F-H)
 1.1510623098225283e-12
@@ -130,6 +130,6 @@ As with other fast transforms, `plan_sph2fourier` saves effort by caching the pr
 
    [4]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, in press at *IMA J. Numer. Anal.*, 2017.
 
-   [5]  R. M. Slevinsky. <a href="https://arxiv.org/abs/">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, arXiv, 2017.
+   [5]  R. M. Slevinsky. <a href="https://arxiv.org/abs/1705.05448">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, arXiv, 2017.
 
    [6]  A. Townsend, M. Webb, and S. Olver. <a href="https://doi.org/10.1090/mcom/3277">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, in press at *Math. Comp.*, 2017.
