@@ -17,6 +17,46 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#Introduction-1",
+    "page": "Home",
+    "title": "Introduction",
+    "category": "section",
+    "text": "In numerical analysis, it is customary to expand a function in a basis:f(x) sim sum_ell=0^infty f_ell phi_ell(x)It may be necessary to transform our representation to one in a new basis, say, psi_m(x)_mge0:f(x) sim sum_m=0^infty g_m psi_m(x)In many cases of interest, both representations are of finite length n and we seek a fast method (faster than mathcalO(n^2)) to transform the original coefficients f_ell to the new coefficients g_m.A similar problem arises when we wish to evaluate f at a set of points x_m_m=0^n. We wish to transform coefficients of f to values at the set of points in fewer than mathcalO(n^2) operations."
+},
+
+{
+    "location": "index.html#FastTransforms.leg2cheb",
+    "page": "Home",
+    "title": "FastTransforms.leg2cheb",
+    "category": "Function",
+    "text": "Computes the Chebyshev expansion coefficients given the Legendre expansion coefficients:\n\nrm CLT  sum_n=0^N c_n^rm legP_n(x) to sum_n=0^N c_n^rm chebT_n(x)\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.cheb2leg",
+    "page": "Home",
+    "title": "FastTransforms.cheb2leg",
+    "category": "Function",
+    "text": "Computes the Legendre expansion coefficients given the Chebyshev expansion coefficients:\n\nrm iCLT  sum_n=0^N c_n^rm chebT_n(x) to sum_n=0^N c_n^rm legP_n(x)\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_leg2cheb",
+    "page": "Home",
+    "title": "FastTransforms.plan_leg2cheb",
+    "category": "Function",
+    "text": "Pre-computes the Legendre–Chebyshev transform.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_cheb2leg",
+    "page": "Home",
+    "title": "FastTransforms.plan_cheb2leg",
+    "category": "Function",
+    "text": "Pre-computes the Chebyshev–Legendre transform.\n\n\n\n"
+},
+
+{
     "location": "index.html#FastTransforms.cjt",
     "page": "Home",
     "title": "FastTransforms.cjt",
@@ -89,11 +129,35 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#FastTransforms.sph2fourier",
+    "page": "Home",
+    "title": "FastTransforms.sph2fourier",
+    "category": "Function",
+    "text": "Computes the bivariate Fourier series given by the spherical harmonic expansion:\n\nrm SHT  sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi) to sum_ell=0^nsum_m=-n^n g_ell^m frace^rm i m varphisqrt2pi leftbeginarrayccoselltheta sin(ell+1)thetaendarrayright\n\nwhere the cosines are used when m is even and the sines are used when m is odd. The spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.fourier2sph",
+    "page": "Home",
+    "title": "FastTransforms.fourier2sph",
+    "category": "Function",
+    "text": "Computes the spherical harmonic expansion given by the bivariate Fourier series:\n\nrm iSHT  sum_ell=0^nsum_m=-n^n g_ell^m frace^rm i m varphisqrt2pi leftbeginarrayccoselltheta sin(ell+1)thetaendarrayright to sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi)\n\nwhere the cosines are used when m is even and the sines are used when m is odd. The spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_sph2fourier",
+    "page": "Home",
+    "title": "FastTransforms.plan_sph2fourier",
+    "category": "Function",
+    "text": "Pre-computes the spherical harmonic transform.\n\n\n\n"
+},
+
+{
     "location": "index.html#Fast-Transforms-1",
     "page": "Home",
     "title": "Fast Transforms",
     "category": "section",
-    "text": "cjticjtjjtplan_cjtplan_icjtpaduatransformipaduatransformplan_paduatransform!plan_ipaduatransform!"
+    "text": "leg2chebcheb2legplan_leg2chebplan_cheb2legcjticjtjjtplan_cjtplan_icjtpaduatransformipaduatransformplan_paduatransform!plan_ipaduatransform!sph2fourierfourier2sphplan_sph2fourier"
 },
 
 {
@@ -113,11 +177,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#FastTransforms.sphevaluate",
+    "page": "Home",
+    "title": "FastTransforms.sphevaluate",
+    "category": "Function",
+    "text": "Pointwise evaluation of spherical harmonic Y_ell^m(thetavarphi).\n\n\n\n"
+},
+
+{
     "location": "index.html#Other-Exported-Methods-1",
     "page": "Home",
     "title": "Other Exported Methods",
     "category": "section",
-    "text": "gauntpaduapoints"
+    "text": "gauntpaduapointssphevaluate"
 },
 
 {
