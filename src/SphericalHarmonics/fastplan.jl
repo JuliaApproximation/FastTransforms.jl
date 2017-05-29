@@ -10,7 +10,6 @@ end
 
 function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     M, N = size(A)
-    @assert ispow2(M)
     @assert N == 2M-1
     n = (N+1)÷2
     RP = RotationPlan(T, n-1)
@@ -36,7 +35,7 @@ function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     FastSphericalHarmonicPlan(RP, BF, p1, p2, p1inv, p2inv, B)
 end
 
-FastSphericalHarmonicPlan(A::Matrix; opts...) = FastSphericalHarmonicPlan(A, round(Int, log2(size(A, 1)+1)-6); opts...)
+FastSphericalHarmonicPlan(A::Matrix; opts...) = FastSphericalHarmonicPlan(A, floor(Int, log2(size(A, 1)+1)-6); opts...)
 
 function Base.A_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = FP.RP, FP.BF, FP.p1, FP.p2, FP.B

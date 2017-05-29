@@ -14,7 +14,6 @@ end
 
 function ThinSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     M, N = size(A)
-    @assert ispow2(M)
     @assert N == 2M-1
     n = (N+1)÷2
     RP = RotationPlan(T, n-1)
@@ -40,7 +39,7 @@ function ThinSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     ThinSphericalHarmonicPlan(RP, BF, p1, p2, p1inv, p2inv, B)
 end
 
-ThinSphericalHarmonicPlan(A::Matrix; opts...) = ThinSphericalHarmonicPlan(A, round(Int, log2(size(A, 1)+1)-6); opts...)
+ThinSphericalHarmonicPlan(A::Matrix; opts...) = ThinSphericalHarmonicPlan(A, floor(Int, log2(size(A, 1)+1)-6); opts...)
 
 function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = TP.RP, TP.BF, TP.p1, TP.p2, TP.B

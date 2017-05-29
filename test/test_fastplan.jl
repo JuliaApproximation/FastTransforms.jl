@@ -1,6 +1,6 @@
 import FastTransforms: allranks, normalizecolumns!, maxcolnorm
 
-n = 255
+n = 362
 
 A = sphrandn(Float64, n+1, n+1);
 normalizecolumns!(A);

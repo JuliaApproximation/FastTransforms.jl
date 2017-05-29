@@ -46,11 +46,12 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
     indices[1] = Vector{Int64}(tL+1)
     cs[1] = Vector{Vector{Int64}}(tL)
 
-    nd = n÷tL
-    nl = 1
-    nu = nd
+    ninds = linspace(1, n+1, tL+1)
     indices[1][1] = 1
     for j = 1:tL
+        nl = round(Int, ninds[j])
+        nu = round(Int, ninds[j+1]) - 1
+        nd = nu-nl+1
         if isorthogonal
             factors[1][j] = IDPackedV{T}(collect(1:nd),Int64[],Array{T}(nd,0))
         else
@@ -59,8 +60,6 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
         permutations[1][j] = factors[1][j][:P]
         indices[1][j+1] = indices[1][j] + size(factors[1][j], 1)
         cs[1][j] = factors[1][j].sk+nl-1
-        nl += nd
-        nu += nd
     end
 
     ii, jj = 2, (tL>>1)
@@ -71,12 +70,12 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
         cs[l] = Vector{Vector{Int64}}(tL)
 
         ctr = 0
-        md = m÷ii
-        ml = 1
-        mu = md
+        minds = linspace(1, m+1, ii+1)
         indices[l][1] = 1
         for i = 1:ii
             shft = 2jj*div(ctr,2jj)
+            ml = round(Int, minds[i])
+            mu = round(Int, minds[i+1]) - 1
             for j = 1:jj
                 cols = vcat(cs[l-1][2j-1+shft],cs[l-1][2j+shft])
                 lc = length(cols)
@@ -84,28 +83,24 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
                 if maximum(abs, Av) < realmin(real(T))/eps(real(T))
                     factors[l][j+ctr] = IDPackedV{T}(Int64[], collect(1:lc), Array{T}(0,lc))
                 else
-                    LRAOpts.rtol = eps(real(T))*max(length(ml:mu),lc)
+                    LRAOpts.rtol = eps(real(T))*max(mu-ml+1, lc)
                     factors[l][j+ctr] = idfact!(Av, LRAOpts)
                 end
                 permutations[l][j+ctr] = factors[l][j+ctr][:P]
                 indices[l][j+ctr+1] = indices[l][j+ctr] + size(factors[l][j+ctr], 1)
                 cs[l][j+ctr] = cols[factors[l][j+ctr].sk]
             end
-            ml += md
-            mu += md
             ctr += jj
         end
         ii <<= 1
         jj >>= 1
     end
 
-    md = m÷tL
-    ml = 1
-    mu = md
+    minds = linspace(1, m+1, tL+1)
     for i = 1:tL
-        columns[i] = A[ml:mu,cs[L+1][i]]
-        ml += md
-        mu += md
+        ml = round(Int, minds[i])
+        mu = round(Int, minds[i+1]) - 1
+        columns[i] = A[ml:mu, cs[L+1][i]]
     end
 
     kk = sumkmax(indices)
