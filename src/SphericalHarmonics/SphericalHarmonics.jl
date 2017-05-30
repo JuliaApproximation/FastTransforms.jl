@@ -16,7 +16,7 @@ include("thinplan.jl")
 
 function plan_sph2fourier(A::AbstractMatrix; opts...)
     M, N = size(A)
-    if M ≤ 1022
+    if M ≤ 1023
         SlowSphericalHarmonicPlan(A)
     else
         ThinSphericalHarmonicPlan(A; opts...)

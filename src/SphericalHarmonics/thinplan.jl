@@ -14,7 +14,6 @@ end
 
 function ThinSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
     M, N = size(A)
-    @assert N == 2M-1
     n = (N+1)÷2
     RP = RotationPlan(T, n-1)
     p1 = plan_normleg2cheb(A)

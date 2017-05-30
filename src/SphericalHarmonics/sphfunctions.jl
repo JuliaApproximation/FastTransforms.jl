@@ -15,7 +15,7 @@ function sphrand{T}(::Type{T}, m::Int, n::Int)
     for i = 1:m
         A[i,1] = rand(T)
     end
-    for j = 1:n
+    for j = 1:n-1
         for i = 1:m-j
             A[i,2j] = rand(T)
             A[i,2j+1] = rand(T)
@@ -29,7 +29,7 @@ function sphrandn{T}(::Type{T}, m::Int, n::Int)
     for i = 1:m
         A[i,1] = randn(T)
     end
-    for j = 1:n
+    for j = 1:n-1
         for i = 1:m-j
             A[i,2j] = randn(T)
             A[i,2j+1] = randn(T)
@@ -43,7 +43,7 @@ function sphones{T}(::Type{T}, m::Int, n::Int)
     for i = 1:m
         A[i,1] = one(T)
     end
-    for j = 1:n
+    for j = 1:n-1
         for i = 1:m-j
             A[i,2j] = one(T)
             A[i,2j+1] = one(T)
