@@ -55,6 +55,12 @@ for θ in (0.123, 0.456), m in 2:2:n
 end
 
 println()
+println("Testing synthesis and analysis")
+println()
+
+include("synthesisanalysistests.jl")
+
+println()
 println("Testing API")
 println()
 

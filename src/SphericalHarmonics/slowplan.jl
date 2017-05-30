@@ -58,7 +58,7 @@ end
 @inline length(P::Pnmp2toPlm) = length(P.rotations)
 @inline getindex(P::Pnmp2toPlm, i::Int) = P.rotations[i]
 
-function Base.A_mul_B!(C::Pnmp2toPlm,A::AbstractVecOrMat)
+function Base.A_mul_B!(C::Pnmp2toPlm, A::AbstractVecOrMat)
     @inbounds for i = 1:length(C)
         A_mul_B!(C.rotations[i], A)
     end

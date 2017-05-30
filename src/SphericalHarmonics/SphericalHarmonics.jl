@@ -13,6 +13,7 @@ include("slowplan.jl")
 include("Butterfly.jl")
 include("fastplan.jl")
 include("thinplan.jl")
+include("synthesisanalysis.jl")
 
 function plan_sph2fourier(A::AbstractMatrix; opts...)
     M, N = size(A)
