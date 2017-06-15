@@ -48,8 +48,8 @@ end
 function Pnmp2toPlm{T}(::Type{T}, n::Int, m::Int)
     G = Vector{Givens{T}}(n)
     @inbounds for ℓ = 1:n
-        c = sqrt((2ℓ+2m+3)/(ℓ+2m+3)*(2m+2)/(ℓ+2m+2))
-        s = sqrt((ℓ+1)/(ℓ+2m+3)*ℓ/(ℓ+2m+2))
+        c = sqrt(T((2m+2)*(2ℓ+2m+3))/T((ℓ+2m+2)*(ℓ+2m+3)))
+        s = sqrt(T(ℓ*(ℓ+1))/T((ℓ+2m+2)*(ℓ+2m+3)))
         G[n+1-ℓ] = Givens(ℓ, ℓ+2, c, s)
     end
     Pnmp2toPlm(G)
