@@ -282,7 +282,7 @@ function compute_absf!{T<:AbstractFloat}(ret::Vector{T},tempsin::Vector{T},temps
     ret
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int64})
+function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
     @inbounds for i in ir
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
         ϑ = (α+half(α))/2-(α+β+m+1)*θ[i]/2
@@ -297,7 +297,7 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix
     end
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int64})
+function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
     @inbounds @simd for i in ir
         temp = inv(tempsinλm[i])
         ϑ = (m+λ)*(half(T)-θ[i])

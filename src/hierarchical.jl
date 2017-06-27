@@ -43,10 +43,10 @@ size(P::HierarchicalPlanWithParity) = (size(P.even, 1)+size(P.odd, 1), size(P.ev
 evensize(v::AbstractVecOrMat, d) = (L = size(v, d); iseven(L) ? L÷2 : (L+1)÷2)
 oddsize(v::AbstractVecOrMat, d) = (L = size(v, d); iseven(L) ? L÷2 : (L-1)÷2)
 
-UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, bd::Int64) = UpperTriangularHierarchicalMatrix(T, f, bd, bd)
-UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, b::Int64, d::Int64) = UpperTriangularHierarchicalMatrix(T, f, 1, b, 1, d)
+UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, bd::Int) = UpperTriangularHierarchicalMatrix(T, f, bd, bd)
+UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, b::Int, d::Int) = UpperTriangularHierarchicalMatrix(T, f, 1, b, 1, d)
 
-function UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, a::Int64, b::Int64, c::Int64, d::Int64)
+function UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, a::Int, b::Int, c::Int, d::Int)
     if (b-a+1) < BLOCKSIZE(T) && (d-c+1) < BLOCKSIZE(T)
         i = (b-a)÷2
         j = (d-c)÷2
@@ -68,7 +68,7 @@ function UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, a::Int64, 
     end
 end
 
-function HierarchicalMatrix{T}(::Type{T}, f::Function, a::Int64, b::Int64, c::Int64, d::Int64)
+function HierarchicalMatrix{T}(::Type{T}, f::Function, a::Int, b::Int, c::Int, d::Int)
     if (b-a+1) < BLOCKSIZE(T) && (d-c+1) < BLOCKSIZE(T)
         i = (b-a)÷2
         j = (d-c)÷2

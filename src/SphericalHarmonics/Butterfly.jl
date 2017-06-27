@@ -2,7 +2,7 @@ immutable Butterfly{T} <: Factorization{T}
     columns::Vector{Matrix{T}}
     factors::Vector{Vector{IDPackedV{T}}}
     permutations::Vector{Vector{ColumnPermutation}}
-    indices::Vector{Vector{Int64}}
+    indices::Vector{Vector{Int}}
     temp1::Vector{T}
     temp2::Vector{T}
     temp3::Vector{T}
@@ -28,7 +28,7 @@ end
 
 size(B::Butterfly) = size(B, 1), size(B, 2)
 
-function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false, opts...)
+function Butterfly{T}(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opts...)
     m, n = size(A)
     tL = 2^L
 
@@ -38,13 +38,13 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
     columns = Vector{Matrix{T}}(tL)
     factors = Vector{Vector{IDPackedV{T}}}(L+1)
     permutations = Vector{Vector{ColumnPermutation}}(L+1)
-    indices = Vector{Vector{Int64}}(L+1)
-    cs = Vector{Vector{Vector{Int64}}}(L+1)
+    indices = Vector{Vector{Int}}(L+1)
+    cs = Vector{Vector{Vector{Int}}}(L+1)
 
     factors[1] = Vector{IDPackedV{T}}(tL)
     permutations[1] = Vector{ColumnPermutation}(tL)
-    indices[1] = Vector{Int64}(tL+1)
-    cs[1] = Vector{Vector{Int64}}(tL)
+    indices[1] = Vector{Int}(tL+1)
+    cs[1] = Vector{Vector{Int}}(tL)
 
     ninds = linspace(1, n+1, tL+1)
     indices[1][1] = 1
@@ -53,7 +53,7 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
         nu = round(Int, ninds[j+1]) - 1
         nd = nu-nl+1
         if isorthogonal
-            factors[1][j] = IDPackedV{T}(collect(1:nd),Int64[],Array{T}(nd,0))
+            factors[1][j] = IDPackedV{T}(collect(1:nd),Int[],Array{T}(nd,0))
         else
             factors[1][j] = idfact!(A[:,nl:nu], LRAOpts)
         end
@@ -66,8 +66,8 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
     for l = 2:L+1
         factors[l] = Vector{IDPackedV{T}}(tL)
         permutations[l] = Vector{ColumnPermutation}(tL)
-        indices[l] = Vector{Int64}(tL+1)
-        cs[l] = Vector{Vector{Int64}}(tL)
+        indices[l] = Vector{Int}(tL+1)
+        cs[l] = Vector{Vector{Int}}(tL)
 
         ctr = 0
         minds = linspace(1, m+1, ii+1)
@@ -81,7 +81,7 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
                 lc = length(cols)
                 Av = A[ml:mu,cols]
                 if maximum(abs, Av) < realmin(real(T))/eps(real(T))
-                    factors[l][j+ctr] = IDPackedV{T}(Int64[], collect(1:lc), Array{T}(0,lc))
+                    factors[l][j+ctr] = IDPackedV{T}(Int[], collect(1:lc), Array{T}(0,lc))
                 else
                     LRAOpts.rtol = eps(real(T))*max(mu-ml+1, lc)
                     factors[l][j+ctr] = idfact!(Av, LRAOpts)
@@ -108,7 +108,7 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int64; isorthogonal::Bool = false
     Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk), zeros(T, kk))
 end
 
-function sumkmax(indices::Vector{Vector{Int64}})
+function sumkmax(indices::Vector{Vector{Int}})
     ret = 0
     @inbounds for j = 1:length(indices)
         ret = max(ret, indices[j][end])
@@ -313,7 +313,7 @@ end
 function allranks(B::Butterfly)
     L = length(B.factors)-1
     tL = 2^L
-    ret = zeros(Int64, tL, L+1)
+    ret = zeros(Int, tL, L+1)
     @inbounds for l = 1:L+1
         for j = 1:tL
             ret[j,l] = size(B.factors[l][j], 1)
