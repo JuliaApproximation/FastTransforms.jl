@@ -13,9 +13,7 @@ matrix:
 notifications:
   email: false
 after_success:
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("FastTransforms")); include(joinpath("docs", "make.jl"))'
-
+  - julia -e 'cd(Pkg.dir("FastTransforms")); Pkg.add("Documenter"); include(joinpath("docs", "make.jl")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
 # uncomment the following lines to override the default test script
 #script:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi

@@ -1,6 +1,6 @@
 # FastTransforms.jl
 
-[![Travis](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl) [![AppVeyor](https://ci.appveyor.com/api/projects/status/oba9qush15q3x8pb/branch/master?svg=true)](https://ci.appveyor.com/project/MikaelSlevinsky/fasttransforms-jl/branch/master) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/latest)
+[![Travis](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl) [![AppVeyor](https://ci.appveyor.com/api/projects/status/oba9qush15q3x8pb/branch/master?svg=true)](https://ci.appveyor.com/project/MikaelSlevinsky/fasttransforms-jl/branch/master) [![codecov](https://codecov.io/gh/MikaelSlevinsky/FastTransforms.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/MikaelSlevinsky/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/latest)
 
 The aim of this package is to provide fast orthogonal polynomial transforms that are designed for expansions of functions with any degree of regularity. There are multiple approaches to the classical connection problem, though the user does not need to know the specifics.
 
