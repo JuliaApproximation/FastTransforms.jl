@@ -6,6 +6,7 @@ immutable Butterfly{T} <: Factorization{T}
     temp1::Vector{T}
     temp2::Vector{T}
     temp3::Vector{T}
+    temp4::Vector{T}
 end
 
 function size(B::Butterfly, dim::Integer)
@@ -105,7 +106,7 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, 
 
     kk = sumkmax(indices)
 
-    Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk), zeros(T, kk))
+    Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk), zeros(T, kk), zeros(T, kk))
 end
 
 function sumkmax(indices::Vector{Vector{Int}})
@@ -150,10 +151,29 @@ function rowperm!(fwd::Bool, x::StridedVecOrMat, p::Vector{Int}, jstart::Int)
     x
 end
 
+function rowperm!(fwd::Bool, y::StridedVector, x::StridedVector, p::Vector{Int}, jstart::Int)
+    n = length(p)
+    jshift = jstart-1
+    @inbounds if (fwd)
+        @simd for i = 1:n
+            y[jshift+i] = x[jshift+p[i]]
+        end
+    else
+        @simd for i = 1:n
+            y[jshift+p[i]] = x[jshift+i]
+        end
+    end
+    y
+end
+
 ## ColumnPermutation
 A_mul_B!(A::ColPerm, B::StridedVecOrMat, jstart::Int) = rowperm!(false, B, A.p, jstart)
 At_mul_B!(A::ColPerm, B::StridedVecOrMat, jstart::Int) = rowperm!(true, B, A.p, jstart)
 Ac_mul_B!(A::ColPerm, B::StridedVecOrMat, jstart::Int) = At_mul_B!(A, B, jstart)
+
+A_mul_B!(y::StridedVector, A::ColPerm, x::StridedVector, jstart::Int) = rowperm!(false, y, x, A.p, jstart)
+At_mul_B!(y::StridedVector, A::ColPerm, x::StridedVector, jstart::Int) = rowperm!(true, y, x, A.p, jstart)
+Ac_mul_B!(y::StridedVector, A::ColPerm, x::StridedVector, jstart::Int) = At_mul_B!(y, x, A, jstart)
 
 # Fast A_mul_B!, At_mul_B!, and Ac_mul_B! for an ID. These overwrite the output.
 
@@ -166,6 +186,14 @@ function A_mul_B!{T}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutati
     y
 end
 
+function A_mul_B!{T}(y::AbstractVector{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int)
+    k, n = size(A)
+    At_mul_B!(temp, P, x, jstart)
+    copy!(y, istart, temp, jstart, k)
+    A_mul_B!(y, A.T, temp, istart, jstart+k)
+    y
+end
+
 for f! in (:At_mul_B!, :Ac_mul_B!)
     @eval begin
         function $f!{T}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int)
@@ -173,6 +201,14 @@ for f! in (:At_mul_B!, :Ac_mul_B!)
             copy!(y, istart, x, jstart, k)
             $f!(y, A.T, x, istart+k, jstart)
             A_mul_B!(P, y, istart)
+            y
+        end
+
+        function $f!{T}(y::AbstractVector{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int)
+            k, n = size(A)
+            copy!(temp, istart, x, jstart, k)
+            $f!(temp, A.T, x, istart+k, jstart)
+            A_mul_B!(y, P, temp, istart)
             y
         end
     end
@@ -194,6 +230,7 @@ function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::I
 
     temp1 = B.temp1
     temp2 = B.temp2
+    temp3 = B.temp3
     fill!(temp1, zero(T))
     fill!(temp2, zero(T))
 
@@ -217,7 +254,7 @@ function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::I
         for i = 1:ii
             shft = 2jj*div(ctr,2jj)
             for j = 1:jj
-                A_mul_B!(temp2, factors[j+ctr], permutations[j+ctr], temp1, indsout[j+ctr], indsin[2j+shft-1])
+                A_mul_B!(temp2, factors[j+ctr], permutations[j+ctr], temp1, temp3, indsout[j+ctr], indsin[2j+shft-1])
             end
             ctr += jj
         end
@@ -252,6 +289,7 @@ for f! in (:At_mul_B!,:Ac_mul_B!)
             temp1 = B.temp1
             temp2 = B.temp2
             temp3 = B.temp3
+            temp4 = B.temp4
             fill!(temp1, zero(T))
             fill!(temp2, zero(T))
             fill!(temp3, zero(T))
@@ -274,8 +312,9 @@ for f! in (:At_mul_B!,:Ac_mul_B!)
                 ctr = 0
                 for i = 1:ii
                     shft = 2jj*div(ctr,2jj)
+                    fill!(temp4, zero(T))
                     for j = 1:jj
-                        $f!(temp3, factors[j+ctr], permutations[j+ctr], temp1, indsout[2j+shft-1], indsin[j+ctr])
+                        $f!(temp3, factors[j+ctr], permutations[j+ctr], temp1, temp4, indsout[2j+shft-1], indsin[j+ctr])
                         addtemp3totemp2!(temp2, temp3, indsout[2j+shft-1], indsout[2j+shft+1]-1)
                     end
                     ctr += jj
