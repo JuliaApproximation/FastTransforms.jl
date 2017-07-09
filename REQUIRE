@@ -1,3 +1,6 @@
-julia 0.4
-ToeplitzMatrices 0.1
-Compat 0.8.4
+julia 0.5
+ToeplitzMatrices 0.2
+HierarchicalMatrices 0.0.2
+LowRankApprox 0.0.2
+ProgressMeter 0.3.4
+Compat 0.17

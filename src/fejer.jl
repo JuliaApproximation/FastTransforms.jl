@@ -1,12 +1,12 @@
 fejer_plan1(μ) = FFTW.plan_r2r!(μ, FFTW.REDFT01)
 fejer_plan2(μ) = FFTW.plan_r2r!(μ, FFTW.RODFT00)
 
-"""
+doc"""
 Compute nodes and weights of Fejer's first quadrature rule with a Jacobi weight.
 """
 fejer1{T<:AbstractFloat}(N::Int,α::T,β::T) = fejer1(N,α,β,fejer_plan1(zeros(T,N)))
 
-"""
+doc"""
 Compute nodes and weights of Fejer's second quadrature rule with a Jacobi weight.
 """
 fejer2{T<:AbstractFloat}(N::Int,α::T,β::T) = fejer2(N,α,β,fejer_plan2(zeros(T,N)))
@@ -15,12 +15,12 @@ fejer1{T<:AbstractFloat}(N::Int,α::T,β::T,plan) = T[sinpi((N-2k-one(T))/2N) fo
 fejer2{T<:AbstractFloat}(N::Int,α::T,β::T,plan) = T[cospi((k+one(T))/(N+one(T))) for k=0:N-1],fejerweights2(N,α,β,plan)
 
 
-"""
+doc"""
 Compute weights of Fejer's first quadrature rule with a Jacobi weight.
 """
 fejerweights1{T<:AbstractFloat}(N::Int,α::T,β::T) = fejerweights1(N,α,β,fejer_plan1(zeros(T,N)))
 
-"""
+doc"""
 Compute weights of Fejer's second quadrature rule with a Jacobi weight.
 """
 fejerweights2{T<:AbstractFloat}(N::Int,α::T,β::T) = fejerweights2(N,α,β,fejer_plan2(zeros(T,N)))

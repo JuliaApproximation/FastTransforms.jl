@@ -1,6 +1,0 @@
-cd docs
-julia build.jl
-cd ..
-mkdocs build --clean
-(sleep 1 && open -a Safari http://127.0.0.1:8000)& # waits for mkdoc server to start up
-mkdocs serve

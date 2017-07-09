@@ -1,4 +1,4 @@
-"""
+doc"""
 Store a diagonally-scaled Toeplitz∘Hankel matrix:
 
     DL(T∘H)DR
@@ -10,7 +10,7 @@ immutable ToeplitzHankelPlan{S}
     C::Vector{Vector{S}}
     DL::Vector{S}
     DR::Vector{S}
-    ToeplitzHankelPlan(T,C,DL,DR)=new(T,C,DL,DR)
+    (::Type{ToeplitzHankelPlan{S}}){S}(T,C,DL,DR) = new{S}(T,C,DL,DR)
 end
 
 function ToeplitzHankelPlan(T::TriangularToeplitz,C::Vector,DL::AbstractVector,DR::AbstractVector)
@@ -34,7 +34,7 @@ function partialchol(H::Hankel)
     v=[H[:,1];vec(H[end,2:end])]
     d=diag(H)
     @assert length(v) ≥ 2n-1
-    reltol=maxabs(d)*eps(eltype(H))*log(n)
+    reltol=maximum(abs,d)*eps(eltype(H))*log(n)
     for k=1:n
         mx,idx=findmax(d)
         if mx ≤ reltol break end
@@ -61,7 +61,7 @@ function partialchol(H::Hankel,D::AbstractVector)
     v=[H[:,1];vec(H[end,2:end])]
     d=diag(H).*D.^2
     @assert length(v) ≥ 2n-1
-    reltol=maxabs(d)*eps(T)*log(n)
+    reltol=maximum(abs,d)*eps(T)*log(n)
     for k=1:n
         mx,idx=findmax(d)
         if mx ≤ reltol break end
@@ -99,7 +99,7 @@ end
 # Diagonally-scaled Toeplitz∘Hankel polynomial transforms
 
 function leg2chebTH{S}(::Type{S},n)
-    λ = Λ(0:half(S):n-1)
+    λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]
     T = TriangularToeplitz(2t/π,:U)
@@ -122,9 +122,9 @@ function cheb2legTH{S}(::Type{S},n)
 end
 
 function leg2chebuTH{S}(::Type{S},n)
-    λ = Λ(0:half(S):n-1)
+    λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
-    t[1:2:end] = λ[1:2:n]./(((1:2:n)-2))
+    t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
     T = TriangularToeplitz(-2t/π,:U)
     H = Hankel(λ[1:n]./((1:n)+1),λ[n:end]./((n:2n-1)+1))
     T,H
@@ -156,13 +156,13 @@ function jac2jacTH{S}(::Type{S},n,α,β,γ,δ)
     T,H,DL,DR
 end
 
-immutable ChebyshevToLegendrePlan{TH}
+immutable ChebyshevToLegendrePlanTH{TH}
     toeplitzhankel::TH
 end
 
-ChebyshevToLegendrePlan{S}(::Type{S},n) = ChebyshevToLegendrePlan(th_cheb2legplan(S,n))
+ChebyshevToLegendrePlanTH{S}(::Type{S},n) = ChebyshevToLegendrePlanTH(th_cheb2legplan(S,n))
 
-function *(P::ChebyshevToLegendrePlan,v::AbstractVector)
+function *(P::ChebyshevToLegendrePlanTH,v::AbstractVector)
     w = zero(v)
     S,n = eltype(v),length(v)
     w[1:2:end] = -one(S)./(one(S):two(S):n)./(-one(S):two(S):n-two(S))
@@ -170,7 +170,7 @@ function *(P::ChebyshevToLegendrePlan,v::AbstractVector)
 end
 
 th_leg2chebplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebTH(S,n)...,ones(S,n))
-th_cheb2legplan{S}(::Type{S},n)=ChebyshevToLegendrePlan(ToeplitzHankelPlan(cheb2legTH(S,n)...))
+th_cheb2legplan{S}(::Type{S},n)=ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S,n)...))
 th_leg2chebuplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebuTH(S,n)...,1:n,ones(S,n))
 th_ultra2ultraplan{S}(::Type{S},n,λ₁,λ₂)=ToeplitzHankelPlan(ultra2ultraTH(S,n,λ₁,λ₂)...)
 th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ)=ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)

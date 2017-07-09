@@ -6,7 +6,7 @@ const BACKWARD = false
 const sqrtpi = 1.772453850905516027298
 const edivsqrt2pi = 1.084437551419227546612
 
-"""
+doc"""
 Compute a typed 0.5.
 """
 half(x::Number) = oftype(x,0.5)
@@ -14,20 +14,24 @@ half(x::Integer) = half(float(x))
 half{T<:Number}(::Type{T}) = convert(T,0.5)
 half{T<:Integer}(::Type{T}) = half(AbstractFloat)
 
-"""
+doc"""
 Compute a typed 2.
 """
 two(x::Number) = oftype(x,2)
 two{T<:Number}(::Type{T}) = convert(T,2)
 
-"""
-The Kronecker δ function.
+doc"""
+The Kronecker ``\delta`` function:
+
+```math
+\delta_{k,j} = \left\{\begin{array}{ccc} 1 & {\rm for} & k = j,\\ 0 & {\rm for} & k \ne j.\end{array}\right.
+```
 """
 δ(k::Integer,j::Integer) = k == j ? 1 : 0
-@vectorize_2arg Integer δ
 
-"""
-Pochhammer symbol (x)_n = Γ(x+n)/Γ(x) for the rising factorial.
+
+doc"""
+Pochhammer symbol ``(x)_n = \frac{\Gamma(x+n)}{\Gamma(x)}`` for the rising factorial.
 """
 function pochhammer(x::Number,n::Integer)
     ret = one(x)
@@ -57,8 +61,8 @@ function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
     ret
 end
 
-"""
-Stirling series for Γ(z).
+doc"""
+Stirling's asymptotic series for ``\Gamma(z)``.
 """
 stirlingseries(z) = gamma(z)*sqrt((z/π)/2)*exp(z)/z^z
 
@@ -96,7 +100,7 @@ function stirlingseries(z::Float64)
     end
 end
 
-@vectorize_1arg Number stirlingseries
+
 
 stirlingremainder(z::Number,N::Int) = (1+zeta(N))*gamma(N)/((2π)^(N+1)*z^N)/stirlingseries(z)
 stirlingremainder{T<:Number}(z::AbstractVector{T},N::Int) = (1+zeta(N))*gamma(N)/(2π)^(N+1)./z.^N./stirlingseries(z)
@@ -135,14 +139,14 @@ Anαβ{T<:Integer}(n::AbstractVector{T},α::Number,β::Number) = [ Anαβ(n[i],�
 Anαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Anαβ(n[i,j],α,β) for i=1:size(n,1), j=1:size(n,2) ]
 
 
-"""
-The Lambda function Λ(z) = Γ(z+½)/Γ(z+1) for the ratio of gamma functions.
+doc"""
+The Lambda function ``\Lambda(z) = \frac{\Gamma(z+\frac{1}{2})}{\Gamma(z+1)}`` for the ratio of gamma functions.
 """
 Λ(z::Number) = exp(lgamma(z+half(z))-lgamma(z+one(z)))
-"""
-For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for τ in Appendix B of
+doc"""
+For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for ``\tau`` in Appendix B of
 
-    I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83–C101, 2012.
+I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, *SIAM J. Sci. Comput.*, **34**:C83–C101, 2012.
 """
 function Λ(x::Float64)
     if x > 9.84475
@@ -152,10 +156,9 @@ function Λ(x::Float64)
         (x+1.0)*Λ(x+1.0)/(x+0.5)
     end
 end
-@vectorize_1arg Number Λ
 
-"""
-The Lambda function Λ(z,λ₁,λ₂) = Γ(z+λ₁)/Γ(z+λ₂) for the ratio of gamma functions.
+doc"""
+The Lambda function ``\Lambda(z,λ₁,λ₂) = \frac{\Gamma(z+\lambda_1)}{Γ(z+\lambda_2)}`` for the ratio of gamma functions.
 """
 Λ(z::Number,λ₁::Number,λ₂::Number) = exp(lgamma(z+λ₁)-lgamma(z+λ₂))
 function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
@@ -279,7 +282,7 @@ function compute_absf!{T<:AbstractFloat}(ret::Vector{T},tempsin::Vector{T},temps
     ret
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int64})
+function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
     @inbounds for i in ir
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
         ϑ = (α+half(α))/2-(α+β+m+1)*θ[i]/2
@@ -294,7 +297,7 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix
     end
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int64})
+function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
     @inbounds @simd for i in ir
         temp = inv(tempsinλm[i])
         ϑ = (m+λ)*(half(T)-θ[i])
@@ -390,11 +393,12 @@ function init_c₁c₂!(c₁::Vector,c₂::Vector,u::Vector,v::Vector,c::Vector,
 end
 
 
-"""
+doc"""
 Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
-    ∫₋₁⁺¹ T_n(x) (1-x)^α(1+x)^β dx.
-
+```math
+    \int_{-1}^{+1} T_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
+```
 """
 function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ = zeros(T,N)
@@ -408,11 +412,12 @@ function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-"""
+doc"""
 Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
-    ∫₋₁⁺¹ U_n(x) (1-x)^α(1+x)^β dx.
-
+```math
+    \int_{-1}^{+1} U_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
+```
 """
 function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ = zeros(T,N)
@@ -426,8 +431,8 @@ function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-"""
-Compute Jacobi expansion coefficients in Pₙ^(α+1,β) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+doc"""
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function incrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -437,8 +442,8 @@ function incrementα!(c::AbstractVector,α,β)
     c
 end
 
-"""
-Compute Jacobi expansion coefficients in Pₙ^(α,β+1) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+doc"""
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha,\beta+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function incrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -448,8 +453,8 @@ function incrementβ!(c::AbstractVector,α,β)
     c
 end
 
-"""
-Compute Jacobi expansion coefficients in Pₙ^(α+1,α+1) given Jacobi expansion coefficients in Pₙ^(α,α) in-place.
+doc"""
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\alpha+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\alpha)}(x)`` in-place.
 """
 function incrementαβ!(c::AbstractVector,α,β)
     @assert α == β
@@ -461,8 +466,8 @@ function incrementαβ!(c::AbstractVector,α,β)
     c
 end
 
-"""
-Compute Jacobi expansion coefficients in Pₙ^(α-1,β) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+doc"""
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha-1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function decrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -472,8 +477,8 @@ function decrementα!(c::AbstractVector,α,β)
     c
 end
 
-"""
-Compute Jacobi expansion coefficients in Pₙ^(α,β-1) given Jacobi expansion coefficients in Pₙ^(α,β) in-place.
+doc"""
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha,\beta-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function decrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -483,8 +488,8 @@ function decrementβ!(c::AbstractVector,α,β)
     c
 end
 
-"""
-Compute Jacobi expansion coefficients in Pₙ^(α-1,α-1) given Jacobi expansion coefficients in Pₙ^(α,α) in-place.
+doc"""
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha-1,\alpha-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\alpha)}(x)`` in-place.
 """
 function decrementαβ!(c::AbstractVector,α,β)
     @assert α == β

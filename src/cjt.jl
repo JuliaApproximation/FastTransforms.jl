@@ -101,7 +101,7 @@ end
 
 function *{D,T<:AbstractFloat}(p::FastTransformPlan{D,T},c::AbstractVector{Complex{T}})
     cr,ci = reim(c)
-    complex(p*cr,p*ci)
+    complex.(p*cr,p*ci)
 end
 
 function *(p::FastTransformPlan,c::AbstractMatrix)
@@ -112,27 +112,33 @@ function *(p::FastTransformPlan,c::AbstractMatrix)
 end
 
 
-"""
+doc"""
 Computes the Chebyshev expansion coefficients
-given the Jacobi expansion coefficients ``c`` with parameters ``α`` and ``β``.
+given the Jacobi expansion coefficients ``c`` with parameters ``\alpha`` and ``\beta``:
 
-See also [`icjt`](#method__icjt.1) and [`jjt`](#method__jjt.1).
+```math
+{\rm CJT} : \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x) \to \sum_{n=0}^N c_n^{\rm cheb}T_n(x).
+```
 """
 cjt(c,α,β) = plan_cjt(c,α,β)*c
 
-"""
-Computes the Jacobi expansion coefficients with parameters ``α`` and ``β``
-given the Chebyshev expansion coefficients ``c``.
+doc"""
+Computes the Jacobi expansion coefficients with parameters ``\alpha`` and ``\beta``
+given the Chebyshev expansion coefficients ``c``:
 
-See also [`cjt`](#method__cjt.1) and [`jjt`](#method__jjt.1).
+```math
+{\rm iCJT} : \sum_{n=0}^N c_n^{\rm cheb}T_n(x) \to \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x).
+```
 """
 icjt(c,α,β) = plan_icjt(c,α,β)*c
 
-"""
-Computes the Jacobi expansion coefficients with parameters ``γ`` and ``δ``
-given the Jacobi expansion coefficients ``c`` with parameters ``α`` and ``β``.
+doc"""
+Computes the Jacobi expansion coefficients with parameters ``\gamma`` and ``\delta``
+given the Jacobi expansion coefficients ``c`` with parameters ``\alpha`` and ``\beta``:
 
-See also [`cjt`](#method__cjt.1) and [`icjt`](#method__icjt.1).
+```math
+{\rm JJT} : \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x) \to \sum_{n=0}^N c_n^{\rm jac}P_n^{(\gamma,\delta)}(x).
+```
 """
 function jjt(c,α,β,γ,δ)
     if isapprox(α,γ) && isapprox(β,δ)
@@ -143,13 +149,13 @@ function jjt(c,α,β,γ,δ)
 end
 
 
-"""
+doc"""
 Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary
 arrays, normalization constants, and recurrence coefficients for a forward Chebyshev—Jacobi transform.
 
 ``c`` is the vector of coefficients; and,
 
-``α`` and ``β`` are the Jacobi parameters.
+``\alpha`` and ``\beta`` are the Jacobi parameters.
 
 Optionally:
 
@@ -157,13 +163,13 @@ Optionally:
 """
 plan_cjt(c::AbstractVector,α,β;M::Int=7) = α == β ? plan_cjt(c,α+half(α);M=M) : ForwardChebyshevJacobiPlan(c,α,β,M)
 
-"""
+doc"""
 Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary
 arrays, normalization constants, and recurrence coefficients for an inverse Chebyshev—Jacobi transform.
 
 ``c`` is the vector of coefficients; and,
 
-``α`` and ``β`` are the Jacobi parameters.
+``\alpha`` and ``\beta`` are the Jacobi parameters.
 
 Optionally:
 

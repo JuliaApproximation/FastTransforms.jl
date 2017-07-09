@@ -1,12 +1,12 @@
 clenshawcurtis_plan(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
 
-"""
+doc"""
 Compute nodes and weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.
 """
 clenshawcurtis{T<:AbstractFloat}(N::Int,α::T,β::T) = clenshawcurtis(N,α,β,clenshawcurtis_plan(zeros(T,N)))
 clenshawcurtis{T<:AbstractFloat}(N::Int,α::T,β::T,plan) = T[cospi(k/(N-one(T))) for k=0:N-1],clenshawcurtisweights(N,α,β,plan)
 
-"""
+doc"""
 Compute weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.
 """
 clenshawcurtisweights{T<:AbstractFloat}(N::Int,α::T,β::T) = clenshawcurtisweights(N,α,β,clenshawcurtis_plan(zeros(T,N)))

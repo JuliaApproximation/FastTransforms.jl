@@ -4,11 +4,16 @@ os:
   - linux
   - osx
 julia:
-  - 0.4
   - 0.5
+  - 0.6
   - nightly
+matrix:
+  allow_failures:
+    - julia: nightly
 notifications:
   email: false
+after_success:
+  - julia -e 'cd(Pkg.dir("FastTransforms")); Pkg.add("Documenter"); include(joinpath("docs", "make.jl")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
 # uncomment the following lines to override the default test script
 #script:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
