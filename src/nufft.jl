@@ -1,5 +1,5 @@
 doc"""
-Pre-compute a nonuniform fast Fourier transform of type `N`.
+Pre-computes a nonuniform fast Fourier transform of type `N`.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
 """
@@ -14,7 +14,7 @@ immutable NUFFTPlan{N,T,FFT} <: Base.DFT.Plan{T}
 end
 
 doc"""
-Computes a nonuniform fast Fourier transform of type I:
+Pre-computes a nonuniform fast Fourier transform of type I:
 
 ```math
 f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} (j-1)/N \omega_k},\quad{\rm for}\quad 1 \le j \le N.
@@ -37,7 +37,7 @@ function plan_nufft1{T<:AbstractFloat}(ω::AbstractVector{T}, ϵ::T)
 end
 
 doc"""
-Computes a nonuniform fast Fourier transform of type II:
+Pre-computes a nonuniform fast Fourier transform of type II:
 
 ```math
 f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j (k-1)},\quad{\rm for}\quad 1 \le j \le N.
@@ -59,7 +59,6 @@ function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, ϵ::T)
 end
 
 doc"""
-Computes a nonuniform fast Fourier transform of type III:
 
 ```math
 f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j \omega_k},\quad{\rm for}\quad 1 \le j \le N.
@@ -93,10 +92,8 @@ function (*){N,T,V}(p::NUFFTPlan{N,T}, x::AbstractVector{V})
     A_mul_B!(zeros(promote_type(T,V), length(x)), p, x)
 end
 
-function Base.A_mul_B!{T}(y::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVector{T})
+function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVector{T})
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
-
-    # (V.*(N*conj(ifft(In[:,t]*conj(Diagonal(c)*U),1))))*ones(K)
 
     broadcast!(*, temp, c, U)
     conj!(temp)
@@ -105,9 +102,9 @@ function Base.A_mul_B!{T}(y::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVe
     p*temp2
     conj!(temp2)
     broadcast!(*, temp, V, temp2)
-    A_mul_B!(y, temp, Ones)
+    A_mul_B!(f, temp, Ones)
 
-    y
+    f
 end
 
 function Base.A_mul_B!{T}(Y::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T})
@@ -117,7 +114,7 @@ function Base.A_mul_B!{T}(Y::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T})
     Y
 end
 
-function A_mul_B_col_J!{T}(Y::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int)
+function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int)
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast_col_J!(*, temp, C, U, J)
@@ -128,9 +125,9 @@ function A_mul_B_col_J!{T}(Y::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int
     conj!(temp2)
     broadcast!(*, temp, V, temp2)
     COLSHIFT = size(C, 1)*(J-1)
-    A_mul_B!(Y, temp, Ones, 1+COLSHIFT, 1)
+    A_mul_B!(F, temp, Ones, 1+COLSHIFT, 1)
 
-    Y
+    F
 end
 
 function broadcast_col_J!(f, temp::Matrix, C::Matrix, U::Matrix, J::Int)
@@ -144,30 +141,28 @@ function broadcast_col_J!(f, temp::Matrix, C::Matrix, U::Matrix, J::Int)
     temp
 end
 
-function Base.A_mul_B!{T}(y::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T})
+function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T})
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
-
-    # (U.*(fft(Diagonal(c)*V,1)[t+1,:]))*ones(K)
 
     broadcast!(*, temp, c, V)
     p*temp
     reindex_temp!(temp, t, temp2)
     broadcast!(*, temp, U, temp2)
-    A_mul_B!(y, temp, Ones)
+    A_mul_B!(f, temp, Ones)
 
-    y
+    f
 end
 
-function Base.A_mul_B!{T}(y::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T})
+function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T})
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast!(*, temp2, c, V)
     A_mul_B!(temp, p, temp2)
     reindex_temp!(temp, t, temp2)
     broadcast!(*, temp, U, temp2)
-    A_mul_B!(y, temp, Ones)
+    A_mul_B!(f, temp, Ones)
 
-    y
+    f
 end
 
 function reindex_temp!{T}(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T})
@@ -189,17 +184,17 @@ function recombine_rows!{T}(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T})
 end
 
 doc"""
-Pre-compute a nonuniform fast Fourier transform of type I.
+Computes a nonuniform fast Fourier transform of type I.
 """
 nufft1{T<:AbstractFloat}(c::AbstractVector, ω::AbstractVector{T}, ϵ::T) = plan_nufft1(ω, ϵ)*c
 
 doc"""
-Pre-compute a nonuniform fast Fourier transform of type II.
+Computes a nonuniform fast Fourier transform of type II.
 """
 nufft2{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ϵ::T) = plan_nufft2(x, ϵ)*c
 
 doc"""
-Pre-compute a nonuniform fast Fourier transform of type III.
+Computes a nonuniform fast Fourier transform of type III.
 """
 nufft3{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) = plan_nufft3(x, ω, ϵ)*c
 

@@ -65,6 +65,14 @@ nufft3
 ```
 
 ```@docs
+inufft1
+```
+
+```@docs
+inufft2
+```
+
+```@docs
 plan_nufft1
 ```
 
@@ -74,6 +82,14 @@ plan_nufft2
 
 ```@docs
 plan_nufft3
+```
+
+```@docs
+plan_inufft1
+```
+
+```@docs
+plan_inufft2
 ```
 
 ```@docs

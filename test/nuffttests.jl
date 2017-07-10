@@ -45,19 +45,26 @@ using FastTransforms, Base.Test
 
     for n in N, ϵ in (1e-4,1e-8,1e-12,eps(Float64))
         c = complex(rand(n))
+        err_bnd = 500*ϵ*n*norm(c)
 
-        ω = collect(0:n-1) + rand(n)
+        ω = collect(0:n-1) + 0.25*rand(n)
         exact = nudft1(c, ω)
         fast = nufft1(c, ω, ϵ)
-        @test norm(exact - fast, Inf) < 500*ϵ*n*norm(c)
+        @test norm(exact - fast, Inf) < err_bnd
 
-        x = (collect(0:n-1) + 3rand(n))/n
+        d = inufft1(fast, ω, ϵ)
+        @test norm(c - d, Inf) < err_bnd
+
+        x = (collect(0:n-1) + 0.25*rand(n))/n
         exact = nudft2(c, x)
         fast = nufft2(c, x, ϵ)
-        @test norm(exact - fast, Inf) < 500*ϵ*n*norm(c)
+        @test norm(exact - fast, Inf) < err_bnd
+
+        d = inufft2(fast, x, ϵ)
+        @test norm(c - d, Inf) < err_bnd
 
         exact = nudft3(c, x, ω)
         fast = nufft3(c, x, ω, ϵ)
-        @test norm(exact - fast, Inf) < 500*ϵ*n*norm(c)
+        @test norm(exact - fast, Inf) < err_bnd
     end
 end
