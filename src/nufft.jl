@@ -59,6 +59,7 @@ function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, ϵ::T)
 end
 
 doc"""
+Pre-computes a nonuniform fast Fourier transform of type III:
 
 ```math
 f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j \omega_k},\quad{\rm for}\quad 1 \le j \le N.
@@ -107,11 +108,11 @@ function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVe
     f
 end
 
-function Base.A_mul_B!{T}(Y::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T})
-    for J = 1:size(Y, 2)
-        A_mul_B_col_J!(Y, P, C, J)
+function Base.A_mul_B!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T})
+    for J = 1:size(F, 2)
+        A_mul_B_col_J!(F, P, C, J)
     end
-    Y
+    F
 end
 
 function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int)
