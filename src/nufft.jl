@@ -14,11 +14,7 @@ immutable NUFFTPlan{N,T,FFT} <: Base.DFT.Plan{T}
 end
 
 doc"""
-Pre-computes a nonuniform fast Fourier transform of type I:
-
-```math
-f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} (j-1)/N \omega_k},\quad{\rm for}\quad 1 \le j \le N.
-```
+Pre-computes a nonuniform fast Fourier transform of type I.
 """
 function plan_nufft1{T<:AbstractFloat}(ω::AbstractVector{T}, ϵ::T)
     N = length(ω)
@@ -37,11 +33,7 @@ function plan_nufft1{T<:AbstractFloat}(ω::AbstractVector{T}, ϵ::T)
 end
 
 doc"""
-Pre-computes a nonuniform fast Fourier transform of type II:
-
-```math
-f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j (k-1)},\quad{\rm for}\quad 1 \le j \le N.
-```
+Pre-computes a nonuniform fast Fourier transform of type II.
 """
 function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, ϵ::T)
     N = length(x)
@@ -59,11 +51,7 @@ function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, ϵ::T)
 end
 
 doc"""
-Pre-computes a nonuniform fast Fourier transform of type III:
-
-```math
-f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j \omega_k},\quad{\rm for}\quad 1 \le j \le N.
-```
+Pre-computes a nonuniform fast Fourier transform of type III.
 """
 function plan_nufft3{T<:AbstractFloat}(x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T)
     N = length(x)
@@ -185,17 +173,29 @@ function recombine_rows!{T}(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T})
 end
 
 doc"""
-Computes a nonuniform fast Fourier transform of type I.
+Computes a nonuniform fast Fourier transform of type I:
+
+```math
+f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} (j-1)/N \omega_k},\quad{\rm for}\quad 1 \le j \le N.
+```
 """
 nufft1{T<:AbstractFloat}(c::AbstractVector, ω::AbstractVector{T}, ϵ::T) = plan_nufft1(ω, ϵ)*c
 
 doc"""
-Computes a nonuniform fast Fourier transform of type II.
+Computes a nonuniform fast Fourier transform of type II:
+
+```math
+f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j (k-1)},\quad{\rm for}\quad 1 \le j \le N.
+```
 """
 nufft2{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ϵ::T) = plan_nufft2(x, ϵ)*c
 
 doc"""
-Computes a nonuniform fast Fourier transform of type III.
+Computes a nonuniform fast Fourier transform of type III:
+
+```math
+f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j \omega_k},\quad{\rm for}\quad 1 \le j \le N.
+```
 """
 nufft3{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) = plan_nufft3(x, ω, ϵ)*c
 
