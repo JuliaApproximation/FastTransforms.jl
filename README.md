@@ -83,6 +83,7 @@ The NUFFTs are implemented thanks to [Alex Townsend](https://github.com/ajt60gai
  - `nufft3 ( = nufft)` assumes nonuniform samples and noninteger frequencies;
  - `inufft1` inverts an `nufft1`; and,
  - `inufft2` inverts an `nufft2`.
+
 Here is an example:
 ```julia
 julia> n = 10^4;
