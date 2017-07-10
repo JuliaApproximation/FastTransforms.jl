@@ -75,6 +75,34 @@ is valid for the half-open square `(α,β) ∈ (-1/2,1/2]^2`. Therefore, the fas
 when the parameters are inside. If the parameters `(α,β)` are not exceptionally beyond the square,
 then increment/decrement operators are used with linear complexity (and linear conditioning) in the degree.
 
+## Nonuniform fast Fourier transforms
+
+The NUFFTs are implemented thanks to [Alex Townsend](https://github.com/ajt60gaibb). `nufft1` assumes uniform samples and noninteger frequencies, while `nufft2` assumes nonuniform samples and integer frequencies.
+```julia
+julia> n = 10^4;
+
+julia> c = complex(rand(n));
+
+julia> ω = collect(0:n-1) + rand(n);
+
+julia> nufft1(c, ω, eps());
+
+julia> p1 = plan_nufft1(ω, eps());
+
+julia> @time p1*c;
+  0.002383 seconds (6 allocations: 156.484 KiB)
+
+julia> x = (collect(0:n-1) + 3rand(n))/n;
+
+julia> nufft2(c, x, eps());
+
+julia> p2 = plan_nufft2(x, eps());
+
+julia> @time p2*c;
+  0.001478 seconds (6 allocations: 156.484 KiB)
+
+```
+
 ## The Padua Transform
 
 The Padua transform and its inverse are implemented thanks to [Michael Clarke](https://github.com/MikeAClarke). These are optimized methods designed for computing the bivariate Chebyshev coefficients by interpolating a bivariate function at the Padua points on `[-1,1]^2`.
@@ -87,7 +115,7 @@ julia> N = div((n+1)*(n+2),2);
 julia> v = rand(N); # The length of v is the number of Padua points
 
 julia> @time norm(ipaduatransform(paduatransform(v))-v)
-0.006571 seconds (846 allocations: 1.746 MiB)
+  0.006571 seconds (846 allocations: 1.746 MiB)
 3.123637691861415e-14
 
 ```
@@ -126,10 +154,12 @@ As with other fast transforms, `plan_sph2fourier` saves effort by caching the pr
 
    [2]  N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, *SIAM J. Sci. Comput.*, **36**:A148—A167, 2014.
 
-   [3] J. Keiner. <a href="http://dx.doi.org/10.1137/070703065">Computing with expansions in Gegenbauer polynomials</a>, *SIAM J. Sci. Comput.*, **31**:2151—2171, 2009.
+   [3]  J. Keiner. <a href="http://dx.doi.org/10.1137/070703065">Computing with expansions in Gegenbauer polynomials</a>, *SIAM J. Sci. Comput.*, **31**:2151—2171, 2009.
 
-   [4]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, in press at *IMA J. Numer. Anal.*, 2017.
+   [4]  D. Ruiz—Antolín and A. Townsend. <a href="https://arxiv.org/abs/1701.04492">A nonuniform fast Fourier transform based on low rank approximation</a>, arXiv:1701.04492, 2017.
 
-   [5]  R. M. Slevinsky. <a href="https://arxiv.org/abs/1705.05448">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, arXiv:1705.05448, 2017.
+   [5]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, in press at *IMA J. Numer. Anal.*, 2017.
 
-   [6]  A. Townsend, M. Webb, and S. Olver. <a href="https://doi.org/10.1090/mcom/3277">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, in press at *Math. Comp.*, 2017.
+   [6]  R. M. Slevinsky. <a href="https://arxiv.org/abs/1705.05448">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, arXiv:1705.05448, 2017.
+
+   [7]  A. Townsend, M. Webb, and S. Olver. <a href="https://doi.org/10.1090/mcom/3277">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, in press at *Math. Comp.*, 2017.

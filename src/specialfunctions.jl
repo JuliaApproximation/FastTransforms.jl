@@ -170,6 +170,34 @@ function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
 end
 Λ{T<:Number}(x::AbstractArray{T},λ₁::Number,λ₂::Number) = promote_type(T,typeof(λ₁),typeof(λ₂))[ Λ(x[i],λ₁,λ₂) for i in eachindex(x) ]
 
+## TODO: deprecate when Lambert-W is supported in a mainstream repository such as SpecialFunctions.jl
+doc"""
+The principal branch of the Lambert-W function, defined by ``x = W_0(x) e^{W_0(x)}``, computed using Halley's method for ``x \in [-e^{-1},\infty)``.
+"""
+function lambertw(x::AbstractFloat)
+    if x < -exp(-one(x))
+        return throw(DomainError())
+    elseif x == -exp(-one(x))
+        return -one(x)
+    elseif x < 0
+        w0 = e*x/(1+inv(inv(sqrt(2*e*x+2))+inv(e-1)-inv(sqrt(2))))
+    else
+        log1px = log1p(x)
+        w0 = log1px*(1-log1p(log1px)/(2+log1px))
+    end
+    expw0 = exp(w0)
+    w1 = w0 - (w0*expw0 - x)/((w0 + 1)*expw0 -
+        (w0 + 2) * (w0*expw0 - x)/(2w0 + 2))
+    while abs(w1/w0 - 1) > 2eps(typeof(x))
+        w0 = w1
+        expw0 = exp(w0)
+        w1 = w0 - (w0*expw0 - x)/((w0 + 1)*expw0 -
+            (w0 + 2) * (w0*expw0 - x)/(2w0 + 2))
+    end
+    return w1
+end
+lambertw(x::Real) = lambertw(float(x))
+
 
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
 Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)

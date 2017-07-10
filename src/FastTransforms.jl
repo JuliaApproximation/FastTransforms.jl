@@ -16,11 +16,14 @@ export normleg2cheb, cheb2normleg, normleg12cheb2, cheb22normleg1
 export plan_leg2cheb, plan_cheb2leg
 export plan_normleg2cheb, plan_cheb2normleg
 export plan_normleg12cheb2, plan_cheb22normleg1
+
 export gaunt
+
 export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
 export plan_paduatransform!, plan_ipaduatransform!
+
 export nufft, nufft1, nufft2
-export nufft_plan, nufft1_plan, nufft2_plan
+export plan_nufft, plan_nufft1, plan_nufft2
 
 export SlowSphericalHarmonicPlan, FastSphericalHarmonicPlan, ThinSphericalHarmonicPlan
 export sph2fourier, fourier2sph, plan_sph2fourier

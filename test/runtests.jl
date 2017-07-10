@@ -4,6 +4,8 @@ srand(0)
 
 include("basictests.jl")
 
+include("nuffttests.jl")
+
 include("chebyshevjacobitests.jl")
 
 include("chebyshevlegendretests.jl")

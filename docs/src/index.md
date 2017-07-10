@@ -53,6 +53,22 @@ plan_icjt
 ```
 
 ```@docs
+nufft1
+```
+
+```@docs
+nufft2
+```
+
+```@docs
+plan_nufft1
+```
+
+```@docs
+plan_nufft2
+```
+
+```@docs
 paduatransform
 ```
 
@@ -110,6 +126,10 @@ FastTransforms.δ
 
 ```@docs
 FastTransforms.Λ
+```
+
+```@docs
+FastTransforms.lambertw
 ```
 
 ```@docs
