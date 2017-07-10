@@ -77,7 +77,10 @@ then increment/decrement operators are used with linear complexity (and linear c
 
 ## Nonuniform fast Fourier transforms
 
-The NUFFTs are implemented thanks to [Alex Townsend](https://github.com/ajt60gaibb). `nufft1` assumes uniform samples and noninteger frequencies, while `nufft2` assumes nonuniform samples and integer frequencies.
+The NUFFTs are implemented thanks to [Alex Townsend](https://github.com/ajt60gaibb):
+ - `nufft1` assumes uniform samples and noninteger frequencies;
+ - `nufft2` assumes nonuniform samples and integer frequencies; and,
+ - `nufft3 ( = nufft)` assumes nonuniform samples and noninteger frequencies.
 ```julia
 julia> n = 10^4;
 
@@ -100,6 +103,13 @@ julia> p2 = plan_nufft2(x, eps());
 
 julia> @time p2*c;
   0.001478 seconds (6 allocations: 156.484 KiB)
+
+julia> nufft3(c, x, ω, eps());
+
+julia> p3 = plan_nufft3(x, ω, eps());
+
+julia> @time p3*c;
+  0.058999 seconds (6 allocations: 156.484 KiB)
 
 ```
 

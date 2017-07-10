@@ -61,11 +61,19 @@ nufft2
 ```
 
 ```@docs
+nufft3
+```
+
+```@docs
 plan_nufft1
 ```
 
 ```@docs
 plan_nufft2
+```
+
+```@docs
+plan_nufft3
 ```
 
 ```@docs
