@@ -97,6 +97,86 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#FastTransforms.nufft1",
+    "page": "Home",
+    "title": "FastTransforms.nufft1",
+    "category": "Function",
+    "text": "Computes a nonuniform fast Fourier transform of type I:\n\nf_j = sum_k=1^N c_k e^-2pirm i (j-1)N omega_kquadrm forquad 1 le j le N\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type I-I:\n\nf_j_1j_2 = sum_k_1=1^Msum_k_2=1^N C_k_1k_2 e^-2pirm i ((j_1-1)M omega_k_1 + (j_2-1)N pi_k_2)quadrm forquad 1 le j_1 le Mquad 1 le j_2 le N\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.nufft2",
+    "page": "Home",
+    "title": "FastTransforms.nufft2",
+    "category": "Function",
+    "text": "Computes a nonuniform fast Fourier transform of type II:\n\nf_j = sum_k=1^N c_k e^-2pirm i x_j (k-1)quadrm forquad 1 le j le N\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type II-II:\n\nf_j_1j_2 = sum_k_1=1^Msum_k_2=1^N C_k_1k_2 e^-2pirm i (x_j_1(k_1-1) + x_j_2(k_2-1))quadrm forquad 1 le j_1 le Mquad 1 le j_2 le N\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.nufft3",
+    "page": "Home",
+    "title": "FastTransforms.nufft3",
+    "category": "Function",
+    "text": "Computes a nonuniform fast Fourier transform of type III:\n\nf_j = sum_k=1^N c_k e^-2pirm i x_j omega_kquadrm forquad 1 le j le N\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.inufft1",
+    "page": "Home",
+    "title": "FastTransforms.inufft1",
+    "category": "Function",
+    "text": "Computes an inverse nonuniform fast Fourier transform of type I.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.inufft2",
+    "page": "Home",
+    "title": "FastTransforms.inufft2",
+    "category": "Function",
+    "text": "Computes an inverse nonuniform fast Fourier transform of type II.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_nufft1",
+    "page": "Home",
+    "title": "FastTransforms.plan_nufft1",
+    "category": "Function",
+    "text": "Pre-computes a nonuniform fast Fourier transform of type I.\n\n\n\nPre-computes a 2D nonuniform fast Fourier transform of type I-I.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_nufft2",
+    "page": "Home",
+    "title": "FastTransforms.plan_nufft2",
+    "category": "Function",
+    "text": "Pre-computes a nonuniform fast Fourier transform of type II.\n\n\n\nPre-computes a 2D nonuniform fast Fourier transform of type II-II.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_nufft3",
+    "page": "Home",
+    "title": "FastTransforms.plan_nufft3",
+    "category": "Function",
+    "text": "Pre-computes a nonuniform fast Fourier transform of type III.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_inufft1",
+    "page": "Home",
+    "title": "FastTransforms.plan_inufft1",
+    "category": "Function",
+    "text": "Pre-computes an inverse nonuniform fast Fourier transform of type I.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_inufft2",
+    "page": "Home",
+    "title": "FastTransforms.plan_inufft2",
+    "category": "Function",
+    "text": "Pre-computes an inverse nonuniform fast Fourier transform of type II.\n\n\n\n"
+},
+
+{
     "location": "index.html#FastTransforms.paduatransform",
     "page": "Home",
     "title": "FastTransforms.paduatransform",
@@ -157,7 +237,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Fast Transforms",
     "category": "section",
-    "text": "leg2chebcheb2legplan_leg2chebplan_cheb2legcjticjtjjtplan_cjtplan_icjtpaduatransformipaduatransformplan_paduatransform!plan_ipaduatransform!sph2fourierfourier2sphplan_sph2fourier"
+    "text": "leg2chebcheb2legplan_leg2chebplan_cheb2legcjticjtjjtplan_cjtplan_icjtnufft1nufft2nufft3inufft1inufft2plan_nufft1plan_nufft2plan_nufft3plan_inufft1plan_inufft2paduatransformipaduatransformplan_paduatransform!plan_ipaduatransform!sph2fourierfourier2sphplan_sph2fourier"
 },
 
 {
@@ -222,6 +302,14 @@ var documenterSearchIndex = {"docs": [
     "title": "FastTransforms.Λ",
     "category": "Function",
     "text": "The Lambda function Lambda(z) = fracGamma(z+frac12)Gamma(z+1) for the ratio of gamma functions.\n\n\n\nFor 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for tau in Appendix B of\n\nI. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83–C101, 2012.\n\n\n\nThe Lambda function Lambda(z) = fracGamma(z+lambda_1)(z+lambda_2) for the ratio of gamma functions.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.lambertw",
+    "page": "Home",
+    "title": "FastTransforms.lambertw",
+    "category": "Function",
+    "text": "The principal branch of the Lambert-W function, defined by x = W_0(x) e^W_0(x), computed using Halley's method for x in -e^-1infty).\n\n\n\n"
 },
 
 {
@@ -357,7 +445,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Internal Methods",
     "category": "section",
-    "text": "FastTransforms.halfFastTransforms.twoFastTransforms.δFastTransforms.ΛFastTransforms.pochhammerFastTransforms.stirlingseriesFastTransforms.clenshawcurtisFastTransforms.clenshawcurtisweightsFastTransforms.fejer1FastTransforms.fejer2FastTransforms.fejerweights1FastTransforms.fejerweights2FastTransforms.chebyshevjacobimoments1FastTransforms.chebyshevjacobimoments2FastTransforms.incrementα!FastTransforms.incrementβ!FastTransforms.incrementαβ!FastTransforms.decrementα!FastTransforms.decrementβ!FastTransforms.decrementαβ!"
+    "text": "FastTransforms.halfFastTransforms.twoFastTransforms.δFastTransforms.ΛFastTransforms.lambertwFastTransforms.pochhammerFastTransforms.stirlingseriesFastTransforms.clenshawcurtisFastTransforms.clenshawcurtisweightsFastTransforms.fejer1FastTransforms.fejer2FastTransforms.fejerweights1FastTransforms.fejerweights2FastTransforms.chebyshevjacobimoments1FastTransforms.chebyshevjacobimoments2FastTransforms.incrementα!FastTransforms.incrementβ!FastTransforms.incrementαβ!FastTransforms.decrementα!FastTransforms.decrementβ!FastTransforms.decrementαβ!"
 },
 
 ]}
