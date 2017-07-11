@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.nufft1",
     "category": "Function",
-    "text": "Computes a nonuniform fast Fourier transform of type I:\n\nf_j = sum_k=1^N c_k e^-2pirm i (j-1)N omega_kquadrm forquad 1 le j le N\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type I-I:\n\nf_j_1j_2 = sum_k_1=1^Msum_k_2=1^N C_k_1k_2 e^-2pirm i ((j_1-1)M omega_k_1 + (j_2-1)N pi_k_2)quadrm forquad 1 le j_1 le Mquad 1 le j_2 le N\n\n\n\n"
+    "text": "Computes a nonuniform fast Fourier transform of type I:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i fracjN omega_kquadrm forquad 0 le j le N-1\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type I-I:\n\nf_ij = sum_k=0^M-1sum_ell=0^N-1 C_kell e^-2pirm i (fraciM omega_k + fracjN pi_ell)quadrm forquad 0 le i le M-1quad 0 le j le N-1\n\n\n\n"
 },
 
 {
@@ -109,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.nufft2",
     "category": "Function",
-    "text": "Computes a nonuniform fast Fourier transform of type II:\n\nf_j = sum_k=1^N c_k e^-2pirm i x_j (k-1)quadrm forquad 1 le j le N\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type II-II:\n\nf_j_1j_2 = sum_k_1=1^Msum_k_2=1^N C_k_1k_2 e^-2pirm i (x_j_1(k_1-1) + x_j_2(k_2-1))quadrm forquad 1 le j_1 le Mquad 1 le j_2 le N\n\n\n\n"
+    "text": "Computes a nonuniform fast Fourier transform of type II:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i x_j kquadrm forquad 0 le j le N-1\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type II-II:\n\nf_ij = sum_k=0^M-1sum_ell=0^N-1 C_kell e^-2pirm i (x_i k + x_j ell)quadrm forquad 0 le i le M-1quad 0 le j le N-1\n\n\n\n"
 },
 
 {
@@ -117,7 +117,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.nufft3",
     "category": "Function",
-    "text": "Computes a nonuniform fast Fourier transform of type III:\n\nf_j = sum_k=1^N c_k e^-2pirm i x_j omega_kquadrm forquad 1 le j le N\n\n\n\n"
+    "text": "Computes a nonuniform fast Fourier transform of type III:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i x_j omega_kquadrm forquad 0 le j le N-1\n\n\n\n"
 },
 
 {
