@@ -77,8 +77,8 @@ function plan_nufft3{T<:AbstractFloat}(x::AbstractVector{T}, ω::AbstractVector{
     NUFFTPlan{3, eltype(U), typeof(p)}(U, V, p, t, temp, temp2, Ones)
 end
 
-function (*){N,T,V}(p::NUFFTPlan{N,T}, x::AbstractVector{V})
-    A_mul_B!(zeros(promote_type(T,V), length(x)), p, x)
+function (*){N,T,V}(p::NUFFTPlan{N,T}, c::AbstractArray{V})
+    A_mul_B!(zeros(promote_type(T,V), size(c)), p, c)
 end
 
 function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVector{T})
@@ -96,11 +96,22 @@ function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVe
     f
 end
 
-function Base.A_mul_B!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T})
+function Base.A_mul_B!{N,T}(F::Matrix{T}, P::NUFFTPlan{N,T}, C::Matrix{T})
     for J = 1:size(F, 2)
         A_mul_B_col_J!(F, P, C, J)
     end
     F
+end
+
+function broadcast_col_J!(f, temp::Matrix, C::Matrix, U::Matrix, J::Int)
+    N = size(C, 1)
+    COLSHIFT = N*(J-1)
+    @inbounds for j = 1:size(temp, 2)
+        for i = 1:N
+            temp[i,j] = f(C[i+COLSHIFT],U[i,j])
+        end
+    end
+    temp
 end
 
 function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int)
@@ -119,17 +130,6 @@ function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int
     F
 end
 
-function broadcast_col_J!(f, temp::Matrix, C::Matrix, U::Matrix, J::Int)
-    N = size(C, 1)
-    COLSHIFT = N*(J-1)
-    @inbounds for j = 1:size(temp, 2)
-        for i = 1:N
-            temp[i,j] = f(C[i+COLSHIFT],U[i,j])
-        end
-    end
-    temp
-end
-
 function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T})
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
@@ -140,6 +140,19 @@ function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVe
     A_mul_B!(f, temp, Ones)
 
     f
+end
+
+function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{2,T}, C::Matrix{T}, J::Int)
+    U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
+
+    broadcast_col_J!(*, temp, C, V, J)
+    p*temp
+    reindex_temp!(temp, t, temp2)
+    broadcast!(*, temp, U, temp2)
+    COLSHIFT = size(C, 1)*(J-1)
+    A_mul_B!(F, temp, Ones, 1+COLSHIFT, 1)
+
+    F
 end
 
 function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T})
@@ -201,6 +214,59 @@ nufft3{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVe
 
 const nufft = nufft3
 const plan_nufft = plan_nufft3
+
+
+doc"""
+Pre-computes a 2D nonuniform fast Fourier transform.
+
+For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
+"""
+immutable NUFFT2DPlan{T,P1,P2} <: Base.DFT.Plan{T}
+    p1::P1
+    p2::P2
+    temp::Vector{T}
+end
+
+doc"""
+Pre-computes a 2D nonuniform fast Fourier transform of type II-II.
+"""
+function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T)
+    p1 = plan_nufft2(x, ϵ)
+    p2 = plan_nufft2(y, ϵ)
+    temp = zeros(Complex{T}, length(y))
+
+    NUFFT2DPlan(p1, p2, temp)
+end
+
+function (*){T,V}(p::NUFFT2DPlan{T}, C::Matrix{V})
+    A_mul_B!(zeros(promote_type(T,V), size(C)), p, C)
+end
+
+function Base.A_mul_B!{T}(F::Matrix{T}, P::NUFFT2DPlan{T}, C::Matrix{T})
+    p1, p2, temp = P.p1, P.p2, P.temp
+
+    # Apply 1D x-plan to all columns
+    A_mul_B!(F, p1, C)
+
+    # Apply 1D y-plan to all rows
+    for i = 1:size(C, 1)
+        @inbounds for j = 1:size(F, 2) temp[j] = F[i,j] end
+        A_mul_B!(temp, p2, temp)
+        @inbounds for j = 1:size(F, 2) F[i,j] = temp[j] end
+    end
+
+    F
+end
+
+doc"""
+Computes a 2D nonuniform fast Fourier transform of type II-II:
+
+```math
+f_{j_1,j_2} = \sum_{k_1=1}^M\sum_{k_2=1}^N C_{k_1,k_2} e^{-2\pi{\rm i} (x_{j_1}(k_1-1) + x_{j_2}(k_2-1))},\quad{\rm for}\quad 1 \le j_1 \le M,\quad 1 \le j_2 \le N.
+```
+"""
+nufft2{T<:AbstractFloat}(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) = plan_nufft2(x, y, ϵ)*C
+
 
 FindK{T<:AbstractFloat}(γ::T, ϵ::T) = Int(ceil(5*γ*exp(lambertw(log(10/ϵ)/γ/7))))
 AssignClosestEquispacedGridpoint{T<:AbstractFloat}(x::AbstractVector{T})::AbstractVector{T} = round.([Int], size(x, 1)*x)

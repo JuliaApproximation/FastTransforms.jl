@@ -67,4 +67,30 @@ using FastTransforms, Base.Test
         fast = nufft3(c, x, ω, ϵ)
         @test norm(exact - fast, Inf) < err_bnd
     end
+
+    function nudft2{T<:AbstractFloat}(C::Matrix{Complex{T}}, x::AbstractVector{T}, y::AbstractVector{T})
+        # Nonuniform discrete Fourier transform of type II-II
+
+        M, N = size(C)
+        output = zeros(C)
+        @inbounds for j1 = 1:M, j2 = 1:N
+            for k1 = 1:M, k2 = 1:N
+                output[j1,j2] += exp(-2*T(π)*im*(x[j1]*(k1-1)+y[j2]*(k2-1)))*C[k1,k2]
+            end
+        end
+        return output
+    end
+
+    N = round.([Int],logspace(1,1.7,5))
+
+    for n in N, ϵ in (1e-4,1e-8,1e-12,eps(Float64))
+        C = complex(rand(n,n))
+        err_bnd = 500*ϵ*n*norm(C)
+
+        x = (collect(0:n-1) + 0.25*rand(n))/n
+        y = (collect(0:n-1) + 0.25*rand(n))/n
+        exact = nudft2(C, x, y)
+        fast = nufft2(C, x, y, ϵ)
+        @test norm(exact - fast, Inf) < err_bnd
+    end
 end
