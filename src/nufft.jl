@@ -202,7 +202,7 @@ doc"""
 Computes a nonuniform fast Fourier transform of type I:
 
 ```math
-f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} (j-1)/N \omega_k},\quad{\rm for}\quad 1 \le j \le N.
+f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} \frac{j}{N} \omega_k},\quad{\rm for}\quad 0 \le j \le N-1.
 ```
 """
 nufft1{T<:AbstractFloat}(c::AbstractVector, ω::AbstractVector{T}, ϵ::T) = plan_nufft1(ω, ϵ)*c
@@ -211,7 +211,7 @@ doc"""
 Computes a nonuniform fast Fourier transform of type II:
 
 ```math
-f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j (k-1)},\quad{\rm for}\quad 1 \le j \le N.
+f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} x_j k},\quad{\rm for}\quad 0 \le j \le N-1.
 ```
 """
 nufft2{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ϵ::T) = plan_nufft2(x, ϵ)*c
@@ -220,7 +220,7 @@ doc"""
 Computes a nonuniform fast Fourier transform of type III:
 
 ```math
-f_j = \sum_{k=1}^N c_k e^{-2\pi{\rm i} x_j \omega_k},\quad{\rm for}\quad 1 \le j \le N.
+f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} x_j \omega_k},\quad{\rm for}\quad 0 \le j \le N-1.
 ```
 """
 nufft3{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) = plan_nufft3(x, ω, ϵ)*c
@@ -286,7 +286,7 @@ doc"""
 Computes a 2D nonuniform fast Fourier transform of type I-I:
 
 ```math
-f_{j_1,j_2} = \sum_{k_1=1}^M\sum_{k_2=1}^N C_{k_1,k_2} e^{-2\pi{\rm i} ((j_1-1)/M \omega_{k_1} + (j_2-1)/N \pi_{k_2})},\quad{\rm for}\quad 1 \le j_1 \le M,\quad 1 \le j_2 \le N.
+f_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (\frac{i}{M} \omega_k + \frac{j}{N} \pi_{\ell})},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
 ```
 """
 nufft1{T<:AbstractFloat}(C::Matrix, ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) = plan_nufft1(ω, π, ϵ)*C
@@ -295,7 +295,7 @@ doc"""
 Computes a 2D nonuniform fast Fourier transform of type II-II:
 
 ```math
-f_{j_1,j_2} = \sum_{k_1=1}^M\sum_{k_2=1}^N C_{k_1,k_2} e^{-2\pi{\rm i} (x_{j_1}(k_1-1) + x_{j_2}(k_2-1))},\quad{\rm for}\quad 1 \le j_1 \le M,\quad 1 \le j_2 \le N.
+f_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (x_i k + x_j \ell)},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
 ```
 """
 nufft2{T<:AbstractFloat}(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) = plan_nufft2(x, y, ϵ)*C
