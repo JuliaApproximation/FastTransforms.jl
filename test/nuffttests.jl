@@ -68,6 +68,19 @@ using FastTransforms, Base.Test
         @test norm(exact - fast, Inf) < err_bnd
     end
 
+    function nudft1{T<:AbstractFloat}(C::Matrix{Complex{T}}, ω1::AbstractVector{T}, ω2::AbstractVector{T})
+        # Nonuniform discrete Fourier transform of type I-I
+
+        M, N = size(C)
+        output = zeros(C)
+        @inbounds for j1 = 1:M, j2 = 1:N
+            for k1 = 1:M, k2 = 1:N
+                output[j1,j2] += exp(-2*T(π)*im*((j1-1)/M*ω1[k1]+(j2-1)/N*ω2[k2]))*C[k1,k2]
+            end
+        end
+        return output
+    end
+
     function nudft2{T<:AbstractFloat}(C::Matrix{Complex{T}}, x::AbstractVector{T}, y::AbstractVector{T})
         # Nonuniform discrete Fourier transform of type II-II
 
@@ -89,6 +102,13 @@ using FastTransforms, Base.Test
 
         x = (collect(0:n-1) + 0.25*rand(n))/n
         y = (collect(0:n-1) + 0.25*rand(n))/n
+        ω1 = collect(0:n-1) + 0.25*rand(n)
+        ω2 = collect(0:n-1) + 0.25*rand(n)
+
+        exact = nudft1(C, ω1, ω2)
+        fast = nufft1(C, ω1, ω2, ϵ)
+        @test norm(exact - fast, Inf) < err_bnd
+
         exact = nudft2(C, x, y)
         fast = nufft2(C, x, y, ϵ)
         @test norm(exact - fast, Inf) < err_bnd

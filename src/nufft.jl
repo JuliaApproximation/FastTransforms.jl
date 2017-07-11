@@ -167,6 +167,19 @@ function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVe
     f
 end
 
+function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int)
+    U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
+
+    broadcast_col_J!(*, temp2, C, V, J)
+    A_mul_B!(temp, p, temp2)
+    reindex_temp!(temp, t, temp2)
+    broadcast!(*, temp, U, temp2)
+    COLSHIFT = size(C, 1)*(J-1)
+    A_mul_B!(F, temp, Ones, 1+COLSHIFT, 1)
+
+    F
+end
+
 function reindex_temp!{T}(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T})
     @inbounds for j = 1:size(temp, 2)
         for i = 1:size(temp, 1)
@@ -228,6 +241,17 @@ immutable NUFFT2DPlan{T,P1,P2} <: Base.DFT.Plan{T}
 end
 
 doc"""
+Pre-computes a 2D nonuniform fast Fourier transform of type I-I.
+"""
+function plan_nufft1{T<:AbstractFloat}(ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T)
+    p1 = plan_nufft1(ω, ϵ)
+    p2 = plan_nufft1(π, ϵ)
+    temp = zeros(Complex{T}, length(π))
+
+    NUFFT2DPlan(p1, p2, temp)
+end
+
+doc"""
 Pre-computes a 2D nonuniform fast Fourier transform of type II-II.
 """
 function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T)
@@ -257,6 +281,15 @@ function Base.A_mul_B!{T}(F::Matrix{T}, P::NUFFT2DPlan{T}, C::Matrix{T})
 
     F
 end
+
+doc"""
+Computes a 2D nonuniform fast Fourier transform of type I-I:
+
+```math
+f_{j_1,j_2} = \sum_{k_1=1}^M\sum_{k_2=1}^N C_{k_1,k_2} e^{-2\pi{\rm i} ((j_1-1)/M \omega_{k_1} + (j_2-1)/N \pi_{k_2})},\quad{\rm for}\quad 1 \le j_1 \le M,\quad 1 \le j_2 \le N.
+```
+"""
+nufft1{T<:AbstractFloat}(C::Matrix, ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) = plan_nufft1(ω, π, ϵ)*C
 
 doc"""
 Computes a 2D nonuniform fast Fourier transform of type II-II:
