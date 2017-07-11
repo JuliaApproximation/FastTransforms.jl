@@ -1,15 +1,16 @@
 using FastTransforms, Base.Test, LowRankApprox
 
-import FastTransforms: Cnλ, Λ, Cnαβ, Anαβ, fejer1, fejer2, clenshawcurtis
+import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ, fejer1, fejer2, clenshawcurtis
 
 @testset "Special functions" begin
     n = 0:1000_000
     λ = 0.123
-    @time FastTransforms.Cnλ(n,λ);
-    @time FastTransforms.Cnλ(n,λ);
+    @time FastTransforms.Cnλ(n,λ)
+    @time FastTransforms.Cnλ(n,λ)
 
-    x = linspace(0,20,81);
-    @test norm((Λ.(x)-Λ.(big.(x)))./Λ.(big.(x)),Inf) < 2eps()
+    x = linspace(0,20,81)
+    @test norm((Λ.(x)-Λ.(big.(x)))./Λ.(x),Inf) < 2eps()
+    @test norm((lambertw.(x)-lambertw.(big.(x)))./max.(lambertw.(x),1), Inf) < 2eps()
 
     x = 0:0.5:10_000
     λ₁,λ₂ = 0.125,0.875
