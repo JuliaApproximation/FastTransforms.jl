@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.nufft1",
     "category": "Function",
-    "text": "Computes a nonuniform fast Fourier transform of type I:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i fracjN omega_kquadrm forquad 0 le j le N-1\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type I-I:\n\nf_ij = sum_k=0^M-1sum_ell=0^N-1 C_kell e^-2pirm i (fraciM omega_k + fracjN pi_ell)quadrm forquad 0 le i le M-1quad 0 le j le N-1\n\n\n\n"
+    "text": "Computes a nonuniform fast Fourier transform of type I:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i fracjN omega_kquadrm forquad 0 le j le N-1\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type I-I:\n\nF_ij = sum_k=0^M-1sum_ell=0^N-1 C_kell e^-2pirm i (fraciM omega_k + fracjN pi_ell)quadrm forquad 0 le i le M-1quad 0 le j le N-1\n\n\n\n"
 },
 
 {
@@ -109,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.nufft2",
     "category": "Function",
-    "text": "Computes a nonuniform fast Fourier transform of type II:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i x_j kquadrm forquad 0 le j le N-1\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type II-II:\n\nf_ij = sum_k=0^M-1sum_ell=0^N-1 C_kell e^-2pirm i (x_i k + x_j ell)quadrm forquad 0 le i le M-1quad 0 le j le N-1\n\n\n\n"
+    "text": "Computes a nonuniform fast Fourier transform of type II:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i x_j kquadrm forquad 0 le j le N-1\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type II-II:\n\nF_ij = sum_k=0^M-1sum_ell=0^N-1 C_kell e^-2pirm i (x_i k + y_j ell)quadrm forquad 0 le i le M-1quad 0 le j le N-1\n\n\n\n"
 },
 
 {
