@@ -25,14 +25,6 @@ cheb2leg
 ```
 
 ```@docs
-plan_leg2cheb
-```
-
-```@docs
-plan_cheb2leg
-```
-
-```@docs
 cjt
 ```
 
@@ -42,14 +34,6 @@ icjt
 
 ```@docs
 jjt
-```
-
-```@docs
-plan_cjt
-```
-
-```@docs
-plan_icjt
 ```
 
 ```@docs
@@ -73,6 +57,42 @@ inufft2
 ```
 
 ```@docs
+paduatransform
+```
+
+```@docs
+ipaduatransform
+```
+
+```@docs
+sph2fourier
+```
+
+```@docs
+fourier2sph
+```
+
+## Planning The Fast Transforms
+
+Most transforms have separate forward and inverse plans. In some instances, however, the inverse is in the sense of least-squares, and therefore only the forward transform is planned.
+
+```@docs
+plan_leg2cheb
+```
+
+```@docs
+plan_cheb2leg
+```
+
+```@docs
+plan_cjt
+```
+
+```@docs
+plan_icjt
+```
+
+```@docs
 plan_nufft1
 ```
 
@@ -93,27 +113,11 @@ plan_inufft2
 ```
 
 ```@docs
-paduatransform
-```
-
-```@docs
-ipaduatransform
-```
-
-```@docs
 plan_paduatransform!
 ```
 
 ```@docs
 plan_ipaduatransform!
-```
-
-```@docs
-sph2fourier
-```
-
-```@docs
-fourier2sph
 ```
 
 ```@docs
