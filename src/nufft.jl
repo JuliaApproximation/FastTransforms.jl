@@ -286,7 +286,7 @@ doc"""
 Computes a 2D nonuniform fast Fourier transform of type I-I:
 
 ```math
-f_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (\frac{i}{M} \omega_k + \frac{j}{N} \pi_{\ell})},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
+F_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (\frac{i}{M} \omega_k + \frac{j}{N} \pi_{\ell})},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
 ```
 """
 nufft1{T<:AbstractFloat}(C::Matrix, ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) = plan_nufft1(ω, π, ϵ)*C
@@ -295,7 +295,7 @@ doc"""
 Computes a 2D nonuniform fast Fourier transform of type II-II:
 
 ```math
-f_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (x_i k + x_j \ell)},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
+F_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (x_i k + y_j \ell)},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
 ```
 """
 nufft2{T<:AbstractFloat}(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) = plan_nufft2(x, y, ϵ)*C
