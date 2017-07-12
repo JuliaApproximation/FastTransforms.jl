@@ -41,22 +41,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#FastTransforms.plan_leg2cheb",
-    "page": "Home",
-    "title": "FastTransforms.plan_leg2cheb",
-    "category": "Function",
-    "text": "Pre-computes the Legendre–Chebyshev transform.\n\n\n\n"
-},
-
-{
-    "location": "index.html#FastTransforms.plan_cheb2leg",
-    "page": "Home",
-    "title": "FastTransforms.plan_cheb2leg",
-    "category": "Function",
-    "text": "Pre-computes the Chebyshev–Legendre transform.\n\n\n\n"
-},
-
-{
     "location": "index.html#FastTransforms.cjt",
     "page": "Home",
     "title": "FastTransforms.cjt",
@@ -78,22 +62,6 @@ var documenterSearchIndex = {"docs": [
     "title": "FastTransforms.jjt",
     "category": "Function",
     "text": "Computes the Jacobi expansion coefficients with parameters gamma and delta given the Jacobi expansion coefficients c with parameters alpha and beta:\n\nrm JJT  sum_n=0^N c_n^rm jacP_n^(alphabeta)(x) to sum_n=0^N c_n^rm jacP_n^(gammadelta)(x)\n\n\n\n"
-},
-
-{
-    "location": "index.html#FastTransforms.plan_cjt",
-    "page": "Home",
-    "title": "FastTransforms.plan_cjt",
-    "category": "Function",
-    "text": "Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary arrays, normalization constants, and recurrence coefficients for a forward Chebyshev—Jacobi transform.\n\nc is the vector of coefficients; and,\n\nalpha and beta are the Jacobi parameters.\n\nOptionally:\n\nM determines the number of terms in Hahn's asymptotic expansion.\n\n\n\n"
-},
-
-{
-    "location": "index.html#FastTransforms.plan_icjt",
-    "page": "Home",
-    "title": "FastTransforms.plan_icjt",
-    "category": "Function",
-    "text": "Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary arrays, normalization constants, and recurrence coefficients for an inverse Chebyshev—Jacobi transform.\n\nc is the vector of coefficients; and,\n\nalpha and beta are the Jacobi parameters.\n\nOptionally:\n\nM determines the number of terms in Hahn's asymptotic expansion.\n\n\n\n"
 },
 
 {
@@ -137,6 +105,78 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#FastTransforms.paduatransform",
+    "page": "Home",
+    "title": "FastTransforms.paduatransform",
+    "category": "Function",
+    "text": "Padua Transform maps from interpolant values at the Padua points to the 2D Chebyshev coefficients.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.ipaduatransform",
+    "page": "Home",
+    "title": "FastTransforms.ipaduatransform",
+    "category": "Function",
+    "text": "Inverse Padua Transform maps the 2D Chebyshev coefficients to the values of the interpolation polynomial at the Padua points.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.sph2fourier",
+    "page": "Home",
+    "title": "FastTransforms.sph2fourier",
+    "category": "Function",
+    "text": "Computes the bivariate Fourier series given by the spherical harmonic expansion:\n\nrm SHT  sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi) to sum_ell=0^nsum_m=-n^n g_ell^m frace^rm i m varphisqrt2pi leftbeginarrayccoselltheta sin(ell+1)thetaendarrayright\n\nwhere the cosines are used when m is even and the sines are used when m is odd. The spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.fourier2sph",
+    "page": "Home",
+    "title": "FastTransforms.fourier2sph",
+    "category": "Function",
+    "text": "Computes the spherical harmonic expansion given by the bivariate Fourier series:\n\nrm iSHT  sum_ell=0^nsum_m=-n^n g_ell^m frace^rm i m varphisqrt2pi leftbeginarrayccoselltheta sin(ell+1)thetaendarrayright to sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi)\n\nwhere the cosines are used when m is even and the sines are used when m is odd. The spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
+},
+
+{
+    "location": "index.html#Fast-Transforms-1",
+    "page": "Home",
+    "title": "Fast Transforms",
+    "category": "section",
+    "text": "leg2chebcheb2legcjticjtjjtnufft1nufft2nufft3inufft1inufft2paduatransformipaduatransformsph2fourierfourier2sph"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_leg2cheb",
+    "page": "Home",
+    "title": "FastTransforms.plan_leg2cheb",
+    "category": "Function",
+    "text": "Pre-computes the Legendre–Chebyshev transform.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_cheb2leg",
+    "page": "Home",
+    "title": "FastTransforms.plan_cheb2leg",
+    "category": "Function",
+    "text": "Pre-computes the Chebyshev–Legendre transform.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_cjt",
+    "page": "Home",
+    "title": "FastTransforms.plan_cjt",
+    "category": "Function",
+    "text": "Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary arrays, normalization constants, and recurrence coefficients for a forward Chebyshev—Jacobi transform.\n\nc is the vector of coefficients; and,\n\nalpha and beta are the Jacobi parameters.\n\nOptionally:\n\nM determines the number of terms in Hahn's asymptotic expansion.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_icjt",
+    "page": "Home",
+    "title": "FastTransforms.plan_icjt",
+    "category": "Function",
+    "text": "Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary arrays, normalization constants, and recurrence coefficients for an inverse Chebyshev—Jacobi transform.\n\nc is the vector of coefficients; and,\n\nalpha and beta are the Jacobi parameters.\n\nOptionally:\n\nM determines the number of terms in Hahn's asymptotic expansion.\n\n\n\n"
+},
+
+{
     "location": "index.html#FastTransforms.plan_nufft1",
     "page": "Home",
     "title": "FastTransforms.plan_nufft1",
@@ -177,22 +217,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#FastTransforms.paduatransform",
-    "page": "Home",
-    "title": "FastTransforms.paduatransform",
-    "category": "Function",
-    "text": "Padua Transform maps from interpolant values at the Padua points to the 2D Chebyshev coefficients.\n\n\n\n"
-},
-
-{
-    "location": "index.html#FastTransforms.ipaduatransform",
-    "page": "Home",
-    "title": "FastTransforms.ipaduatransform",
-    "category": "Function",
-    "text": "Inverse Padua Transform maps the 2D Chebyshev coefficients to the values of the interpolation polynomial at the Padua points.\n\n\n\n"
-},
-
-{
     "location": "index.html#FastTransforms.plan_paduatransform!",
     "page": "Home",
     "title": "FastTransforms.plan_paduatransform!",
@@ -209,22 +233,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#FastTransforms.sph2fourier",
-    "page": "Home",
-    "title": "FastTransforms.sph2fourier",
-    "category": "Function",
-    "text": "Computes the bivariate Fourier series given by the spherical harmonic expansion:\n\nrm SHT  sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi) to sum_ell=0^nsum_m=-n^n g_ell^m frace^rm i m varphisqrt2pi leftbeginarrayccoselltheta sin(ell+1)thetaendarrayright\n\nwhere the cosines are used when m is even and the sines are used when m is odd. The spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
-},
-
-{
-    "location": "index.html#FastTransforms.fourier2sph",
-    "page": "Home",
-    "title": "FastTransforms.fourier2sph",
-    "category": "Function",
-    "text": "Computes the spherical harmonic expansion given by the bivariate Fourier series:\n\nrm iSHT  sum_ell=0^nsum_m=-n^n g_ell^m frace^rm i m varphisqrt2pi leftbeginarrayccoselltheta sin(ell+1)thetaendarrayright to sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi)\n\nwhere the cosines are used when m is even and the sines are used when m is odd. The spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
-},
-
-{
     "location": "index.html#FastTransforms.plan_sph2fourier",
     "page": "Home",
     "title": "FastTransforms.plan_sph2fourier",
@@ -233,11 +241,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Fast-Transforms-1",
+    "location": "index.html#Planning-The-Fast-Transforms-1",
     "page": "Home",
-    "title": "Fast Transforms",
+    "title": "Planning The Fast Transforms",
     "category": "section",
-    "text": "leg2chebcheb2legplan_leg2chebplan_cheb2legcjticjtjjtplan_cjtplan_icjtnufft1nufft2nufft3inufft1inufft2plan_nufft1plan_nufft2plan_nufft3plan_inufft1plan_inufft2paduatransformipaduatransformplan_paduatransform!plan_ipaduatransform!sph2fourierfourier2sphplan_sph2fourier"
+    "text": "Most transforms have separate forward and inverse plans. In some instances, however, the inverse is in the sense of least-squares, and therefore only the forward transform is planned.plan_leg2chebplan_cheb2legplan_cjtplan_icjtplan_nufft1plan_nufft2plan_nufft3plan_inufft1plan_inufft2plan_paduatransform!plan_ipaduatransform!plan_sph2fourier"
 },
 
 {
@@ -261,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.sphevaluate",
     "category": "Function",
-    "text": "Pointwise evaluation of spherical harmonic Y_ell^m(thetavarphi).\n\n\n\n"
+    "text": "Pointwise evaluation of spherical harmonic:\n\nY_ell^m(thetavarphi) = frace^rm i mvarphisqrt2pi rm i^m+msqrt(ell+frac12)frac(ell-m)(ell+m) P_ell^m(costheta)\n\n\n\n"
 },
 
 {
