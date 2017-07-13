@@ -43,7 +43,7 @@ using FastTransforms, Base.Test
 
     N = round.([Int],logspace(1,3,10))
 
-    for n in N, ϵ in (1e-4,1e-8,1e-12,eps(Float64))
+    for n in N, ϵ in (1e-4, 1e-8, 1e-12, eps(Float64))
         c = complex(rand(n))
         err_bnd = 500*ϵ*n*norm(c)
 
@@ -69,16 +69,15 @@ using FastTransforms, Base.Test
     end
 
     # Check that if points/frequencies are indeed uniform, then it's equal to the fft.
-
-    n = 1000
-    c = complex(rand(n))
-    ω = collect(0.0:n-1)
-    x = ω/n
-    fftc = fft(c)
-    @test norm(nufft1(c, ω, eps()) - fftc) == 0
-    @test norm(nufft2(c, x, eps()) - fftc) == 0
-    @test norm(nufft3(c, x, ω, eps()) - fftc) == 0
-
+    for n in (1000,), ϵ in (eps(Float64), 0.0)
+        c = complex(rand(n))
+        ω = collect(0.0:n-1)
+        x = ω/n
+        fftc = fft(c)
+        @test norm(nufft1(c, ω, ϵ) - fftc) == 0
+        @test norm(nufft2(c, x, ϵ) - fftc) == 0
+        @test norm(nufft3(c, x, ω, ϵ) - fftc) == 0
+    end
 
     function nudft1{T<:AbstractFloat}(C::Matrix{Complex{T}}, ω1::AbstractVector{T}, ω2::AbstractVector{T})
         # Nonuniform discrete Fourier transform of type I-I
