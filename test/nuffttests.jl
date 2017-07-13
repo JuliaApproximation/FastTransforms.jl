@@ -74,9 +74,16 @@ using FastTransforms, Base.Test
         ω = collect(0.0:n-1)
         x = ω/n
         fftc = fft(c)
-        @test norm(nufft1(c, ω, ϵ) - fftc) == 0
-        @test norm(nufft2(c, x, ϵ) - fftc) == 0
-        @test norm(nufft3(c, x, ω, ϵ) - fftc) == 0
+        if Base.Sys.WORD_SIZE == 64
+            @test norm(nufft1(c, ω, ϵ) - fftc) == 0
+            @test norm(nufft2(c, x, ϵ) - fftc) == 0
+            @test norm(nufft3(c, x, ω, ϵ) - fftc) == 0
+        else
+            err_bnd = 500*eps(Float64)*norm(c)
+            @test norm(nufft1(c, ω, ϵ) - fftc) < err_bnd
+            @test norm(nufft2(c, x, ϵ) - fftc) < err_bnd
+            @test norm(nufft3(c, x, ω, ϵ) - fftc) < err_bnd
+        end
     end
 
     function nudft1{T<:AbstractFloat}(C::Matrix{Complex{T}}, ω1::AbstractVector{T}, ω2::AbstractVector{T})
