@@ -41,22 +41,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#FastTransforms.plan_leg2cheb",
-    "page": "Home",
-    "title": "FastTransforms.plan_leg2cheb",
-    "category": "Function",
-    "text": "Pre-computes the Legendre–Chebyshev transform.\n\n\n\n"
-},
-
-{
-    "location": "index.html#FastTransforms.plan_cheb2leg",
-    "page": "Home",
-    "title": "FastTransforms.plan_cheb2leg",
-    "category": "Function",
-    "text": "Pre-computes the Chebyshev–Legendre transform.\n\n\n\n"
-},
-
-{
     "location": "index.html#FastTransforms.cjt",
     "page": "Home",
     "title": "FastTransforms.cjt",
@@ -81,19 +65,43 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#FastTransforms.plan_cjt",
+    "location": "index.html#FastTransforms.nufft1",
     "page": "Home",
-    "title": "FastTransforms.plan_cjt",
+    "title": "FastTransforms.nufft1",
     "category": "Function",
-    "text": "Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary arrays, normalization constants, and recurrence coefficients for a forward Chebyshev—Jacobi transform.\n\nc is the vector of coefficients; and,\n\nalpha and beta are the Jacobi parameters.\n\nOptionally:\n\nM determines the number of terms in Hahn's asymptotic expansion.\n\n\n\n"
+    "text": "Computes a nonuniform fast Fourier transform of type I:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i fracjN omega_kquadrm forquad 0 le j le N-1\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type I-I:\n\nF_ij = sum_k=0^M-1sum_ell=0^N-1 C_kell e^-2pirm i (fraciM omega_k + fracjN pi_ell)quadrm forquad 0 le i le M-1quad 0 le j le N-1\n\n\n\n"
 },
 
 {
-    "location": "index.html#FastTransforms.plan_icjt",
+    "location": "index.html#FastTransforms.nufft2",
     "page": "Home",
-    "title": "FastTransforms.plan_icjt",
+    "title": "FastTransforms.nufft2",
     "category": "Function",
-    "text": "Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary arrays, normalization constants, and recurrence coefficients for an inverse Chebyshev—Jacobi transform.\n\nc is the vector of coefficients; and,\n\nalpha and beta are the Jacobi parameters.\n\nOptionally:\n\nM determines the number of terms in Hahn's asymptotic expansion.\n\n\n\n"
+    "text": "Computes a nonuniform fast Fourier transform of type II:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i x_j kquadrm forquad 0 le j le N-1\n\n\n\nComputes a 2D nonuniform fast Fourier transform of type II-II:\n\nF_ij = sum_k=0^M-1sum_ell=0^N-1 C_kell e^-2pirm i (x_i k + y_j ell)quadrm forquad 0 le i le M-1quad 0 le j le N-1\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.nufft3",
+    "page": "Home",
+    "title": "FastTransforms.nufft3",
+    "category": "Function",
+    "text": "Computes a nonuniform fast Fourier transform of type III:\n\nf_j = sum_k=0^N-1 c_k e^-2pirm i x_j omega_kquadrm forquad 0 le j le N-1\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.inufft1",
+    "page": "Home",
+    "title": "FastTransforms.inufft1",
+    "category": "Function",
+    "text": "Computes an inverse nonuniform fast Fourier transform of type I.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.inufft2",
+    "page": "Home",
+    "title": "FastTransforms.inufft2",
+    "category": "Function",
+    "text": "Computes an inverse nonuniform fast Fourier transform of type II.\n\n\n\n"
 },
 
 {
@@ -113,22 +121,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#FastTransforms.plan_paduatransform!",
-    "page": "Home",
-    "title": "FastTransforms.plan_paduatransform!",
-    "category": "Function",
-    "text": "Pre-plan a Padua Transform.\n\n\n\n"
-},
-
-{
-    "location": "index.html#FastTransforms.plan_ipaduatransform!",
-    "page": "Home",
-    "title": "FastTransforms.plan_ipaduatransform!",
-    "category": "Function",
-    "text": "Pre-plan an Inverse Padua Transform.\n\n\n\n"
-},
-
-{
     "location": "index.html#FastTransforms.sph2fourier",
     "page": "Home",
     "title": "FastTransforms.sph2fourier",
@@ -145,6 +137,102 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#Fast-Transforms-1",
+    "page": "Home",
+    "title": "Fast Transforms",
+    "category": "section",
+    "text": "leg2chebcheb2legcjticjtjjtnufft1nufft2nufft3inufft1inufft2paduatransformipaduatransformsph2fourierfourier2sph"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_leg2cheb",
+    "page": "Home",
+    "title": "FastTransforms.plan_leg2cheb",
+    "category": "Function",
+    "text": "Pre-computes the Legendre–Chebyshev transform.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_cheb2leg",
+    "page": "Home",
+    "title": "FastTransforms.plan_cheb2leg",
+    "category": "Function",
+    "text": "Pre-computes the Chebyshev–Legendre transform.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_cjt",
+    "page": "Home",
+    "title": "FastTransforms.plan_cjt",
+    "category": "Function",
+    "text": "Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary arrays, normalization constants, and recurrence coefficients for a forward Chebyshev—Jacobi transform.\n\nc is the vector of coefficients; and,\n\nalpha and beta are the Jacobi parameters.\n\nOptionally:\n\nM determines the number of terms in Hahn's asymptotic expansion.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_icjt",
+    "page": "Home",
+    "title": "FastTransforms.plan_icjt",
+    "category": "Function",
+    "text": "Pre-plan optimized DCT-I and DST-I plans and pre-allocate the necessary arrays, normalization constants, and recurrence coefficients for an inverse Chebyshev—Jacobi transform.\n\nc is the vector of coefficients; and,\n\nalpha and beta are the Jacobi parameters.\n\nOptionally:\n\nM determines the number of terms in Hahn's asymptotic expansion.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_nufft1",
+    "page": "Home",
+    "title": "FastTransforms.plan_nufft1",
+    "category": "Function",
+    "text": "Pre-computes a nonuniform fast Fourier transform of type I.\n\n\n\nPre-computes a 2D nonuniform fast Fourier transform of type I-I.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_nufft2",
+    "page": "Home",
+    "title": "FastTransforms.plan_nufft2",
+    "category": "Function",
+    "text": "Pre-computes a nonuniform fast Fourier transform of type II.\n\n\n\nPre-computes a 2D nonuniform fast Fourier transform of type II-II.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_nufft3",
+    "page": "Home",
+    "title": "FastTransforms.plan_nufft3",
+    "category": "Function",
+    "text": "Pre-computes a nonuniform fast Fourier transform of type III.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_inufft1",
+    "page": "Home",
+    "title": "FastTransforms.plan_inufft1",
+    "category": "Function",
+    "text": "Pre-computes an inverse nonuniform fast Fourier transform of type I.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_inufft2",
+    "page": "Home",
+    "title": "FastTransforms.plan_inufft2",
+    "category": "Function",
+    "text": "Pre-computes an inverse nonuniform fast Fourier transform of type II.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_paduatransform!",
+    "page": "Home",
+    "title": "FastTransforms.plan_paduatransform!",
+    "category": "Function",
+    "text": "Pre-plan a Padua Transform.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.plan_ipaduatransform!",
+    "page": "Home",
+    "title": "FastTransforms.plan_ipaduatransform!",
+    "category": "Function",
+    "text": "Pre-plan an Inverse Padua Transform.\n\n\n\n"
+},
+
+{
     "location": "index.html#FastTransforms.plan_sph2fourier",
     "page": "Home",
     "title": "FastTransforms.plan_sph2fourier",
@@ -153,11 +241,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Fast-Transforms-1",
+    "location": "index.html#Planning-The-Fast-Transforms-1",
     "page": "Home",
-    "title": "Fast Transforms",
+    "title": "Planning The Fast Transforms",
     "category": "section",
-    "text": "leg2chebcheb2legplan_leg2chebplan_cheb2legcjticjtjjtplan_cjtplan_icjtpaduatransformipaduatransformplan_paduatransform!plan_ipaduatransform!sph2fourierfourier2sphplan_sph2fourier"
+    "text": "Most transforms have separate forward and inverse plans. In some instances, however, the inverse is in the sense of least-squares, and therefore only the forward transform is planned.plan_leg2chebplan_cheb2legplan_cjtplan_icjtplan_nufft1plan_nufft2plan_nufft3plan_inufft1plan_inufft2plan_paduatransform!plan_ipaduatransform!plan_sph2fourier"
 },
 
 {
@@ -181,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.sphevaluate",
     "category": "Function",
-    "text": "Pointwise evaluation of spherical harmonic Y_ell^m(thetavarphi).\n\n\n\n"
+    "text": "Pointwise evaluation of spherical harmonic:\n\nY_ell^m(thetavarphi) = frace^rm i mvarphisqrt2pi rm i^m+msqrt(ell+frac12)frac(ell-m)(ell+m) P_ell^m(costheta)\n\n\n\n"
 },
 
 {
@@ -222,6 +310,14 @@ var documenterSearchIndex = {"docs": [
     "title": "FastTransforms.Λ",
     "category": "Function",
     "text": "The Lambda function Lambda(z) = fracGamma(z+frac12)Gamma(z+1) for the ratio of gamma functions.\n\n\n\nFor 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for tau in Appendix B of\n\nI. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, SIAM J. Sci. Comput., 34:C83–C101, 2012.\n\n\n\nThe Lambda function Lambda(z) = fracGamma(z+lambda_1)(z+lambda_2) for the ratio of gamma functions.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.lambertw",
+    "page": "Home",
+    "title": "FastTransforms.lambertw",
+    "category": "Function",
+    "text": "The principal branch of the Lambert-W function, defined by x = W_0(x) e^W_0(x), computed using Halley's method for x in -e^-1infty).\n\n\n\n"
 },
 
 {
@@ -357,7 +453,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Internal Methods",
     "category": "section",
-    "text": "FastTransforms.halfFastTransforms.twoFastTransforms.δFastTransforms.ΛFastTransforms.pochhammerFastTransforms.stirlingseriesFastTransforms.clenshawcurtisFastTransforms.clenshawcurtisweightsFastTransforms.fejer1FastTransforms.fejer2FastTransforms.fejerweights1FastTransforms.fejerweights2FastTransforms.chebyshevjacobimoments1FastTransforms.chebyshevjacobimoments2FastTransforms.incrementα!FastTransforms.incrementβ!FastTransforms.incrementαβ!FastTransforms.decrementα!FastTransforms.decrementβ!FastTransforms.decrementαβ!"
+    "text": "FastTransforms.halfFastTransforms.twoFastTransforms.δFastTransforms.ΛFastTransforms.lambertwFastTransforms.pochhammerFastTransforms.stirlingseriesFastTransforms.clenshawcurtisFastTransforms.clenshawcurtisweightsFastTransforms.fejer1FastTransforms.fejer2FastTransforms.fejerweights1FastTransforms.fejerweights2FastTransforms.chebyshevjacobimoments1FastTransforms.chebyshevjacobimoments2FastTransforms.incrementα!FastTransforms.incrementβ!FastTransforms.incrementαβ!FastTransforms.decrementα!FastTransforms.decrementβ!FastTransforms.decrementαβ!"
 },
 
 ]}
