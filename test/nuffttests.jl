@@ -68,6 +68,18 @@ using FastTransforms, Base.Test
         @test norm(exact - fast, Inf) < err_bnd
     end
 
+    # Check that if points/frequencies are indeed uniform, then it's equal to the fft.
+
+    n = 1000
+    c = complex(rand(n))
+    ω = collect(0.0:n-1)
+    x = ω/n
+    fftc = fft(c)
+    @test norm(nufft1(c, ω, eps()) - fftc) == 0
+    @test norm(nufft2(c, x, eps()) - fftc) == 0
+    @test norm(nufft3(c, x, ω, eps()) - fftc) == 0
+
+
     function nudft1{T<:AbstractFloat}(C::Matrix{Complex{T}}, ω1::AbstractVector{T}, ω2::AbstractVector{T})
         # Nonuniform discrete Fourier transform of type I-I
 

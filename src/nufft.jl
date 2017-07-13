@@ -301,7 +301,7 @@ F_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (x_i k 
 nufft2{T<:AbstractFloat}(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) = plan_nufft2(x, y, ϵ)*C
 
 
-FindK{T<:AbstractFloat}(γ::T, ϵ::T) = Int(ceil(5*γ*exp(lambertw(log(10/ϵ)/γ/7))))
+FindK{T<:AbstractFloat}(γ::T, ϵ::T) = γ < ϵ ? 1 : Int(ceil(5*γ*exp(lambertw(log(10/ϵ)/γ/7))))
 AssignClosestEquispacedGridpoint{T<:AbstractFloat}(x::AbstractVector{T})::AbstractVector{T} = round.([Int], size(x, 1)*x)
 AssignClosestEquispacedFFTpoint{T<:AbstractFloat}(x::AbstractVector{T})::Array{Int,1} = mod.(round.([Int], size(x, 1)*x), size(x, 1)) + 1
 PerturbationParameter{T<:AbstractFloat}(x::AbstractVector{T}, s_vec::AbstractVector{T})::AbstractFloat = norm(size(x, 1)*x - s_vec, Inf)

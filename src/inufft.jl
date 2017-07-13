@@ -6,6 +6,9 @@ For best performance, choose the right number of threads by `FFTW.set_num_thread
 immutable iNUFFTPlan{N,T,S,PT} <: Base.DFT.Plan{T}
     pt::PT
     TP::Toeplitz{T}
+    r::Vector{T}
+    p::Vector{T}
+    Ap::Vector{T}
     ϵ::S
 end
 
@@ -22,8 +25,11 @@ function plan_inufft1{T<:AbstractFloat}(ω::AbstractVector{T}, ϵ::T)
     r[1] = avg
     c[1] = avg
     TP = Toeplitz(c, r)
+    r = zero(c)
+    p = zero(c)
+    Ap = zero(c)
 
-    iNUFFTPlan{1, eltype(TP), typeof(ϵ), typeof(pt)}(pt, TP, ϵ)
+    iNUFFTPlan{1, eltype(TP), typeof(ϵ), typeof(pt)}(pt, TP, r, p, Ap, ϵ)
 end
 
 doc"""
@@ -38,8 +44,11 @@ function plan_inufft2{T<:AbstractFloat}(x::AbstractVector{T}, ϵ::T)
     r[1] = avg
     c[1] = avg
     TP = Toeplitz(c, r)
+    r = zero(c)
+    p = zero(c)
+    Ap = zero(c)
 
-    iNUFFTPlan{2, eltype(TP), typeof(ϵ), typeof(pt)}(pt, TP, ϵ)
+    iNUFFTPlan{2, eltype(TP), typeof(ϵ), typeof(pt)}(pt, TP, r, p, Ap, ϵ)
 end
 
 function (*){N,T,V}(p::iNUFFTPlan{N,T}, x::AbstractVector{V})
@@ -47,14 +56,14 @@ function (*){N,T,V}(p::iNUFFTPlan{N,T}, x::AbstractVector{V})
 end
 
 function Base.A_mul_B!{T}(c::AbstractVector{T}, P::iNUFFTPlan{1,T}, f::AbstractVector{T})
-    pt, TP, ϵ = P.pt, P.TP, P.ϵ
-    cg(TP, c, f, 50, 100ϵ)
+    pt, TP, r, p, Ap, ϵ = P.pt, P.TP, P.r, P.p, P.Ap, P.ϵ
+    cg_for_inufft(TP, c, f, r, p, Ap, 50, 100ϵ)
     conj!(A_mul_B!(c, pt, conj!(c)))
 end
 
 function Base.A_mul_B!{T}(c::AbstractVector{T}, P::iNUFFTPlan{2,T}, f::AbstractVector{T})
-    pt, TP, ϵ = P.pt, P.TP, P.ϵ
-    cg(TP, c, conj!(pt*conj!(f)), 50, 100ϵ)
+    pt, TP, r, p, Ap, ϵ = P.pt, P.TP, P.r, P.p, P.Ap, P.ϵ
+    cg_for_inufft(TP, c, conj!(pt*conj!(f)), r, p, Ap, 50, 100ϵ)
     conj!(f)
     c
 end
@@ -69,16 +78,16 @@ Computes an inverse nonuniform fast Fourier transform of type II.
 """
 inufft2{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ϵ::T) = plan_inufft2(x, ϵ)*c
 
-function cg{T}(A::ToeplitzMatrices.AbstractToeplitz{T}, x::AbstractVector{T}, b::AbstractVector{T}, max_it::Integer, tol::Real)
+function cg_for_inufft{T}(A::ToeplitzMatrices.AbstractToeplitz{T}, x::AbstractVector{T}, b::AbstractVector{T}, r::AbstractVector{T}, p::AbstractVector{T}, Ap::AbstractVector{T}, max_it::Integer, tol::Real)
 	n = length(b)
 	n1, n2 = size(A)
 	n == n1 == n2 || throw(DimensionMismatch(""))
     nrmb = norm(b)
     if nrmb == 0 nrmb = one(typeof(nrmb)) end
 	copy!(x, b)
-    r = zero(x)
-    p = zero(x)
-    Ap = zero(x)
+    fill!(r, zero(T))
+    fill!(p, zero(T))
+    fill!(Ap, zero(T))
     # r = b - A*x
     copy!(r, b)
     A_mul_B!(-one(T), A, x, one(T), r)
