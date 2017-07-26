@@ -148,7 +148,7 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
         end
     end
 
-    zero_spurious_modes!(Y)
+    sph_zero_spurious_modes!(Y)
 end
 
 Base.Ac_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, TP, X)

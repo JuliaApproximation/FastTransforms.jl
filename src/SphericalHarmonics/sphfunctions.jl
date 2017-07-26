@@ -1,4 +1,4 @@
-function zero_spurious_modes!(A::AbstractMatrix)
+function sph_zero_spurious_modes!(A::AbstractMatrix)
     M, N = size(A)
     n = N÷2
     @inbounds for j = 1:n

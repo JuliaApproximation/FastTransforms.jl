@@ -77,7 +77,7 @@ function Base.At_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
         At_mul_B_col_J!(Y, BF[J-1], B, 2J)
         At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
     end
-    zero_spurious_modes!(Y)
+    sph_zero_spurious_modes!(Y)
 end
 
 Base.Ac_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, FP, X)

@@ -29,6 +29,10 @@ export SlowSphericalHarmonicPlan, FastSphericalHarmonicPlan, ThinSphericalHarmon
 export sph2fourier, fourier2sph, plan_sph2fourier
 export sphones, sphzeros, sphrand, sphrandn, sphevaluate
 
+export SlowTriangularHarmonicPlan
+export tri2cheb, cheb2tri, plan_tri2cheb
+export triones, trizeros, trirand, trirandn, trievaluate
+
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
 #export sqrtpi, pochhammer, stirlingseries, stirlingremainder, Aratio, Cratio, Anαβ
@@ -69,6 +73,7 @@ jac2jac(x...)=th_jac2jac(x...)
 
 include("hierarchical.jl")
 include("SphericalHarmonics/SphericalHarmonics.jl")
+include("TriangularHarmonics/TriangularHarmonics.jl")
 
 include("gaunt.jl")
 

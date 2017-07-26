@@ -166,7 +166,7 @@ As with other fast transforms, `plan_sph2fourier` saves effort by caching the pr
 
    [1]  B. Alpert and V. Rokhlin. <a href="http://dx.doi.org/10.1137/0912009">A fast algorithm for the evaluation of Legendre expansions</a>, *SIAM J. Sci. Stat. Comput.*, **12**:158—179, 1991.
 
-   [2]  N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using and asymptotic formula</a>, *SIAM J. Sci. Comput.*, **36**:A148—A167, 2014.
+   [2]  N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using an asymptotic formula</a>, *SIAM J. Sci. Comput.*, **36**:A148—A167, 2014.
 
    [3]  J. Keiner. <a href="http://dx.doi.org/10.1137/070703065">Computing with expansions in Gegenbauer polynomials</a>, *SIAM J. Sci. Comput.*, **31**:2151—2171, 2009.
 
