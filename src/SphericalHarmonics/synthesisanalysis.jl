@@ -5,7 +5,7 @@ immutable SynthesisPlan{T, P1, P2}
     temp::Vector{T}
 end
 
-function plan_synthesis{T<:FFTW.fftwNumber}(A::Matrix{T})
+function plan_synthesis{T<:fftwNumber}(A::Matrix{T})
     m, n = size(A)
     x = FFTW.FakeArray(T, m)
     y = FFTW.FakeArray(T, n)
@@ -22,7 +22,7 @@ immutable AnalysisPlan{T, P1, P2}
     temp::Vector{T}
 end
 
-function plan_analysis{T<:FFTW.fftwNumber}(A::Matrix{T})
+function plan_analysis{T<:fftwNumber}(A::Matrix{T})
     m, n = size(A)
     x = FFTW.FakeArray(T, m)
     y = FFTW.FakeArray(T, n)
@@ -170,9 +170,6 @@ function negateeven!(x::Vector)
     end
     x
 end
-
-import Base.FFTW: unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
-import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
 
 function A_mul_B_col_J!{T}(Y::Matrix{T}, P::r2rFFTWPlan{T}, X::Matrix{T}, J::Int)
     unsafe_execute_col_J!(P, X, Y, J)

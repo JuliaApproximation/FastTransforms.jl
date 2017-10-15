@@ -128,12 +128,12 @@ Base.dct!{T<:BigFloats}(a::AbstractArray{T}) = (b = dct(a); a[:] = b)
 Base.idct!{T<:BigFloats}(a::AbstractArray{T}) = (b = idct(a); a[:] = b)
 
 # dummy plans
-type DummyFFTPlan{T,inplace} <: Base.DFT.Plan{T} end
-type DummyiFFTPlan{T,inplace} <: Base.DFT.Plan{T} end
-type DummyrFFTPlan{T,inplace} <: Base.DFT.Plan{T} end
-type DummyirFFTPlan{T,inplace} <: Base.DFT.Plan{T} end
-type DummyDCTPlan{T,inplace} <: Base.DFT.Plan{T} end
-type DummyiDCTPlan{T,inplace} <: Base.DFT.Plan{T} end
+type DummyFFTPlan{T,inplace} <: Plan{T} end
+type DummyiFFTPlan{T,inplace} <: Plan{T} end
+type DummyrFFTPlan{T,inplace} <: Plan{T} end
+type DummyirFFTPlan{T,inplace} <: Plan{T} end
+type DummyDCTPlan{T,inplace} <: Plan{T} end
+type DummyiDCTPlan{T,inplace} <: Plan{T} end
 
 for (Plan,iPlan) in ((:DummyFFTPlan,:DummyiFFTPlan),
                      (:DummyrFFTPlan,:DummyirFFTPlan),

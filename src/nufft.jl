@@ -3,7 +3,7 @@ Pre-computes a nonuniform fast Fourier transform of type `N`.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
 """
-immutable NUFFTPlan{N,T,FFT} <: Base.DFT.Plan{T}
+immutable NUFFTPlan{N,T,FFT} <: Plan{T}
     U::Matrix{T}
     V::Matrix{T}
     p::FFT
@@ -234,7 +234,7 @@ Pre-computes a 2D nonuniform fast Fourier transform.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
 """
-immutable NUFFT2DPlan{T,P1,P2} <: Base.DFT.Plan{T}
+immutable NUFFT2DPlan{T,P1,P2} <: Plan{T}
     p1::P1
     p2::P2
     temp::Vector{T}

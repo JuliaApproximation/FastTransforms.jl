@@ -1,7 +1,8 @@
 __precompile__()
 module FastTransforms
 
-using Base, ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter, Compat
+using ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter, Compat,
+        FFTW, AbstractFFTs
 
 import Base: *, \, size, view
 import Base: getindex, setindex!, Factorization, length
@@ -9,6 +10,10 @@ import Base.LinAlg: BlasFloat, BlasInt
 import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
 import HierarchicalMatrices: A_mul_B!, At_mul_B!, Ac_mul_B!
 import LowRankApprox: ColPerm
+import AbstractFFTs: Plan
+import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
+import FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
