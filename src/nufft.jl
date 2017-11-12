@@ -64,9 +64,9 @@ function plan_nufft3{T<:AbstractFloat}(x::AbstractVector{T}, ω::AbstractVector{
 
     p = plan_nufft1(ω, ϵ)
 
-    D1 = Diagonal(1-(s-t+1)/N)
-    D2 = Diagonal((s-t+1)/N)
-    D3 = Diagonal(exp.(-2*im*T(π)*ω))
+    D1 = Diagonal(1 .- (s .- t .+ 1)./N)
+    D2 = Diagonal((s .- t .+ 1)./N)
+    D3 = Diagonal(exp.(-2 .* im .* T(π) .* ω ))
     U = hcat(D1*u, D2*u)
     V = hcat(v, D3*v)
 

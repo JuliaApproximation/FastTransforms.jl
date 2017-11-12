@@ -1,4 +1,5 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 

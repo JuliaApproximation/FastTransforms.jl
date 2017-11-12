@@ -1,4 +1,5 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test
 
 @testset "Chebyshev--Legendre transform" begin
     for k in round.([Int],logspace(1,4,20))

@@ -126,7 +126,7 @@ function leg2chebuTH{S}(::Type{S},n)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
     T = TriangularToeplitz(-2t/π,:U)
-    H = Hankel(λ[1:n]./((1:n)+1),λ[n:end]./((n:2n-1)+1))
+    H = Hankel(λ[1:n]./((1:n).+1),λ[n:end]./((n:2n-1).+1))
     T,H
 end
 
@@ -135,9 +135,9 @@ function ultra2ultraTH{S}(::Type{S},n,λ₁,λ₂)
     DL = (zero(S):n-one(S)) .+ λ₂
     jk = 0:half(S):n-1
     t = zeros(S,n)
-    t[1:2:n] = Λ(jk,λ₁-λ₂,one(S))[1:2:n]
+    t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S))[1:2:n]
     T = TriangularToeplitz(scale!(inv(gamma(λ₁-λ₂)),t),:U)
-    h = Λ(jk,λ₁,λ₂+one(S))
+    h = Λ.(jk,λ₁,λ₂+one(S))
     scale!(gamma(λ₂)/gamma(λ₁),h)
     H = Hankel(h[1:n],h[n:end])
     DR = ones(S,n)
@@ -149,10 +149,10 @@ function jac2jacTH{S}(::Type{S},n,α,β,γ,δ)
     @assert abs(α-γ) < 1
     @assert α+β > -1
     jk = zero(S):n-one(S)
-    DL = (2jk+γ+β+one(S)).*Λ(jk,γ+β+one(S),β+one(S))
-    T = TriangularToeplitz(Λ(jk,α-γ,one(S)),:U)
-    H = Hankel(Λ(jk,α+β+one(S),γ+β+two(S)),Λ(jk+n-one(S),α+β+one(S),γ+β+two(S)))
-    DR = Λ(jk,β+one(S),α+β+one(S))/gamma(α-γ)
+    DL = (2jk .+ γ .+ β .+ one(S)).*Λ.(jk,γ+β+one(S),β+one(S))
+    T = TriangularToeplitz(Λ.(jk,α-γ,one(S)),:U)
+    H = Hankel(Λ.(jk,α+β+one(S),γ+β+two(S)),Λ.(jk.+n.-one(S),α+β+one(S),γ+β+two(S)))
+    DR = Λ.(jk,β+one(S),α+β+one(S))./gamma(α-γ)
     T,H,DL,DR
 end
 

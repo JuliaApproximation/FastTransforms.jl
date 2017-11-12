@@ -103,15 +103,12 @@ end
 
 
 stirlingremainder(z::Number,N::Int) = (1+zeta(N))*gamma(N)/((2π)^(N+1)*z^N)/stirlingseries(z)
-stirlingremainder{T<:Number}(z::AbstractVector{T},N::Int) = (1+zeta(N))*gamma(N)/(2π)^(N+1)./z.^N./stirlingseries(z)
 
 Aratio(n::Int,α::Float64,β::Float64) = exp((n/2+α+1/4)*log1p(-β/(n+α+β+1))+(n/2+β+1/4)*log1p(-α/(n+α+β+1))+(n/2+1/4)*log1p(α/(n+1))+(n/2+1/4)*log1p(β/(n+1)))
 Aratio(n::Number,α::Number,β::Number) = (1+(α+1)/n)^(n+α+1/2)*(1+(β+1)/n)^(n+β+1/2)/(1+(α+β+1)/n)^(n+α+β+1/2)/(1+(zero(α)+zero(β))/n)^(n+1/2)
-Aratio(n::AbstractVector,α::Number,β::Number) = [ Aratio(n[i],α,β) for i=1:length(n) ]
 
 Cratio(n::Int,α::Float64,β::Float64) = exp((n+α+1/2)*log1p((α-β)/(2n+α+β+2))+(n+β+1/2)*log1p((β-α)/(2n+α+β+2))-log1p((α+β+2)/2n)/2)/sqrt(n)
 Cratio(n::Number,α::Number,β::Number) = n^(-1/2)*(1+(α+1)/n)^(n+α+1/2)*(1+(β+1)/n)^(n+β+1/2)/(1+(α+β+2)/2n)^(2n+α+β+3/2)
-Cratio(n::AbstractVector,α::Number,β::Number) = [ Cratio(n[i],α,β) for i=1:length(n) ]
 
 
 Anαβ(n::Number,α::Number,β::Number) = 2^(α+β+1)/(2n+α+β+1)*exp(lgamma(n+α+1)-lgamma(n+α+β+1)+lgamma(n+β+1)-lgamma(n+1))
@@ -134,9 +131,6 @@ function Anαβ(n::Integer,α::Float64,β::Float64)
         (n+1)*(n+α+β+1)/(n+α+1)/(n+β+1)*Anαβ(n+1,α,β)*((2n+α+β+3)/(2n+α+β+1))
     end
 end
-
-Anαβ{T<:Integer}(n::AbstractVector{T},α::Number,β::Number) = [ Anαβ(n[i],α,β) for i=1:length(n) ]
-Anαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Anαβ(n[i,j],α,β) for i=1:size(n,1), j=1:size(n,2) ]
 
 
 doc"""
@@ -168,7 +162,6 @@ function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
         (x+λ₂)/(x+λ₁)*Λ(x+1.,λ₁,λ₂)
     end
 end
-Λ{T<:Number}(x::AbstractArray{T},λ₁::Number,λ₂::Number) = promote_type(T,typeof(λ₁),typeof(λ₂))[ Λ(x[i],λ₁,λ₂) for i in eachindex(x) ]
 
 ## TODO: deprecate when Lambert-W is supported in a mainstream repository such as SpecialFunctions.jl
 doc"""
@@ -210,9 +203,6 @@ function Cnλ{T<:Integer}(n::UnitRange{T},λ::Number)
     ret
 end
 
-Cnλ{T<:Integer}(n::AbstractVector{T},λ::Number) = [ Cnλ(n[i],λ) for i=1:length(n) ]
-Cnλ{T<:Integer}(n::AbstractMatrix{T},λ::Number) = [ Cnλ(n[i,j],λ) for i=1:size(n,1), j=1:size(n,2) ]
-
 function Cnmλ(n::Integer,m::Integer,λ::Number)
     if m == 0
         Cnλ(n,λ)
@@ -220,8 +210,6 @@ function Cnmλ(n::Integer,m::Integer,λ::Number)
         (λ+m-1)/2/m*(m-λ)/(n+λ+m)*Cnmλ(n,m-1,λ)
     end
 end
-
-Cnmλ{T<:Integer}(n::AbstractVector{T},m::Integer,λ::Number) = [ Cnmλ(n[i],m,λ) for i=1:length(n) ]
 
 
 function Cnαβ(n::Integer,α::Number,β::Number)
@@ -244,9 +232,6 @@ function Cnαβ(n::Integer,α::Float64,β::Float64)
     end
 end
 
-Cnαβ{T<:Integer}(n::AbstractVector{T},α::Number,β::Number) = [ Cnαβ(n[i],α,β) for i=1:length(n) ]
-Cnαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Cnαβ(n[i,j],α,β) for i=1:size(n,1), j=1:size(n,2) ]
-
 function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
     if m == 0
         Cnαβ(n,α,β)
@@ -255,8 +240,6 @@ function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
     end
 end
 
-Cnmαβ{T<:Integer}(n::AbstractVector{T},m::Integer,α::Number,β::Number) = [ Cnmαβ(n[i],m,α,β) for i=1:length(n) ]
-Cnmαβ{T<:Integer}(n::AbstractMatrix{T},m::Integer,α::Number,β::Number) = [ Cnmαβ(n[i,j],m,α,β) for i=1:size(n,1), j=1:size(n,2) ]
 
 function Cnmαβ{T<:Number}(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T})
     shp = promote_shape(size(α),size(β))

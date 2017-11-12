@@ -1,15 +1,15 @@
-using FastTransforms
-if VERSION < v"0.7-"
-    using Base.Test
-else
-    using Test, FFTW
+using FastTransforms, Compat
+using Compat.Test
+
+if VERSION ≥ v"0.7-"
+    using FFTW
 end
 
 @testset "Nonuniform fast Fourier transforms" begin
 
     FFTW.set_num_threads(Base.Sys.CPU_CORES)
 
-    function nudft1{T<:AbstractFloat}(c::AbstractVector, ω::AbstractVector{T})
+    function nudft1(c::AbstractVector, ω::AbstractVector{T}) where {T<:AbstractFloat}
         # Nonuniform discrete Fourier transform of type I
 
         N = size(ω, 1)
@@ -21,7 +21,7 @@ end
         return output
     end
 
-    function nudft2{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T})
+    function nudft2(c::AbstractVector, x::AbstractVector{T}) where {T<:AbstractFloat}
         # Nonuniform discrete Fourier transform of type II
 
         N = size(x, 1)
@@ -34,7 +34,7 @@ end
         return output
     end
 
-    function nudft3{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVector{T})
+    function nudft3(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVector{T}) where {T<:AbstractFloat}
         # Nonuniform discrete Fourier transform of type III
 
         N = size(x, 1)
@@ -91,7 +91,7 @@ end
         end
     end
 
-    function nudft1{T<:AbstractFloat}(C::Matrix{Complex{T}}, ω1::AbstractVector{T}, ω2::AbstractVector{T})
+    function nudft1(C::Matrix{Complex{T}}, ω1::AbstractVector{T}, ω2::AbstractVector{T}) where {T<:AbstractFloat}
         # Nonuniform discrete Fourier transform of type I-I
 
         M, N = size(C)
@@ -104,7 +104,7 @@ end
         return output
     end
 
-    function nudft2{T<:AbstractFloat}(C::Matrix{Complex{T}}, x::AbstractVector{T}, y::AbstractVector{T})
+    function nudft2(C::Matrix{Complex{T}}, x::AbstractVector{T}, y::AbstractVector{T}) where {T<:AbstractFloat}
         # Nonuniform discrete Fourier transform of type II-II
 
         M, N = size(C)

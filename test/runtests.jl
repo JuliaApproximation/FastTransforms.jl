@@ -1,9 +1,5 @@
-using FastTransforms
-if VERSION < v"0.7-"
-    using Base.Test
-else
-    using Test
-end
+using FastTransforms, Compat
+using Compat.Test
 
 srand(0)
 

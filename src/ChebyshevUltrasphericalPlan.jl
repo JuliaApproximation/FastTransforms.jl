@@ -184,7 +184,7 @@ function BackwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T
     cnmλ = similar(cnλ)
 
     # Initialize orthonormality constants
-    anλ = Anαβ(0:N,λ-half(λ),λ-half(λ))
+    anλ = Anαβ.(0:N,λ-half(λ),λ-half(λ))
 
     # Get indices
     CUI = ChebyshevUltrasphericalIndices(λ,CUC,tempmindices,tempsin,tempsinλ)

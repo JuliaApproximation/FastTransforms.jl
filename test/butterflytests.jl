@@ -1,5 +1,5 @@
-using FastTransforms, LowRankApprox
-using Base.Test
+using FastTransforms, LowRankApprox, Compat
+using Compat.Test
 
 import FastTransforms: Butterfly
 
