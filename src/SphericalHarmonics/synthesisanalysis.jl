@@ -1,4 +1,4 @@
-immutable SynthesisPlan{T, P1, P2}
+struct SynthesisPlan{T, P1, P2}
     planθ::P1
     planφ::P2
     C::ColumnPermutation
@@ -15,7 +15,7 @@ function plan_synthesis{T<:fftwNumber}(A::Matrix{T})
     SynthesisPlan(planθ, planφ, C, zeros(T, n))
 end
 
-immutable AnalysisPlan{T, P1, P2}
+struct AnalysisPlan{T, P1, P2}
     planθ::P1
     planφ::P2
     C::ColumnPermutation

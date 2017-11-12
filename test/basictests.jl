@@ -1,4 +1,10 @@
-using FastTransforms, Base.Test, LowRankApprox
+using FastTransforms, LowRankApprox
+
+if VERSION < v"0.7-"
+    using Base.Test
+else
+    using Test
+end
 
 import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ, fejer1, fejer2, clenshawcurtis
 
@@ -23,10 +29,10 @@ import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ, fejer1, fejer2, clens
     β = 0.375
 
     @time FastTransforms.Cnαβ(n,α,β);
-    @test norm(FastTransforms.Cnαβ(n,α,β)./FastTransforms.Cnαβ(n,big(α),big(β))-1,Inf) < 3eps()
+    @test norm(FastTransforms.Cnαβ(n,α,β) ./ FastTransforms.Cnαβ(n,big(α),big(β)) .- 1,Inf) < 3eps()
 
     @time FastTransforms.Anαβ(n,α,β);
-    @test norm(FastTransforms.Anαβ(n,α,β)./FastTransforms.Anαβ(n,big(α),big(β))-1,Inf) < 4eps()
+    @test norm(FastTransforms.Anαβ(n,α,β) ./ FastTransforms.Anαβ(n,big(α),big(β)) .- 1,Inf) < 4eps()
 end
 
 @testset "Fejer and Clenshaw--Curtis quadrature" begin

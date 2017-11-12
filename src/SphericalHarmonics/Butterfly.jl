@@ -1,4 +1,4 @@
-immutable Butterfly{T} <: Factorization{T}
+struct Butterfly{T} <: Factorization{T}
     columns::Vector{Matrix{T}}
     factors::Vector{Vector{IDPackedV{T}}}
     permutations::Vector{Vector{ColumnPermutation}}
@@ -60,7 +60,7 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, 
         end
         permutations[1][j] = factors[1][j][:P]
         indices[1][j+1] = indices[1][j] + size(factors[1][j], 1)
-        cs[1][j] = factors[1][j].sk+nl-1
+        cs[1][j] = factors[1][j].sk .+ nl .- 1
     end
 
     ii, jj = 2, (tL>>1)
@@ -276,7 +276,7 @@ function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::I
 end
 
 for f! in (:At_mul_B!,:Ac_mul_B!)
-    f_col_J! = parse(string(f!)[1:end-1]*"_col_J!")
+    f_col_J! = Meta.parse(string(f!)[1:end-1]*"_col_J!")
     @eval begin
         function $f_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int)
             L = length(B.factors) - 1

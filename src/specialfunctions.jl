@@ -129,7 +129,7 @@ end
 
 function Anαβ(n::Integer,α::Float64,β::Float64)
     if n+min(α,β,α+β,0) ≥ 7.979120323411497
-        2.^(α+β+1)/(2n+α+β+1)*stirlingseries(n+α+1)*Aratio(n,α,β)/stirlingseries(n+α+β+1)*stirlingseries(n+β+1)/stirlingseries(n+one(Float64))
+        2 .^ (α+β+1)/(2n+α+β+1)*stirlingseries(n+α+1)*Aratio(n,α,β)/stirlingseries(n+α+β+1)*stirlingseries(n+β+1)/stirlingseries(n+one(Float64))
     else
         (n+1)*(n+α+β+1)/(n+α+1)/(n+β+1)*Anαβ(n+1,α,β)*((2n+α+β+3)/(2n+α+β+1))
     end
@@ -180,7 +180,7 @@ function lambertw(x::AbstractFloat)
     elseif x == -exp(-one(x))
         return -one(x)
     elseif x < 0
-        w0 = e*x/(1+inv(inv(sqrt(2*e*x+2))+inv(e-1)-inv(sqrt(2))))
+        w0 = ℯ*x/(1+inv(inv(sqrt(2*ℯ*x+2))+inv(ℯ-1)-inv(sqrt(2))))
     else
         log1px = log1p(x)
         w0 = log1px*(1-log1p(log1px)/(2+log1px))
@@ -430,7 +430,7 @@ Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 """
 function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ = zeros(T,N)
-    N > 0 && (μ[1] = 2.^(α+β+1)*beta(α+1,β+1))
+    N > 0 && (μ[1] = 2 .^ (α+β+1)*beta(α+1,β+1))
     if N > 1
         μ[2] = μ[1]*(β-α)/(α+β+2)
         for i=1:N-2
@@ -449,7 +449,7 @@ Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 """
 function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ = zeros(T,N)
-    N > 0 && (μ[1] = 2.^(α+β+1)*beta(α+1,β+1))
+    N > 0 && (μ[1] = 2 .^ (α+β+1)*beta(α+1,β+1))
     if N > 1
         μ[2] = 2μ[1]*(β-α)/(α+β+2)
         for i=1:N-2

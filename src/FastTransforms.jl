@@ -2,7 +2,17 @@ __precompile__()
 module FastTransforms
 
 using ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter, Compat,
-        FFTW, AbstractFFTs
+        AbstractFFTs, SpecialFunctions
+
+if VERSION < v"0.7-"
+    using Base.FFTW
+    import Base.FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
+    import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+else
+    using FFTW
+    import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
+    import FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+end
 
 import Base: *, \, size, view
 import Base: getindex, setindex!, Factorization, length
@@ -11,8 +21,6 @@ import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
 import HierarchicalMatrices: A_mul_B!, At_mul_B!, Ac_mul_B!
 import LowRankApprox: ColPerm
 import AbstractFFTs: Plan
-import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
-import FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
 
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
@@ -50,7 +58,7 @@ include("fejer.jl")
 include("recurrence.jl")
 include("PaduaTransform.jl")
 
-@compat abstract type FastTransformPlan{D,T} end
+abstract type FastTransformPlan{D,T} end
 
 include("ChebyshevJacobiPlan.jl")
 include("jac2cheb.jl")

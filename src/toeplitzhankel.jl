@@ -5,7 +5,7 @@ Store a diagonally-scaled Toeplitz∘Hankel matrix:
 
 where the Hankel matrix `H` is non-negative definite. This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
 """
-immutable ToeplitzHankelPlan{S}
+struct ToeplitzHankelPlan{S}
     T::TriangularToeplitz{S}
     C::Vector{Vector{S}}
     DL::Vector{S}
@@ -132,7 +132,7 @@ end
 
 function ultra2ultraTH{S}(::Type{S},n,λ₁,λ₂)
     @assert abs(λ₁-λ₂) < 1
-    DL = (zero(S):n-one(S))+λ₂
+    DL = (zero(S):n-one(S)) .+ λ₂
     jk = 0:half(S):n-1
     t = zeros(S,n)
     t[1:2:n] = Λ(jk,λ₁-λ₂,one(S))[1:2:n]
@@ -156,7 +156,7 @@ function jac2jacTH{S}(::Type{S},n,α,β,γ,δ)
     T,H,DL,DR
 end
 
-immutable ChebyshevToLegendrePlanTH{TH}
+struct ChebyshevToLegendrePlanTH{TH}
     toeplitzhankel::TH
 end
 
@@ -176,8 +176,8 @@ th_ultra2ultraplan{S}(::Type{S},n,λ₁,λ₂)=ToeplitzHankelPlan(ultra2ultraTH(
 th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ)=ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)
 
 
-th_leg2cheb(v)=th_leg2chebplan(eltype(v),length(v))*v
+th_leg2cheb(v) = th_leg2chebplan(eltype(v),length(v))*v
 th_cheb2leg(v) = th_cheb2legplan(eltype(v),length(v))*v
-th_leg2chebu(v)=th_leg2chebuplan(eltype(v),length(v))*v
-th_ultra2ultra(v,λ₁,λ₂)=th_ultra2ultraplan(eltype(v),length(v),λ₁,λ₂)*v
-th_jac2jac(v,α,β,γ,δ)=th_jac2jacplan(eltype(v),length(v),α,β,γ,δ)*v
+th_leg2chebu(v) = th_leg2chebuplan(eltype(v),length(v))*v
+th_ultra2ultra(v,λ₁,λ₂) = th_ultra2ultraplan(eltype(v),length(v),λ₁,λ₂)*v
+th_jac2jac(v,α,β,γ,δ) = th_jac2jacplan(eltype(v),length(v),α,β,γ,δ)*v

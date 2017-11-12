@@ -1,4 +1,9 @@
-using FastTransforms, Base.Test
+using FastTransforms
+if VERSION < v"0.7-"
+    using Base.Test
+else
+    using Test, FFTW
+end
 
 @testset "Nonuniform fast Fourier transforms" begin
 

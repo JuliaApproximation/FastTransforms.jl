@@ -1,4 +1,4 @@
-immutable ChebyshevJacobiConstants{D,T}
+struct ChebyshevJacobiConstants{D,T}
     α::T
     β::T
     M::Int
@@ -23,7 +23,7 @@ function ChebyshevJacobiConstants{T}(c::AbstractVector{T},α::T,β::T;M::Int=7,D
     ChebyshevJacobiConstants{D,T}(α,β,M,N,nM₀,αN,K)
 end
 
-immutable ChebyshevJacobiIndices
+struct ChebyshevJacobiIndices
     i₁::Vector{Int}
     i₂::Vector{Int}
     j₁::Vector{Int}
@@ -53,7 +53,7 @@ function ChebyshevJacobiIndices{D,T}(α::T,β::T,CJC::ChebyshevJacobiConstants{D
     ChebyshevJacobiIndices(i₁,i₂,j₁,j₂)
 end
 
-type ChebyshevJacobiPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
+mutable struct ChebyshevJacobiPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
     CJC::ChebyshevJacobiConstants{D,T}
     CJI::ChebyshevJacobiIndices
     p₁::DCT

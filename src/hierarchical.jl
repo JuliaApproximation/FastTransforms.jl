@@ -1,4 +1,4 @@
-@compat abstract type HierarchicalPlan{T} <: AbstractMatrix{T} end
+abstract type HierarchicalPlan{T} <: AbstractMatrix{T} end
 
 function *(P::HierarchicalPlan, x::AbstractVector)
     A_mul_B!(zero(x), P, x)
@@ -36,7 +36,7 @@ function scale_col_J!(b::Number, A::AbstractVecOrMat, J::Int)
     A
 end
 
-@compat abstract type HierarchicalPlanWithParity{T} <: HierarchicalPlan{T} end
+abstract type HierarchicalPlanWithParity{T} <: HierarchicalPlan{T} end
 
 size(P::HierarchicalPlanWithParity) = (size(P.even, 1)+size(P.odd, 1), size(P.even, 2)+size(P.odd, 2))
 
@@ -124,7 +124,7 @@ function Lodd{T}(::Type{T}, x, y)
     end
 end
 
-immutable LegendreToChebyshevPlan{T} <: HierarchicalPlanWithParity{T}
+struct LegendreToChebyshevPlan{T} <: HierarchicalPlanWithParity{T}
     even::HierarchicalMatrix{T}
     odd::HierarchicalMatrix{T}
 end
@@ -139,7 +139,7 @@ function getindex(P::LegendreToChebyshevPlan, i::Int, j::Int)
     end
 end
 
-immutable ChebyshevToLegendrePlan{T} <: HierarchicalPlanWithParity{T}
+struct ChebyshevToLegendrePlan{T} <: HierarchicalPlanWithParity{T}
     even::HierarchicalMatrix{T}
     odd::HierarchicalMatrix{T}
 end
@@ -224,7 +224,7 @@ function Loddnorm{T}(::Type{T}, x, y)
     end
 end
 
-immutable NormalizedLegendreToChebyshevPlan{T} <: HierarchicalPlanWithParity{T}
+struct NormalizedLegendreToChebyshevPlan{T} <: HierarchicalPlanWithParity{T}
     even::HierarchicalMatrix{T}
     odd::HierarchicalMatrix{T}
     scl::Vector{T}
@@ -240,7 +240,7 @@ function getindex(P::NormalizedLegendreToChebyshevPlan, i::Int, j::Int)
     end
 end
 
-immutable ChebyshevToNormalizedLegendrePlan{T} <: HierarchicalPlanWithParity{T}
+struct ChebyshevToNormalizedLegendrePlan{T} <: HierarchicalPlanWithParity{T}
     even::HierarchicalMatrix{T}
     odd::HierarchicalMatrix{T}
     scl::Vector{T}
@@ -332,7 +332,7 @@ function Lnormodd{T}(::Type{T}, x, y)
     -T(Λ(1.0*(y-x))/(2.0*y-2.0*x-1.0)*Λ(1.0*(y+x)+0.5)/(2.0*y+2.0*x)*(2.0*x+0.5))
 end
 
-immutable NormalizedLegendre1ToChebyshev2Plan{T} <: HierarchicalPlanWithParity{T}
+struct NormalizedLegendre1ToChebyshev2Plan{T} <: HierarchicalPlanWithParity{T}
     even::HierarchicalMatrix{T}
     odd::HierarchicalMatrix{T}
     scl::Vector{T}
@@ -348,7 +348,7 @@ function getindex(P::NormalizedLegendre1ToChebyshev2Plan, i::Int, j::Int)
     end
 end
 
-immutable Chebyshev2ToNormalizedLegendre1Plan{T} <: HierarchicalPlanWithParity{T}
+struct Chebyshev2ToNormalizedLegendre1Plan{T} <: HierarchicalPlanWithParity{T}
     even::HierarchicalMatrix{T}
     odd::HierarchicalMatrix{T}
     scl::Vector{T}
@@ -420,9 +420,9 @@ for (f, T, feven, fodd) in ((:leg2cheb, :LegendreToChebyshevPlan, :Meven, :Modd)
                           (:cheb2normleg, :ChebyshevToNormalizedLegendrePlan, :Levennorm, :Loddnorm),
                           (:normleg12cheb2, :NormalizedLegendre1ToChebyshev2Plan, :Mnormeven, :Mnormodd),
                           (:cheb22normleg1, :Chebyshev2ToNormalizedLegendre1Plan, :Lnormeven, :Lnormodd))
-    plan_f = parse("plan_"*string(f))
-    plan_even_f = parse("plan_even_"*string(f))
-    plan_odd_f = parse("plan_odd_"*string(f))
+    plan_f = Meta.parse("plan_"*string(f))
+    plan_even_f = Meta.parse("plan_even_"*string(f))
+    plan_odd_f = Meta.parse("plan_odd_"*string(f))
     @eval begin
         $plan_f(v::VecOrMat) = $T(v)
         $f(v::VecOrMat) = $plan_f(v)*v

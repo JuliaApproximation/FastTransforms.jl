@@ -2,7 +2,7 @@ doc"""
 Pre-plan an Inverse Padua Transform.
 """
 # lex indicates if its lexigraphical (i.e., x, y) or reverse (y, x)
-immutable IPaduaTransformPlan{lex,IDCTPLAN,T}
+struct IPaduaTransformPlan{lex,IDCTPLAN,T}
     cfsmat::Matrix{T}
     idctplan::IDCTPLAN
 end
@@ -103,7 +103,7 @@ end
 doc"""
 Pre-plan a Padua Transform.
 """
-immutable PaduaTransformPlan{lex,DCTPLAN,T}
+struct PaduaTransformPlan{lex,DCTPLAN,T}
     vals::Matrix{T}
     dctplan::DCTPLAN
 end
