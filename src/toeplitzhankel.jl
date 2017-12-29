@@ -28,40 +28,40 @@ ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,D::AbstractVector,DL::Abstrac
 
 function partialchol(H::Hankel)
     # Assumes positive definite
-    σ=eltype(H)[]
-    n=size(H,1)
-    C=Vector{eltype(H)}[]
-    v=[H[:,1];vec(H[end,2:end])]
-    d=diag(H)
+    σ = eltype(H)[]
+    n = size(H,1)
+    C = Vector{eltype(H)}[]
+    v = [H[:,1]; vec(H[end,2:end])]
+    d = diag(H)
     @assert length(v) ≥ 2n-1
-    reltol=maximum(abs,d)*eps(eltype(H))*log(n)
+    reltol = maximum(abs,d)*eps(eltype(H))*log(n)
     for k=1:n
-        mx,idx=findmax(d)
+        mx,idx = findmax(d)
         if mx ≤ reltol break end
-        push!(σ,inv(mx))
-        push!(C,v[idx:n+idx-1])
+        push!(σ, inv(mx))
+        push!(C, v[idx:n+idx-1])
         for j=1:k-1
             nCjidxσj = -C[j][idx]*σ[j]
             Base.axpy!(nCjidxσj, C[j], C[k])
         end
         @simd for p=1:n
-            @inbounds d[p]-=C[k][p]^2/mx
+            @inbounds d[p] -= C[k][p]^2/mx
         end
     end
     for k=1:length(σ) scale!(C[k],sqrt(σ[k])) end
     C
 end
 
-function partialchol(H::Hankel,D::AbstractVector)
+function partialchol(H::Hankel, D::AbstractVector)
     # Assumes positive definite
     T = promote_type(eltype(H),eltype(D))
-    σ=T[]
-    n=size(H,1)
-    C=Vector{T}[]
-    v=[H[:,1];vec(H[end,2:end])]
-    d=diag(H).*D.^2
+    σ = T[]
+    n = size(H,1)
+    C = Vector{T}[]
+    v = [H[:,1];vec(H[end,2:end])]
+    d = diag(H).*D.^2
     @assert length(v) ≥ 2n-1
-    reltol=maximum(abs,d)*eps(T)*log(n)
+    reltol = maximum(abs,d)*eps(T)*log(n)
     for k=1:n
         mx,idx=findmax(d)
         if mx ≤ reltol break end
@@ -103,7 +103,7 @@ function leg2chebTH{S}(::Type{S},n)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]
     T = TriangularToeplitz(2t/π,:U)
-    H = Hankel(λ[1:n],λ[n:end])
+    H = Hankel(λ[1:n], λ[n:end])
     DL = ones(S,n)
     DL[1] /= 2
     T,H,DL

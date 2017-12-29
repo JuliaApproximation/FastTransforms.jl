@@ -17,4 +17,7 @@ using Compat.Test
     @test norm(jac2jac(c,0.,√2/2,-1/4,√2/2)-jjt(c,0.,√2/2,-1/4,√2/2),Inf) < 10length(c)*eps()
 
     @test norm(ultra2ultra(ultra2ultra(c,.5,.75),.75,.5)-c,Inf) < 10length(c)*eps()
+
+    @test FastTransforms.th_cheb2leg([1.0,2,3,4,5]) ≈ cheb2leg([1.0,2,3,4,5])
+    @test FastTransforms.th_leg2cheb([1.0,2,3,4,5]) ≈ leg2cheb([1.0,2,3,4,5])
 end
