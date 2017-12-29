@@ -111,9 +111,9 @@ end
 
 function cheb2legTH{S}(::Type{S},n)
     t = zeros(S,n-1)
-    t[1:2:end] = Λ(0:one(S):div(n-2,2),-half(S),one(S))
+    t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
     T = TriangularToeplitz(t,:U)
-    h = Λ(1:half(S):n-1,zero(S),3half(S))
+    h = Λ.(1:half(S):n-1, zero(S), 3half(S))
     H = Hankel(h[1:n-1],h[n-1:end])
     D = 1:one(S):n-1
     DL = (3half(S):n-half(S))./D
@@ -169,11 +169,11 @@ function *(P::ChebyshevToLegendrePlanTH,v::AbstractVector)
     [dot(w,v);P.toeplitzhankel*view(v,2:n)]
 end
 
-th_leg2chebplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebTH(S,n)...,ones(S,n))
-th_cheb2legplan{S}(::Type{S},n)=ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S,n)...))
-th_leg2chebuplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebuTH(S,n)...,1:n,ones(S,n))
-th_ultra2ultraplan{S}(::Type{S},n,λ₁,λ₂)=ToeplitzHankelPlan(ultra2ultraTH(S,n,λ₁,λ₂)...)
-th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ)=ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)
+th_leg2chebplan{S}(::Type{S},n) = ToeplitzHankelPlan(leg2chebTH(S,n)...,ones(S,n))
+th_cheb2legplan{S}(::Type{S},n) = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S,n)...))
+th_leg2chebuplan{S}(::Type{S},n) = ToeplitzHankelPlan(leg2chebuTH(S,n)...,1:n,ones(S,n))
+th_ultra2ultraplan{S}(::Type{S},n,λ₁,λ₂) = ToeplitzHankelPlan(ultra2ultraTH(S,n,λ₁,λ₂)...)
+th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ) = ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)
 
 
 th_leg2cheb(v) = th_leg2chebplan(eltype(v),length(v))*v
