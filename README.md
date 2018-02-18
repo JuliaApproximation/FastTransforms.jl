@@ -172,8 +172,10 @@ As with other fast transforms, `plan_sph2fourier` saves effort by caching the pr
 
    [4]  D. Ruiz—Antolín and A. Townsend. <a href="https://arxiv.org/abs/1701.04492">A nonuniform fast Fourier transform based on low rank approximation</a>, arXiv:1701.04492, 2017.
 
-   [5]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, in press at *IMA J. Numer. Anal.*, 2017.
+   [5]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, *IMA J. Numer. Anal.*, **38**:102—124, 2018.
 
-   [6]  R. M. Slevinsky. <a href="https://arxiv.org/abs/1705.05448">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, arXiv:1705.05448, 2017.
+   [6]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, in press at *Appl. Comput. Harmon. Anal.*, 2017.
 
-   [7]  A. Townsend, M. Webb, and S. Olver. <a href="https://doi.org/10.1090/mcom/3277">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, in press at *Math. Comp.*, 2017.
+   [7]  R. M. Slevinsky, <a href="https://arxiv.org/abs/1711.07866">Conquering the pre-computation in two-dimensional harmonic polynomial transforms</a>, arXiv:1711.07866, 2017.
+
+   [8]  A. Townsend, M. Webb, and S. Olver. <a href="https://doi.org/10.1090/mcom/3277">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, in press at *Math. Comp.*, 2017.
