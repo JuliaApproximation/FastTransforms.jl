@@ -1,4 +1,5 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test
 
 @testset "Padua transform and its inverse" begin
     n=200

@@ -41,7 +41,7 @@ function A_mul_B!{T<:Real}(A::AbstractMatrix, G::Givens{T})
     return A
 end
 
-immutable Pnmp2toPlm{T} <: AbstractRotation{T}
+struct Pnmp2toPlm{T} <: AbstractRotation{T}
     rotations::Vector{Givens{T}}
 end
 
@@ -73,7 +73,7 @@ function Base.A_mul_B!(A::AbstractMatrix, C::Pnmp2toPlm)
 end
 
 
-immutable RotationPlan{T} <: AbstractRotation{T}
+struct RotationPlan{T} <: AbstractRotation{T}
     layers::Vector{Pnmp2toPlm{T}}
 end
 
@@ -126,7 +126,7 @@ end
 Base.Ac_mul_B!(P::RotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
 
 
-immutable SlowSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
+struct SlowSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     RP::RotationPlan{T}
     p1::NormalizedLegendreToChebyshevPlan{T}
     p2::NormalizedLegendre1ToChebyshev2Plan{T}

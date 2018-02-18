@@ -3,7 +3,7 @@ Pre-computes an inverse nonuniform fast Fourier transform of type `N`.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
 """
-immutable iNUFFTPlan{N,T,S,PT} <: Base.DFT.Plan{T}
+struct iNUFFTPlan{N,T,S,PT} <: Plan{T}
     pt::PT
     TP::Toeplitz{T}
     r::Vector{T}

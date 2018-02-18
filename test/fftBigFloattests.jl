@@ -1,4 +1,8 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test
+if VERSION ≥ v"0.7-"
+    using FFTW
+end
 
 @testset "BigFloat FFT and DCT" begin
 

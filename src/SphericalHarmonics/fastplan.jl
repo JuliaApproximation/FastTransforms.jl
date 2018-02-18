@@ -1,4 +1,4 @@
-immutable FastSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
+struct FastSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     RP::RotationPlan{T}
     BF::Vector{Butterfly{T}}
     p1::NormalizedLegendreToChebyshevPlan{T}

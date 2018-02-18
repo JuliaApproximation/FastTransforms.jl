@@ -1,4 +1,4 @@
-immutable RecurrencePlan{T}
+struct RecurrencePlan{T}
     A::Vector{T}
     B::Vector{T}
     C::Vector{T}
@@ -27,8 +27,8 @@ function RecurrencePlan{T}(α::T,β::T,N::Int)
     RecurrencePlan(A,B,C,rf₀,rf₁,rf₀inv,rf₁inv,rb₀,rb₁,rb₀inv,rb₁inv)
 end
 
-recA{T}(α::T,β::T,k::Int)=k==0&&((α+β==0)||(α+β==-1))?(α+β)/2+1:(2k+α+β+1)*(2k+α+β+2)/(2*(k+1)*(k+α+β+1))
-recB{T}(α::T,β::T,k::Int)=k==0&&((α+β==0)||(α+β==-1))?(α-β)/2:(α-β)*(α+β)*(2k+α+β+1)/(2*(k+1)*(k+α+β+1)*(2k+α+β))
+recA{T}(α::T,β::T,k::Int)=k==0&&((α+β==0)||(α+β==-1)) ? (α+β)/2+1 : (2k+α+β+1)*(2k+α+β+2)/(2*(k+1)*(k+α+β+1))
+recB{T}(α::T,β::T,k::Int)=k==0&&((α+β==0)||(α+β==-1)) ? (α-β)/2 : (α-β)*(α+β)*(2k+α+β+1)/(2*(k+1)*(k+α+β+1)*(2k+α+β))
 recC{T}(α::T,β::T,k::Int)=(k+α)*(k+β)*(2k+α+β+2)/((k+1)*(k+α+β+1)*(2k+α+β))
 
 rf0{T}(α::T,β::T,k::Int) = (k+α+one(T))/(k+one(T))

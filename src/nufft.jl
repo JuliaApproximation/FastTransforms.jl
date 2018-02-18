@@ -3,7 +3,7 @@ Pre-computes a nonuniform fast Fourier transform of type `N`.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
 """
-immutable NUFFTPlan{N,T,FFT} <: Base.DFT.Plan{T}
+struct NUFFTPlan{N,T,FFT} <: Plan{T}
     U::Matrix{T}
     V::Matrix{T}
     p::FFT
@@ -64,9 +64,9 @@ function plan_nufft3{T<:AbstractFloat}(x::AbstractVector{T}, ω::AbstractVector{
 
     p = plan_nufft1(ω, ϵ)
 
-    D1 = Diagonal(1-(s-t+1)/N)
-    D2 = Diagonal((s-t+1)/N)
-    D3 = Diagonal(exp.(-2*im*T(π)*ω))
+    D1 = Diagonal(1 .- (s .- t .+ 1)./N)
+    D2 = Diagonal((s .- t .+ 1)./N)
+    D3 = Diagonal(exp.(-2 .* im .* T(π) .* ω ))
     U = hcat(D1*u, D2*u)
     V = hcat(v, D3*v)
 
@@ -234,7 +234,7 @@ Pre-computes a 2D nonuniform fast Fourier transform.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
 """
-immutable NUFFT2DPlan{T,P1,P2} <: Base.DFT.Plan{T}
+struct NUFFT2DPlan{T,P1,P2} <: Plan{T}
     p1::P1
     p2::P2
     temp::Vector{T}
@@ -303,7 +303,7 @@ nufft2{T<:AbstractFloat}(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, 
 
 FindK{T<:AbstractFloat}(γ::T, ϵ::T) = γ ≤ ϵ ? 1 : Int(ceil(5*γ*exp(lambertw(log(10/ϵ)/γ/7))))
 AssignClosestEquispacedGridpoint{T<:AbstractFloat}(x::AbstractVector{T})::AbstractVector{T} = round.([Int], size(x, 1)*x)
-AssignClosestEquispacedFFTpoint{T<:AbstractFloat}(x::AbstractVector{T})::Array{Int,1} = mod.(round.([Int], size(x, 1)*x), size(x, 1)) + 1
+AssignClosestEquispacedFFTpoint{T<:AbstractFloat}(x::AbstractVector{T})::Array{Int,1} = mod.(round.([Int], size(x, 1)*x), size(x, 1)) .+ 1
 PerturbationParameter{T<:AbstractFloat}(x::AbstractVector{T}, s_vec::AbstractVector{T})::AbstractFloat = norm(size(x, 1)*x - s_vec, Inf)
 
 function constructU{T<:AbstractFloat}(x::AbstractVector{T}, K::Int)
@@ -317,7 +317,7 @@ function constructU{T<:AbstractFloat}(x::AbstractVector{T}, K::Int)
 end
 
 function constructV{T<:AbstractFloat}(ω::AbstractVector{T}, K::Int)
-    complex(ChebyshevP(K-1, ω*(two(T)/length(ω)) - 1))
+    complex(ChebyshevP(K-1, ω.*(two(T)/length(ω)) .- 1))
 end
 
 function Bessel_coeffs{T<:AbstractFloat}(K::Int, γ::T)

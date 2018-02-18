@@ -1,4 +1,4 @@
-immutable ChebyshevUltrasphericalConstants{D,T}
+struct ChebyshevUltrasphericalConstants{D,T}
     λ::T
     M::Int
     N::Int
@@ -23,7 +23,7 @@ function ChebyshevUltrasphericalConstants{T}(c::AbstractVector{T},λ::T;M::Int=7
     ChebyshevUltrasphericalConstants{D,T}(λ,M,N,nM₀,αN,K)
 end
 
-immutable ChebyshevUltrasphericalIndices
+struct ChebyshevUltrasphericalIndices
     i₁::Vector{Int}
     i₂::Vector{Int}
     j₁::Vector{Int}
@@ -53,7 +53,7 @@ function ChebyshevUltrasphericalIndices{D,T}(λ::T,CUC::ChebyshevUltrasphericalC
     ChebyshevUltrasphericalIndices(i₁,i₂,j₁,j₂)
 end
 
-type ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
+mutable struct ChebyshevUltrasphericalPlan{D,T,DCT,DST,SA} <: FastTransformPlan{D,T}
     CUC::ChebyshevUltrasphericalConstants{D,T}
     CUI::ChebyshevUltrasphericalIndices
     p₁::DCT
@@ -184,7 +184,7 @@ function BackwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T
     cnmλ = similar(cnλ)
 
     # Initialize orthonormality constants
-    anλ = Anαβ(0:N,λ-half(λ),λ-half(λ))
+    anλ = Anαβ.(0:N,λ-half(λ),λ-half(λ))
 
     # Get indices
     CUI = ChebyshevUltrasphericalIndices(λ,CUC,tempmindices,tempsin,tempsinλ)

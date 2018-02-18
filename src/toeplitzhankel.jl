@@ -5,7 +5,7 @@ Store a diagonally-scaled Toeplitz∘Hankel matrix:
 
 where the Hankel matrix `H` is non-negative definite. This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
 """
-immutable ToeplitzHankelPlan{S}
+struct ToeplitzHankelPlan{S}
     T::TriangularToeplitz{S}
     C::Vector{Vector{S}}
     DL::Vector{S}
@@ -28,40 +28,40 @@ ToeplitzHankelPlan(T::TriangularToeplitz,H::Hankel,D::AbstractVector,DL::Abstrac
 
 function partialchol(H::Hankel)
     # Assumes positive definite
-    σ=eltype(H)[]
-    n=size(H,1)
-    C=Vector{eltype(H)}[]
-    v=[H[:,1];vec(H[end,2:end])]
-    d=diag(H)
+    σ = eltype(H)[]
+    n = size(H,1)
+    C = Vector{eltype(H)}[]
+    v = [H[:,1]; vec(H[end,2:end])]
+    d = diag(H)
     @assert length(v) ≥ 2n-1
-    reltol=maximum(abs,d)*eps(eltype(H))*log(n)
+    reltol = maximum(abs,d)*eps(eltype(H))*log(n)
     for k=1:n
-        mx,idx=findmax(d)
+        mx,idx = findmax(d)
         if mx ≤ reltol break end
-        push!(σ,inv(mx))
-        push!(C,v[idx:n+idx-1])
+        push!(σ, inv(mx))
+        push!(C, v[idx:n+idx-1])
         for j=1:k-1
             nCjidxσj = -C[j][idx]*σ[j]
             Base.axpy!(nCjidxσj, C[j], C[k])
         end
         @simd for p=1:n
-            @inbounds d[p]-=C[k][p]^2/mx
+            @inbounds d[p] -= C[k][p]^2/mx
         end
     end
     for k=1:length(σ) scale!(C[k],sqrt(σ[k])) end
     C
 end
 
-function partialchol(H::Hankel,D::AbstractVector)
+function partialchol(H::Hankel, D::AbstractVector)
     # Assumes positive definite
     T = promote_type(eltype(H),eltype(D))
-    σ=T[]
-    n=size(H,1)
-    C=Vector{T}[]
-    v=[H[:,1];vec(H[end,2:end])]
-    d=diag(H).*D.^2
+    σ = T[]
+    n = size(H,1)
+    C = Vector{T}[]
+    v = [H[:,1];vec(H[end,2:end])]
+    d = diag(H).*D.^2
     @assert length(v) ≥ 2n-1
-    reltol=maximum(abs,d)*eps(T)*log(n)
+    reltol = maximum(abs,d)*eps(T)*log(n)
     for k=1:n
         mx,idx=findmax(d)
         if mx ≤ reltol break end
@@ -103,7 +103,7 @@ function leg2chebTH{S}(::Type{S},n)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]
     T = TriangularToeplitz(2t/π,:U)
-    H = Hankel(λ[1:n],λ[n:end])
+    H = Hankel(λ[1:n], λ[n:end])
     DL = ones(S,n)
     DL[1] /= 2
     T,H,DL
@@ -111,9 +111,9 @@ end
 
 function cheb2legTH{S}(::Type{S},n)
     t = zeros(S,n-1)
-    t[1:2:end] = Λ(0:one(S):div(n-2,2),-half(S),one(S))
+    t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
     T = TriangularToeplitz(t,:U)
-    h = Λ(1:half(S):n-1,zero(S),3half(S))
+    h = Λ.(1:half(S):n-1, zero(S), 3half(S))
     H = Hankel(h[1:n-1],h[n-1:end])
     D = 1:one(S):n-1
     DL = (3half(S):n-half(S))./D
@@ -126,18 +126,18 @@ function leg2chebuTH{S}(::Type{S},n)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
     T = TriangularToeplitz(-2t/π,:U)
-    H = Hankel(λ[1:n]./((1:n)+1),λ[n:end]./((n:2n-1)+1))
+    H = Hankel(λ[1:n]./((1:n).+1),λ[n:end]./((n:2n-1).+1))
     T,H
 end
 
 function ultra2ultraTH{S}(::Type{S},n,λ₁,λ₂)
     @assert abs(λ₁-λ₂) < 1
-    DL = (zero(S):n-one(S))+λ₂
+    DL = (zero(S):n-one(S)) .+ λ₂
     jk = 0:half(S):n-1
     t = zeros(S,n)
-    t[1:2:n] = Λ(jk,λ₁-λ₂,one(S))[1:2:n]
+    t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S))[1:2:n]
     T = TriangularToeplitz(scale!(inv(gamma(λ₁-λ₂)),t),:U)
-    h = Λ(jk,λ₁,λ₂+one(S))
+    h = Λ.(jk,λ₁,λ₂+one(S))
     scale!(gamma(λ₂)/gamma(λ₁),h)
     H = Hankel(h[1:n],h[n:end])
     DR = ones(S,n)
@@ -149,14 +149,14 @@ function jac2jacTH{S}(::Type{S},n,α,β,γ,δ)
     @assert abs(α-γ) < 1
     @assert α+β > -1
     jk = zero(S):n-one(S)
-    DL = (2jk+γ+β+one(S)).*Λ(jk,γ+β+one(S),β+one(S))
-    T = TriangularToeplitz(Λ(jk,α-γ,one(S)),:U)
-    H = Hankel(Λ(jk,α+β+one(S),γ+β+two(S)),Λ(jk+n-one(S),α+β+one(S),γ+β+two(S)))
-    DR = Λ(jk,β+one(S),α+β+one(S))/gamma(α-γ)
+    DL = (2jk .+ γ .+ β .+ one(S)).*Λ.(jk,γ+β+one(S),β+one(S))
+    T = TriangularToeplitz(Λ.(jk,α-γ,one(S)),:U)
+    H = Hankel(Λ.(jk,α+β+one(S),γ+β+two(S)),Λ.(jk.+n.-one(S),α+β+one(S),γ+β+two(S)))
+    DR = Λ.(jk,β+one(S),α+β+one(S))./gamma(α-γ)
     T,H,DL,DR
 end
 
-immutable ChebyshevToLegendrePlanTH{TH}
+struct ChebyshevToLegendrePlanTH{TH}
     toeplitzhankel::TH
 end
 
@@ -169,15 +169,15 @@ function *(P::ChebyshevToLegendrePlanTH,v::AbstractVector)
     [dot(w,v);P.toeplitzhankel*view(v,2:n)]
 end
 
-th_leg2chebplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebTH(S,n)...,ones(S,n))
-th_cheb2legplan{S}(::Type{S},n)=ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S,n)...))
-th_leg2chebuplan{S}(::Type{S},n)=ToeplitzHankelPlan(leg2chebuTH(S,n)...,1:n,ones(S,n))
-th_ultra2ultraplan{S}(::Type{S},n,λ₁,λ₂)=ToeplitzHankelPlan(ultra2ultraTH(S,n,λ₁,λ₂)...)
-th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ)=ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)
+th_leg2chebplan{S}(::Type{S},n) = ToeplitzHankelPlan(leg2chebTH(S,n)...,ones(S,n))
+th_cheb2legplan{S}(::Type{S},n) = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S,n)...))
+th_leg2chebuplan{S}(::Type{S},n) = ToeplitzHankelPlan(leg2chebuTH(S,n)...,1:n,ones(S,n))
+th_ultra2ultraplan{S}(::Type{S},n,λ₁,λ₂) = ToeplitzHankelPlan(ultra2ultraTH(S,n,λ₁,λ₂)...)
+th_jac2jacplan{S}(::Type{S},n,α,β,γ,δ) = ToeplitzHankelPlan(jac2jacTH(S,n,α,β,γ,δ)...)
 
 
-th_leg2cheb(v)=th_leg2chebplan(eltype(v),length(v))*v
+th_leg2cheb(v) = th_leg2chebplan(eltype(v),length(v))*v
 th_cheb2leg(v) = th_cheb2legplan(eltype(v),length(v))*v
-th_leg2chebu(v)=th_leg2chebuplan(eltype(v),length(v))*v
-th_ultra2ultra(v,λ₁,λ₂)=th_ultra2ultraplan(eltype(v),length(v),λ₁,λ₂)*v
-th_jac2jac(v,α,β,γ,δ)=th_jac2jacplan(eltype(v),length(v),α,β,γ,δ)*v
+th_leg2chebu(v) = th_leg2chebuplan(eltype(v),length(v))*v
+th_ultra2ultra(v,λ₁,λ₂) = th_ultra2ultraplan(eltype(v),length(v),λ₁,λ₂)*v
+th_jac2jac(v,α,β,γ,δ) = th_jac2jacplan(eltype(v),length(v),α,β,γ,δ)*v
