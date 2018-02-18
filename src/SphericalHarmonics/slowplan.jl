@@ -2,7 +2,7 @@ import Base.LinAlg: Givens, AbstractRotation
 
 ### These three A_mul_B! should be in Base, but for the time being they do not add methods to Base.A_mul_B!; they add methods to the internal A_mul_B!.
 
-function A_mul_B!{T<:Real}(G::Givens{T}, A::AbstractVecOrMat)
+function A_mul_B!(G::Givens{T}, A::AbstractVecOrMat) where T<:Real
     m, n = size(A, 1), size(A, 2)
     if G.i2 > m
         throw(DimensionMismatch("column indices for rotation are outside the matrix"))
@@ -28,7 +28,7 @@ function A_mul_B!(A::AbstractMatrix, G::Givens)
     return A
 end
 
-function A_mul_B!{T<:Real}(A::AbstractMatrix, G::Givens{T})
+function A_mul_B!(A::AbstractMatrix, G::Givens{T}) where T<:Real
     m, n = size(A, 1), size(A, 2)
     if G.i2 > n
         throw(DimensionMismatch("column indices for rotation are outside the matrix"))
@@ -45,7 +45,7 @@ struct Pnmp2toPlm{T} <: AbstractRotation{T}
     rotations::Vector{Givens{T}}
 end
 
-function Pnmp2toPlm{T}(::Type{T}, n::Int, m::Int)
+function Pnmp2toPlm(::Type{T}, n::Int, m::Int) where T
     G = Vector{Givens{T}}(n)
     @inbounds for ℓ = 1:n
         c = sqrt(T((2m+2)*(2ℓ+2m+3))/T((ℓ+2m+2)*(ℓ+2m+3)))
@@ -75,14 +75,42 @@ end
 
 struct RotationPlan{T} <: AbstractRotation{T}
     layers::Vector{Pnmp2toPlm{T}}
+    snm::Vector{T}
+    cnm::Vector{T}
 end
 
-function RotationPlan{T}(::Type{T}, n::Int)
+function RotationPlan(::Type{T}, n::Int) where T
     layers = Vector{Pnmp2toPlm{T}}(n-1)
     @inbounds for m = 0:n-2
         layers[m+1] = Pnmp2toPlm(T, n-1-m, m)
     end
-    RotationPlan(layers)
+    n = n+1
+    snm = zeros(T, (n*(n+1))÷2)
+    cnm = zeros(T, (n*(n+1))÷2)
+    @inbounds for l = 0:n-1
+        for m = 0:n-l-1
+            nums = T((l+1)*(l+2))
+            numc = T((2*m+2)*(2*l+2*m+5))
+            den = T((l+2*m+3)*(l+2*m+4))
+            snm[l+(m*(2*n+1-m))÷2+1] = sqrt(nums/den)
+            cnm[l+(m*(2*n+1-m))÷2+1] = sqrt(numc/den)
+        end
+    end
+    RotationPlan(layers, snm, cnm)
+end
+
+const rotpath = joinpath(Pkg.dir("FastTransforms"), "deps", "rotpar")
+
+function Base.A_mul_B!(P::RotationPlan{Float64}, A::AbstractMatrix{Float64})
+    M, N = size(A)
+    ccall((:julia_apply_givens, rotpath), Void, (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Int64, Int64), A, P.snm, P.cnm, M, N)
+    A
+end
+
+function Base.At_mul_B!(P::RotationPlan{Float64}, A::AbstractMatrix{Float64})
+    M, N = size(A)
+    ccall((:julia_apply_givens_t, rotpath), Void, (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Int64, Int64), A, P.snm, P.cnm, M, N)
+    A
 end
 
 function Base.A_mul_B!(P::RotationPlan, A::AbstractMatrix)
@@ -135,7 +163,7 @@ struct SlowSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     B::Matrix{T}
 end
 
-function SlowSphericalHarmonicPlan{T}(A::Matrix{T})
+function SlowSphericalHarmonicPlan(A::Matrix{T}) where T
     M, N = size(A)
     n = (N+1)÷2
     RP = RotationPlan(T, n-1)

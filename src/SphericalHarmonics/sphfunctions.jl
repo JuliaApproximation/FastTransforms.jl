@@ -10,7 +10,7 @@ function sph_zero_spurious_modes!(A::AbstractMatrix)
     A
 end
 
-function sphrand{T}(::Type{T}, m::Int, n::Int)
+function sphrand(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, 2n-1)
     for i = 1:m
         A[i,1] = rand(T)
@@ -24,7 +24,7 @@ function sphrand{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-function sphrandn{T}(::Type{T}, m::Int, n::Int)
+function sphrandn(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, 2n-1)
     for i = 1:m
         A[i,1] = randn(T)
@@ -38,7 +38,7 @@ function sphrandn{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-function sphones{T}(::Type{T}, m::Int, n::Int)
+function sphones(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, 2n-1)
     for i = 1:m
         A[i,1] = one(T)
@@ -52,7 +52,7 @@ function sphones{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-sphzeros{T}(::Type{T}, m::Int, n::Int) = zeros(T, m, 2n-1)
+sphzeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, 2n-1)
 
 function normalizecolumns!(A::AbstractMatrix)
     m, n = size(A)

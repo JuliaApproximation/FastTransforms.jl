@@ -8,7 +8,7 @@ struct FastSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     B::Matrix{T}
 end
 
-function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
+function FastSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
     M, N = size(A)
     n = (N+1)÷2
     RP = RotationPlan(T, n-1)

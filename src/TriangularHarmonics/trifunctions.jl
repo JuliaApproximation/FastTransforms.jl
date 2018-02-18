@@ -8,7 +8,7 @@ function tri_zero_spurious_modes!(A::AbstractMatrix)
     A
 end
 
-function trirand{T}(::Type{T}, m::Int, n::Int)
+function trirand(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, n)
     for j = 1:n
         for i = 1:m+1-j
@@ -18,7 +18,7 @@ function trirand{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-function trirandn{T}(::Type{T}, m::Int, n::Int)
+function trirandn(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, n)
     for j = 1:n
         for i = 1:m+1-j
@@ -28,7 +28,7 @@ function trirandn{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-function triones{T}(::Type{T}, m::Int, n::Int)
+function triones(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, n)
     for j = 1:n
         for i = 1:m+1-j
@@ -38,7 +38,7 @@ function triones{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-trizeros{T}(::Type{T}, m::Int, n::Int) = zeros(T, m, n)
+trizeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, n)
 
 doc"""
 Pointwise evaluation of triangular harmonic:

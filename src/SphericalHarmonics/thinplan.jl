@@ -12,7 +12,7 @@ struct ThinSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     B::Matrix{T}
 end
 
-function ThinSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
+function ThinSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
     M, N = size(A)
     n = (N+1)÷2
     RP = RotationPlan(T, n-1)

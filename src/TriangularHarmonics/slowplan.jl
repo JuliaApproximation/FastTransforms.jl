@@ -1,8 +1,8 @@
-immutable Pnmp1toPlm{T} <: AbstractRotation{T}
+struct Pnmp1toPlm{T} <: AbstractRotation{T}
     rotations::Vector{Givens{T}}
 end
 
-function Pnmp1toPlm{T}(::Type{T}, n::Int, m::Int, α::T, β::T, γ::T)
+function Pnmp1toPlm(::Type{T}, n::Int, m::Int, α::T, β::T, γ::T) where T
     G = Vector{Givens{T}}(n)
     @inbounds for ℓ = 1:n
         c = sqrt((2m+β+γ+2)/(ℓ+2m+β+γ+2)*(2ℓ+2m+α+β+γ+2)/(ℓ+2m+α+β+γ+2))
@@ -29,11 +29,11 @@ function Base.A_mul_B!(A::AbstractMatrix, C::Pnmp1toPlm)
     A
 end
 
-immutable TriRotationPlan{T} <: AbstractRotation{T}
+struct TriRotationPlan{T} <: AbstractRotation{T}
     layers::Vector{Pnmp1toPlm{T}}
 end
 
-function TriRotationPlan{T}(::Type{T}, n::Int, α::T, β::T, γ::T)
+function TriRotationPlan(::Type{T}, n::Int, α::T, β::T, γ::T) where T
     layers = Vector{Pnmp1toPlm{T}}(n)
     @inbounds for m = 0:n-1
         layers[m+1] = Pnmp1toPlm(T, n-m, m, α, β, γ)
@@ -76,14 +76,14 @@ end
 Base.Ac_mul_B!(P::TriRotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
 
 
-immutable SlowTriangularHarmonicPlan{T} <: TriangularHarmonicPlan{T}
+struct SlowTriangularHarmonicPlan{T} <: TriangularHarmonicPlan{T}
     RP::TriRotationPlan{T}
     p::NormalizedLegendreToChebyshevPlan{T}
     pinv::ChebyshevToNormalizedLegendrePlan{T}
     B::Matrix{T}
 end
 
-function SlowTriangularHarmonicPlan{T}(A::Matrix{T}, α, β, γ)
+function SlowTriangularHarmonicPlan(A::Matrix{T}, α, β, γ) where T
     @assert β == γ == -half(T)
     @assert α == zero(T)
     M, N = size(A)
