@@ -106,8 +106,8 @@ function Base.A_mul_B!(P::RotationPlan, A::AbstractMatrix)
     @stepthreads for m = M÷2:-1:2
         @inbounds for j = m:-2:2
             for l = N-j:-1:1
-                s = snm[l+(j-2)*(2*N+3-j)÷2]
-                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                s = snm[l+(j-2)*(M+2-j)÷2]
+                c = cnm[l+(j-2)*(M+2-j)÷2]
                 a1 = A[l+N*(2*m-1)]
                 a2 = A[l+2+N*(2*m-1)]
                 a3 = A[l+N*(2*m)]
@@ -129,8 +129,8 @@ function Base.At_mul_B!(P::RotationPlan, A::AbstractMatrix)
     @stepthreads for m = M÷2:-1:2
         @inbounds for j = reverse(m:-2:2)
             for l = 1:N-j
-                s = snm[l+(j-2)*(2*N+3-j)÷2]
-                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                s = snm[l+(j-2)*(M+2-j)÷2]
+                c = cnm[l+(j-2)*(M+2-j)÷2]
                 a1 = A[l+N*(2*m-1)]
                 a2 = A[l+2+N*(2*m-1)]
                 a3 = A[l+N*(2*m)]

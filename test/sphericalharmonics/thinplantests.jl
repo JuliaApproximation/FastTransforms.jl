@@ -4,7 +4,7 @@ using Compat.Test
 import FastTransforms: normalizecolumns!, maxcolnorm
 
 @testset "Thin plan" begin
-    m, n = VERSION < v"0.6.0-" ? (362, 300) : (724, 600)
+    m, n = 724, 600
 
     A = sphrandn(Float64, m, n);
     normalizecolumns!(A);
