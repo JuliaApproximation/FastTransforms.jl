@@ -99,20 +99,53 @@ function RotationPlan(::Type{T}, n::Int) where T
     RotationPlan(layers, snm, cnm)
 end
 
-const rotpath = joinpath(Pkg.dir("FastTransforms"), "deps", "rotpar")
-
-function Base.A_mul_B!(P::RotationPlan{Float64}, A::AbstractMatrix{Float64})
-    M, N = size(A)
-    ccall((:julia_apply_givens, rotpath), Void, (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Int64, Int64), A, P.snm, P.cnm, M, N)
+function Base.A_mul_B!(P::RotationPlan, A::AbstractMatrix)
+    N, M = size(A)
+    snm = P.snm
+    cnm = P.cnm
+    @stepthreads for m = M÷2:-1:2
+        @inbounds for j = m:-2:2
+            for l = N-j:-1:1
+                s = snm[l+(j-2)*(2*N+3-j)÷2]
+                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                a1 = A[l+N*(2*m-1)]
+                a2 = A[l+2+N*(2*m-1)]
+                a3 = A[l+N*(2*m)]
+                a4 = A[l+2+N*(2*m)]
+                A[l+N*(2*m-1)] = c*a1 + s*a2
+                A[l+2+N*(2*m-1)] = c*a2 - s*a1
+                A[l+N*(2*m)] = c*a3 + s*a4
+                A[l+2+N*(2*m)] = c*a4 - s*a3
+            end
+        end
+    end
     A
 end
 
-function Base.At_mul_B!(P::RotationPlan{Float64}, A::AbstractMatrix{Float64})
-    M, N = size(A)
-    ccall((:julia_apply_givens_t, rotpath), Void, (Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Int64, Int64), A, P.snm, P.cnm, M, N)
+function Base.At_mul_B!(P::RotationPlan, A::AbstractMatrix)
+    N, M = size(A)
+    snm = P.snm
+    cnm = P.cnm
+    @stepthreads for m = M÷2:-1:2
+        @inbounds for j = reverse(m:-2:2)
+            for l = 1:N-j
+                s = snm[l+(j-2)*(2*N+3-j)÷2]
+                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                a1 = A[l+N*(2*m-1)]
+                a2 = A[l+2+N*(2*m-1)]
+                a3 = A[l+N*(2*m)]
+                a4 = A[l+2+N*(2*m)]
+                A[l+N*(2*m-1)] = c*a1 - s*a2
+                A[l+2+N*(2*m-1)] = c*a2 + s*a1
+                A[l+N*(2*m)] = c*a3 - s*a4
+                A[l+2+N*(2*m)] = c*a4 + s*a3
+            end
+        end
+    end
     A
 end
 
+#=
 function Base.A_mul_B!(P::RotationPlan, A::AbstractMatrix)
     M, N = size(A)
     @inbounds for m = N÷2-2:-1:0
@@ -150,6 +183,7 @@ function Base.At_mul_B!(P::RotationPlan, A::AbstractMatrix)
     end
     A
 end
+=#
 
 Base.Ac_mul_B!(P::RotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
 

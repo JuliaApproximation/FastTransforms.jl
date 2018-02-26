@@ -55,6 +55,7 @@ export triones, trizeros, trirand, trirandn, trievaluate
 #export fejer2, fejer_plan2, fejerweights2
 #export RecurrencePlan, forward_recurrence!, backward_recurrence
 
+include("stepthreading.jl")
 include("fftBigFloat.jl")
 include("specialfunctions.jl")
 include("clenshawcurtis.jl")
