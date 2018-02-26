@@ -11,7 +11,7 @@ end
 function FastSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
     M, N = size(A)
     n = (N+1)÷2
-    RP = RotationPlan(T, n-1)
+    RP = RotationPlan(T, M-1)
     p1 = plan_normleg2cheb(A)
     p2 = plan_normleg12cheb2(A)
     p1inv = plan_cheb2normleg(A)
