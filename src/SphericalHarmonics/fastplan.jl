@@ -8,10 +8,10 @@ struct FastSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     B::Matrix{T}
 end
 
-function FastSphericalHarmonicPlan{T}(A::Matrix{T}, L::Int; opts...)
+function FastSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
     M, N = size(A)
     n = (N+1)÷2
-    RP = RotationPlan(T, n-1)
+    RP = RotationPlan(T, M-1)
     p1 = plan_normleg2cheb(A)
     p2 = plan_normleg12cheb2(A)
     p1inv = plan_cheb2normleg(A)
@@ -77,7 +77,7 @@ function Base.At_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
         At_mul_B_col_J!(Y, BF[J-1], B, 2J)
         At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
     end
-    zero_spurious_modes!(Y)
+    sph_zero_spurious_modes!(Y)
 end
 
 Base.Ac_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, FP, X)

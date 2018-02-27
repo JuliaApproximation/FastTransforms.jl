@@ -5,7 +5,7 @@ struct SynthesisPlan{T, P1, P2}
     temp::Vector{T}
 end
 
-function plan_synthesis{T<:fftwNumber}(A::Matrix{T})
+function plan_synthesis(A::Matrix{T}) where T<:fftwNumber
     m, n = size(A)
     x = FFTW.FakeArray(T, m)
     y = FFTW.FakeArray(T, n)
@@ -22,7 +22,7 @@ struct AnalysisPlan{T, P1, P2}
     temp::Vector{T}
 end
 
-function plan_analysis{T<:fftwNumber}(A::Matrix{T})
+function plan_analysis(A::Matrix{T}) where T<:fftwNumber
     m, n = size(A)
     x = FFTW.FakeArray(T, m)
     y = FFTW.FakeArray(T, n)
@@ -32,7 +32,7 @@ function plan_analysis{T<:fftwNumber}(A::Matrix{T})
     AnalysisPlan(planθ, planφ, C, zeros(T, n))
 end
 
-function Base.A_mul_B!{T}(Y::Matrix{T}, P::SynthesisPlan{T}, X::Matrix{T})
+function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Column synthesis
@@ -73,7 +73,7 @@ function Base.A_mul_B!{T}(Y::Matrix{T}, P::SynthesisPlan{T}, X::Matrix{T})
     Y
 end
 
-function Base.A_mul_B!{T}(Y::Matrix{T}, P::AnalysisPlan{T}, X::Matrix{T})
+function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Row analysis
@@ -112,7 +112,7 @@ end
 
 
 
-function row_analysis!{T}(P, C, vals::Vector{T})
+function row_analysis!(P, C, vals::Vector{T}) where T
     n = length(vals)
     cfs = scale!(two(T)/n,P*vals)
     cfs[1] *= half(T)
@@ -123,7 +123,7 @@ function row_analysis!{T}(P, C, vals::Vector{T})
     negateeven!(reverseeven!(A_mul_B!(C, cfs)))
 end
 
-function row_synthesis!{T}(P, C, cfs::Vector{T})
+function row_synthesis!(P, C, cfs::Vector{T}) where T
     n = length(cfs)
     Ac_mul_B!(C, reverseeven!(negateeven!(cfs)))
     if iseven(n)
@@ -171,17 +171,17 @@ function negateeven!(x::Vector)
     x
 end
 
-function A_mul_B_col_J!{T}(Y::Matrix{T}, P::r2rFFTWPlan{T}, X::Matrix{T}, J::Int)
+function A_mul_B_col_J!(Y::Matrix{T}, P::r2rFFTWPlan{T}, X::Matrix{T}, J::Int) where T
     unsafe_execute_col_J!(P, X, Y, J)
     return Y
 end
 
-function unsafe_execute_col_J!{T<:fftwDouble}(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T}, J::Int)
+function unsafe_execute_col_J!(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T}, J::Int) where T<:fftwDouble
     M = size(X, 1)
     ccall((:fftw_execute_r2r, libfftw), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+1))
 end
 
-function unsafe_execute_col_J!{T<:fftwSingle}(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T}, J::Int)
+function unsafe_execute_col_J!(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T}, J::Int) where T<:fftwSingle
     M = size(X, 1)
     ccall((:fftwf_execute_r2r, libfftwf), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+1))
 end

@@ -2,7 +2,7 @@ import Base.LinAlg: Givens, AbstractRotation
 
 ### These three A_mul_B! should be in Base, but for the time being they do not add methods to Base.A_mul_B!; they add methods to the internal A_mul_B!.
 
-function A_mul_B!{T<:Real}(G::Givens{T}, A::AbstractVecOrMat)
+function A_mul_B!(G::Givens{T}, A::AbstractVecOrMat) where T<:Real
     m, n = size(A, 1), size(A, 2)
     if G.i2 > m
         throw(DimensionMismatch("column indices for rotation are outside the matrix"))
@@ -28,7 +28,7 @@ function A_mul_B!(A::AbstractMatrix, G::Givens)
     return A
 end
 
-function A_mul_B!{T<:Real}(A::AbstractMatrix, G::Givens{T})
+function A_mul_B!(A::AbstractMatrix, G::Givens{T}) where T<:Real
     m, n = size(A, 1), size(A, 2)
     if G.i2 > n
         throw(DimensionMismatch("column indices for rotation are outside the matrix"))
@@ -45,7 +45,7 @@ struct Pnmp2toPlm{T} <: AbstractRotation{T}
     rotations::Vector{Givens{T}}
 end
 
-function Pnmp2toPlm{T}(::Type{T}, n::Int, m::Int)
+function Pnmp2toPlm(::Type{T}, n::Int, m::Int) where T
     G = Vector{Givens{T}}(n)
     @inbounds for ℓ = 1:n
         c = sqrt(T((2m+2)*(2ℓ+2m+3))/T((ℓ+2m+2)*(ℓ+2m+3)))
@@ -75,16 +75,77 @@ end
 
 struct RotationPlan{T} <: AbstractRotation{T}
     layers::Vector{Pnmp2toPlm{T}}
+    snm::Vector{T}
+    cnm::Vector{T}
 end
 
-function RotationPlan{T}(::Type{T}, n::Int)
+function RotationPlan(::Type{T}, n::Int) where T
     layers = Vector{Pnmp2toPlm{T}}(n-1)
     @inbounds for m = 0:n-2
         layers[m+1] = Pnmp2toPlm(T, n-1-m, m)
     end
-    RotationPlan(layers)
+    n = n+1
+    snm = zeros(T, (n*(n+1))÷2)
+    cnm = zeros(T, (n*(n+1))÷2)
+    @inbounds for l = 0:n-1
+        for m = 0:n-l-1
+            nums = T((l+1)*(l+2))
+            numc = T((2*m+2)*(2*l+2*m+5))
+            den = T((l+2*m+3)*(l+2*m+4))
+            snm[l+(m*(2*n+1-m))÷2+1] = sqrt(nums/den)
+            cnm[l+(m*(2*n+1-m))÷2+1] = sqrt(numc/den)
+        end
+    end
+    RotationPlan(layers, snm, cnm)
 end
 
+function Base.A_mul_B!(P::RotationPlan, A::AbstractMatrix)
+    N, M = size(A)
+    snm = P.snm
+    cnm = P.cnm
+    @stepthreads for m = M÷2:-1:2
+        @inbounds for j = m:-2:2
+            for l = N-j:-1:1
+                s = snm[l+(j-2)*(2*N+3-j)÷2]
+                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                a1 = A[l+N*(2*m-1)]
+                a2 = A[l+2+N*(2*m-1)]
+                a3 = A[l+N*(2*m)]
+                a4 = A[l+2+N*(2*m)]
+                A[l+N*(2*m-1)] = c*a1 + s*a2
+                A[l+2+N*(2*m-1)] = c*a2 - s*a1
+                A[l+N*(2*m)] = c*a3 + s*a4
+                A[l+2+N*(2*m)] = c*a4 - s*a3
+            end
+        end
+    end
+    A
+end
+
+function Base.At_mul_B!(P::RotationPlan, A::AbstractMatrix)
+    N, M = size(A)
+    snm = P.snm
+    cnm = P.cnm
+    @stepthreads for m = M÷2:-1:2
+        @inbounds for j = reverse(m:-2:2)
+            for l = 1:N-j
+                s = snm[l+(j-2)*(2*N+3-j)÷2]
+                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                a1 = A[l+N*(2*m-1)]
+                a2 = A[l+2+N*(2*m-1)]
+                a3 = A[l+N*(2*m)]
+                a4 = A[l+2+N*(2*m)]
+                A[l+N*(2*m-1)] = c*a1 - s*a2
+                A[l+2+N*(2*m-1)] = c*a2 + s*a1
+                A[l+N*(2*m)] = c*a3 - s*a4
+                A[l+2+N*(2*m)] = c*a4 + s*a3
+            end
+        end
+    end
+    A
+end
+
+#=
 function Base.A_mul_B!(P::RotationPlan, A::AbstractMatrix)
     M, N = size(A)
     @inbounds for m = N÷2-2:-1:0
@@ -122,6 +183,7 @@ function Base.At_mul_B!(P::RotationPlan, A::AbstractMatrix)
     end
     A
 end
+=#
 
 Base.Ac_mul_B!(P::RotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
 
@@ -135,10 +197,9 @@ struct SlowSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     B::Matrix{T}
 end
 
-function SlowSphericalHarmonicPlan{T}(A::Matrix{T})
+function SlowSphericalHarmonicPlan(A::Matrix{T}) where T
     M, N = size(A)
-    n = (N+1)÷2
-    RP = RotationPlan(T, n-1)
+    RP = RotationPlan(T, M-1)
     p1 = plan_normleg2cheb(A)
     p2 = plan_normleg12cheb2(A)
     p1inv = plan_cheb2normleg(A)
@@ -177,7 +238,7 @@ function Base.At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
         A_mul_B_col_J!!(Y, p1inv, B, J)
         A_mul_B_col_J!!(Y, p1inv, B, J+1)
     end
-    zero_spurious_modes!(At_mul_B!(RP, Y))
+    sph_zero_spurious_modes!(At_mul_B!(RP, Y))
 end
 
 Base.Ac_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, SP, X)
