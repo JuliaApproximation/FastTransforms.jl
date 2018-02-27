@@ -1,6 +1,6 @@
 The FastTransforms.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2016-2017: Richard Mikael Slevinsky and other contributors:
+> Copyright (c) 2016-2018: Richard Mikael Slevinsky and other contributors:
 >
 > https://github.com/MikaelSlevinsky/FastTransforms.jl/graphs/contributors
 >
