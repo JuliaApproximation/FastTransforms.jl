@@ -45,15 +45,15 @@ function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T}, X::Matrix{T}) where T
 
     for J = 2:4:N
         A_mul_B_col_J!(Y, PCo, X, J)
-        A_mul_B_col_J!(Y, PCo, X, J+1)
+        J < N && A_mul_B_col_J!(Y, PCo, X, J+1)
     end
     for J = 4:4:N
         X[1,J] *= two(T)
-        X[1,J+1] *= two(T)
+        J < N && (X[1,J+1] *= two(T))
         A_mul_B_col_J!(Y, PCe, X, J)
-        A_mul_B_col_J!(Y, PCe, X, J+1)
+        J < N && A_mul_B_col_J!(Y, PCe, X, J+1)
         X[1,J] *= half(T)
-        X[1,J+1] *= half(T)
+        J < N && (X[1,J+1] *= half(T))
     end
     scale!(half(T), Y)
 
@@ -94,13 +94,13 @@ function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T}, X::Matrix{T}) where T
     Y[1] *= half(T)
     for J = 2:4:N
         A_mul_B_col_J!(Y, PCo, Y, J)
-        A_mul_B_col_J!(Y, PCo, Y, J+1)
+        J < N && A_mul_B_col_J!(Y, PCo, Y, J+1)
     end
     for J = 4:4:N
         A_mul_B_col_J!(Y, PCe, Y, J)
-        A_mul_B_col_J!(Y, PCe, Y, J+1)
+        J < N && A_mul_B_col_J!(Y, PCe, Y, J+1)
         Y[1,J] *= half(T)
-        Y[1,J+1] *= half(T)
+        J < N && (Y[1,J+1] *= half(T))
     end
     scale!(sqrt(π)*inv(T(M)), Y)
     sqrttwo = sqrt(2)

@@ -50,3 +50,31 @@ import FastTransforms: normalizecolumns!, maxcolnorm
 
     @test maxcolnorm(F - H) < 100eps()
 end
+
+@testset "Test for dropping last column" begin
+    for f in ((θ,φ)->1/(3 + cospi(φ) + sinpi(θ)),
+              (θ,φ)->cos(50*cospi(φ)*sinpi(θ)*sinpi(φ)*sinpi(θ)),
+              (θ,φ)->cos(50*cospi(φ)*sinpi(θ)+80*sinpi(φ)*sinpi(θ)),
+              (θ,φ)->sqrt(5+cospi(φ)*sinpi(θ)+exp(sinpi(φ)*sinpi(θ))+sin(cospi(θ))))
+        n = 20
+        UO = sphones(Float64, n, n)
+        UE = sphones(Float64, n, n)
+        while norm(UO[:,end]) > vecnorm(UO)*eps()
+            θ = (0.5:n-0.5)/n
+            φ = (0:2n-2)*2/(2n-1)
+            F = [f(θ,φ) for θ in θ, φ in φ]
+            V = zero(F)
+            A_mul_B!(V, FastTransforms.plan_analysis(F), F)
+            UO = fourier2sph(V)
+
+            φ = (0:2n-3)*2/(2n-2)
+            F = [f(θ,φ) for θ in θ, φ in φ]
+            V = zero(F)
+            A_mul_B!(V, FastTransforms.plan_analysis(F), F)
+            UE = fourier2sph(V)
+
+            n *= 2
+        end
+        @test vecnorm(UO[:,1:end-1] - UE) < n*vecnorm(UO)*eps()
+    end
+end

@@ -1,6 +1,6 @@
 const LAYERSKELETON = 64
 
-checklayer(j::Int) = j÷LAYERSKELETON == j/LAYERSKELETON
+checklayer(J::Int) = J÷LAYERSKELETON == J/LAYERSKELETON
 
 struct ThinSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
     RP::RotationPlan{T}
@@ -25,14 +25,14 @@ function ThinSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
     Co = eye(T, M)
     BF = Vector{Butterfly{T}}(n-2)
     P = Progress(n-2, 0.1, "Pre-computing...", 43)
-    for j = 1:2:n-2
-        A_mul_B!(Ce, RP.layers[j])
-        checklayer(j+1) && (BF[j] = Butterfly(Ce, L; isorthogonal = true, opts...))
+    for J = 1:2:n-2
+        A_mul_B!(Ce, RP.layers[J])
+        checklayer(J+1) && (BF[J] = Butterfly(Ce, L; isorthogonal = true, opts...))
         next!(P)
     end
-    for j = 2:2:n-2
-        A_mul_B!(Co, RP.layers[j])
-        checklayer(j) && (BF[j] = Butterfly(Co, L; isorthogonal = true, opts...))
+    for J = 2:2:n-2
+        A_mul_B!(Co, RP.layers[J])
+        checklayer(J) && (BF[J] = Butterfly(Co, L; isorthogonal = true, opts...))
         next!(P)
     end
     ThinSphericalHarmonicPlan(RP, BF, p1, p2, p1inv, p2inv, B)
@@ -45,36 +45,36 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     copy!(B, X)
     M, N = size(X)
 
-    for j = 3:2:N÷2
-        if checklayer(j-1)
-            A_mul_B_col_J!(Y, BF[j-1], B, 2j)
-            A_mul_B_col_J!(Y, BF[j-1], B, 2j+1)
+    for J = 3:2:N÷2
+        if checklayer(J-1)
+            A_mul_B_col_J!(Y, BF[J-1], B, 2J)
+            2J < N && A_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
         else
-            ℓ = round(Int, (j-1)÷LAYERSKELETON)*LAYERSKELETON
-            A_mul_B_col_J!(RP, B, 2j, ℓ+1, j-1)
-            A_mul_B_col_J!(RP, B, 2j+1, ℓ+1, j-1)
+            ℓ = round(Int, (J-1)÷LAYERSKELETON)*LAYERSKELETON
+            A_mul_B_col_J!(RP, B, 2J, ℓ+1, J-1)
+            2J < N && A_mul_B_col_J!(RP, B, 2J+1, ℓ+1, J-1)
             if ℓ > LAYERSKELETON-2
-                A_mul_B_col_J!(Y, BF[ℓ], B, 2j)
-                A_mul_B_col_J!(Y, BF[ℓ], B, 2j+1)
+                A_mul_B_col_J!(Y, BF[ℓ], B, 2J)
+                2J < N && A_mul_B_col_J!(Y, BF[ℓ], B, 2J+1)
             else
-                copy!(Y, 1+M*(2j-1), B, 1+M*(2j-1), 2M)
+                copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
         end
     end
 
-    for j = 2:2:N÷2
-        if checklayer(j)
-            A_mul_B_col_J!(Y, BF[j-1], B, 2j)
-            A_mul_B_col_J!(Y, BF[j-1], B, 2j+1)
+    for J = 2:2:N÷2
+        if checklayer(J)
+            A_mul_B_col_J!(Y, BF[J-1], B, 2J)
+            2J < N && A_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
         else
-            ℓ = round(Int, j÷LAYERSKELETON)*LAYERSKELETON
-            A_mul_B_col_J!(RP, B, 2j, ℓ, j-1)
-            A_mul_B_col_J!(RP, B, 2j+1, ℓ, j-1)
+            ℓ = round(Int, J÷LAYERSKELETON)*LAYERSKELETON
+            A_mul_B_col_J!(RP, B, 2J, ℓ, J-1)
+            2J < N && A_mul_B_col_J!(RP, B, 2J+1, ℓ, J-1)
             if ℓ > LAYERSKELETON-2
-                A_mul_B_col_J!(Y, BF[ℓ-1], B, 2j)
-                A_mul_B_col_J!(Y, BF[ℓ-1], B, 2j+1)
+                A_mul_B_col_J!(Y, BF[ℓ-1], B, 2J)
+                2J < N && A_mul_B_col_J!(Y, BF[ℓ-1], B, 2J+1)
             else
-                copy!(Y, 1+M*(2j-1), B, 1+M*(2j-1), 2M)
+                copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
         end
     end
@@ -86,11 +86,11 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     A_mul_B_col_J!!(Y, p1, B, 1)
     for J = 2:4:N
         A_mul_B_col_J!!(Y, p2, B, J)
-        A_mul_B_col_J!!(Y, p2, B, J+1)
+        J < N && A_mul_B_col_J!!(Y, p2, B, J+1)
     end
     for J = 4:4:N
         A_mul_B_col_J!!(Y, p1, B, J)
-        A_mul_B_col_J!!(Y, p1, B, J+1)
+        J < N && A_mul_B_col_J!!(Y, p1, B, J+1)
     end
     Y
 end
@@ -103,48 +103,48 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     A_mul_B_col_J!!(Y, p1inv, B, 1)
     for J = 2:4:N
         A_mul_B_col_J!!(Y, p2inv, B, J)
-        A_mul_B_col_J!!(Y, p2inv, B, J+1)
+        J < N && A_mul_B_col_J!!(Y, p2inv, B, J+1)
     end
     for J = 4:4:N
         A_mul_B_col_J!!(Y, p1inv, B, J)
-        A_mul_B_col_J!!(Y, p1inv, B, J+1)
+        J < N && A_mul_B_col_J!!(Y, p1inv, B, J+1)
     end
 
     copy!(B, Y)
     fill!(Y, zero(eltype(Y)))
     copy!(Y, 1, B, 1, 3M)
 
-    for j = 3:2:N÷2
-        if checklayer(j-1)
-            At_mul_B_col_J!(Y, BF[j-1], B, 2j)
-            At_mul_B_col_J!(Y, BF[j-1], B, 2j+1)
+    for J = 3:2:N÷2
+        if checklayer(J-1)
+            At_mul_B_col_J!(Y, BF[J-1], B, 2J)
+            2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
         else
-            ℓ = round(Int, (j-1)÷LAYERSKELETON)*LAYERSKELETON
+            ℓ = round(Int, (J-1)÷LAYERSKELETON)*LAYERSKELETON
             if ℓ > LAYERSKELETON-2
-                At_mul_B_col_J!(Y, BF[ℓ], B, 2j)
-                At_mul_B_col_J!(Y, BF[ℓ], B, 2j+1)
+                At_mul_B_col_J!(Y, BF[ℓ], B, 2J)
+                2J < N && At_mul_B_col_J!(Y, BF[ℓ], B, 2J+1)
             else
-                copy!(Y, 1+M*(2j-1), B, 1+M*(2j-1), 2M)
+                copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
-            At_mul_B_col_J!(RP, Y, 2j, ℓ+1, j-1)
-            At_mul_B_col_J!(RP, Y, 2j+1, ℓ+1, j-1)
+            At_mul_B_col_J!(RP, Y, 2J, ℓ+1, J-1)
+            2J < N && At_mul_B_col_J!(RP, Y, 2J+1, ℓ+1, J-1)
         end
     end
 
-    for j = 2:2:N÷2
-        if checklayer(j)
-            At_mul_B_col_J!(Y, BF[j-1], B, 2j)
-            At_mul_B_col_J!(Y, BF[j-1], B, 2j+1)
+    for J = 2:2:N÷2
+        if checklayer(J)
+            At_mul_B_col_J!(Y, BF[J-1], B, 2J)
+            2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
         else
-            ℓ = round(Int, j÷LAYERSKELETON)*LAYERSKELETON
+            ℓ = round(Int, J÷LAYERSKELETON)*LAYERSKELETON
             if ℓ > LAYERSKELETON-2
-                At_mul_B_col_J!(Y, BF[ℓ-1], B, 2j)
-                At_mul_B_col_J!(Y, BF[ℓ-1], B, 2j+1)
+                At_mul_B_col_J!(Y, BF[ℓ-1], B, 2J)
+                2J < N && At_mul_B_col_J!(Y, BF[ℓ-1], B, 2J+1)
             else
-                copy!(Y, 1+M*(2j-1), B, 1+M*(2j-1), 2M)
+                copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
-            At_mul_B_col_J!(RP, Y, 2j, ℓ, j-1)
-            At_mul_B_col_J!(RP, Y, 2j+1, ℓ, j-1)
+            At_mul_B_col_J!(RP, Y, 2J, ℓ, J-1)
+            2J < N && At_mul_B_col_J!(RP, Y, 2J+1, ℓ, J-1)
         end
     end
 

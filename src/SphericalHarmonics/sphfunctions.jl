@@ -1,11 +1,15 @@
 function sph_zero_spurious_modes!(A::AbstractMatrix)
     M, N = size(A)
     n = N÷2
-    @inbounds for j = 1:n
+    @inbounds for j = 1:n-1
         @simd for i = M-j+1:M
             A[i,2j] = 0
             A[i,2j+1] = 0
         end
+    end
+    @inbounds @simd for i = M-n+1:M
+        A[i,2n] = 0
+        2n < N && (A[i,2n+1] = 0)
     end
     A
 end
