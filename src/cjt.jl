@@ -120,7 +120,7 @@ given the Jacobi expansion coefficients ``c`` with parameters ``\alpha`` and ``\
 {\rm CJT} : \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x) \to \sum_{n=0}^N c_n^{\rm cheb}T_n(x).
 ```
 """
-cjt(c,α,β) = plan_cjt(c,α,β)*c
+cjt(c::AbstractVector{T},α,β) where T = plan_cjt(c,real(T)(α),real(T)(β))*c
 
 doc"""
 Computes the Jacobi expansion coefficients with parameters ``\alpha`` and ``\beta``

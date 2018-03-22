@@ -121,6 +121,7 @@ using Compat.Test
     cL32 = cjt(c32,0.f0,0.f0)
 
     @test norm(cL32-cL64,Inf) < 20eps(Float32)
+    @test cL32 == cjt(c32,0.,0.)
 
     println("Testing for Matrix of coefficients")
 
