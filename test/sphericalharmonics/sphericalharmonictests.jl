@@ -17,4 +17,6 @@ include("pointwisetests.jl")
 
 include("synthesisanalysistests.jl")
 
+include("vectorfieldtests.jl")
+
 include("apitests.jl")
