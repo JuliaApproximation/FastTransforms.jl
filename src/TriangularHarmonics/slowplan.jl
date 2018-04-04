@@ -104,7 +104,7 @@ function Base.A_mul_B!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
         A_mul_B_col_J!!(Y, p, B, J)
     end
     @inbounds for J = 1:N
-        nrm = sqrt(π/(2-δ(J-1,0)))
+        nrm = sqrt((2-δ(J-1,0))/π)
         @simd for I = 1:M
             Y[I,J] *= nrm
         end
@@ -117,7 +117,7 @@ function Base.At_mul_B!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
     copy!(B, X)
     M, N = size(X)
     @inbounds for J = 1:N
-        nrm = sqrt((2-δ(J-1,0))/π)
+        nrm = sqrt(π/(2-δ(J-1,0)))
         @simd for I = 1:M
             B[I,J] *= nrm
         end
