@@ -15,7 +15,7 @@ makedocs(modules=[FastTransforms],
 deploydocs(
     repo   = "github.com/MikaelSlevinsky/FastTransforms.jl.git",
     latest = "master",
-    julia  = "0.5",
+    julia  = "0.6",
     osname = "linux",
     target = "build",
     deps   = Deps.pip("pygments", "mkdocs", "python-markdown-math"),

@@ -4,13 +4,13 @@
 
 In numerical analysis, it is customary to expand a function in a basis:
 ```math
-f(x) \sim \sum_{\ell=0}^{\infty} f_{\ell} \phi_{\ell}(x).
+f(x) = \sum_{\ell=0}^{\infty} f_{\ell} \phi_{\ell}(x).
 ```
 It may be necessary to transform our representation to one in a new basis, say, ``\{\psi_m(x)\}_{m\ge0}``:
 ```math
-f(x) \sim \sum_{m=0}^{\infty} g_m \psi_m(x).
+f(x) = \sum_{m=0}^{\infty} g_m \psi_m(x).
 ```
-In many cases of interest, both representations are of finite length ``n`` and we seek a fast method (faster than ``\mathcal{O}(n^2)``) to transform the original coefficients ``f_{\ell}`` to the new coefficients ``g_m``.
+In many cases of interest, both representations have finite dimension ``n`` and we seek a fast method (faster than ``\mathcal{O}(n^2)``) to transform the original coefficients ``f_{\ell}`` to the new coefficients ``g_m``.
 
 A similar problem arises when we wish to evaluate ``f`` at a set of points ``\{x_m\}_{m=0}^n``. We wish to transform coefficients of ``f`` to values at the set of points in fewer than ``\mathcal{O}(n^2)`` operations.
 
