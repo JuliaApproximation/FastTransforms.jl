@@ -2,17 +2,11 @@
 
 ## Introduction
 
-In numerical analysis, it is customary to expand a function in a basis:
-```math
-f(x) = \sum_{\ell=0}^{\infty} f_{\ell} \phi_{\ell}(x).
-```
-It may be necessary to transform our representation to one in a new basis, say, ``\{\psi_m(x)\}_{m\ge0}``:
-```math
-f(x) = \sum_{m=0}^{\infty} g_m \psi_m(x).
-```
-In many cases of interest, both representations have finite dimension ``n`` and we seek a fast method (faster than ``\mathcal{O}(n^2)``) to transform the original coefficients ``f_{\ell}`` to the new coefficients ``g_m``.
+Orthogonal polynomials are instrumental in approximation theory, numerical analysis, and signal processing. `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions. Many algorithms have been derived for accelerating orthogonal polynomial transforms, though the user need not know the specifics.
 
-A similar problem arises when we wish to evaluate ``f`` at a set of points ``\{x_m\}_{m=0}^n``. We wish to transform coefficients of ``f`` to values at the set of points in fewer than ``\mathcal{O}(n^2)`` operations.
+Transforms include conversion between Jacobi polynomial expansions, with Chebyshev, Legendre, and ultraspherical polynomial transforms as special cases. For the signal processor, all three types of nonuniform fast Fourier transforms available. As well, spherical harmonic transforms and transforms between orthogonal polynomials on the triangle allow for the efficient simulation of partial differential equations of evolution.
+
+Algorithms include methods based on asymptotic formulae to relate the transforms to a small number of fast Fourier transforms, matrix factorizations based on the Hadamard product, hierarchical matrix decompositions à la Fast Multipole Method, and the butterfly algorithm.
 
 ## Fast Transforms
 
