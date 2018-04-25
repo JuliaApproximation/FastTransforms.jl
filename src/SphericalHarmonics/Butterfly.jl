@@ -3,10 +3,10 @@ struct Butterfly{T} <: Factorization{T}
     factors::Vector{Vector{IDPackedV{T}}}
     permutations::Vector{Vector{ColumnPermutation}}
     indices::Vector{Vector{Int}}
-    temp1::Vector{T}
-    temp2::Vector{T}
-    temp3::Vector{T}
-    temp4::Vector{T}
+    temp1::ThreadSafeVector{T}
+    temp2::ThreadSafeVector{T}
+    temp3::ThreadSafeVector{T}
+    temp4::ThreadSafeVector{T}
 end
 
 function size(B::Butterfly, dim::Integer)
@@ -106,7 +106,7 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, 
 
     kk = sumkmax(indices)
 
-    Butterfly(columns, factors, permutations, indices, zeros(T, kk), zeros(T, kk), zeros(T, kk), zeros(T, kk))
+    Butterfly(columns, factors, permutations, indices, threadedzeros(T, kk), threadedzeros(T, kk), threadedzeros(T, kk), threadedzeros(T, kk))
 end
 
 function sumkmax(indices::Vector{Vector{Int}})
@@ -119,7 +119,7 @@ end
 
 #### Helper
 
-function rowperm!(fwd::Bool, x::StridedVecOrMat, p::Vector{Int}, jstart::Int)
+function rowperm!(fwd::Bool, x::AbstractVecOrMat, p::Vector{Int}, jstart::Int)
     n = length(p)
     jshift = jstart-1
     scale!(p, -1)
@@ -151,7 +151,7 @@ function rowperm!(fwd::Bool, x::StridedVecOrMat, p::Vector{Int}, jstart::Int)
     x
 end
 
-function rowperm!(fwd::Bool, y::StridedVector, x::StridedVector, p::Vector{Int}, jstart::Int)
+function rowperm!(fwd::Bool, y::AbstractVector, x::AbstractVector, p::Vector{Int}, jstart::Int)
     n = length(p)
     jshift = jstart-1
     @inbounds if (fwd)
@@ -167,13 +167,13 @@ function rowperm!(fwd::Bool, y::StridedVector, x::StridedVector, p::Vector{Int},
 end
 
 ## ColumnPermutation
-A_mul_B!(A::ColPerm, B::StridedVecOrMat, jstart::Int) = rowperm!(false, B, A.p, jstart)
-At_mul_B!(A::ColPerm, B::StridedVecOrMat, jstart::Int) = rowperm!(true, B, A.p, jstart)
-Ac_mul_B!(A::ColPerm, B::StridedVecOrMat, jstart::Int) = At_mul_B!(A, B, jstart)
+A_mul_B!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(false, B, A.p, jstart)
+At_mul_B!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(true, B, A.p, jstart)
+Ac_mul_B!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = At_mul_B!(A, B, jstart)
 
-A_mul_B!(y::StridedVector, A::ColPerm, x::StridedVector, jstart::Int) = rowperm!(false, y, x, A.p, jstart)
-At_mul_B!(y::StridedVector, A::ColPerm, x::StridedVector, jstart::Int) = rowperm!(true, y, x, A.p, jstart)
-Ac_mul_B!(y::StridedVector, A::ColPerm, x::StridedVector, jstart::Int) = At_mul_B!(y, x, A, jstart)
+A_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = rowperm!(false, y, x, A.p, jstart)
+At_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = rowperm!(true, y, x, A.p, jstart)
+Ac_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = At_mul_B!(y, x, A, jstart)
 
 # Fast A_mul_B!, At_mul_B!, and Ac_mul_B! for an ID. These overwrite the output.
 
@@ -339,7 +339,7 @@ for f! in (:At_mul_B!,:Ac_mul_B!)
     end
 end
 
-function addtemp3totemp2!(temp2::Vector, temp3::Vector, i1::Int, i2::Int)
+function addtemp3totemp2!(temp2::AbstractVector, temp3::AbstractVector, i1::Int, i2::Int)
     z = zero(eltype(temp3))
     @inbounds @simd for i = i1:i2
         temp2[i] += temp3[i]

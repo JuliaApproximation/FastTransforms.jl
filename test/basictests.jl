@@ -58,7 +58,7 @@ end
         x = rand(T, n)
         y = zeros(T, k)
 
-        @test FastTransforms.A_mul_B!(y, A, P, x, 1, 1) == A*x
+        @test norm(FastTransforms.A_mul_B!(y, A, P, x, 1, 1) - A*x) < 10eps()*norm(A*x)
 
         x = rand(T, k)
         y = zeros(T, n)

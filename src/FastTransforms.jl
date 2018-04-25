@@ -19,6 +19,7 @@ import Base: getindex, setindex!, Factorization, length
 import Base.LinAlg: BlasFloat, BlasInt
 import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
 import HierarchicalMatrices: A_mul_B!, At_mul_B!, Ac_mul_B!
+import HierarchicalMatrices: ThreadSafeVector, threadsafezeros
 import LowRankApprox: ColPerm
 import AbstractFFTs: Plan
 

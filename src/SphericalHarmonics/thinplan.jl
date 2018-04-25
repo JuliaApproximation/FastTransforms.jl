@@ -45,7 +45,7 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     copy!(B, X)
     M, N = size(X)
 
-    for J = 3:2:N÷2
+    @stepthreads for J = 3:2:N÷2
         if checklayer(J-1)
             A_mul_B_col_J!(Y, BF[J-1], B, 2J)
             2J < N && A_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
@@ -62,7 +62,7 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
         end
     end
 
-    for J = 2:2:N÷2
+    @stepthreads for J = 2:2:N÷2
         if checklayer(J)
             A_mul_B_col_J!(Y, BF[J-1], B, 2J)
             2J < N && A_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
@@ -84,11 +84,11 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     fill!(Y, zero(eltype(Y)))
 
     A_mul_B_col_J!!(Y, p1, B, 1)
-    for J = 2:4:N
+    @stepthreads for J = 2:4:N
         A_mul_B_col_J!!(Y, p2, B, J)
         J < N && A_mul_B_col_J!!(Y, p2, B, J+1)
     end
-    for J = 4:4:N
+    @stepthreads for J = 4:4:N
         A_mul_B_col_J!!(Y, p1, B, J)
         J < N && A_mul_B_col_J!!(Y, p1, B, J+1)
     end
@@ -101,11 +101,11 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     copy!(B, X)
     M, N = size(X)
     A_mul_B_col_J!!(Y, p1inv, B, 1)
-    for J = 2:4:N
+    @stepthreads for J = 2:4:N
         A_mul_B_col_J!!(Y, p2inv, B, J)
         J < N && A_mul_B_col_J!!(Y, p2inv, B, J+1)
     end
-    for J = 4:4:N
+    @stepthreads for J = 4:4:N
         A_mul_B_col_J!!(Y, p1inv, B, J)
         J < N && A_mul_B_col_J!!(Y, p1inv, B, J+1)
     end
@@ -114,7 +114,7 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     fill!(Y, zero(eltype(Y)))
     copy!(Y, 1, B, 1, 3M)
 
-    for J = 3:2:N÷2
+    @stepthreads for J = 3:2:N÷2
         if checklayer(J-1)
             At_mul_B_col_J!(Y, BF[J-1], B, 2J)
             2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
@@ -131,7 +131,7 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
         end
     end
 
-    for J = 2:2:N÷2
+    @stepthreads for J = 2:2:N÷2
         if checklayer(J)
             At_mul_B_col_J!(Y, BF[J-1], B, 2J)
             2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
