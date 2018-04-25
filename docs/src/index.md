@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Orthogonal polynomials are instrumental in approximation theory, numerical analysis, and signal processing. `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions. Many algorithms have been derived for accelerating orthogonal polynomial transforms, though the user need not know the specifics.
+`FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
 Transforms include conversion between Jacobi polynomial expansions, with Chebyshev, Legendre, and ultraspherical polynomial transforms as special cases. For the signal processor, all three types of nonuniform fast Fourier transforms available. As well, spherical harmonic transforms and transforms between orthogonal polynomials on the triangle allow for the efficient simulation of partial differential equations of evolution.
 

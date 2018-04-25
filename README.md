@@ -2,7 +2,7 @@
 
 [![Travis](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/MikaelSlevinsky/FastTransforms.jl) [![AppVeyor](https://ci.appveyor.com/api/projects/status/oba9qush15q3x8pb/branch/master?svg=true)](https://ci.appveyor.com/project/MikaelSlevinsky/fasttransforms-jl/branch/master) [![codecov](https://codecov.io/gh/MikaelSlevinsky/FastTransforms.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/MikaelSlevinsky/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://MikaelSlevinsky.github.io/FastTransforms.jl/latest)
 
-Orthogonal polynomials are instrumental in approximation theory, numerical analysis, and signal processing. `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions. Many algorithms have been derived for accelerating orthogonal polynomial transforms, though the user need not know the specifics.
+`FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
 Transforms include conversion between Jacobi polynomial expansions, with Chebyshev, Legendre, and ultraspherical polynomial transforms as special cases. For the signal processor, all three types of nonuniform fast Fourier transforms available. As well, spherical harmonic transforms and transforms between orthogonal polynomials on the triangle allow for the efficient simulation of partial differential equations of evolution.
 
