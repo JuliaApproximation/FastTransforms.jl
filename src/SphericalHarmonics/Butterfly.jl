@@ -106,7 +106,7 @@ function Butterfly{T}(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, 
 
     kk = sumkmax(indices)
 
-    Butterfly(columns, factors, permutations, indices, threadedzeros(T, kk), threadedzeros(T, kk), threadedzeros(T, kk), threadedzeros(T, kk))
+    Butterfly(columns, factors, permutations, indices, threadsafezeros(T, kk), threadsafezeros(T, kk), threadsafezeros(T, kk), threadsafezeros(T, kk))
 end
 
 function sumkmax(indices::Vector{Vector{Int}})
