@@ -41,17 +41,17 @@ function Base.A_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     fill!(B, zero(eltype(B)))
     M, N = size(X)
     copy!(B, 1, X, 1, 3M)
-    for J = 2:N÷2
+    @stepthreads for J = 2:N÷2
         A_mul_B_col_J!(B, BF[J-1], X, 2J)
         2J < N && A_mul_B_col_J!(B, BF[J-1], X, 2J+1)
     end
 
     A_mul_B_col_J!!(Y, p1, B, 1)
-    for J = 2:4:N
+    @stepthreads for J = 2:4:N
         A_mul_B_col_J!!(Y, p2, B, J)
         J < N && A_mul_B_col_J!!(Y, p2, B, J+1)
     end
-    for J = 4:4:N
+    @stepthreads for J = 4:4:N
         A_mul_B_col_J!!(Y, p1, B, J)
         J < N && A_mul_B_col_J!!(Y, p1, B, J+1)
     end
@@ -63,17 +63,17 @@ function Base.At_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     copy!(B, X)
     M, N = size(X)
     A_mul_B_col_J!!(Y, p1inv, B, 1)
-    for J = 2:4:N
+    @stepthreads for J = 2:4:N
         A_mul_B_col_J!!(Y, p2inv, B, J)
         J < N && A_mul_B_col_J!!(Y, p2inv, B, J+1)
     end
-    for J = 4:4:N
+    @stepthreads for J = 4:4:N
         A_mul_B_col_J!!(Y, p1inv, B, J)
         J < N && A_mul_B_col_J!!(Y, p1inv, B, J+1)
     end
 
     copy!(B, Y)
-    for J = 2:N÷2
+    @stepthreads for J = 2:N÷2
         At_mul_B_col_J!(Y, BF[J-1], B, 2J)
         2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
     end

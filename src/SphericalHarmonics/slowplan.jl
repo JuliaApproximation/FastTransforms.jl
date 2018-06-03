@@ -272,11 +272,11 @@ function Base.A_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     A_mul_B!(RP, B)
     M, N = size(X)
     A_mul_B_col_J!!(Y, p1, B, 1)
-    for J = 2:4:N
+    @stepthreads for J = 2:4:N
         A_mul_B_col_J!!(Y, p2, B, J)
         J < N && A_mul_B_col_J!!(Y, p2, B, J+1)
     end
-    for J = 4:4:N
+    @stepthreads for J = 4:4:N
         A_mul_B_col_J!!(Y, p1, B, J)
         J < N && A_mul_B_col_J!!(Y, p1, B, J+1)
     end
@@ -288,11 +288,11 @@ function Base.At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     copy!(B, X)
     M, N = size(X)
     A_mul_B_col_J!!(Y, p1inv, B, 1)
-    for J = 2:4:N
+    @stepthreads for J = 2:4:N
         A_mul_B_col_J!!(Y, p2inv, B, J)
         J < N && A_mul_B_col_J!!(Y, p2inv, B, J+1)
     end
-    for J = 4:4:N
+    @stepthreads for J = 4:4:N
         A_mul_B_col_J!!(Y, p1inv, B, J)
         J < N && A_mul_B_col_J!!(Y, p1inv, B, J+1)
     end
