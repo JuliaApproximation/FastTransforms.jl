@@ -52,16 +52,16 @@ function plan_inufft2{T<:AbstractFloat}(x::AbstractVector{T}, ϵ::T)
 end
 
 function (*){N,T,V}(p::iNUFFTPlan{N,T}, x::AbstractVector{V})
-    A_mul_B!(zeros(promote_type(T,V), length(x)), p, x)
+    mul!(zeros(promote_type(T,V), length(x)), p, x)
 end
 
-function Base.A_mul_B!{T}(c::AbstractVector{T}, P::iNUFFTPlan{1,T}, f::AbstractVector{T})
+function Base.mul!{T}(c::AbstractVector{T}, P::iNUFFTPlan{1,T}, f::AbstractVector{T})
     pt, TP, r, p, Ap, ϵ = P.pt, P.TP, P.r, P.p, P.Ap, P.ϵ
     cg_for_inufft(TP, c, f, r, p, Ap, 50, 100ϵ)
-    conj!(A_mul_B!(c, pt, conj!(c)))
+    conj!(mul!(c, pt, conj!(c)))
 end
 
-function Base.A_mul_B!{T}(c::AbstractVector{T}, P::iNUFFTPlan{2,T}, f::AbstractVector{T})
+function Base.mul!{T}(c::AbstractVector{T}, P::iNUFFTPlan{2,T}, f::AbstractVector{T})
     pt, TP, r, p, Ap, ϵ = P.pt, P.TP, P.r, P.p, P.Ap, P.ϵ
     cg_for_inufft(TP, c, conj!(pt*conj!(f)), r, p, Ap, 50, 100ϵ)
     conj!(f)
@@ -90,12 +90,12 @@ function cg_for_inufft{T}(A::ToeplitzMatrices.AbstractToeplitz{T}, x::AbstractVe
     fill!(Ap, zero(T))
     # r = b - A*x
     copy!(r, b)
-    A_mul_B!(-one(T), A, x, one(T), r)
+    mul!(r, A, x, -one(T), one(T))
 	copy!(p, r)
 	nrm2 = r⋅r
     for k = 1:max_it
         # Ap = A*p
-        A_mul_B!(one(T), A, p, zero(T), Ap)
+        mul!(Ap, A, p)
 		α = nrm2/(p⋅Ap)
         @inbounds @simd for l = 1:n
             x[l] += α*p[l]

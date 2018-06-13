@@ -52,7 +52,7 @@ function plan_analysis2(A::Matrix{T}) where T<:fftwNumber
     AnalysisPlan(planθ, planφ, C, zeros(T, n))
 end
 
-function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(REDFT01,),true,1}, r2rFFTWPlan{T,(RODFT01,),true,1}}}, X::Matrix{T}) where T
+function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT01,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT01,),true,1}}}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Column synthesis
@@ -93,7 +93,7 @@ function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(RE
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(REDFT00,),true,1}, r2rFFTWPlan{T,(RODFT00,),true,1}}}, X::Matrix{T}) where T
+function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT00,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT00,),true,1}}}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Column synthesis
@@ -138,7 +138,7 @@ function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(RE
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(REDFT10,),true,1}, r2rFFTWPlan{T,(RODFT10,),true,1}}}, X::Matrix{T}) where T
+function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT10,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT10,),true,1}}}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Row analysis
@@ -174,7 +174,7 @@ function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(RED
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(REDFT00,),true,1}, r2rFFTWPlan{T,(RODFT00,),true,1}}}, X::Matrix{T}) where T
+function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT00,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT00,),true,1}}}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Row analysis

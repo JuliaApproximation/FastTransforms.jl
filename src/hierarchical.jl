@@ -1,21 +1,21 @@
 abstract type HierarchicalPlan{T} <: AbstractMatrix{T} end
 
 function *(P::HierarchicalPlan, x::AbstractVector)
-    A_mul_B!(zero(x), P, x)
+    mul!(zero(x), P, x)
 end
 
 function *(P::HierarchicalPlan, X::AbstractMatrix)
-    A_mul_B!(zero(X), P, X)
+    mul!(zero(X), P, X)
 end
 
-# A_mul_B!! mutates x while overwriting y. The generic fallback assumes it doesn't mutate x.
-A_mul_B!!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = A_mul_B!(y, P, x)
-A_mul_B!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B!(Y, P, X)
+# mul!! mutates x while overwriting y. The generic fallback assumes it doesn't mutate x.
+mul!!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = mul!(y, P, x)
+mul!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = mul!(Y, P, X)
 A_mul_B_col_J!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix, J::Int) = A_mul_B_col_J!(Y, P, X, J)
 
-# A_mul_B! falls back to the mutating version with a copy.
-Base.A_mul_B!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = A_mul_B!!(y, P, copy(x))
-Base.A_mul_B!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B!!(Y, P, copy(X))
+# mul! falls back to the mutating version with a copy.
+Base.mul!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = mul!!(y, P, copy(x))
+Base.mul!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = mul!!(Y, P, copy(X))
 A_mul_B_col_J!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B_col_J!!(Y, P, copy(X), J)
 
 function scale_col_J!(b::AbstractVector, A::AbstractVecOrMat, J::Int)
@@ -154,24 +154,24 @@ function getindex(P::ChebyshevToLegendrePlan, i::Int, j::Int)
     end
 end
 
-function Base.A_mul_B!(y::Vector, P::LegendreToChebyshevPlan, x::AbstractVector)
-    A_mul_B!(y, P.even, x, 1, 1, 2, 2)
-    A_mul_B!(y, P.odd, x, 2, 2, 2, 2)
+function Base.mul!(y::Vector, P::LegendreToChebyshevPlan, x::AbstractVector)
+    mul!(y, P.even, x, 1, 1, 2, 2)
+    mul!(y, P.odd, x, 2, 2, 2, 2)
     scale!(2/π, y)
     y[1] *= 0.5
     y
 end
 
-function Base.A_mul_B!(y::Vector, P::ChebyshevToLegendrePlan, x::AbstractVector)
-    A_mul_B!(y, P.even, x, 1, 1, 2, 2)
-    A_mul_B!(y, P.odd, x, 2, 2, 2, 2)
+function Base.mul!(y::Vector, P::ChebyshevToLegendrePlan, x::AbstractVector)
+    mul!(y, P.even, x, 1, 1, 2, 2)
+    mul!(y, P.odd, x, 2, 2, 2, 2)
 end
 
-function Base.A_mul_B!(Y::Matrix, P::LegendreToChebyshevPlan, X::Matrix)
+function Base.mul!(Y::Matrix, P::LegendreToChebyshevPlan, X::Matrix)
     m, n = size(X)
     for j = 1:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
+        mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
+        mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
     scale!(2/π, Y)
     for j = 1:n
@@ -180,11 +180,11 @@ function Base.A_mul_B!(Y::Matrix, P::LegendreToChebyshevPlan, X::Matrix)
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix, P::ChebyshevToLegendrePlan, X::Matrix)
+function Base.mul!(Y::Matrix, P::ChebyshevToLegendrePlan, X::Matrix)
     m, n = size(X)
     for j = 1:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
+        mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
+        mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
     Y
 end
@@ -256,27 +256,27 @@ function getindex(P::ChebyshevToNormalizedLegendrePlan, i::Int, j::Int)
     end
 end
 
-function A_mul_B!!(y::Vector, P::NormalizedLegendreToChebyshevPlan, x::AbstractVector)
+function mul!!(y::Vector, P::NormalizedLegendreToChebyshevPlan, x::AbstractVector)
     unsafe_broadcasttimes!(x, P.scl)
-    A_mul_B!(y, P.even, x, 1, 1, 2, 2)
-    A_mul_B!(y, P.odd, x, 2, 2, 2, 2)
+    mul!(y, P.even, x, 1, 1, 2, 2)
+    mul!(y, P.odd, x, 2, 2, 2, 2)
     scale!(2/π, y)
     y[1] *= 0.5
     y
 end
 
-function Base.A_mul_B!(y::Vector, P::ChebyshevToNormalizedLegendrePlan, x::AbstractVector)
-    A_mul_B!(y, P.even, x, 1, 1, 2, 2)
-    A_mul_B!(y, P.odd, x, 2, 2, 2, 2)
+function Base.mul!(y::Vector, P::ChebyshevToNormalizedLegendrePlan, x::AbstractVector)
+    mul!(y, P.even, x, 1, 1, 2, 2)
+    mul!(y, P.odd, x, 2, 2, 2, 2)
     unsafe_broadcasttimes!(y, P.scl)
 end
 
-function A_mul_B!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix)
+function mul!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix)
     m, n = size(X)
     scale!(P.scl, X)
     for j = 1:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
+        mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
+        mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
     scale!(2/π, Y)
     @inbounds @simd for j = 1:n
@@ -285,11 +285,11 @@ function A_mul_B!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix)
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix)
+function Base.mul!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix)
     m, n = size(X)
     for j = 1:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
+        mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
+        mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
     scale!(P.scl, Y)
 end
@@ -298,8 +298,8 @@ function A_mul_B_col_J!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Mat
     m, n = size(X)
     COLSHIFT = m*(J-1)
     scale_col_J!(P.scl, X, J)
-    A_mul_B!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
-    A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
+    mul!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
+    mul!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
     scale_col_J!(2/π, Y, J)
     @inbounds Y[1+COLSHIFT] *= 0.5
     Y
@@ -308,8 +308,8 @@ end
 function A_mul_B_col_J!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix, J::Int)
     m, n = size(X)
     COLSHIFT = m*(J-1)
-    A_mul_B!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
-    A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
+    mul!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
+    mul!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
     scale_col_J!(P.scl, Y, J)
 end
 
@@ -364,33 +364,33 @@ function getindex(P::Chebyshev2ToNormalizedLegendre1Plan, i::Int, j::Int)
     end
 end
 
-function A_mul_B!!(y::Vector, P::NormalizedLegendre1ToChebyshev2Plan, x::AbstractVector)
+function mul!!(y::Vector, P::NormalizedLegendre1ToChebyshev2Plan, x::AbstractVector)
     unsafe_broadcasttimes!(x, P.scl)
-    A_mul_B!(y, P.even, x, 1, 1, 2, 2)
-    A_mul_B!(y, P.odd, x, 2, 2, 2, 2)
+    mul!(y, P.even, x, 1, 1, 2, 2)
+    mul!(y, P.odd, x, 2, 2, 2, 2)
 end
 
-function Base.A_mul_B!(y::Vector, P::Chebyshev2ToNormalizedLegendre1Plan, x::AbstractVector)
-    A_mul_B!(y, P.even, x, 1, 1, 2, 2)
-    A_mul_B!(y, P.odd, x, 2, 2, 2, 2)
+function Base.mul!(y::Vector, P::Chebyshev2ToNormalizedLegendre1Plan, x::AbstractVector)
+    mul!(y, P.even, x, 1, 1, 2, 2)
+    mul!(y, P.odd, x, 2, 2, 2, 2)
     unsafe_broadcasttimes!(y, P.scl)
 end
 
-function A_mul_B!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix)
+function mul!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix)
     m, n = size(X)
     scale!(P.scl, X)
     for j = 1:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
+        mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
+        mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix)
+function Base.mul!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix)
     m, n = size(X)
     for j = 1:n
-        A_mul_B!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
-        A_mul_B!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
+        mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
+        mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
     scale!(P.scl, Y)
 end
@@ -399,16 +399,16 @@ function A_mul_B_col_J!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::M
     m, n = size(X)
     COLSHIFT = m*(J-1)
     scale_col_J!(P.scl, X, J)
-    A_mul_B!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
-    A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
+    mul!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
+    mul!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
     Y
 end
 
 function A_mul_B_col_J!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix, J::Int)
     m, n = size(X)
     COLSHIFT = m*(J-1)
-    A_mul_B!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
-    A_mul_B!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
+    mul!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
+    mul!(Y, P.odd, X, 2+COLSHIFT, 2+COLSHIFT, 2, 2)
     scale_col_J!(P.scl, Y, J)
 end
 

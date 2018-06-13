@@ -78,10 +78,10 @@ function plan_nufft3{T<:AbstractFloat}(x::AbstractVector{T}, ω::AbstractVector{
 end
 
 function (*){N,T,V}(p::NUFFTPlan{N,T}, c::AbstractArray{V})
-    A_mul_B!(zeros(promote_type(T,V), size(c)), p, c)
+    mul!(zeros(promote_type(T,V), size(c)), p, c)
 end
 
-function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVector{T})
+function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVector{T})
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast!(*, temp, c, U)
@@ -91,12 +91,12 @@ function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVe
     p*temp2
     conj!(temp2)
     broadcast!(*, temp, V, temp2)
-    A_mul_B!(f, temp, Ones)
+    mul!(f, temp, Ones)
 
     f
 end
 
-function Base.A_mul_B!{N,T}(F::Matrix{T}, P::NUFFTPlan{N,T}, C::Matrix{T})
+function Base.mul!{N,T}(F::Matrix{T}, P::NUFFTPlan{N,T}, C::Matrix{T})
     for J = 1:size(F, 2)
         A_mul_B_col_J!(F, P, C, J)
     end
@@ -125,19 +125,19 @@ function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int
     conj!(temp2)
     broadcast!(*, temp, V, temp2)
     COLSHIFT = size(C, 1)*(J-1)
-    A_mul_B!(F, temp, Ones, 1+COLSHIFT, 1)
+    mul!(F, temp, Ones, 1+COLSHIFT, 1)
 
     F
 end
 
-function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T})
+function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T})
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast!(*, temp, c, V)
     p*temp
     reindex_temp!(temp, t, temp2)
     broadcast!(*, temp, U, temp2)
-    A_mul_B!(f, temp, Ones)
+    mul!(f, temp, Ones)
 
     f
 end
@@ -150,19 +150,19 @@ function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{2,T}, C::Matrix{T}, J::Int
     reindex_temp!(temp, t, temp2)
     broadcast!(*, temp, U, temp2)
     COLSHIFT = size(C, 1)*(J-1)
-    A_mul_B!(F, temp, Ones, 1+COLSHIFT, 1)
+    mul!(F, temp, Ones, 1+COLSHIFT, 1)
 
     F
 end
 
-function Base.A_mul_B!{T}(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T})
+function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T})
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast!(*, temp2, c, V)
-    A_mul_B!(temp, p, temp2)
+    mul!(temp, p, temp2)
     reindex_temp!(temp, t, temp2)
     broadcast!(*, temp, U, temp2)
-    A_mul_B!(f, temp, Ones)
+    mul!(f, temp, Ones)
 
     f
 end
@@ -171,11 +171,11 @@ function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast_col_J!(*, temp2, C, V, J)
-    A_mul_B!(temp, p, temp2)
+    mul!(temp, p, temp2)
     reindex_temp!(temp, t, temp2)
     broadcast!(*, temp, U, temp2)
     COLSHIFT = size(C, 1)*(J-1)
-    A_mul_B!(F, temp, Ones, 1+COLSHIFT, 1)
+    mul!(F, temp, Ones, 1+COLSHIFT, 1)
 
     F
 end
@@ -263,19 +263,19 @@ function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, y::AbstractVector{T
 end
 
 function (*){T,V}(p::NUFFT2DPlan{T}, C::Matrix{V})
-    A_mul_B!(zeros(promote_type(T,V), size(C)), p, C)
+    mul!(zeros(promote_type(T,V), size(C)), p, C)
 end
 
-function Base.A_mul_B!{T}(F::Matrix{T}, P::NUFFT2DPlan{T}, C::Matrix{T})
+function Base.mul!{T}(F::Matrix{T}, P::NUFFT2DPlan{T}, C::Matrix{T})
     p1, p2, temp = P.p1, P.p2, P.temp
 
     # Apply 1D x-plan to all columns
-    A_mul_B!(F, p1, C)
+    mul!(F, p1, C)
 
     # Apply 1D y-plan to all rows
     for i = 1:size(C, 1)
         @inbounds for j = 1:size(F, 2) temp[j] = F[i,j] end
-        A_mul_B!(temp, p2, temp)
+        mul!(temp, p2, temp)
         @inbounds for j = 1:size(F, 2) F[i,j] = temp[j] end
     end
 

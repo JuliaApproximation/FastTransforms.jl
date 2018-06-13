@@ -160,7 +160,7 @@ for (Plan,ff,ff!) in ((:DummyFFTPlan,:fft,:fft!),
     @eval begin
         *{T,N}(p::$Plan{T,true}, x::StridedArray{T,N}) = $ff!(x)
         *{T,N}(p::$Plan{T,false}, x::StridedArray{T,N}) = $ff(x)
-        function Base.A_mul_B!(C::StridedVector,p::$Plan,x::StridedVector)
+        function Base.mul!(C::StridedVector,p::$Plan,x::StridedVector)
             C[:]=$ff(x)
             C
         end

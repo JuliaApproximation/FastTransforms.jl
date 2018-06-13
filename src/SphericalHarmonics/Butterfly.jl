@@ -29,7 +29,7 @@ end
 
 size(B::Butterfly) = size(B, 1), size(B, 2)
 
-function Butterfly{T}(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opts...)
+function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opts...)  where T
     m, n = size(A)
     tL = 2^L
 
@@ -167,60 +167,60 @@ function rowperm!(fwd::Bool, y::AbstractVector, x::AbstractVector, p::Vector{Int
 end
 
 ## ColumnPermutation
-A_mul_B!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(false, B, A.p, jstart)
+mul!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(false, B, A.p, jstart)
 At_mul_B!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(true, B, A.p, jstart)
 Ac_mul_B!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = At_mul_B!(A, B, jstart)
 
-A_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = rowperm!(false, y, x, A.p, jstart)
+mul!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = rowperm!(false, y, x, A.p, jstart)
 At_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = rowperm!(true, y, x, A.p, jstart)
 Ac_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = At_mul_B!(y, x, A, jstart)
 
-# Fast A_mul_B!, At_mul_B!, and Ac_mul_B! for an ID. These overwrite the output.
+# Fast mul!, At_mul_B!, and Ac_mul_B! for an ID. These overwrite the output.
 
-function A_mul_B!{T}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int)
+function mul!(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where {T}
     k, n = size(A)
     At_mul_B!(P, x, jstart)
     copy!(y, istart, x, jstart, k)
-    A_mul_B!(y, A.T, x, istart, jstart+k)
-    A_mul_B!(P, x, jstart)
+    mul!(y, A.T, x, istart, jstart+k)
+    mul!(P, x, jstart)
     y
 end
 
-function A_mul_B!{T}(y::AbstractVector{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int)
+function mul!(y::AbstractVector{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int) where {T}
     k, n = size(A)
     At_mul_B!(temp, P, x, jstart)
     copy!(y, istart, temp, jstart, k)
-    A_mul_B!(y, A.T, temp, istart, jstart+k)
+    mul!(y, A.T, temp, istart, jstart+k)
     y
 end
 
 for f! in (:At_mul_B!, :Ac_mul_B!)
     @eval begin
-        function $f!{T}(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int)
+        function $f!(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where {T}
             k, n = size(A)
             copy!(y, istart, x, jstart, k)
             $f!(y, A.T, x, istart+k, jstart)
-            A_mul_B!(P, y, istart)
+            mul!(P, y, istart)
             y
         end
 
-        function $f!{T}(y::AbstractVector{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int)
+        function $f!(y::AbstractVector{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int) where {T}
             k, n = size(A)
             copy!(temp, istart, x, jstart, k)
             $f!(temp, A.T, x, istart+k, jstart)
-            A_mul_B!(y, P, temp, istart)
+            mul!(y, P, temp, istart)
             y
         end
     end
 end
 
-### A_mul_B!, At_mul_B!, and  Ac_mul_B! for a Butterfly factorization.
+### mul!, At_mul_B!, and  Ac_mul_B! for a Butterfly factorization.
 
-Base.A_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = A_mul_B_col_J!(u, B, b, 1)
-Base.At_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = At_mul_B_col_J!(u, B, b, 1)
-Base.Ac_mul_B!{T}(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) = Ac_mul_B_col_J!(u, B, b, 1)
+Base.mul!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = A_mul_B_col_J!(u, B, b, 1)
+Base.At_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = At_mul_B_col_J!(u, B, b, 1)
+Base.Ac_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = Ac_mul_B_col_J!(u, B, b, 1)
 
-function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int)
+function A_mul_B_col_J!(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int) where T
     L = length(B.factors) - 1
     tL = 2^L
 
@@ -241,7 +241,7 @@ function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::I
     for j = 1:tL
         nl = nu+1
         nu += size(factors[j], 2)
-        A_mul_B!(temp1, factors[j], permutations[j], b, inds[j], nl+COLSHIFT)
+        mul!(temp1, factors[j], permutations[j], b, inds[j], nl+COLSHIFT)
     end
 
     ii, jj = 2, (tL>>1)
@@ -254,7 +254,7 @@ function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::I
         for i = 1:ii
             shft = 2jj*div(ctr,2jj)
             for j = 1:jj
-                A_mul_B!(temp2, factors[j+ctr], permutations[j+ctr], temp1, temp3, indsout[j+ctr], indsin[2j+shft-1])
+                mul!(temp2, factors[j+ctr], permutations[j+ctr], temp1, temp3, indsout[j+ctr], indsin[2j+shft-1])
             end
             ctr += jj
         end
@@ -269,7 +269,7 @@ function A_mul_B_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::I
     for i = 1:tL
         ml = mu+1
         mu += size(columns[i], 1)
-        A_mul_B!(u, columns[i], temp1, ml+COLSHIFT, inds[i])
+        mul!(u, columns[i], temp1, ml+COLSHIFT, inds[i])
     end
 
     u
@@ -278,7 +278,7 @@ end
 for f! in (:At_mul_B!,:Ac_mul_B!)
     f_col_J! = Meta.parse(string(f!)[1:end-1]*"_col_J!")
     @eval begin
-        function $f_col_J!{T}(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int)
+        function $f_col_J!(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int) where T
             L = length(B.factors) - 1
             tL = 2^L
 
