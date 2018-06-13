@@ -5,3 +5,4 @@ LowRankApprox 0.1.1
 ProgressMeter 0.3.4
 SpecialFunctions 0.3.4
 Compat 0.17
+AbstractFFTs 0.3.1
