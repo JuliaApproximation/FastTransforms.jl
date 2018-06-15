@@ -114,30 +114,30 @@ end
 
 """
 Computes the Chebyshev expansion coefficients
-given the Jacobi expansion coefficients ``c`` with parameters ``\alpha`` and ``\beta``:
+given the Jacobi expansion coefficients ``c`` with parameters ``\\alpha`` and ``\\beta``:
 
 ```math
-{\rm CJT} : \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x) \to \sum_{n=0}^N c_n^{\rm cheb}T_n(x).
+{\\rm CJT} : \\sum_{n=0}^N c_n^{\\rm jac}P_n^{(\\alpha,\\beta)}(x) \\to \\sum_{n=0}^N c_n^{\\rm cheb}T_n(x).
 ```
 """
 cjt(c::AbstractVector{T},α,β) where T = plan_cjt(c,real(T)(α),real(T)(β))*c
 
 """
-Computes the Jacobi expansion coefficients with parameters ``\alpha`` and ``\beta``
+Computes the Jacobi expansion coefficients with parameters ``\\alpha`` and ``\\beta``
 given the Chebyshev expansion coefficients ``c``:
 
 ```math
-{\rm iCJT} : \sum_{n=0}^N c_n^{\rm cheb}T_n(x) \to \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x).
+{\\rm iCJT} : \\sum_{n=0}^N c_n^{\\rm cheb}T_n(x) \\to \\sum_{n=0}^N c_n^{\\rm jac}P_n^{(\\alpha,\\beta)}(x).
 ```
 """
 icjt(c,α,β) = plan_icjt(c,α,β)*c
 
 """
-Computes the Jacobi expansion coefficients with parameters ``\gamma`` and ``\delta``
-given the Jacobi expansion coefficients ``c`` with parameters ``\alpha`` and ``\beta``:
+Computes the Jacobi expansion coefficients with parameters ``\\gamma`` and ``\\delta``
+given the Jacobi expansion coefficients ``c`` with parameters ``\\alpha`` and ``\\beta``:
 
 ```math
-{\rm JJT} : \sum_{n=0}^N c_n^{\rm jac}P_n^{(\alpha,\beta)}(x) \to \sum_{n=0}^N c_n^{\rm jac}P_n^{(\gamma,\delta)}(x).
+{\\rm JJT} : \\sum_{n=0}^N c_n^{\\rm jac}P_n^{(\\alpha,\\beta)}(x) \\to \\sum_{n=0}^N c_n^{\\rm jac}P_n^{(\\gamma,\\delta)}(x).
 ```
 """
 function jjt(c,α,β,γ,δ)
@@ -155,7 +155,7 @@ arrays, normalization constants, and recurrence coefficients for a forward Cheby
 
 ``c`` is the vector of coefficients; and,
 
-``\alpha`` and ``\beta`` are the Jacobi parameters.
+``\\alpha`` and ``\\beta`` are the Jacobi parameters.
 
 Optionally:
 
@@ -169,7 +169,7 @@ arrays, normalization constants, and recurrence coefficients for an inverse Cheb
 
 ``c`` is the vector of coefficients; and,
 
-``\alpha`` and ``\beta`` are the Jacobi parameters.
+``\\alpha`` and ``\\beta`` are the Jacobi parameters.
 
 Optionally:
 

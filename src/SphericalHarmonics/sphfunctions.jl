@@ -90,7 +90,7 @@ end
 Pointwise evaluation of spherical harmonic:
 
 ```math
-Y_\ell^m(\theta,\varphi) = \frac{e^{{\rm i} m\varphi}}{\sqrt{2\pi}} {\rm i}^{m+|m|}\sqrt{(\ell+\frac{1}{2})\frac{(\ell-m)!}{(\ell+m)!}} P_\ell^m(\cos\theta).
+Y_\\ell^m(\\theta,\\varphi) = \\frac{e^{{\\rm i} m\\varphi}}{\\sqrt{2\\pi}} {\\rm i}^{m+|m|}\\sqrt{(\\ell+\\frac{1}{2})\\frac{(\\ell-m)!}{(\\ell+m)!}} P_\\ell^m(\\cos\\theta).
 ```
 """
 sphevaluate(θ, φ, L, M) = sphevaluatepi(θ/π, φ/π, L, M)

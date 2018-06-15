@@ -17,14 +17,14 @@ end
 
 function Base.A_mul_B!(C::Pnmp1toPlm, A::AbstractVecOrMat)
     @inbounds for i = 1:length(C)
-        A_mul_B!(C.rotations[i], A)
+        mul!(C.rotations[i], A)
     end
     A
 end
 
 function Base.A_mul_B!(A::AbstractMatrix, C::Pnmp1toPlm)
     @inbounds for i = length(C):-1:1
-        A_mul_B!(A, C.rotations[i])
+        mul!(A, C.rotations[i])
     end
     A
 end
@@ -98,10 +98,10 @@ end
 function Base.A_mul_B!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
     RP, p, B = SP.RP, SP.p, SP.B
     copy!(B, X)
-    A_mul_B!(RP, B)
+    mul!(RP, B)
     M, N = size(X)
     for J = 1:N
-        A_mul_B_col_J!!(Y, p, B, J)
+        mul_col_J!!(Y, p, B, J)
     end
     @inbounds for J = 1:N
         nrm = sqrt((2-δ(J-1,0))/π)
@@ -123,7 +123,7 @@ function Base.At_mul_B!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
         end
     end
     for J = 1:N
-        A_mul_B_col_J!!(Y, pinv, B, J)
+        mul_col_J!!(Y, pinv, B, J)
     end
     tri_zero_spurious_modes!(At_mul_B!(RP, Y))
 end

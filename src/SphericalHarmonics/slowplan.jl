@@ -1,8 +1,8 @@
 import Base.LinAlg: Givens, AbstractRotation
 
-### These three A_mul_B! should be in Base, but for the time being they do not add methods to Base.A_mul_B!; they add methods to the internal A_mul_B!.
+### These three mul! should be in Base, but for the time being they do not add methods to Base.mul!; they add methods to the internal mul!.
 
-function A_mul_B!(G::Givens{T}, A::AbstractVecOrMat) where T<:Real
+function mul!(G::Givens{T}, A::AbstractVecOrMat) where T<:Real
     m, n = size(A, 1), size(A, 2)
     if G.i2 > m
         throw(DimensionMismatch("column indices for rotation are outside the matrix"))
@@ -15,7 +15,7 @@ function A_mul_B!(G::Givens{T}, A::AbstractVecOrMat) where T<:Real
     return A
 end
 
-function A_mul_B!(A::AbstractMatrix, G::Givens)
+function mul!(A::AbstractMatrix, G::Givens)
     m, n = size(A, 1), size(A, 2)
     if G.i2 > n
         throw(DimensionMismatch("column indices for rotation are outside the matrix"))
@@ -28,7 +28,7 @@ function A_mul_B!(A::AbstractMatrix, G::Givens)
     return A
 end
 
-function A_mul_B!(A::AbstractMatrix, G::Givens{T}) where T<:Real
+function mul!(A::AbstractMatrix, G::Givens{T}) where T<:Real
     m, n = size(A, 1), size(A, 2)
     if G.i2 > n
         throw(DimensionMismatch("column indices for rotation are outside the matrix"))
@@ -60,14 +60,14 @@ end
 
 function Base.A_mul_B!(C::Pnmp2toPlm, A::AbstractVecOrMat)
     @inbounds for i = 1:length(C)
-        A_mul_B!(C.rotations[i], A)
+        mul!(C.rotations[i], A)
     end
     A
 end
 
 function Base.A_mul_B!(A::AbstractMatrix, C::Pnmp2toPlm)
     @inbounds for i = length(C):-1:1
-        A_mul_B!(A, C.rotations[i])
+        mul!(A, C.rotations[i])
     end
     A
 end
@@ -269,16 +269,16 @@ end
 function Base.A_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     RP, p1, p2, B = SP.RP, SP.p1, SP.p2, SP.B
     copy!(B, X)
-    A_mul_B!(RP, B)
+    mul!(RP, B)
     M, N = size(X)
-    A_mul_B_col_J!!(Y, p1, B, 1)
+    mul_col_J!!(Y, p1, B, 1)
     @stepthreads for J = 2:4:N
-        A_mul_B_col_J!!(Y, p2, B, J)
-        J < N && A_mul_B_col_J!!(Y, p2, B, J+1)
+        mul_col_J!!(Y, p2, B, J)
+        J < N && mul_col_J!!(Y, p2, B, J+1)
     end
     @stepthreads for J = 4:4:N
-        A_mul_B_col_J!!(Y, p1, B, J)
-        J < N && A_mul_B_col_J!!(Y, p1, B, J+1)
+        mul_col_J!!(Y, p1, B, J)
+        J < N && mul_col_J!!(Y, p1, B, J+1)
     end
     Y
 end
@@ -287,14 +287,14 @@ function Base.At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
     copy!(B, X)
     M, N = size(X)
-    A_mul_B_col_J!!(Y, p1inv, B, 1)
+    mul_col_J!!(Y, p1inv, B, 1)
     @stepthreads for J = 2:4:N
-        A_mul_B_col_J!!(Y, p2inv, B, J)
-        J < N && A_mul_B_col_J!!(Y, p2inv, B, J+1)
+        mul_col_J!!(Y, p2inv, B, J)
+        J < N && mul_col_J!!(Y, p2inv, B, J+1)
     end
     @stepthreads for J = 4:4:N
-        A_mul_B_col_J!!(Y, p1inv, B, J)
-        J < N && A_mul_B_col_J!!(Y, p1inv, B, J+1)
+        mul_col_J!!(Y, p1inv, B, J)
+        J < N && mul_col_J!!(Y, p1inv, B, J+1)
     end
     sph_zero_spurious_modes!(At_mul_B!(RP, Y))
 end

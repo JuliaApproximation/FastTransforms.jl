@@ -11,12 +11,12 @@ end
 # mul!! mutates x while overwriting y. The generic fallback assumes it doesn't mutate x.
 mul!!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = mul!(y, P, x)
 mul!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = mul!(Y, P, X)
-A_mul_B_col_J!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix, J::Int) = A_mul_B_col_J!(Y, P, X, J)
+mul_col_J!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix, J::Int) = mul_col_J!(Y, P, X, J)
 
 # mul! falls back to the mutating version with a copy.
 mul!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = mul!!(y, P, copy(x))
 mul!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = mul!!(Y, P, copy(X))
-A_mul_B_col_J!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B_col_J!!(Y, P, copy(X), J)
+mul_col_J!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = mul_col_J!!(Y, P, copy(X), J)
 
 function scale_col_J!(b::AbstractVector, A::AbstractVecOrMat, J::Int)
     m, n = size(A)
@@ -294,7 +294,7 @@ function mul!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix)
     scale!(P.scl, Y)
 end
 
-function A_mul_B_col_J!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix, J::Int)
+function mul_col_J!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix, J::Int)
     m, n = size(X)
     COLSHIFT = m*(J-1)
     scale_col_J!(P.scl, X, J)
@@ -305,7 +305,7 @@ function A_mul_B_col_J!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Mat
     Y
 end
 
-function A_mul_B_col_J!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix, J::Int)
+function mul_col_J!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix, J::Int)
     m, n = size(X)
     COLSHIFT = m*(J-1)
     mul!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
@@ -395,7 +395,7 @@ function mul!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix)
     scale!(P.scl, Y)
 end
 
-function A_mul_B_col_J!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix, J::Int)
+function mul_col_J!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix, J::Int)
     m, n = size(X)
     COLSHIFT = m*(J-1)
     scale_col_J!(P.scl, X, J)
@@ -404,7 +404,7 @@ function A_mul_B_col_J!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::M
     Y
 end
 
-function A_mul_B_col_J!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix, J::Int)
+function mul_col_J!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix, J::Int)
     m, n = size(X)
     COLSHIFT = m*(J-1)
     mul!(Y, P.even, X, 1+COLSHIFT, 1+COLSHIFT, 2, 2)
@@ -444,7 +444,7 @@ Chebyshev2ToNormalizedLegendre1Plan(v::VecOrMat) = Chebyshev2ToNormalizedLegendr
 Computes the Chebyshev expansion coefficients given the Legendre expansion coefficients:
 
 ```math
-{\rm CLT} : \sum_{n=0}^N c_n^{\rm leg}P_n(x) \to \sum_{n=0}^N c_n^{\rm cheb}T_n(x).
+{\\rm CLT} : \\sum_{n=0}^N c_n^{\\rm leg}P_n(x) \\to \\sum_{n=0}^N c_n^{\\rm cheb}T_n(x).
 ```
 """
 leg2cheb(::Vector)
@@ -453,7 +453,7 @@ leg2cheb(::Vector)
 Computes the Legendre expansion coefficients given the Chebyshev expansion coefficients:
 
 ```math
-{\rm iCLT} : \sum_{n=0}^N c_n^{\rm cheb}T_n(x) \to \sum_{n=0}^N c_n^{\rm leg}P_n(x).
+{\\rm iCLT} : \\sum_{n=0}^N c_n^{\\rm cheb}T_n(x) \\to \\sum_{n=0}^N c_n^{\\rm leg}P_n(x).
 ```
 """
 cheb2leg(::Vector)

@@ -1,7 +1,7 @@
 @compat abstract type TriangularHarmonicPlan{T} end
 
 function *(P::TriangularHarmonicPlan, X::AbstractMatrix)
-    A_mul_B!(zero(X), P, X)
+    mul!(zero(X), P, X)
 end
 
 function \(P::TriangularHarmonicPlan, X::AbstractMatrix)

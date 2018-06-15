@@ -1,4 +1,4 @@
-function A_mul_B_vf!(P::RotationPlan, A::AbstractMatrix)
+function mul_vf!(P::RotationPlan, A::AbstractMatrix)
     N, M = size(A)
     snm = P.snm
     cnm = P.cnm
@@ -48,28 +48,28 @@ end
 function Base.A_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix)
     RP, p1, p2, B = SP.RP, SP.p1, SP.p2, SP.B
     copy!(B, X1)
-    A_mul_B_vf!(RP, B)
+    mul_vf!(RP, B)
     M, N = size(X1)
-    A_mul_B_col_J!!(Y1, p2, B, 1)
+    mul_col_J!!(Y1, p2, B, 1)
     @stepthreads for J = 2:4:N
-        A_mul_B_col_J!!(Y1, p1, B, J)
-        J < N && A_mul_B_col_J!!(Y1, p1, B, J+1)
+        mul_col_J!!(Y1, p1, B, J)
+        J < N && mul_col_J!!(Y1, p1, B, J+1)
     end
     @stepthreads for J = 4:4:N
-        A_mul_B_col_J!!(Y1, p2, B, J)
-        J < N && A_mul_B_col_J!!(Y1, p2, B, J+1)
+        mul_col_J!!(Y1, p2, B, J)
+        J < N && mul_col_J!!(Y1, p2, B, J+1)
     end
     copy!(B, X2)
-    A_mul_B_vf!(RP, B)
+    mul_vf!(RP, B)
     M, N = size(X2)
-    A_mul_B_col_J!!(Y2, p2, B, 1)
+    mul_col_J!!(Y2, p2, B, 1)
     @stepthreads for J = 2:4:N
-        A_mul_B_col_J!!(Y2, p1, B, J)
-        J < N && A_mul_B_col_J!!(Y2, p1, B, J+1)
+        mul_col_J!!(Y2, p1, B, J)
+        J < N && mul_col_J!!(Y2, p1, B, J+1)
     end
     @stepthreads for J = 4:4:N
-        A_mul_B_col_J!!(Y2, p2, B, J)
-        J < N && A_mul_B_col_J!!(Y2, p2, B, J+1)
+        mul_col_J!!(Y2, p2, B, J)
+        J < N && mul_col_J!!(Y2, p2, B, J+1)
     end
     Y1
 end
@@ -78,26 +78,26 @@ function Base.At_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X
     RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
     copy!(B, X1)
     M, N = size(X1)
-    A_mul_B_col_J!!(Y1, p2inv, B, 1)
+    mul_col_J!!(Y1, p2inv, B, 1)
     @stepthreads for J = 2:4:N
-        A_mul_B_col_J!!(Y1, p1inv, B, J)
-        J < N && A_mul_B_col_J!!(Y1, p1inv, B, J+1)
+        mul_col_J!!(Y1, p1inv, B, J)
+        J < N && mul_col_J!!(Y1, p1inv, B, J+1)
     end
     @stepthreads for J = 4:4:N
-        A_mul_B_col_J!!(Y1, p2inv, B, J)
-        J < N && A_mul_B_col_J!!(Y1, p2inv, B, J+1)
+        mul_col_J!!(Y1, p2inv, B, J)
+        J < N && mul_col_J!!(Y1, p2inv, B, J+1)
     end
     sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y1))
     copy!(B, X2)
     M, N = size(X2)
-    A_mul_B_col_J!!(Y2, p2inv, B, 1)
+    mul_col_J!!(Y2, p2inv, B, 1)
     @stepthreads for J = 2:4:N
-        A_mul_B_col_J!!(Y2, p1inv, B, J)
-        J < N && A_mul_B_col_J!!(Y2, p1inv, B, J+1)
+        mul_col_J!!(Y2, p1inv, B, J)
+        J < N && mul_col_J!!(Y2, p1inv, B, J+1)
     end
     @stepthreads for J = 4:4:N
-        A_mul_B_col_J!!(Y2, p2inv, B, J)
-        J < N && A_mul_B_col_J!!(Y2, p2inv, B, J+1)
+        mul_col_J!!(Y2, p2inv, B, J)
+        J < N && mul_col_J!!(Y2, p2inv, B, J+1)
     end
     sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y2))
     Y1
@@ -113,19 +113,19 @@ function Base.A_mul_B!(Y1::Matrix{T}, Y2::Matrix{T}, P::SynthesisPlan{T}, X1::Ma
     PCe = P.planθ[1]
     PCo = P.planθ[2]
 
-    A_mul_B_col_J!(Y1, PCo, X1, 1)
+    mul_col_J!(Y1, PCo, X1, 1)
 
     for J = 2:4:N
         X1[1,J] *= two(T)
         J < N && (X1[1,J+1] *= two(T))
-        A_mul_B_col_J!(Y1, PCe, X1, J)
-        J < N && A_mul_B_col_J!(Y1, PCe, X1, J+1)
+        mul_col_J!(Y1, PCe, X1, J)
+        J < N && mul_col_J!(Y1, PCe, X1, J+1)
         X1[1,J] *= half(T)
         J < N && (X1[1,J+1] *= half(T))
     end
     for J = 4:4:N
-        A_mul_B_col_J!(Y1, PCo, X1, J)
-        J < N && A_mul_B_col_J!(Y1, PCo, X1, J+1)
+        mul_col_J!(Y1, PCo, X1, J)
+        J < N && mul_col_J!(Y1, PCo, X1, J+1)
     end
     scale!(half(T), Y1)
 
@@ -149,19 +149,19 @@ function Base.A_mul_B!(Y1::Matrix{T}, Y2::Matrix{T}, P::SynthesisPlan{T}, X1::Ma
     PCe = P.planθ[1]
     PCo = P.planθ[2]
 
-    A_mul_B_col_J!(Y2, PCo, X2, 1)
+    mul_col_J!(Y2, PCo, X2, 1)
 
     for J = 2:4:N
         X2[1,J] *= two(T)
         J < N && (X2[1,J+1] *= two(T))
-        A_mul_B_col_J!(Y2, PCe, X2, J)
-        J < N && A_mul_B_col_J!(Y2, PCe, X2, J+1)
+        mul_col_J!(Y2, PCe, X2, J)
+        J < N && mul_col_J!(Y2, PCe, X2, J+1)
         X2[1,J] *= half(T)
         J < N && (X2[1,J+1] *= half(T))
     end
     for J = 4:4:N
-        A_mul_B_col_J!(Y2, PCo, X2, J)
-        J < N && A_mul_B_col_J!(Y2, PCo, X2, J+1)
+        mul_col_J!(Y2, PCo, X2, J)
+        J < N && mul_col_J!(Y2, PCo, X2, J+1)
     end
     scale!(half(T), Y2)
 
@@ -198,16 +198,16 @@ function Base.A_mul_B!(Y1::Matrix{T}, Y2::Matrix{T}, P::AnalysisPlan{T}, X1::Mat
     PCe = P.planθ[1]
     PCo = P.planθ[2]
 
-    A_mul_B_col_J!(Y1, PCo, Y1, 1)
+    mul_col_J!(Y1, PCo, Y1, 1)
     for J = 2:4:N
-        A_mul_B_col_J!(Y1, PCe, Y1, J)
-        J < N && A_mul_B_col_J!(Y1, PCe, Y1, J+1)
+        mul_col_J!(Y1, PCe, Y1, J)
+        J < N && mul_col_J!(Y1, PCe, Y1, J+1)
         Y1[1,J] *= half(T)
         J < N && (Y1[1,J+1] *= half(T))
     end
     for J = 4:4:N
-        A_mul_B_col_J!(Y1, PCo, Y1, J)
-        J < N && A_mul_B_col_J!(Y1, PCo, Y1, J+1)
+        mul_col_J!(Y1, PCo, Y1, J)
+        J < N && mul_col_J!(Y1, PCo, Y1, J+1)
     end
     scale!(sqrt(π)*inv(T(M)), Y1)
     sqrttwo = sqrt(2)
@@ -229,16 +229,16 @@ function Base.A_mul_B!(Y1::Matrix{T}, Y2::Matrix{T}, P::AnalysisPlan{T}, X1::Mat
     PCe = P.planθ[1]
     PCo = P.planθ[2]
 
-    A_mul_B_col_J!(Y2, PCo, Y2, 1)
+    mul_col_J!(Y2, PCo, Y2, 1)
     for J = 2:4:N
-        A_mul_B_col_J!(Y2, PCe, Y2, J)
-        J < N && A_mul_B_col_J!(Y2, PCe, Y2, J+1)
+        mul_col_J!(Y2, PCe, Y2, J)
+        J < N && mul_col_J!(Y2, PCe, Y2, J+1)
         Y2[1,J] *= half(T)
         J < N && (Y2[1,J+1] *= half(T))
     end
     for J = 4:4:N
-        A_mul_B_col_J!(Y2, PCo, Y2, J)
-        J < N && A_mul_B_col_J!(Y2, PCo, Y2, J+1)
+        mul_col_J!(Y2, PCo, Y2, J)
+        J < N && mul_col_J!(Y2, PCo, Y2, J+1)
     end
     scale!(sqrt(π)*inv(T(M)), Y2)
     sqrttwo = sqrt(2)

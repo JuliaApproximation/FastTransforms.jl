@@ -26,12 +26,12 @@ function ThinSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
     BF = Vector{Butterfly{T}}(n-2)
     P = Progress(n-2, 0.1, "Pre-computing...", 43)
     for J = 1:2:n-2
-        A_mul_B!(Ce, RP.layers[J])
+        mul!(Ce, RP.layers[J])
         checklayer(J+1) && (BF[J] = Butterfly(Ce, L; isorthogonal = true, opts...))
         next!(P)
     end
     for J = 2:2:n-2
-        A_mul_B!(Co, RP.layers[J])
+        mul!(Co, RP.layers[J])
         checklayer(J) && (BF[J] = Butterfly(Co, L; isorthogonal = true, opts...))
         next!(P)
     end
@@ -47,15 +47,15 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
 
     @stepthreads for J = 3:2:N÷2
         if checklayer(J-1)
-            A_mul_B_col_J!(Y, BF[J-1], B, 2J)
-            2J < N && A_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
+            mul_col_J!(Y, BF[J-1], B, 2J)
+            2J < N && mul_col_J!(Y, BF[J-1], B, 2J+1)
         else
             ℓ = round(Int, (J-1)÷LAYERSKELETON)*LAYERSKELETON
-            A_mul_B_col_J!(RP, B, 2J, ℓ+1, J-1)
-            2J < N && A_mul_B_col_J!(RP, B, 2J+1, ℓ+1, J-1)
+            mul_col_J!(RP, B, 2J, ℓ+1, J-1)
+            2J < N && mul_col_J!(RP, B, 2J+1, ℓ+1, J-1)
             if ℓ > LAYERSKELETON-2
-                A_mul_B_col_J!(Y, BF[ℓ], B, 2J)
-                2J < N && A_mul_B_col_J!(Y, BF[ℓ], B, 2J+1)
+                mul_col_J!(Y, BF[ℓ], B, 2J)
+                2J < N && mul_col_J!(Y, BF[ℓ], B, 2J+1)
             else
                 copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
@@ -64,15 +64,15 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
 
     @stepthreads for J = 2:2:N÷2
         if checklayer(J)
-            A_mul_B_col_J!(Y, BF[J-1], B, 2J)
-            2J < N && A_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
+            mul_col_J!(Y, BF[J-1], B, 2J)
+            2J < N && mul_col_J!(Y, BF[J-1], B, 2J+1)
         else
             ℓ = round(Int, J÷LAYERSKELETON)*LAYERSKELETON
-            A_mul_B_col_J!(RP, B, 2J, ℓ, J-1)
-            2J < N && A_mul_B_col_J!(RP, B, 2J+1, ℓ, J-1)
+            mul_col_J!(RP, B, 2J, ℓ, J-1)
+            2J < N && mul_col_J!(RP, B, 2J+1, ℓ, J-1)
             if ℓ > LAYERSKELETON-2
-                A_mul_B_col_J!(Y, BF[ℓ-1], B, 2J)
-                2J < N && A_mul_B_col_J!(Y, BF[ℓ-1], B, 2J+1)
+                mul_col_J!(Y, BF[ℓ-1], B, 2J)
+                2J < N && mul_col_J!(Y, BF[ℓ-1], B, 2J+1)
             else
                 copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
@@ -83,14 +83,14 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     copy!(B, Y)
     fill!(Y, zero(eltype(Y)))
 
-    A_mul_B_col_J!!(Y, p1, B, 1)
+    mul_col_J!!(Y, p1, B, 1)
     @stepthreads for J = 2:4:N
-        A_mul_B_col_J!!(Y, p2, B, J)
-        J < N && A_mul_B_col_J!!(Y, p2, B, J+1)
+        mul_col_J!!(Y, p2, B, J)
+        J < N && mul_col_J!!(Y, p2, B, J+1)
     end
     @stepthreads for J = 4:4:N
-        A_mul_B_col_J!!(Y, p1, B, J)
-        J < N && A_mul_B_col_J!!(Y, p1, B, J+1)
+        mul_col_J!!(Y, p1, B, J)
+        J < N && mul_col_J!!(Y, p1, B, J+1)
     end
     Y
 end
@@ -100,14 +100,14 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1inv, p2inv, B = TP.RP, TP.BF, TP.p1inv, TP.p2inv, TP.B
     copy!(B, X)
     M, N = size(X)
-    A_mul_B_col_J!!(Y, p1inv, B, 1)
+    mul_col_J!!(Y, p1inv, B, 1)
     @stepthreads for J = 2:4:N
-        A_mul_B_col_J!!(Y, p2inv, B, J)
-        J < N && A_mul_B_col_J!!(Y, p2inv, B, J+1)
+        mul_col_J!!(Y, p2inv, B, J)
+        J < N && mul_col_J!!(Y, p2inv, B, J+1)
     end
     @stepthreads for J = 4:4:N
-        A_mul_B_col_J!!(Y, p1inv, B, J)
-        J < N && A_mul_B_col_J!!(Y, p1inv, B, J+1)
+        mul_col_J!!(Y, p1inv, B, J)
+        J < N && mul_col_J!!(Y, p1inv, B, J+1)
     end
 
     copy!(B, Y)
@@ -156,7 +156,7 @@ Base.Ac_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix) = At_mul_B!(
 allranks(TP::ThinSphericalHarmonicPlan) = mapreduce(i->allranks(TP.BF[i]),vcat,sort!([LAYERSKELETON-1:LAYERSKELETON:length(TP.BF);LAYERSKELETON:LAYERSKELETON:length(TP.BF)]))
 
 
-function A_mul_B_col_J!(P::RotationPlan, A::AbstractMatrix, J::Int, L1::Int, L2::Int)
+function mul_col_J!(P::RotationPlan, A::AbstractMatrix, J::Int, L1::Int, L2::Int)
     M, N = size(A)
     @inbounds for m = L2-1:-2:L1
         layer = P.layers[m+1]

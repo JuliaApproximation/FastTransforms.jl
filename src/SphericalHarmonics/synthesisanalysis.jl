@@ -60,18 +60,18 @@ function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FF
     PCo = P.planθ[2]
 
     X[1] *= two(T)
-    A_mul_B_col_J!(Y, PCe, X, 1)
+    mul_col_J!(Y, PCe, X, 1)
     X[1] *= half(T)
 
     for J = 2:4:N
-        A_mul_B_col_J!(Y, PCo, X, J)
-        J < N && A_mul_B_col_J!(Y, PCo, X, J+1)
+        mul_col_J!(Y, PCo, X, J)
+        J < N && mul_col_J!(Y, PCo, X, J+1)
     end
     for J = 4:4:N
         X[1,J] *= two(T)
         J < N && (X[1,J+1] *= two(T))
-        A_mul_B_col_J!(Y, PCe, X, J)
-        J < N && A_mul_B_col_J!(Y, PCe, X, J+1)
+        mul_col_J!(Y, PCe, X, J)
+        J < N && mul_col_J!(Y, PCe, X, J+1)
         X[1,J] *= half(T)
         J < N && (X[1,J+1] *= half(T))
     end
@@ -102,20 +102,20 @@ function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FF
 
     X[1] *= two(T)
     X[M,1] *= two(T)
-    A_mul_B_col_J!(Y, PCe, X, 1)
+    mul_col_J!(Y, PCe, X, 1)
     X[1] *= half(T)
     X[M,1] *= half(T)
 
     for J = 2:4:N
-        A_mul_B_col_J!(Y, PCo, X, J, false)
-        J < N && A_mul_B_col_J!(Y, PCo, X, J+1, false)
+        mul_col_J!(Y, PCo, X, J, false)
+        J < N && mul_col_J!(Y, PCo, X, J+1, false)
     end
     for J = 4:4:N
         X[1,J] *= two(T)
         X[M,J] *= two(T)
         J < N && (X[1,J+1] *= two(T); X[M,J+1] *= two(T))
-        A_mul_B_col_J!(Y, PCe, X, J)
-        J < N && A_mul_B_col_J!(Y, PCe, X, J+1)
+        mul_col_J!(Y, PCe, X, J)
+        J < N && mul_col_J!(Y, PCe, X, J+1)
         X[1,J] *= half(T)
         X[M,J] *= half(T)
         J < N && (X[1,J+1] *= half(T); X[M,J+1] *= half(T))
@@ -155,15 +155,15 @@ function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFT
     PCe = P.planθ[1]
     PCo = P.planθ[2]
 
-    A_mul_B_col_J!(Y, PCe, Y, 1)
+    mul_col_J!(Y, PCe, Y, 1)
     Y[1] *= half(T)
     for J = 2:4:N
-        A_mul_B_col_J!(Y, PCo, Y, J)
-        J < N && A_mul_B_col_J!(Y, PCo, Y, J+1)
+        mul_col_J!(Y, PCo, Y, J)
+        J < N && mul_col_J!(Y, PCo, Y, J+1)
     end
     for J = 4:4:N
-        A_mul_B_col_J!(Y, PCe, Y, J)
-        J < N && A_mul_B_col_J!(Y, PCe, Y, J+1)
+        mul_col_J!(Y, PCe, Y, J)
+        J < N && mul_col_J!(Y, PCe, Y, J+1)
         Y[1,J] *= half(T)
         J < N && (Y[1,J+1] *= half(T))
     end
@@ -191,18 +191,18 @@ function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFT
     PCe = P.planθ[1]
     PCo = P.planθ[2]
 
-    A_mul_B_col_J!(Y, PCe, Y, 1)
+    mul_col_J!(Y, PCe, Y, 1)
     Y[1] *= half(T)
     Y[M, 1] *= half(T)
     for J = 2:4:N
-        A_mul_B_col_J!(Y, PCo, Y, J, true)
-        J < N && A_mul_B_col_J!(Y, PCo, Y, J+1, true)
+        mul_col_J!(Y, PCo, Y, J, true)
+        J < N && mul_col_J!(Y, PCo, Y, J+1, true)
         Y[M-1,J] = zero(T)
         J < N && (Y[M-1,J+1] = zero(T))
     end
     for J = 4:4:N
-        A_mul_B_col_J!(Y, PCe, Y, J)
-        J < N && A_mul_B_col_J!(Y, PCe, Y, J+1)
+        mul_col_J!(Y, PCe, Y, J)
+        J < N && mul_col_J!(Y, PCe, Y, J+1)
         Y[1,J] *= half(T)
         Y[M,J] *= half(T)
         J < N && (Y[1,J+1] *= half(T); Y[M,J+1] *= half(T))
@@ -224,7 +224,7 @@ function row_analysis!(P, C, vals::Vector{T}) where T
         cfs[n÷2+1] *= half(T)
     end
 
-    negateeven!(reverseeven!(A_mul_B!(C, cfs)))
+    negateeven!(reverseeven!(mul!(C, cfs)))
 end
 
 function row_synthesis!(P, C, cfs::Vector{T}) where T
@@ -275,7 +275,7 @@ function negateeven!(x::Vector)
     x
 end
 
-function A_mul_B_col_J!(Y::Matrix{T}, P::r2rFFTWPlan{T}, X::Matrix{T}, J::Int) where T
+function mul_col_J!(Y::Matrix{T}, P::r2rFFTWPlan{T}, X::Matrix{T}, J::Int) where T
     unsafe_execute_col_J!(P, X, Y, J)
     return Y
 end
@@ -290,7 +290,7 @@ function unsafe_execute_col_J!(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T},
     ccall((:fftwf_execute_r2r, libfftwf), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+1))
 end
 
-function A_mul_B_col_J!(Y::Matrix{T}, P::r2rFFTWPlan{T}, X::Matrix{T}, J::Int, TF::Bool) where T
+function mul_col_J!(Y::Matrix{T}, P::r2rFFTWPlan{T}, X::Matrix{T}, J::Int, TF::Bool) where T
     unsafe_execute_col_J!(P, X, Y, J, TF)
     return Y
 end

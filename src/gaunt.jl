@@ -2,12 +2,12 @@
 Calculates the Gaunt coefficients, defined by:
 
 ```math
-a(m,n,\mu,\nu,q) = \frac{2(n+\nu-2q)+1}{2} \frac{(n+\nu-2q-m-\mu)!}{(n+\nu-2q+m+\mu)!} \int_{-1}^{+1} P_m^n(x) P_\nu^\mu(x) P_{n+\nu-2q}^{m+\mu}(x) {\rm\,d}x.
+a(m,n,\\mu,\\nu,q) = \\frac{2(n+\\nu-2q)+1}{2} \\frac{(n+\\nu-2q-m-\\mu)!}{(n+\\nu-2q+m+\\mu)!} \\int_{-1}^{+1} P_m^n(x) P_\\nu^\\mu(x) P_{n+\\nu-2q}^{m+\\mu}(x) {\\rm\\,d}x.
 ```
 or defined by:
 
 ```math
-P_n^m(x) P_\nu^\mu(x) = \sum_{q=0}^{q_{\rm max}} a(m,n,\mu,\nu,q) P_{n+\nu-2q}^{m+\mu}(x)
+P_n^m(x) P_\\nu^\\mu(x) = \\sum_{q=0}^{q_{\\rm max}} a(m,n,\\mu,\\nu,q) P_{n+\\nu-2q}^{m+\\mu}(x)
 ```
 
 This is a Julia implementation of the stable recurrence described in:

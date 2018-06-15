@@ -58,12 +58,12 @@ end
         x = rand(T, n)
         y = zeros(T, k)
 
-        @test norm(FastTransforms.A_mul_B!(y, A, P, x, 1, 1) - A*x) < 10eps()*norm(A*x)
+        @test norm(FastTransforms.mul!(y, A, P, x, 1, 1) - A*x) < 10eps()*norm(A*x)
 
         x = rand(T, k)
         y = zeros(T, n)
 
-        @test norm(FastTransforms.At_mul_B!(y, A, P, x, 1, 1) - A.'x, Inf) < 10eps()
+        @test norm(FastTransforms.At_mul_B!(y, A, P, x, 1, 1) - transpose(A)*x, Inf) < 10eps()
 
         fill!(y, zero(T))
         @test norm(FastTransforms.Ac_mul_B!(y, A, P, x, 1, 1) - A'x, Inf) < 10eps()

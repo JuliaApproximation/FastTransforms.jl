@@ -84,11 +84,11 @@ function toeplitzcholmult(T,C,v)
     ret,temp1,temp2 = zero(v),zero(v),zero(v)
     un,ze = one(eltype(v)),zero(eltype(v))
     broadcast!(*, temp1, C[K], v)
-    A_mul_B!(un, T, temp1, ze, temp2)
+    mul!(un, T, temp1, ze, temp2)
     broadcast!(*, ret, C[K], temp2)
     for k=K-1:-1:1
         broadcast!(*, temp1, C[k], v)
-        A_mul_B!(un, T, temp1, ze, temp2)
+        mul!(un, T, temp1, ze, temp2)
         broadcast!(*, temp1, C[k], temp2)
         broadcast!(+, ret, ret, temp1)
     end

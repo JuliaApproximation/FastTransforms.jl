@@ -216,11 +216,11 @@ end
 
 ### mul!, At_mul_B!, and  Ac_mul_B! for a Butterfly factorization.
 
-mul!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = A_mul_B_col_J!(u, B, b, 1)
+mul!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = mul_col_J!(u, B, b, 1)
 Base.At_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = At_mul_B_col_J!(u, B, b, 1)
 Base.Ac_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = Ac_mul_B_col_J!(u, B, b, 1)
 
-function A_mul_B_col_J!(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int) where T
+function mul_col_J!(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int) where T
     L = length(B.factors) - 1
     tL = 2^L
 

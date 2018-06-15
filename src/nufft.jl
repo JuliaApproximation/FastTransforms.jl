@@ -98,7 +98,7 @@ end
 
 function mul!(F::Matrix{T}, P::NUFFTPlan{N,T}, C::Matrix{T}) where {N,T}
     for J = 1:size(F, 2)
-        A_mul_B_col_J!(F, P, C, J)
+        mul_col_J!(F, P, C, J)
     end
     F
 end
@@ -114,7 +114,7 @@ function broadcast_col_J!(f, temp::Matrix, C::Matrix, U::Matrix, J::Int)
     temp
 end
 
-function A_mul_B_col_J!(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int) where {T}
+function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast_col_J!(*, temp, C, U, J)
@@ -142,7 +142,7 @@ function mul!(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T}) whe
     f
 end
 
-function A_mul_B_col_J!(F::Matrix{T}, P::NUFFTPlan{2,T}, C::Matrix{T}, J::Int) where {T}
+function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{2,T}, C::Matrix{T}, J::Int) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast_col_J!(*, temp, C, V, J)
@@ -167,7 +167,7 @@ function mul!(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T}) whe
     f
 end
 
-function A_mul_B_col_J!(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int) where {T}
+function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast_col_J!(*, temp2, C, V, J)
@@ -202,7 +202,7 @@ end
 Computes a nonuniform fast Fourier transform of type I:
 
 ```math
-f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} \frac{j}{N} \omega_k},\quad{\rm for}\quad 0 \le j \le N-1.
+f_j = \\sum_{k=0}^{N-1} c_k e^{-2\\pi{\\rm i} \\frac{j}{N} \\omega_k},\\quad{\\rm for}\\quad 0 \\le j \\le N-1.
 ```
 """
 nufft1(c::AbstractVector, ω::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_nufft1(ω, ϵ)*c
@@ -211,7 +211,7 @@ nufft1(c::AbstractVector, ω::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
 Computes a nonuniform fast Fourier transform of type II:
 
 ```math
-f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} x_j k},\quad{\rm for}\quad 0 \le j \le N-1.
+f_j = \\sum_{k=0}^{N-1} c_k e^{-2\\pi{\\rm i} x_j k},\\quad{\\rm for}\\quad 0 \\le j \\le N-1.
 ```
 """
 nufft2(c::AbstractVector, x::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}  = plan_nufft2(x, ϵ)*c
@@ -220,7 +220,7 @@ nufft2(c::AbstractVector, x::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} 
 Computes a nonuniform fast Fourier transform of type III:
 
 ```math
-f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} x_j \omega_k},\quad{\rm for}\quad 0 \le j \le N-1.
+f_j = \\sum_{k=0}^{N-1} c_k e^{-2\\pi{\\rm i} x_j \\omega_k},\\quad{\\rm for}\\quad 0 \\le j \\le N-1.
 ```
 """
 nufft3(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_nufft3(x, ω, ϵ)*c
@@ -286,7 +286,7 @@ end
 Computes a 2D nonuniform fast Fourier transform of type I-I:
 
 ```math
-F_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (\frac{i}{M} \omega_k + \frac{j}{N} \pi_{\ell})},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
+F_{i,j} = \\sum_{k=0}^{M-1}\\sum_{\\ell=0}^{N-1} C_{k,\\ell} e^{-2\\pi{\\rm i} (\\frac{i}{M} \\omega_k + \\frac{j}{N} \\pi_{\\ell})},\\quad{\\rm for}\\quad 0 \\le i \\le M-1,\\quad 0 \\le j \\le N-1.
 ```
 """
 nufft1(C::Matrix, ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_nufft1(ω, π, ϵ)*C
@@ -295,7 +295,7 @@ nufft1(C::Matrix, ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) where {T<
 Computes a 2D nonuniform fast Fourier transform of type II-II:
 
 ```math
-F_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (x_i k + y_j \ell)},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
+F_{i,j} = \\sum_{k=0}^{M-1}\\sum_{\\ell=0}^{N-1} C_{k,\\ell} e^{-2\\pi{\\rm i} (x_i k + y_j \\ell)},\\quad{\\rm for}\\quad 0 \\le i \\le M-1,\\quad 0 \\le j \\le N-1.
 ```
 """
 nufft2(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_nufft2(x, y, ϵ)*C
