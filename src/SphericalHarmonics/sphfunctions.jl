@@ -86,7 +86,7 @@ function maxcolnorm(A::AbstractMatrix)
     norm(nrm, Inf)
 end
 
-doc"""
+"""
 Pointwise evaluation of spherical harmonic:
 
 ```math

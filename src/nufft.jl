@@ -1,4 +1,4 @@
-doc"""
+"""
 Pre-computes a nonuniform fast Fourier transform of type `N`.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
@@ -13,10 +13,10 @@ struct NUFFTPlan{N,T,FFT} <: Plan{T}
     Ones::Vector{T}
 end
 
-doc"""
+"""
 Pre-computes a nonuniform fast Fourier transform of type I.
 """
-function plan_nufft1{T<:AbstractFloat}(ω::AbstractVector{T}, ϵ::T)
+function plan_nufft1(ω::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
     N = length(ω)
     ωdN = ω/N
     t = AssignClosestEquispacedFFTpoint(ωdN)
@@ -32,10 +32,10 @@ function plan_nufft1{T<:AbstractFloat}(ω::AbstractVector{T}, ϵ::T)
     NUFFTPlan{1, eltype(U), typeof(p)}(U, V, p, t, temp, temp2, Ones)
 end
 
-doc"""
+"""
 Pre-computes a nonuniform fast Fourier transform of type II.
 """
-function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, ϵ::T)
+function plan_nufft2(x::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
     N = length(x)
     t = AssignClosestEquispacedFFTpoint(x)
     γ = PerturbationParameter(x, AssignClosestEquispacedGridpoint(x))
@@ -50,10 +50,10 @@ function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, ϵ::T)
     NUFFTPlan{2, eltype(U), typeof(p)}(U, V, p, t, temp, temp2, Ones)
 end
 
-doc"""
+"""
 Pre-computes a nonuniform fast Fourier transform of type III.
 """
-function plan_nufft3{T<:AbstractFloat}(x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T)
+function plan_nufft3(x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
     N = length(x)
     s = AssignClosestEquispacedGridpoint(x)
     t = AssignClosestEquispacedFFTpoint(x)
@@ -77,11 +77,11 @@ function plan_nufft3{T<:AbstractFloat}(x::AbstractVector{T}, ω::AbstractVector{
     NUFFTPlan{3, eltype(U), typeof(p)}(U, V, p, t, temp, temp2, Ones)
 end
 
-function (*){N,T,V}(p::NUFFTPlan{N,T}, c::AbstractArray{V})
+function (*)(p::NUFFTPlan{N,T}, c::AbstractArray{V}) where {N,T,V}
     mul!(zeros(promote_type(T,V), size(c)), p, c)
 end
 
-function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVector{T})
+function mul!(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVector{T}) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast!(*, temp, c, U)
@@ -96,7 +96,7 @@ function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{1,T}, c::AbstractVector
     f
 end
 
-function Base.mul!{N,T}(F::Matrix{T}, P::NUFFTPlan{N,T}, C::Matrix{T})
+function mul!(F::Matrix{T}, P::NUFFTPlan{N,T}, C::Matrix{T}) where {N,T}
     for J = 1:size(F, 2)
         A_mul_B_col_J!(F, P, C, J)
     end
@@ -114,7 +114,7 @@ function broadcast_col_J!(f, temp::Matrix, C::Matrix, U::Matrix, J::Int)
     temp
 end
 
-function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int)
+function A_mul_B_col_J!(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast_col_J!(*, temp, C, U, J)
@@ -130,7 +130,7 @@ function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int
     F
 end
 
-function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T})
+function mul!(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T}) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast!(*, temp, c, V)
@@ -142,7 +142,7 @@ function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector
     f
 end
 
-function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{2,T}, C::Matrix{T}, J::Int)
+function A_mul_B_col_J!(F::Matrix{T}, P::NUFFTPlan{2,T}, C::Matrix{T}, J::Int) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast_col_J!(*, temp, C, V, J)
@@ -155,7 +155,7 @@ function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{2,T}, C::Matrix{T}, J::Int
     F
 end
 
-function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T})
+function mul!(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T}) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast!(*, temp2, c, V)
@@ -167,7 +167,7 @@ function Base.mul!{T}(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector
     f
 end
 
-function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int)
+function A_mul_B_col_J!(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast_col_J!(*, temp2, C, V, J)
@@ -180,7 +180,7 @@ function A_mul_B_col_J!{T}(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int
     F
 end
 
-function reindex_temp!{T}(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T})
+function reindex_temp!(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T}) where {T}
     @inbounds for j = 1:size(temp, 2)
         for i = 1:size(temp, 1)
             temp2[i, j] = temp[t[i], j]
@@ -189,7 +189,7 @@ function reindex_temp!{T}(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T})
     temp2
 end
 
-function recombine_rows!{T}(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T})
+function recombine_rows!(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T}) where {T}
     @inbounds for j = 1:size(temp, 2)
         for i = 1:size(temp, 1)
             temp2[t[i], j] += temp[i, j]
@@ -198,38 +198,38 @@ function recombine_rows!{T}(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T})
     temp2
 end
 
-doc"""
+"""
 Computes a nonuniform fast Fourier transform of type I:
 
 ```math
 f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} \frac{j}{N} \omega_k},\quad{\rm for}\quad 0 \le j \le N-1.
 ```
 """
-nufft1{T<:AbstractFloat}(c::AbstractVector, ω::AbstractVector{T}, ϵ::T) = plan_nufft1(ω, ϵ)*c
+nufft1(c::AbstractVector, ω::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_nufft1(ω, ϵ)*c
 
-doc"""
+"""
 Computes a nonuniform fast Fourier transform of type II:
 
 ```math
 f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} x_j k},\quad{\rm for}\quad 0 \le j \le N-1.
 ```
 """
-nufft2{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ϵ::T) = plan_nufft2(x, ϵ)*c
+nufft2(c::AbstractVector, x::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}  = plan_nufft2(x, ϵ)*c
 
-doc"""
+"""
 Computes a nonuniform fast Fourier transform of type III:
 
 ```math
 f_j = \sum_{k=0}^{N-1} c_k e^{-2\pi{\rm i} x_j \omega_k},\quad{\rm for}\quad 0 \le j \le N-1.
 ```
 """
-nufft3{T<:AbstractFloat}(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) = plan_nufft3(x, ω, ϵ)*c
+nufft3(c::AbstractVector, x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_nufft3(x, ω, ϵ)*c
 
 const nufft = nufft3
 const plan_nufft = plan_nufft3
 
 
-doc"""
+"""
 Pre-computes a 2D nonuniform fast Fourier transform.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
@@ -240,10 +240,10 @@ struct NUFFT2DPlan{T,P1,P2} <: Plan{T}
     temp::Vector{T}
 end
 
-doc"""
+"""
 Pre-computes a 2D nonuniform fast Fourier transform of type I-I.
 """
-function plan_nufft1{T<:AbstractFloat}(ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T)
+function plan_nufft1(ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
     p1 = plan_nufft1(ω, ϵ)
     p2 = plan_nufft1(π, ϵ)
     temp = zeros(Complex{T}, length(π))
@@ -251,10 +251,10 @@ function plan_nufft1{T<:AbstractFloat}(ω::AbstractVector{T}, π::AbstractVector
     NUFFT2DPlan(p1, p2, temp)
 end
 
-doc"""
+"""
 Pre-computes a 2D nonuniform fast Fourier transform of type II-II.
 """
-function plan_nufft2{T<:AbstractFloat}(x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T)
+function plan_nufft2(x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
     p1 = plan_nufft2(x, ϵ)
     p2 = plan_nufft2(y, ϵ)
     temp = zeros(Complex{T}, length(y))
@@ -266,7 +266,7 @@ function (*){T,V}(p::NUFFT2DPlan{T}, C::Matrix{V})
     mul!(zeros(promote_type(T,V), size(C)), p, C)
 end
 
-function Base.mul!{T}(F::Matrix{T}, P::NUFFT2DPlan{T}, C::Matrix{T})
+function mul!(F::Matrix{T}, P::NUFFT2DPlan{T}, C::Matrix{T}) where {T}
     p1, p2, temp = P.p1, P.p2, P.temp
 
     # Apply 1D x-plan to all columns
@@ -282,31 +282,31 @@ function Base.mul!{T}(F::Matrix{T}, P::NUFFT2DPlan{T}, C::Matrix{T})
     F
 end
 
-doc"""
+"""
 Computes a 2D nonuniform fast Fourier transform of type I-I:
 
 ```math
 F_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (\frac{i}{M} \omega_k + \frac{j}{N} \pi_{\ell})},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
 ```
 """
-nufft1{T<:AbstractFloat}(C::Matrix, ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) = plan_nufft1(ω, π, ϵ)*C
+nufft1(C::Matrix, ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_nufft1(ω, π, ϵ)*C
 
-doc"""
+"""
 Computes a 2D nonuniform fast Fourier transform of type II-II:
 
 ```math
 F_{i,j} = \sum_{k=0}^{M-1}\sum_{\ell=0}^{N-1} C_{k,\ell} e^{-2\pi{\rm i} (x_i k + y_j \ell)},\quad{\rm for}\quad 0 \le i \le M-1,\quad 0 \le j \le N-1.
 ```
 """
-nufft2{T<:AbstractFloat}(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) = plan_nufft2(x, y, ϵ)*C
+nufft2(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_nufft2(x, y, ϵ)*C
 
 
-FindK{T<:AbstractFloat}(γ::T, ϵ::T) = γ ≤ ϵ ? 1 : Int(ceil(5*γ*exp(lambertw(log(10/ϵ)/γ/7))))
-AssignClosestEquispacedGridpoint{T<:AbstractFloat}(x::AbstractVector{T})::AbstractVector{T} = round.([Int], size(x, 1)*x)
-AssignClosestEquispacedFFTpoint{T<:AbstractFloat}(x::AbstractVector{T})::Array{Int,1} = mod.(round.([Int], size(x, 1)*x), size(x, 1)) .+ 1
-PerturbationParameter{T<:AbstractFloat}(x::AbstractVector{T}, s_vec::AbstractVector{T})::AbstractFloat = norm(size(x, 1)*x - s_vec, Inf)
+FindK(γ::T, ϵ::T) where {T<:AbstractFloat} = γ ≤ ϵ ? 1 : Int(ceil(5*γ*exp(lambertw(log(10/ϵ)/γ/7))))
+(AssignClosestEquispacedGridpoint(x::AbstractVector{T})::AbstractVector{T}) where {T<:AbstractFloat} = round.([Int], size(x, 1)*x)
+(AssignClosestEquispacedFFTpoint(x::AbstractVector{T})::Array{Int,1}) where {T<:AbstractFloat} = mod.(round.([Int], size(x, 1)*x), size(x, 1)) .+ 1
+(PerturbationParameter(x::AbstractVector{T}, s_vec::AbstractVector{T})::AbstractFloat) where {T<:AbstractFloat} = norm(size(x, 1)*x - s_vec, Inf)
 
-function constructU{T<:AbstractFloat}(x::AbstractVector{T}, K::Int)
+function constructU(x::AbstractVector{T}, K::Int) where {T<:AbstractFloat}
     # Construct a low rank approximation, using Chebyshev expansions
     # for AK = exp(-2*pi*1im*(x[j]-j/N)*k):
     N = length(x)
@@ -316,11 +316,11 @@ function constructU{T<:AbstractFloat}(x::AbstractVector{T}, K::Int)
     Diagonal(exp.(-im*(π*er)))*ChebyshevP(K-1, er/γ)*Bessel_coeffs(K, γ)
 end
 
-function constructV{T<:AbstractFloat}(ω::AbstractVector{T}, K::Int)
+function constructV(ω::AbstractVector{T}, K::Int) where {T<:AbstractFloat}
     complex(ChebyshevP(K-1, ω.*(two(T)/length(ω)) .- 1))
 end
 
-function Bessel_coeffs{T<:AbstractFloat}(K::Int, γ::T)
+function Bessel_coeffs(K::Int, γ::T) where {T<:AbstractFloat}
     # Calculate the Chebyshev coefficients of exp(-2*pi*1im*x*y) on [-gam,gam]x[0,1]
     cfs = zeros(Complex{T}, K, K)
     arg = -γ*π/two(T)
@@ -334,7 +334,7 @@ function Bessel_coeffs{T<:AbstractFloat}(K::Int, γ::T)
     return cfs
 end
 
-function ChebyshevP{T<:AbstractFloat}(n::Int, x::AbstractVector{T})
+function ChebyshevP(n::Int, x::AbstractVector{T}) where {T<:AbstractFloat}
     # Evaluate Chebyshev polynomials of degree 0,...,n at x:
     N = size(x, 1)
     Tcheb = Matrix{T}(N, n+1)

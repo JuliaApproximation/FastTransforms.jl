@@ -1,4 +1,4 @@
-doc"""
+"""
 Calculates the Gaunt coefficients, defined by:
 
 ```math
@@ -21,7 +21,7 @@ function gaunt{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer;normal
         scale!(normalization(T,m,n,μ,ν),gaunt(T,m,n,μ,ν;normalized=true))
     end
 end
-doc"""
+"""
 Calculates the Gaunt coefficients in 64-bit floating-point arithmetic.
 """
 gaunt(m::Integer,n::Integer,μ::Integer,ν::Integer;kwds...) = gaunt(Float64,m,n,μ,ν;kwds...)

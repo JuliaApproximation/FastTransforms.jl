@@ -14,8 +14,8 @@ mul!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = mul!(Y, P, X)
 A_mul_B_col_J!!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix, J::Int) = A_mul_B_col_J!(Y, P, X, J)
 
 # mul! falls back to the mutating version with a copy.
-Base.mul!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = mul!!(y, P, copy(x))
-Base.mul!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = mul!!(Y, P, copy(X))
+mul!(y::AbstractVector, P::HierarchicalPlan, x::AbstractVector) = mul!!(y, P, copy(x))
+mul!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = mul!!(Y, P, copy(X))
 A_mul_B_col_J!(Y::AbstractMatrix, P::HierarchicalPlan, X::AbstractMatrix) = A_mul_B_col_J!!(Y, P, copy(X), J)
 
 function scale_col_J!(b::AbstractVector, A::AbstractVecOrMat, J::Int)
@@ -154,7 +154,7 @@ function getindex(P::ChebyshevToLegendrePlan, i::Int, j::Int)
     end
 end
 
-function Base.mul!(y::Vector, P::LegendreToChebyshevPlan, x::AbstractVector)
+function mul!(y::Vector, P::LegendreToChebyshevPlan, x::AbstractVector)
     mul!(y, P.even, x, 1, 1, 2, 2)
     mul!(y, P.odd, x, 2, 2, 2, 2)
     scale!(2/π, y)
@@ -162,12 +162,12 @@ function Base.mul!(y::Vector, P::LegendreToChebyshevPlan, x::AbstractVector)
     y
 end
 
-function Base.mul!(y::Vector, P::ChebyshevToLegendrePlan, x::AbstractVector)
+function mul!(y::Vector, P::ChebyshevToLegendrePlan, x::AbstractVector)
     mul!(y, P.even, x, 1, 1, 2, 2)
     mul!(y, P.odd, x, 2, 2, 2, 2)
 end
 
-function Base.mul!(Y::Matrix, P::LegendreToChebyshevPlan, X::Matrix)
+function mul!(Y::Matrix, P::LegendreToChebyshevPlan, X::Matrix)
     m, n = size(X)
     for j = 1:n
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
@@ -180,7 +180,7 @@ function Base.mul!(Y::Matrix, P::LegendreToChebyshevPlan, X::Matrix)
     Y
 end
 
-function Base.mul!(Y::Matrix, P::ChebyshevToLegendrePlan, X::Matrix)
+function mul!(Y::Matrix, P::ChebyshevToLegendrePlan, X::Matrix)
     m, n = size(X)
     for j = 1:n
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
@@ -265,7 +265,7 @@ function mul!!(y::Vector, P::NormalizedLegendreToChebyshevPlan, x::AbstractVecto
     y
 end
 
-function Base.mul!(y::Vector, P::ChebyshevToNormalizedLegendrePlan, x::AbstractVector)
+function mul!(y::Vector, P::ChebyshevToNormalizedLegendrePlan, x::AbstractVector)
     mul!(y, P.even, x, 1, 1, 2, 2)
     mul!(y, P.odd, x, 2, 2, 2, 2)
     unsafe_broadcasttimes!(y, P.scl)
@@ -285,7 +285,7 @@ function mul!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix)
     Y
 end
 
-function Base.mul!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix)
+function mul!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix)
     m, n = size(X)
     for j = 1:n
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
@@ -370,7 +370,7 @@ function mul!!(y::Vector, P::NormalizedLegendre1ToChebyshev2Plan, x::AbstractVec
     mul!(y, P.odd, x, 2, 2, 2, 2)
 end
 
-function Base.mul!(y::Vector, P::Chebyshev2ToNormalizedLegendre1Plan, x::AbstractVector)
+function mul!(y::Vector, P::Chebyshev2ToNormalizedLegendre1Plan, x::AbstractVector)
     mul!(y, P.even, x, 1, 1, 2, 2)
     mul!(y, P.odd, x, 2, 2, 2, 2)
     unsafe_broadcasttimes!(y, P.scl)
@@ -386,7 +386,7 @@ function mul!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix)
     Y
 end
 
-function Base.mul!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix)
+function mul!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix)
     m, n = size(X)
     for j = 1:n
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
@@ -440,7 +440,7 @@ ChebyshevToNormalizedLegendrePlan(v::VecOrMat) = ChebyshevToNormalizedLegendrePl
 NormalizedLegendre1ToChebyshev2Plan(v::VecOrMat) = NormalizedLegendre1ToChebyshev2Plan(plan_even_normleg12cheb2(v), plan_odd_normleg12cheb2(v), eltype(v)[sqrt((j+0.5)/(j*(j+1))) for j in 1:size(v, 1)])
 Chebyshev2ToNormalizedLegendre1Plan(v::VecOrMat) = Chebyshev2ToNormalizedLegendre1Plan(plan_even_cheb22normleg1(v), plan_odd_cheb22normleg1(v), eltype(v)[sqrt(i*(i+1)/(i+0.5)) for i in 1:size(v, 1)])
 
-doc"""
+"""
 Computes the Chebyshev expansion coefficients given the Legendre expansion coefficients:
 
 ```math
@@ -449,7 +449,7 @@ Computes the Chebyshev expansion coefficients given the Legendre expansion coeff
 """
 leg2cheb(::Vector)
 
-doc"""
+"""
 Computes the Legendre expansion coefficients given the Chebyshev expansion coefficients:
 
 ```math
@@ -458,12 +458,12 @@ Computes the Legendre expansion coefficients given the Chebyshev expansion coeff
 """
 cheb2leg(::Vector)
 
-doc"""
+"""
 Pre-computes the Legendre--Chebyshev transform.
 """
 plan_leg2cheb(::Vector)
 
-doc"""
+"""
 Pre-computes the Chebyshev--Legendre transform.
 """
 plan_cheb2leg(::Vector)

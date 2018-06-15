@@ -40,7 +40,7 @@ end
 
 trizeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, n)
 
-doc"""
+"""
 Pointwise evaluation of triangular harmonic:
 
 ```math

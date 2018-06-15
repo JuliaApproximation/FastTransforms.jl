@@ -6,32 +6,32 @@ const BACKWARD = false
 const sqrtpi = 1.772453850905516027298
 const edivsqrt2pi = 1.084437551419227546612
 
-doc"""
+"""
 Compute a typed 0.5.
 """
 half(x::Number) = oftype(x,0.5)
 half(x::Integer) = half(float(x))
-half{T<:Number}(::Type{T}) = convert(T,0.5)
-half{T<:Integer}(::Type{T}) = half(AbstractFloat)
+half(::Type{T}) where {T<:Number} = convert(T,0.5)
+half(::Type{T}) where {T<:Integer} = half(AbstractFloat)
 
-doc"""
+"""
 Compute a typed 2.
 """
 two(x::Number) = oftype(x,2)
-two{T<:Number}(::Type{T}) = convert(T,2)
+two(::Type{T}) where {T<:Number} = convert(T,2)
 
-doc"""
-The Kronecker ``\delta`` function:
+"""
+The Kronecker ``\\delta`` function:
 
 ```math
-\delta_{k,j} = \left\{\begin{array}{ccc} 1 & {\rm for} & k = j,\\ 0 & {\rm for} & k \ne j.\end{array}\right.
+\\delta_{k,j} = \\left\\{\\begin{array}{ccc} 1 & {\\rm for} & k = j,\\\\ 0 & {\\rm for} & k \\ne j.\\end{array}\\right.
 ```
 """
 δ(k::Integer,j::Integer) = k == j ? 1 : 0
 
 
-doc"""
-Pochhammer symbol ``(x)_n = \frac{\Gamma(x+n)}{\Gamma(x)}`` for the rising factorial.
+"""
+Pochhammer symbol ``(x)_n = \\frac{\\Gamma(x+n)}{\\Gamma(x)}`` for the rising factorial.
 """
 function pochhammer(x::Number,n::Integer)
     ret = one(x)
@@ -45,12 +45,12 @@ function pochhammer(x::Number,n::Integer)
     ret
 end
 
-pochhammer{T<:Number}(x::AbstractArray{T,1},n::Integer) = [pochhammer(x[i],n) for i=1:length(x)]
-pochhammer{T<:Number}(x::AbstractArray{T,2},n::Integer) = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
-pochhammer{T<:Number}(x::AbstractArray{T},n::Integer) = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
+pochhammer(x::AbstractArray{T,1},n::Integer) where {T<:Number} = [pochhammer(x[i],n) for i=1:length(x)]
+pochhammer(x::AbstractArray{T,2},n::Integer) where {T<:Number} = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
+pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
 
 pochhammer(x::Number,n::Number) = gamma(x+n)/gamma(x)
-pochhammer{T<:Number}(x::AbstractArray{T},n::Number) = gamma(x+n)./gamma(x)
+pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = gamma(x+n)./gamma(x)
 
 function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
     ret = Vector{promote_type(typeof(x),T)}(length(n))
@@ -61,8 +61,8 @@ function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
     ret
 end
 
-doc"""
-Stirling's asymptotic series for ``\Gamma(z)``.
+"""
+Stirling's asymptotic series for ``\\Gamma(z)``.
 """
 stirlingseries(z) = gamma(z)*sqrt((z/π)/2)*exp(z)/z^z
 
@@ -133,12 +133,12 @@ function Anαβ(n::Integer,α::Float64,β::Float64)
 end
 
 
-doc"""
-The Lambda function ``\Lambda(z) = \frac{\Gamma(z+\frac{1}{2})}{\Gamma(z+1)}`` for the ratio of gamma functions.
+"""
+The Lambda function ``\\Lambda(z) = \\frac{\\Gamma(z+\\frac{1}{2})}{\\Gamma(z+1)}`` for the ratio of gamma functions.
 """
 Λ(z::Number) = exp(lgamma(z+half(z))-lgamma(z+one(z)))
-doc"""
-For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for ``\tau`` in Appendix B of
+"""
+For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for ``\\tau`` in Appendix B of
 
 I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, *SIAM J. Sci. Comput.*, **34**:C83–C101, 2012.
 """
@@ -151,8 +151,8 @@ function Λ(x::Float64)
     end
 end
 
-doc"""
-The Lambda function ``\Lambda(z,λ₁,λ₂) = \frac{\Gamma(z+\lambda_1)}{Γ(z+\lambda_2)}`` for the ratio of gamma functions.
+"""
+The Lambda function ``\\Lambda(z,λ₁,λ₂) = \\frac{\\Gamma(z+\\lambda_1)}{Γ(z+\\lambda_2)}`` for the ratio of gamma functions.
 """
 Λ(z::Number,λ₁::Number,λ₂::Number) = exp(lgamma(z+λ₁)-lgamma(z+λ₂))
 function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
@@ -164,8 +164,8 @@ function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
 end
 
 ## TODO: deprecate when Lambert-W is supported in a mainstream repository such as SpecialFunctions.jl
-doc"""
-The principal branch of the Lambert-W function, defined by ``x = W_0(x) e^{W_0(x)}``, computed using Halley's method for ``x \in [-e^{-1},\infty)``.
+"""
+The principal branch of the Lambert-W function, defined by ``x = W_0(x) e^{W_0(x)}``, computed using Halley's method for ``x \\in [-e^{-1},\\infty)``.
 """
 function lambertw(x::AbstractFloat)
     if x < -exp(-one(x))
@@ -194,7 +194,7 @@ lambertw(x::Real) = lambertw(float(x))
 
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
 Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)
-function Cnλ{T<:Integer}(n::UnitRange{T},λ::Number)
+function Cnλ(n::UnitRange{T},λ::Number) where {T<:Integer}
     ret = Vector{typeof(λ)}(length(n))
     ret[1] = Cnλ(first(n),λ)
     for i=2:length(n)
@@ -241,7 +241,7 @@ function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
 end
 
 
-function Cnmαβ{T<:Number}(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T})
+function Cnmαβ(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T}) where {T<:Number}
     shp = promote_shape(size(α),size(β))
     reshape([ Cnmαβ(n,m,α[i],β[i]) for i in eachindex(α,β) ], shp)
 end
@@ -255,12 +255,12 @@ function absf(α::Number,β::Number,m::Int,θ::Number)
     ret
 end
 
-function absf{T<:Number}(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number)
+function absf(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number) where {T<:Number}
     shp = promote_shape(size(α),size(β))
     reshape([ absf(α[i],β[i],m,θ) for i in eachindex(α,β) ], shp)
 end
 
-function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
+function absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,1}) where {T<:Number}
     ret = zero(θ)
     cfs = zeros(T,m+1)
     for l=0:m
@@ -271,8 +271,8 @@ function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
     end
     ret
 end
-absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
-absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T}) = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
+absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) where {T<:Number} = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
+absf(α::Number,β::Number,m::Int,θ::AbstractArray{T}) where {T<:Number} = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
 
 function compute_absf!{T<:AbstractFloat}(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int)
     @inbounds for i=1:length(ret)
@@ -404,11 +404,11 @@ function init_c₁c₂!(c₁::Vector,c₂::Vector,u::Vector,v::Vector,c::Vector,
 end
 
 
-doc"""
+"""
 Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
 ```math
-    \int_{-1}^{+1} T_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
+    \\int_{-1}^{+1} T_n(x) (1-x)^\\alpha(1+x)^\\beta{\\rm\\,d}x.
 ```
 """
 function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
@@ -423,11 +423,11 @@ function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-doc"""
+"""
 Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
 ```math
-    \int_{-1}^{+1} U_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
+    \\int_{-1}^{+1} U_n(x) (1-x)^\\alpha(1+x)^\\beta{\\rm\\,d}x.
 ```
 """
 function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
@@ -442,8 +442,8 @@ function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function incrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -453,8 +453,8 @@ function incrementα!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha,\beta+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function incrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -464,8 +464,8 @@ function incrementβ!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\alpha+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\alpha)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\alpha+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\alpha)}(x)`` in-place.
 """
 function incrementαβ!(c::AbstractVector,α,β)
     @assert α == β
@@ -477,8 +477,8 @@ function incrementαβ!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha-1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha-1,\\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function decrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -488,8 +488,8 @@ function decrementα!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha,\beta-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function decrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -499,8 +499,8 @@ function decrementβ!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha-1,\alpha-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\alpha)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha-1,\\alpha-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\alpha)}(x)`` in-place.
 """
 function decrementαβ!(c::AbstractVector,α,β)
     @assert α == β

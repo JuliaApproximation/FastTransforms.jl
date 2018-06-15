@@ -8,10 +8,12 @@ if VERSION < v"0.7-"
     using Base.FFTW
     import Base.FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
     import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+    const mul! = Base.A_mul_B!
 else
-    using FFTW
+    using FFTW, LinearAlgebra
     import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
     import FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+    import LinearAlgebra: mul!
 end
 
 import Base: *, \, size, view

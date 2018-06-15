@@ -12,7 +12,7 @@ struct RecurrencePlan{T}
     rb₁inv::Vector{T}
 end
 
-function RecurrencePlan{T}(α::T,β::T,N::Int)
+function RecurrencePlan(α::T,β::T,N::Int) where T
     A  = T[recA(α,β,k) for k=0:N-1]
     B  = T[recB(α,β,k) for k=0:N-1]
     C  = T[recC(α,β,k) for k=1:N  ]
@@ -27,20 +27,20 @@ function RecurrencePlan{T}(α::T,β::T,N::Int)
     RecurrencePlan(A,B,C,rf₀,rf₁,rf₀inv,rf₁inv,rb₀,rb₁,rb₀inv,rb₁inv)
 end
 
-recA{T}(α::T,β::T,k::Int)=k==0&&((α+β==0)||(α+β==-1)) ? (α+β)/2+1 : (2k+α+β+1)*(2k+α+β+2)/(2*(k+1)*(k+α+β+1))
-recB{T}(α::T,β::T,k::Int)=k==0&&((α+β==0)||(α+β==-1)) ? (α-β)/2 : (α-β)*(α+β)*(2k+α+β+1)/(2*(k+1)*(k+α+β+1)*(2k+α+β))
-recC{T}(α::T,β::T,k::Int)=(k+α)*(k+β)*(2k+α+β+2)/((k+1)*(k+α+β+1)*(2k+α+β))
+recA(α::T,β::T,k::Int) where T = k == 0 && ((α+β==0)||(α+β==-1)) ? (α+β)/2+1 : (2k+α+β+1)*(2k+α+β+2)/(2*(k+1)*(k+α+β+1))
+recB(α::T,β::T,k::Int) where T = k==0&&((α+β==0)||(α+β==-1)) ? (α-β)/2 : (α-β)*(α+β)*(2k+α+β+1)/(2*(k+1)*(k+α+β+1)*(2k+α+β))
+recC(α::T,β::T,k::Int) where T = (k+α)*(k+β)*(2k+α+β+2)/((k+1)*(k+α+β+1)*(2k+α+β))
 
-rf0{T}(α::T,β::T,k::Int) = (k+α+one(T))/(k+one(T))
-rf1{T}(α::T,β::T,k::Int) = -(k+β+one(T))/(k+one(T))
+rf0(α::T,β::T,k::Int) where T = (k+α+one(T))/(k+one(T))
+rf1(α::T,β::T,k::Int) where T = -(k+β+one(T))/(k+one(T))
 
-rb0{T}(α::T,β::T,k::Int) = (k+one(T))/k*(α+β+k+1)/(k+β)*(α+β+2k)/(α+β+2k+2)
-rb1{T}(α::T,β::T,k::Int) = -(k+one(T))/k*(α+β+k+1)/(k+α)*(α+β+2k)/(α+β+2k+2)
+rb0(α::T,β::T,k::Int) where T = (k+one(T))/k*(α+β+k+1)/(k+β)*(α+β+2k)/(α+β+2k+2)
+rb1(α::T,β::T,k::Int) where T = -(k+one(T))/k*(α+β+k+1)/(k+α)*(α+β+2k)/(α+β+2k+2)
 
 
 # Forward polynomial recurrence. Select modified algorithms for x≈±1.
 
-function forward_recurrence!{T}(p::AbstractVector,N::Int,θ::Number,plan::RecurrencePlan{T})
+function forward_recurrence!(p::AbstractVector,N::Int,θ::Number,plan::RecurrencePlan{T}) where T
     if θ ≤ 1/4
         reinsch_f0!(p,N,sinpi(θ/2),plan)
     elseif θ ≥ 3/4
@@ -49,9 +49,10 @@ function forward_recurrence!{T}(p::AbstractVector,N::Int,θ::Number,plan::Recurr
         orthogonal_polynomial_recurrence!(p,N,cospi(θ),plan)
     end
 end
-forward_recurrence!{T}(p::AbstractVector,θ::Number,plan::RecurrencePlan{T}) = forward_recurrence!(p,length(p),θ,plan)
+forward_recurrence!(p::AbstractVector,θ::Number,plan::RecurrencePlan{T}) where T =
+    forward_recurrence!(p,length(p),θ,plan)
 
-function forward_recurrence!{T}(p::AbstractVector,N::Int,θ::Number,cpθ::Number,spθ::Number,plan::RecurrencePlan{T})
+function forward_recurrence!(p::AbstractVector,N::Int,θ::Number,cpθ::Number,spθ::Number,plan::RecurrencePlan{T}) where T
     if θ ≤ 1/4
         reinsch_f0!(p,N,spθ,plan)
     elseif θ ≥ 3/4
@@ -126,7 +127,7 @@ end
 
 # Backward polynomial recurrence. Select modified algorithms for x≈±1.
 
-function backward_recurrence{T}(c::AbstractVector,N::Int,θ::Number,plan::RecurrencePlan{T})
+function backward_recurrence(c::AbstractVector,N::Int,θ::Number,plan::RecurrencePlan{T}) where T
     if θ ≤ 1/4
         reinsch_b0(c,N,sinpi(θ/2),plan)
     elseif θ ≥ 3/4
@@ -135,9 +136,10 @@ function backward_recurrence{T}(c::AbstractVector,N::Int,θ::Number,plan::Recurr
         clenshaw(c,N,cospi(θ),plan)
     end
 end
-backward_recurrence{T}(c::AbstractVector,θ::Number,plan::RecurrencePlan{T}) = backward_recurrence(c,length(c),θ,plan)
+backward_recurrence(c::AbstractVector,θ::Number,plan::RecurrencePlan{T}) where T =
+    backward_recurrence(c,length(c),θ,plan)
 
-function backward_recurrence{T}(c::AbstractVector,N::Int,θ::Number,cpθ::Number,spθ::Number,plan::RecurrencePlan{T})
+function backward_recurrence(c::AbstractVector,N::Int,θ::Number,cpθ::Number,spθ::Number,plan::RecurrencePlan{T}) where T
     if θ ≤ 1/4
         reinsch_b0(c,N,spθ,plan)
     elseif θ ≥ 3/4

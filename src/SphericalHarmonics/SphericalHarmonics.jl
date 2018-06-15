@@ -28,7 +28,7 @@ end
 sph2fourier(A::AbstractMatrix; opts...) = plan_sph2fourier(A; opts...)*A
 fourier2sph(A::AbstractMatrix; opts...) = plan_sph2fourier(A; opts...)\A
 
-doc"""
+"""
 Computes the bivariate Fourier series given by the spherical harmonic expansion:
 
 ```math
@@ -62,7 +62,7 @@ g_n^0 & 0 & 0 & \cdots & g_n^{-n} & g_n^n\\
 """
 sph2fourier(::AbstractMatrix; opts...)
 
-doc"""
+"""
 Computes the spherical harmonic expansion given by the bivariate Fourier series:
 
 ```math
@@ -96,7 +96,7 @@ g_n^0 & 0 & 0 & \cdots & g_n^{-n} & g_n^n\\
 """
 fourier2sph(::AbstractMatrix; opts...)
 
-doc"""
+"""
 Pre-computes the spherical harmonic transform.
 """
 plan_sph2fourier(::AbstractMatrix; opts...)
