@@ -175,7 +175,7 @@ function BackwardChebyshevJacobiPlan{T}(c_cheb::AbstractVector{T},α::T,β::T,M:
 
     # Clenshaw-Curtis nodes and weights
     θ = N > 0 ? T[k/2N for k=zero(T):2N] : T[0]
-    w = N > 0 ? clenshawcurtisweights(2N+1,α,β,p₁) : T[0]
+    w = N > 0 ? clenshawcurtisweights!(chebyshevjacobimoments1(T, 2N+1, α, β), p₁) : T[0]
 
     # Initialize sines and cosines
     tempsin = sinpi.(θ./2)

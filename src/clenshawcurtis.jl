@@ -1,20 +1,20 @@
-clenshawcurtis_plan(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
+plan_clenshawcurtis(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
 
 doc"""
-Compute nodes and weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.
+Compute nodes of the Clenshaw—Curtis quadrature rule.
 """
-clenshawcurtis{T<:AbstractFloat}(N::Int,α::T,β::T) = clenshawcurtis(N,α,β,clenshawcurtis_plan(zeros(T,N)))
-clenshawcurtis{T<:AbstractFloat}(N::Int,α::T,β::T,plan) = T[cospi(k/(N-one(T))) for k=0:N-1],clenshawcurtisweights(N,α,β,plan)
+clenshawcurtisnodes(::Type{T}, N::Int) where T = T[cospi(k/(N-one(T))) for k=0:N-1]
 
 doc"""
-Compute weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.
+Compute weights of the Clenshaw—Curtis quadrature rule with modified Chebyshev moments of the first kind ``\mu``.
 """
-clenshawcurtisweights{T<:AbstractFloat}(N::Int,α::T,β::T) = clenshawcurtisweights(N,α,β,clenshawcurtis_plan(zeros(T,N)))
-function clenshawcurtisweights{T<:AbstractFloat}(N::Int,α::T,β::T,plan)
-    μ = chebyshevjacobimoments1(N,α,β)
-    scale!(μ,inv(N-one(T)))
+clenshawcurtisweights(μ::Vector) = clenshawcurtisweights!(copy(μ))
+clenshawcurtisweights!(μ::Vector) = clenshawcurtisweights!(μ, plan_clenshawcurtis(μ))
+function clenshawcurtisweights!(μ::Vector{T}, plan) where T
+    N = length(μ)
+    scale!(μ, inv(N-one(T)))
     plan*μ
-    μ[1]/=2;μ[N]/=2
+    μ[1] *= half(T); μ[N] *= half(T)
     return μ
 end
 
