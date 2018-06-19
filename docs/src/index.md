@@ -134,6 +134,8 @@ sphevaluate
 
 ## Internal Methods
 
+### Miscellaneous Special Functions
+
 ```@docs
 FastTransforms.half
 ```
@@ -162,8 +164,10 @@ FastTransforms.pochhammer
 FastTransforms.stirlingseries
 ```
 
+### Modified Chebyshev Moment-Based Quadrature
+
 ```@docs
-FastTransforms.clenshawcurtis
+FastTransforms.clenshawcurtisnodes
 ```
 
 ```@docs
@@ -171,11 +175,7 @@ FastTransforms.clenshawcurtisweights
 ```
 
 ```@docs
-FastTransforms.fejer1
-```
-
-```@docs
-FastTransforms.fejer2
+FastTransforms.fejernodes1
 ```
 
 ```@docs
@@ -183,7 +183,15 @@ FastTransforms.fejerweights1
 ```
 
 ```@docs
+FastTransforms.fejernodes2
+```
+
+```@docs
 FastTransforms.fejerweights2
+```
+
+```@docs
+FastTransforms.chebyshevmoments1
 ```
 
 ```@docs
@@ -191,8 +199,22 @@ FastTransforms.chebyshevjacobimoments1
 ```
 
 ```@docs
+FastTransforms.chebyshevlogmoments1
+```
+
+```@docs
+FastTransforms.chebyshevmoments2
+```
+
+```@docs
 FastTransforms.chebyshevjacobimoments2
 ```
+
+```@docs
+FastTransforms.chebyshevlogmoments2
+```
+
+### Jacobi Polynomial Increment and Decrement Operators
 
 ```@docs
 FastTransforms.incrementα!

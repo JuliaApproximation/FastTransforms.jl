@@ -169,7 +169,7 @@ function BackwardChebyshevUltrasphericalPlan{T}(c_ultra::AbstractVector{T},λ::T
 
     # Clenshaw-Curtis nodes and weights
     θ = N > 0 ? T[k/2N for k=zero(T):2N] : T[0]
-    w = N > 0 ? clenshawcurtisweights(2N+1,λ-half(λ),λ-half(λ),p₁) : T[0]
+    w = N > 0 ? clenshawcurtisweights!(chebyshevjacobimoments1(T, 2N+1, λ-half(λ), λ-half(λ)), p₁) : T[0]
 
     # Initialize sines and cosines
     tempsin = sinpi.(θ)

@@ -405,14 +405,29 @@ end
 
 
 doc"""
+Modified Chebyshev moments of the first kind:
+
+```math
+    \int_{-1}^{+1} T_n(x) {\rm\,d}x.
+```
+"""
+function chebyshevmoments1(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    for i = 0:2:N-1
+        @inbounds μ[i+1] = two(T)/T(1-i^2)
+    end
+    μ
+end
+
+doc"""
 Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
 ```math
     \int_{-1}^{+1} T_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
 ```
 """
-function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
-    μ = zeros(T,N)
+function chebyshevjacobimoments1(::Type{T}, N::Int, α, β) where T
+    μ = zeros(T, N)
     N > 0 && (μ[1] = 2 .^ (α+β+1)*beta(α+1,β+1))
     if N > 1
         μ[2] = μ[1]*(β-α)/(α+β+2)
@@ -424,19 +439,72 @@ function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
 end
 
 doc"""
+Modified Chebyshev moments of the first kind with respect to the logarithmic weight:
+
+```math
+    \int_{-1}^{+1} T_n(x) \log\left(\frac{1-x}{2}\right){\rm\,d}x.
+```
+"""
+function chebyshevlogmoments1(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    N > 0 && (μ[1] = -two(T))
+    if N > 1
+        μ[2] = -one(T)
+        for i=1:N-2
+            cst = isodd(i) ? T(4)/T(i^2-4) : T(4)/T(i^2-1)
+            @inbounds μ[i+2] = ((i-2)*μ[i]+cst)/(i+2)
+        end
+    end
+    μ
+end
+
+doc"""
+Modified Chebyshev moments of the second kind:
+
+```math
+    \int_{-1}^{+1} U_n(x) {\rm\,d}x.
+```
+"""
+function chebyshevmoments2(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    for i = 0:2:N-1
+        @inbounds μ[i+1] = two(T)/T(i+1)
+    end
+    μ
+end
+
+doc"""
 Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
 ```math
     \int_{-1}^{+1} U_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
 ```
 """
-function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
-    μ = zeros(T,N)
+function chebyshevjacobimoments2(::Type{T}, N::Int, α, β) where T
+    μ = zeros(T, N)
     N > 0 && (μ[1] = 2 .^ (α+β+1)*beta(α+1,β+1))
     if N > 1
         μ[2] = 2μ[1]*(β-α)/(α+β+2)
         for i=1:N-2
             @inbounds μ[i+2] = (2(β-α)*μ[i+1]-(α+β-i)*μ[i])/(α+β+i+2)
+        end
+    end
+    μ
+end
+
+doc"""
+Modified Chebyshev moments of the second kind with respect to the logarithmic weight:
+
+```math
+    \int_{-1}^{+1} U_n(x) \log\left(\frac{1-x}{2}\right){\rm\,d}x.
+```
+"""
+function chebyshevlogmoments2(::Type{T}, N::Int) where T
+    μ = chebyshevlogmoments1(T, N)
+    if N > 1
+        μ[2] *= two(T)
+        for i=1:N-2
+            @inbounds μ[i+2] = 2μ[i+2] + μ[i]
         end
     end
     μ
