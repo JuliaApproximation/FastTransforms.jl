@@ -281,6 +281,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#Internal-Methods-1",
+    "page": "Home",
+    "title": "Internal Methods",
+    "category": "section",
+    "text": ""
+},
+
+{
     "location": "index.html#FastTransforms.half",
     "page": "Home",
     "title": "FastTransforms.half",
@@ -337,11 +345,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#FastTransforms.clenshawcurtis",
+    "location": "index.html#Miscellaneous-Special-Functions-1",
     "page": "Home",
-    "title": "FastTransforms.clenshawcurtis",
+    "title": "Miscellaneous Special Functions",
+    "category": "section",
+    "text": "FastTransforms.halfFastTransforms.twoFastTransforms.δFastTransforms.ΛFastTransforms.lambertwFastTransforms.pochhammerFastTransforms.stirlingseries"
+},
+
+{
+    "location": "index.html#FastTransforms.clenshawcurtisnodes",
+    "page": "Home",
+    "title": "FastTransforms.clenshawcurtisnodes",
     "category": "function",
-    "text": "Compute nodes and weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.\n\n\n\n"
+    "text": "Compute nodes of the Clenshaw—Curtis quadrature rule.\n\n\n\n"
 },
 
 {
@@ -349,23 +365,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.clenshawcurtisweights",
     "category": "function",
-    "text": "Compute weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.\n\n\n\n"
+    "text": "Compute weights of the Clenshaw—Curtis quadrature rule with modified Chebyshev moments of the first kind mu.\n\n\n\n"
 },
 
 {
-    "location": "index.html#FastTransforms.fejer1",
+    "location": "index.html#FastTransforms.fejernodes1",
     "page": "Home",
-    "title": "FastTransforms.fejer1",
+    "title": "FastTransforms.fejernodes1",
     "category": "function",
-    "text": "Compute nodes and weights of Fejer\'s first quadrature rule with a Jacobi weight.\n\n\n\n"
-},
-
-{
-    "location": "index.html#FastTransforms.fejer2",
-    "page": "Home",
-    "title": "FastTransforms.fejer2",
-    "category": "function",
-    "text": "Compute nodes and weights of Fejer\'s second quadrature rule with a Jacobi weight.\n\n\n\n"
+    "text": "Compute nodes of Fejer\'s first quadrature rule.\n\n\n\n"
 },
 
 {
@@ -373,7 +381,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.fejerweights1",
     "category": "function",
-    "text": "Compute weights of Fejer\'s first quadrature rule with a Jacobi weight.\n\n\n\n"
+    "text": "Compute weights of Fejer\'s first quadrature rule with modified Chebyshev moments of the first kind mu.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.fejernodes2",
+    "page": "Home",
+    "title": "FastTransforms.fejernodes2",
+    "category": "function",
+    "text": "Compute nodes of Fejer\'s second quadrature rule.\n\n\n\n"
 },
 
 {
@@ -381,7 +397,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.fejerweights2",
     "category": "function",
-    "text": "Compute weights of Fejer\'s second quadrature rule with a Jacobi weight.\n\n\n\n"
+    "text": "Compute weights of Fejer\'s second quadrature rule with modified Chebyshev moments of the second kind mu.\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.chebyshevmoments1",
+    "page": "Home",
+    "title": "FastTransforms.chebyshevmoments1",
+    "category": "function",
+    "text": "Modified Chebyshev moments of the first kind:\n\n    int_-1^+1 T_n(x) rmdx\n\n\n\n"
 },
 
 {
@@ -393,11 +417,43 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#FastTransforms.chebyshevlogmoments1",
+    "page": "Home",
+    "title": "FastTransforms.chebyshevlogmoments1",
+    "category": "function",
+    "text": "Modified Chebyshev moments of the first kind with respect to the logarithmic weight:\n\n    int_-1^+1 T_n(x) logleft(frac1-x2right)rmdx\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.chebyshevmoments2",
+    "page": "Home",
+    "title": "FastTransforms.chebyshevmoments2",
+    "category": "function",
+    "text": "Modified Chebyshev moments of the second kind:\n\n    int_-1^+1 U_n(x) rmdx\n\n\n\n"
+},
+
+{
     "location": "index.html#FastTransforms.chebyshevjacobimoments2",
     "page": "Home",
     "title": "FastTransforms.chebyshevjacobimoments2",
     "category": "function",
     "text": "Modified Chebyshev moments of the second kind with respect to the Jacobi weight:\n\n    int_-1^+1 U_n(x) (1-x)^alpha(1+x)^betarmdx\n\n\n\n"
+},
+
+{
+    "location": "index.html#FastTransforms.chebyshevlogmoments2",
+    "page": "Home",
+    "title": "FastTransforms.chebyshevlogmoments2",
+    "category": "function",
+    "text": "Modified Chebyshev moments of the second kind with respect to the logarithmic weight:\n\n    int_-1^+1 U_n(x) logleft(frac1-x2right)rmdx\n\n\n\n"
+},
+
+{
+    "location": "index.html#Modified-Chebyshev-Moment-Based-Quadrature-1",
+    "page": "Home",
+    "title": "Modified Chebyshev Moment-Based Quadrature",
+    "category": "section",
+    "text": "FastTransforms.clenshawcurtisnodesFastTransforms.clenshawcurtisweightsFastTransforms.fejernodes1FastTransforms.fejerweights1FastTransforms.fejernodes2FastTransforms.fejerweights2FastTransforms.chebyshevmoments1FastTransforms.chebyshevjacobimoments1FastTransforms.chebyshevlogmoments1FastTransforms.chebyshevmoments2FastTransforms.chebyshevjacobimoments2FastTransforms.chebyshevlogmoments2"
 },
 
 {
@@ -449,11 +505,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Internal-Methods-1",
+    "location": "index.html#Jacobi-Polynomial-Increment-and-Decrement-Operators-1",
     "page": "Home",
-    "title": "Internal Methods",
+    "title": "Jacobi Polynomial Increment and Decrement Operators",
     "category": "section",
-    "text": "FastTransforms.halfFastTransforms.twoFastTransforms.δFastTransforms.ΛFastTransforms.lambertwFastTransforms.pochhammerFastTransforms.stirlingseriesFastTransforms.clenshawcurtisFastTransforms.clenshawcurtisweightsFastTransforms.fejer1FastTransforms.fejer2FastTransforms.fejerweights1FastTransforms.fejerweights2FastTransforms.chebyshevjacobimoments1FastTransforms.chebyshevjacobimoments2FastTransforms.incrementα!FastTransforms.incrementβ!FastTransforms.incrementαβ!FastTransforms.decrementα!FastTransforms.decrementβ!FastTransforms.decrementαβ!"
+    "text": "FastTransforms.incrementα!FastTransforms.incrementβ!FastTransforms.incrementαβ!FastTransforms.decrementα!FastTransforms.decrementβ!FastTransforms.decrementαβ!"
 },
 
 ]}
