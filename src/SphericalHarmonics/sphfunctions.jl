@@ -90,7 +90,7 @@ doc"""
 Pointwise evaluation of real orthonormal spherical harmonic:
 
 ```math
-Y_\ell^m(\theta,\varphi) = (-1)^{|m|}\sqrt{(\ell+\frac{1}{2})\frac{(\ell-|m|)!}{(\ell+|m|)!}} P_\ell^{|m|}(\cos\theta) \sqrt{\frac{2-\delta_{m,0}}{\pi}} \left\{\begin{array}{ccc} \cos m\varphi & {\rm for} & m \ge 0,\\ \sin(-m\varphi) & {\rm for} & m < 0.\end{array}\right.
+Y_\ell^m(\theta,\varphi) = (-1)^{|m|}\sqrt{(\ell+\frac{1}{2})\frac{(\ell-|m|)!}{(\ell+|m|)!}} P_\ell^{|m|}(\cos\theta) \sqrt{\frac{2-\delta_{m,0}}{2\pi}} \left\{\begin{array}{ccc} \cos m\varphi & {\rm for} & m \ge 0,\\ \sin(-m\varphi) & {\rm for} & m < 0.\end{array}\right.
 ```
 """
 sphevaluate(θ, φ, L, M) = sphevaluatepi(θ/π, φ/π, L, M)
@@ -120,4 +120,4 @@ function sphevaluatepi(θ::Number, L::Integer, M::Integer)
     end
 end
 
-sphevaluatepi(φ::Number, M::Integer) = sqrt((two(φ)-δ(M, 0))/π)*(M ≥ 0 ? cospi(M*φ) : sinpi(-M*φ))
+sphevaluatepi(φ::Number, M::Integer) = sqrt((two(φ)-δ(M, 0))/(two(φ)*π))*(M ≥ 0 ? cospi(M*φ) : sinpi(-M*φ))
