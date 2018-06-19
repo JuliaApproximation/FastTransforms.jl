@@ -125,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.sph2fourier",
     "category": "function",
-    "text": "Computes the bivariate Fourier series given by the spherical harmonic expansion:\n\nrm SHT  sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi) to sum_ell=0^nsum_m=-n^n g_ell^m frace^rm i m varphisqrt2pi leftbeginarrayccoselltheta sin(ell+1)thetaendarrayright\n\nwhere the cosines are used when m is even and the sines are used when m is odd. The spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
+    "text": "Computes the bivariate Fourier series given by the spherical harmonic expansion:\n\nrm SHT  sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi) to sum_ell=0^nsum_m=-n^n g_ell^m leftbeginarrayccccoselltheta  rm for  mrmeven sin(ell+1)theta  rm for  mrmoddendarrayrighttimes sqrtfrac2-delta_m0pi leftbeginarrayccc cos mvarphi  rm for  m ge 0 sin(-mvarphi)  rm for  m  0endarrayright\n\nThe spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
 },
 
 {
@@ -133,7 +133,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.fourier2sph",
     "category": "function",
-    "text": "Computes the spherical harmonic expansion given by the bivariate Fourier series:\n\nrm iSHT  sum_ell=0^nsum_m=-n^n g_ell^m frace^rm i m varphisqrt2pi leftbeginarrayccoselltheta sin(ell+1)thetaendarrayright to sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi)\n\nwhere the cosines are used when m is even and the sines are used when m is odd. The spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
+    "text": "Computes the spherical harmonic expansion given by the bivariate Fourier series:\n\nrm iSHT  sum_ell=0^nsum_m=-n^n g_ell^m leftbeginarrayccccoselltheta  rm for  mrmeven sin(ell+1)theta  rm for  mrmoddendarrayrighttimes sqrtfrac2-delta_m0pi leftbeginarrayccc cos mvarphi  rm for  m ge 0 sin(-mvarphi)  rm for  m  0endarrayright to sum_ell=0^nsum_m=-ell^ell f_ell^m Y_ell^m(thetavarphi)\n\nThe spherical harmonic expansion coefficients are organized as follows:\n\nF = beginpmatrix\nf_0^0  f_1^-1  f_1^1  f_2^-2  f_2^2  cdots  f_n^-n  f_n^n\nf_1^0  f_2^-1  f_2^1  f_3^-2  f_3^2  cdots  0  0\nvdots  vdots  vdots   vdots   vdots  ddots  vdots  vdots\nf_n-2^0  f_n-1^-1  f_n-1^1  f_n^-2  f_n^2    vdots  vdots\nf_n-1^0  f_n^-1  f_n^1  0  0  cdots  0  0\nf_n^0  0  0  0  0  cdots  0  0\nendpmatrix\n\nand the Fourier coefficients are organized similarly:\n\nG = beginpmatrix\ng_0^0  g_0^-1  g_0^1  cdots  g_0^-n  g_0^n\ng_1^0  g_1^-1  g_1^1  cdots  g_1^-n  g_1^n\nvdots  vdots  vdots  ddots  vdots  vdots\ng_n-1^0  g_n-1^-1  g_n-1^1 cdots  g_n-1^-n  g_n-1^n\ng_n^0  0  0  cdots  g_n^-n  g_n^n\nendpmatrix\n\n\n\n"
 },
 
 {
@@ -269,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.sphevaluate",
     "category": "function",
-    "text": "Pointwise evaluation of spherical harmonic:\n\nY_ell^m(thetavarphi) = frace^rm i mvarphisqrt2pi rm i^m+msqrt(ell+frac12)frac(ell-m)(ell+m) P_ell^m(costheta)\n\n\n\n"
+    "text": "Pointwise evaluation of real orthonormal spherical harmonic:\n\nY_ell^m(thetavarphi) = (-1)^msqrt(ell+frac12)frac(ell-m)(ell+m) P_ell^m(costheta) sqrtfrac2-delta_m0pi leftbeginarrayccc cos mvarphi  rm for  m ge 0 sin(-mvarphi)  rm for  m  0endarrayright\n\n\n\n"
 },
 
 {
