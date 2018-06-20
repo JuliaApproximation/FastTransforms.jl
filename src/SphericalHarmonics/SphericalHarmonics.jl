@@ -1,4 +1,4 @@
-@compat abstract type SphericalHarmonicPlan{T} end
+abstract type SphericalHarmonicPlan{T} end
 
 function *(P::SphericalHarmonicPlan, X::AbstractMatrix)
     A_mul_B!(zero(X), P, X)
