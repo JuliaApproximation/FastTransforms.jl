@@ -51,9 +51,9 @@ export triones, trizeros, trirand, trirandn, trievaluate
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
 #export sqrtpi, pochhammer, stirlingseries, stirlingremainder, Aratio, Cratio, Anαβ
 #export Cnmαβ, Cnαβ, Cnmλ, Cnλ, Λ, absf, findmindices!
-#export clenshawcurtis, clenshawcurtis_plan, clenshawcurtisweights
-#export fejer1, fejer_plan1, fejerweights1
-#export fejer2, fejer_plan2, fejerweights2
+#export plan_clenshawcurtis, clenshawcurtisnodes, clenshawcurtisweights
+#export plan_fejer1, fejernodes1, fejerweights1
+#export plan_fejer2, fejernodes2, fejerweights2
 #export RecurrencePlan, forward_recurrence!, backward_recurrence
 
 include("stepthreading.jl")

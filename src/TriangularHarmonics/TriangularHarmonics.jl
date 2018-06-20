@@ -1,4 +1,4 @@
-@compat abstract type TriangularHarmonicPlan{T} end
+abstract type TriangularHarmonicPlan{T} end
 
 function *(P::TriangularHarmonicPlan, X::AbstractMatrix)
     mul!(zero(X), P, X)

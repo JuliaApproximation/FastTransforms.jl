@@ -1,20 +1,20 @@
-clenshawcurtis_plan(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
+plan_clenshawcurtis(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
 
+doc"""
+Compute nodes of the Clenshaw—Curtis quadrature rule.
 """
-Compute nodes and weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.
-"""
-clenshawcurtis(N::Int,α::T,β::T) where {T<:AbstractFloat} = clenshawcurtis(N,α,β,clenshawcurtis_plan(zeros(T,N)))
-clenshawcurtis(N::Int,α::T,β::T,plan) where {T<:AbstractFloat} = T[cospi(k/(N-one(T))) for k=0:N-1],clenshawcurtisweights(N,α,β,plan)
+clenshawcurtisnodes(::Type{T}, N::Int) where T = T[cospi(k/(N-one(T))) for k=0:N-1]
 
+doc"""
+Compute weights of the Clenshaw—Curtis quadrature rule with modified Chebyshev moments of the first kind ``\mu``.
 """
-Compute weights of the Clenshaw—Curtis quadrature rule with a Jacobi weight.
-"""
-clenshawcurtisweights(N::Int,α::T,β::T) where {T<:AbstractFloat} = clenshawcurtisweights(N,α,β,clenshawcurtis_plan(zeros(T,N)))
-function clenshawcurtisweights(N::Int,α::T,β::T,plan) where {T<:AbstractFloat}
-    μ = chebyshevjacobimoments1(N,α,β)
-    scale!(μ,inv(N-one(T)))
+clenshawcurtisweights(μ::Vector) = clenshawcurtisweights!(copy(μ))
+clenshawcurtisweights!(μ::Vector) = clenshawcurtisweights!(μ, plan_clenshawcurtis(μ))
+function clenshawcurtisweights!(μ::Vector{T}, plan) where T
+    N = length(μ)
+    scale!(μ, inv(N-one(T)))
     plan*μ
-    μ[1]/=2;μ[N]/=2
+    μ[1] *= half(T); μ[N] *= half(T)
     return μ
 end
 
@@ -23,7 +23,8 @@ end
 applyTN_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : ones(x)'
 
 applyTN!(x::Vector{T}) where {T<:AbstractFloat} = applyTN!(x,applyTN_plan(x))
-function applyTN!(x::Vector{T},plan) where {T<:AbstractFloat}
+
+function applyTN!(x::Vector{T},plan) where T<:AbstractFloat
     x[1] *= 2; x[end] *=2
     plan*x
     scale!(x,half(T))
@@ -36,7 +37,8 @@ applyTN(x::Vector{T}) where {T<:AbstractFloat} = applyTN!(copy(x))
 applyTNinv_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : ones(x)'
 
 applyTNinv!(x::Vector{T}) where {T<:AbstractFloat} = applyTNinv!(x,applyTNinv_plan(x))
-function applyTNinv!(x::Vector{T},plan) where {T<:AbstractFloat}
+
+function applyTNinv!(x::Vector{T},plan) where T<:AbstractFloat
     plan*x
     x[1] /= 2;x[end] /= 2
     scale!(x,inv(length(x)-one(T)))
@@ -49,7 +51,8 @@ applyTNinv(x::Vector{T}) where {T<:AbstractFloat} = applyTNinv!(copy(x))
 applyUN_plan(x) = length(x) > 0 ? FFTW.plan_r2r!(x, FFTW.RODFT00) : ones(x)'
 
 applyUN!(x::AbstractVector{T}) where {T<:AbstractFloat} = applyUN!(x,applyUN_plan(x))
-function applyUN!(x::AbstractVector{T},plan) where {T<:AbstractFloat}
+
+function applyUN!(x::AbstractVector{T},plan) where T<:AbstractFloat
     plan*x
     scale!(x,half(T))
 end

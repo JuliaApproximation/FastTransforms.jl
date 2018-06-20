@@ -13,7 +13,7 @@ IPaduaTransformPlan(cfsmat::Matrix{T},idctplan,::Type{Val{lex}}) where {T,lex} =
 """
 Pre-plan an Inverse Padua Transform.
 """
-function plan_ipaduatransform!(::Type{T},N::Integer,lex) where {T}
+function plan_ipaduatransform!(::Type{T},N::Integer,lex) where T
     n=Int(cld(-3+sqrt(1+8N),2))
     if N ≠ div((n+1)*(n+2),2)
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
@@ -25,7 +25,8 @@ end
 plan_ipaduatransform!(::Type{T},N::Integer) where {T} = plan_ipaduatransform!(T,N,Val{true})
 plan_ipaduatransform!(v::AbstractVector{T},lex...) where {T} = plan_ipaduatransform!(eltype(v),length(v),lex...)
 
-function *(P::IPaduaTransformPlan,v::AbstractVector{T}) where {T}
+
+function *(P::IPaduaTransformPlan,v::AbstractVector{T}) where T
     cfsmat=trianglecfsmat(P,v)
     n,m=size(cfsmat)
     scale!(view(cfsmat,:,2:m-1),0.5)
@@ -114,7 +115,7 @@ PaduaTransformPlan(vals::Matrix{T},dctplan,::Type{Val{lex}}) where {T,lex} =
 """
 Pre-plan a Padua Transform.
 """
-function plan_paduatransform!(::Type{T},N::Integer,lex) where {T}
+function plan_paduatransform!(::Type{T},N::Integer,lex) where T
     n=Int(cld(-3+sqrt(1+8N),2))
     if N ≠ ((n+1)*(n+2))÷2
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
@@ -125,7 +126,7 @@ end
 plan_paduatransform!(::Type{T},N::Integer) where {T} = plan_paduatransform!(T,N,Val{true})
 plan_paduatransform!(v::AbstractVector{T},lex...) where {T} = plan_paduatransform!(eltype(v),length(v),lex...)
 
-function *(P::PaduaTransformPlan,v::AbstractVector{T}) where {T}
+function *(P::PaduaTransformPlan,v::AbstractVector{T}) where T
     N=length(v)
     n=Int(cld(-3+sqrt(1+8N),2))
     vals=paduavalsmat(P,v)
@@ -197,7 +198,7 @@ end
 """
 Returns coordinates of the ``(n+1)(n+2)/2`` Padua points.
 """
-function paduapoints(::Type{T},n::Integer) where {T}
+function paduapoints(::Type{T}, n::Integer) where T
     N=div((n+1)*(n+2),2)
     MM=Matrix{T}(undef,N,2)
     m=0

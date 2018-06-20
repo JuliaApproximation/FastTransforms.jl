@@ -12,7 +12,7 @@ end
 
 # The following implements Bluestein's algorithm, following http://www.dsprelated.com/dspbooks/mdft/Bluestein_s_FFT_Algorithm.html
 # To add more types, add them in the union of the function's signature.
-function fft(x::Vector{T}) where {T<:BigFloats}
+function fft(x::Vector{T}) where T<:BigFloats
     n = length(x)
     ispow2(n) && return fft_pow2(x)
     ks = linspace(zero(real(T)),n-one(real(T)),n)
@@ -21,15 +21,17 @@ function fft(x::Vector{T}) where {T<:BigFloats}
     return Wks.*conv(xq,wq)[n+1:2n]
 end
 
-function fft!(x::Vector{T}) where {T<:BigFloats}
+
+function fft!(x::Vector{T}) where T<:BigFloats
     x[:] = fft(x)
     return x
 end
 
 # add rfft for BigFloat, by calling fft
 #  this creates ToeplitzMatrices.rfft, so avoids changing rfft
-rfft(v::Vector{T}) where {T<:BigFloats} = fft(v)[1:div(length(v),2)+1]
-function irfft(v::Vector{T},n::Integer) where {T<:BigFloats}
+
+rfft(v::Vector{T}) where T<:BigFloats = fft(v)[1:div(length(v),2)+1]
+function irfft(v::Vector{T},n::Integer) where T<:BigFloats
     @assert n==2length(v)-1
     r = Vector{Complex{BigFloat}}(n)
     r[1:length(v)]=v
@@ -37,13 +39,13 @@ function irfft(v::Vector{T},n::Integer) where {T<:BigFloats}
     real(ifft(r))
 end
 
-ifft(x::Vector{T})  where {T<:BigFloats} = conj!(fft(conj(x)))/length(x)
-function ifft!(x::Vector{T}) where {T<:BigFloats}
+ifft(x::Vector{T}) where {T<:BigFloats} = conj!(fft(conj(x)))/length(x)
+function ifft!(x::Vector{T}) where T<:BigFloats
     x[:] = ifft(x)
     return x
 end
 
-function conv(u::StridedVector{T}, v::StridedVector{T}) where {T<:BigFloats}
+function conv(u::StridedVector{T}, v::StridedVector{T}) where T<:BigFloats
     nu,nv = length(u),length(v)
     n = nu + nv - 1
     np2 = nextpow2(n)
@@ -57,7 +59,7 @@ end
 # c_radix2.c in the GNU Scientific Library and four1 in the Numerical Recipes in C.
 # However, the trigonometric recurrence is improved for greater efficiency.
 # The algorithm starts with bit-reversal, then divides and conquers in-place.
-function fft_pow2!(x::Vector{T}) where {T<:BigFloat}
+function fft_pow2!(x::Vector{T}) where T<:BigFloat
     n,big2=length(x),2one(T)
     nn,j=n÷2,1
     for i=1:2:n-1
@@ -93,14 +95,14 @@ function fft_pow2!(x::Vector{T}) where {T<:BigFloat}
     return x
 end
 
-function fft_pow2(x::Vector{Complex{T}}) where {T<:BigFloat}
+function fft_pow2(x::Vector{Complex{T}}) where T<:BigFloat
     y = interlace(real(x),imag(x))
     fft_pow2!(y)
     return complex.(y[1:2:end],y[2:2:end])
 end
 fft_pow2(x::Vector{T}) where {T<:BigFloat} = fft_pow2(complex(x))
 
-function ifft_pow2(x::Vector{Complex{T}}) where {T<:BigFloat}
+function ifft_pow2(x::Vector{Complex{T}}) where T<:BigFloat
     y = interlace(real(x),-imag(x))
     fft_pow2!(y)
     return complex.(y[1:2:end],-y[2:2:end])/length(x)
@@ -146,7 +148,7 @@ for (Plan,iPlan) in ((:DummyFFTPlan,:DummyiFFTPlan),
                      (:DummyDCTPlan,:DummyiDCTPlan))
    @eval begin
        Base.inv(::$Plan{T,inplace}) where {T,inplace} = $iPlan{T,inplace}()
-       Base.inv(::$iPlan{T,inplace}) where {T,inplace} =$Plan{T,inplace}()
+       Base.inv(::$iPlan{T,inplace}) where {T,inplace} = $Plan{T,inplace}()
     end
 end
 
@@ -172,8 +174,9 @@ end
 
 plan_fft!(x::Vector{T}) where {T<:BigFloats} = DummyFFTPlan{Complex{BigFloat},true}()
 plan_ifft!(x::Vector{T}) where {T<:BigFloats} = DummyiFFTPlan{Complex{BigFloat},true}()
-#plan_rfft!(x::Vector{T}) where {T<:BigFloats} = DummyrFFTPlan{Complex{BigFloat},true}()
-#plan_irfft!(x::Vector{T},n::Integer) where {T<:BigFloats} = DummyirFFTPlan{Complex{BigFloat},true}()
+
+#plan_rfft!{T<:BigFloats}(x::Vector{T}) = DummyrFFTPlan{Complex{BigFloat},true}()
+#plan_irfft!{T<:BigFloats}(x::Vector{T},n::Integer) = DummyirFFTPlan{Complex{BigFloat},true}()
 plan_dct!(x::Vector{T}) where {T<:BigFloats} = DummyDCTPlan{T,true}()
 plan_idct!(x::Vector{T}) where {T<:BigFloats} = DummyiDCTPlan{T,true}()
 

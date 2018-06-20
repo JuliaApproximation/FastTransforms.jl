@@ -29,7 +29,8 @@ end
 
 size(B::Butterfly) = size(B, 1), size(B, 2)
 
-function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opts...)  where T
+
+function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opts...) where T
     m, n = size(A)
     tL = 2^L
 
@@ -177,6 +178,7 @@ Ac_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = At_mu
 
 # Fast mul!, At_mul_B!, and Ac_mul_B! for an ID. These overwrite the output.
 
+
 function mul!(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where {T}
     k, n = size(A)
     At_mul_B!(P, x, jstart)
@@ -215,7 +217,6 @@ for f! in (:At_mul_B!, :Ac_mul_B!)
 end
 
 ### mul!, At_mul_B!, and  Ac_mul_B! for a Butterfly factorization.
-
 mul!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = mul_col_J!(u, B, b, 1)
 Base.At_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = At_mul_B_col_J!(u, B, b, 1)
 Base.Ac_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = Ac_mul_B_col_J!(u, B, b, 1)

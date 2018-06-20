@@ -35,7 +35,7 @@ end
 """
 Pre-computes a nonuniform fast Fourier transform of type II.
 """
-function plan_nufft2(x::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
+function plan_nufft2(x::AbstractVector{T}, ϵ::T) where T<:AbstractFloat
     N = length(x)
     t = AssignClosestEquispacedFFTpoint(x)
     γ = PerturbationParameter(x, AssignClosestEquispacedGridpoint(x))
@@ -53,7 +53,7 @@ end
 """
 Pre-computes a nonuniform fast Fourier transform of type III.
 """
-function plan_nufft3(x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
+function plan_nufft3(x::AbstractVector{T}, ω::AbstractVector{T}, ϵ::T) where T<:AbstractFloat
     N = length(x)
     s = AssignClosestEquispacedGridpoint(x)
     t = AssignClosestEquispacedFFTpoint(x)
@@ -167,6 +167,7 @@ function mul!(f::AbstractVector{T}, P::NUFFTPlan{3,T}, c::AbstractVector{T}) whe
     f
 end
 
+
 function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int) where {T}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
@@ -243,7 +244,7 @@ end
 """
 Pre-computes a 2D nonuniform fast Fourier transform of type I-I.
 """
-function plan_nufft1(ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
+function plan_nufft1(ω::AbstractVector{T}, π::AbstractVector{T}, ϵ::T) where T<:AbstractFloat
     p1 = plan_nufft1(ω, ϵ)
     p2 = plan_nufft1(π, ϵ)
     temp = zeros(Complex{T}, length(π))
@@ -254,7 +255,7 @@ end
 """
 Pre-computes a 2D nonuniform fast Fourier transform of type II-II.
 """
-function plan_nufft2(x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat}
+function plan_nufft2(x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) where T<:AbstractFloat
     p1 = plan_nufft2(x, ϵ)
     p2 = plan_nufft2(y, ϵ)
     temp = zeros(Complex{T}, length(y))
@@ -302,6 +303,7 @@ nufft2(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) where {T<:A
 
 
 FindK(γ::T, ϵ::T) where {T<:AbstractFloat} = γ ≤ ϵ ? 1 : Int(ceil(5*γ*exp(lambertw(log(10/ϵ)/γ/7))))
+
 (AssignClosestEquispacedGridpoint(x::AbstractVector{T})::AbstractVector{T}) where {T<:AbstractFloat} = round.([Int], size(x, 1)*x)
 (AssignClosestEquispacedFFTpoint(x::AbstractVector{T})::Array{Int,1}) where {T<:AbstractFloat} = mod.(round.([Int], size(x, 1)*x), size(x, 1)) .+ 1
 (PerturbationParameter(x::AbstractVector{T}, s_vec::AbstractVector{T})::AbstractFloat) where {T<:AbstractFloat} = norm(size(x, 1)*x - s_vec, Inf)
@@ -334,7 +336,7 @@ function Bessel_coeffs(K::Int, γ::T) where {T<:AbstractFloat}
     return cfs
 end
 
-function ChebyshevP(n::Int, x::AbstractVector{T}) where {T<:AbstractFloat}
+function ChebyshevP(n::Int, x::AbstractVector{T}) where T<:AbstractFloat
     # Evaluate Chebyshev polynomials of degree 0,...,n at x:
     N = size(x, 1)
     Tcheb = Matrix{T}(N, n+1)

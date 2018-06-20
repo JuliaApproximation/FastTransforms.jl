@@ -1,6 +1,8 @@
 using Compat, FastTransforms, LowRankApprox
 using Compat.Test
-import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ, fejer1, fejer2, clenshawcurtis
+import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ
+import FastTransforms: clenshawcurtisnodes, clenshawcurtisweights, fejernodes1, fejerweights1, fejernodes2, fejerweights2
+import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimoments1, chebyshevjacobimoments2, chebyshevlogmoments1, chebyshevlogmoments2
 
 @testset "Special functions" begin
     n = 0:1000_000
@@ -33,19 +35,44 @@ end
     N = 20
     f(x) = exp(x)
 
-    x,w = fejer1(N,0.,0.)
-    @test norm(dot(f.(x),w)-2sinh(1)) ≤ 4eps()
-    x,w = fejer2(N,0.,0.)
-    @test norm(dot(f.(x),w)-2sinh(1)) ≤ 4eps()
-    x,w = clenshawcurtis(N,0.,0.)
+    x = clenshawcurtisnodes(Float64, N)
+    μ = chebyshevmoments1(Float64, N)
+    w = clenshawcurtisweights(μ)
     @test norm(dot(f.(x),w)-2sinh(1)) ≤ 4eps()
 
-    x,w = fejer1(N,0.25,0.35)
+    μ = chebyshevjacobimoments1(Float64, N, 0.25, 0.35)
+    w = clenshawcurtisweights(μ)
     @test norm(dot(f.(x),w)-2.0351088204147243) ≤ 4eps()
-    x,w = fejer2(N,0.25,0.35)
+
+    μ = chebyshevlogmoments1(Float64, N)
+    w = clenshawcurtisweights(μ)
+    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
+
+    x = fejernodes1(Float64, N)
+    μ = chebyshevmoments1(Float64, N)
+    w = fejerweights1(μ)
+    @test norm(dot(f.(x),w)-2sinh(1)) ≤ 4eps()
+
+    μ = chebyshevjacobimoments1(Float64, N, 0.25, 0.35)
+    w = fejerweights1(μ)
     @test norm(dot(f.(x),w)-2.0351088204147243) ≤ 4eps()
-    x,w = clenshawcurtis(N,0.25,0.35)
+
+    μ = chebyshevlogmoments1(Float64, N)
+    w = fejerweights1(μ)
+    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
+
+    x = fejernodes2(Float64, N)
+    μ = chebyshevmoments2(Float64, N)
+    w = fejerweights2(μ)
+    @test norm(dot(f.(x),w)-2sinh(1)) ≤ 4eps()
+
+    μ = chebyshevjacobimoments2(Float64, N, 0.25, 0.35)
+    w = fejerweights2(μ)
     @test norm(dot(f.(x),w)-2.0351088204147243) ≤ 4eps()
+
+    μ = chebyshevlogmoments2(Float64, N)
+    w = fejerweights2(μ)
+    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
 end
 
 @testset "Allocation-free ID matrix-vector products" begin

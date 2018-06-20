@@ -1,4 +1,4 @@
-function ultra2cheb{T<:AbstractFloat}(c_ultra::AbstractVector{T},λ::T,plan::ChebyshevUltrasphericalPlan{FORWARD,T})
+function ultra2cheb(c_ultra::AbstractVector{T},λ::T,plan::ChebyshevUltrasphericalPlan{FORWARD,T}) where T<:AbstractFloat
     M,N,nM₀,αN,K = getconstants(plan)
     i₁,i₂,j₁,j₂ = getindices(plan)
     p₁,p₂,rp,c₁,c₂,um,vm,θ,tempsin,tempsin2,tempsinλ,tempsinλm,tempmindices,cnλ,cnmλ = getplan(plan)

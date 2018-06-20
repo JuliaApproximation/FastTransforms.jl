@@ -52,7 +52,7 @@ pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochham
 pochhammer(x::Number,n::Number) = gamma(x+n)/gamma(x)
 pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = gamma(x+n)./gamma(x)
 
-function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
+function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret = Vector{promote_type(typeof(x),T)}(length(n))
     ret[1] = pochhammer(x,first(n))
     for i=2:length(n)
@@ -194,7 +194,7 @@ lambertw(x::Real) = lambertw(float(x))
 
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
 Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)
-function Cnλ(n::UnitRange{T},λ::Number) where {T<:Integer}
+function Cnλ(n::UnitRange{T},λ::Number) where T<:Integer
     ret = Vector{typeof(λ)}(length(n))
     ret[1] = Cnλ(first(n),λ)
     for i=2:length(n)
@@ -241,7 +241,7 @@ function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
 end
 
 
-function Cnmαβ(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T}) where {T<:Number}
+function Cnmαβ(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T}) where T<:Number
     shp = promote_shape(size(α),size(β))
     reshape([ Cnmαβ(n,m,α[i],β[i]) for i in eachindex(α,β) ], shp)
 end
@@ -255,12 +255,13 @@ function absf(α::Number,β::Number,m::Int,θ::Number)
     ret
 end
 
-function absf(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number) where {T<:Number}
+function absf(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number) where T<:Number
     shp = promote_shape(size(α),size(β))
     reshape([ absf(α[i],β[i],m,θ) for i in eachindex(α,β) ], shp)
 end
 
-function absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,1}) where {T<:Number}
+
+function absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,1}) where T<:Number
     ret = zero(θ)
     cfs = zeros(T,m+1)
     for l=0:m
@@ -274,7 +275,7 @@ end
 absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) where {T<:Number} = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
 absf(α::Number,β::Number,m::Int,θ::AbstractArray{T}) where {T<:Number} = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
 
-function compute_absf!{T<:AbstractFloat}(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int)
+function compute_absf!(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int) where T<:AbstractFloat
     @inbounds for i=1:length(ret)
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
         ret[i] = cfs[m+1,1]*temp
@@ -286,14 +287,14 @@ function compute_absf!{T<:AbstractFloat}(ret::Vector{T},cfs::Matrix{T},α::T,β:
     ret
 end
 
-function compute_absf!{T<:AbstractFloat}(ret::Vector{T},tempsin::Vector{T},tempsinλ::Vector{T},m::Int)
+function compute_absf!(ret::Vector{T},tempsin::Vector{T},tempsinλ::Vector{T},m::Int) where T<:AbstractFloat
     for i=1:length(ret)
         @inbounds ret[i] = inv(tempsin[i]^m*tempsinλ[i])
     end
     ret
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
+function compute_umvm!(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int}) where T<:AbstractFloat
     @inbounds for i in ir
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
         ϑ = (α+half(α))/2-(α+β+m+1)*θ[i]/2
@@ -308,7 +309,7 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix
     end
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
+function compute_umvm!(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int}) where T<:AbstractFloat
     @inbounds @simd for i in ir
         temp = inv(tempsinλm[i])
         ϑ = (m+λ)*(half(T)-θ[i])
@@ -317,7 +318,7 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,temps
     end
 end
 
-function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},cfs::Matrix{T},α::T,β::T,j::Int,m::Int,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T})
+function findmindices!(Rαβjm::Vector{T},cfs::Matrix{T},α::T,β::T,j::Int,m::Int,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T}) where T<:AbstractFloat
     compute_absf!(Rαβjm,cfs,α,β,tempcos,tempsin,tempcosβsinα,m)
     scale!(Rαβjm,Cnmαβ(j,m,α,β))
     rmin,imin = findmin(Rαβjm)
@@ -344,7 +345,7 @@ function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},cfs::Matrix{T},α::T
     end
 end
 
-function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},λ::T,j::Int,m::Int,tempsin::Vector{T},tempsinλ::Vector{T})
+function findmindices!(Rαβjm::Vector{T},λ::T,j::Int,m::Int,tempsin::Vector{T},tempsinλ::Vector{T}) where T<:AbstractFloat
     compute_absf!(Rαβjm,tempsin,tempsinλ,m)
     scale!(Rαβjm,Cnmλ(j,m,λ))
     rmin,imin = findmin(Rαβjm)
@@ -373,7 +374,7 @@ end
 
 # initialization methods
 
-function init_cfs{T<:AbstractFloat}(α::T,β::T,M::Int)
+function init_cfs(α::T,β::T,M::Int) where T<:AbstractFloat
     cfs = zeros(T,M+1,M+1)
     @inbounds for m=0:M,l=0:m
         cfs[m+1,l+1] = pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)
@@ -405,14 +406,29 @@ end
 
 
 """
+Modified Chebyshev moments of the first kind:
+
+```math
+    \int_{-1}^{+1} T_n(x) {\rm\,d}x.
+```
+"""
+function chebyshevmoments1(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    for i = 0:2:N-1
+        @inbounds μ[i+1] = two(T)/T(1-i^2)
+    end
+    μ
+end
+
+"""
 Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
 ```math
     \\int_{-1}^{+1} T_n(x) (1-x)^\\alpha(1+x)^\\beta{\\rm\\,d}x.
 ```
 """
-function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
-    μ = zeros(T,N)
+function chebyshevjacobimoments1(::Type{T}, N::Int, α, β) where T
+    μ = zeros(T, N)
     N > 0 && (μ[1] = 2 .^ (α+β+1)*beta(α+1,β+1))
     if N > 1
         μ[2] = μ[1]*(β-α)/(α+β+2)
@@ -424,14 +440,49 @@ function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
 end
 
 """
+Modified Chebyshev moments of the first kind with respect to the logarithmic weight:
+
+```math
+    \int_{-1}^{+1} T_n(x) \log\left(\frac{1-x}{2}\right){\rm\,d}x.
+```
+"""
+function chebyshevlogmoments1(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    N > 0 && (μ[1] = -two(T))
+    if N > 1
+        μ[2] = -one(T)
+        for i=1:N-2
+            cst = isodd(i) ? T(4)/T(i^2-4) : T(4)/T(i^2-1)
+            @inbounds μ[i+2] = ((i-2)*μ[i]+cst)/(i+2)
+        end
+    end
+    μ
+end
+
+"""
+Modified Chebyshev moments of the second kind:
+
+```math
+    \int_{-1}^{+1} U_n(x) {\rm\,d}x.
+```
+"""
+function chebyshevmoments2(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    for i = 0:2:N-1
+        @inbounds μ[i+1] = two(T)/T(i+1)
+    end
+    μ
+end
+
+"""
 Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
 ```math
     \\int_{-1}^{+1} U_n(x) (1-x)^\\alpha(1+x)^\\beta{\\rm\\,d}x.
 ```
 """
-function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
-    μ = zeros(T,N)
+function chebyshevjacobimoments2(::Type{T}, N::Int, α, β) where T
+    μ = zeros(T, N)
     N > 0 && (μ[1] = 2 .^ (α+β+1)*beta(α+1,β+1))
     if N > 1
         μ[2] = 2μ[1]*(β-α)/(α+β+2)
@@ -443,7 +494,25 @@ function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
 end
 
 """
-Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
+Modified Chebyshev moments of the second kind with respect to the logarithmic weight:
+
+```math
+    \int_{-1}^{+1} U_n(x) \log\left(\frac{1-x}{2}\right){\rm\,d}x.
+```
+"""
+function chebyshevlogmoments2(::Type{T}, N::Int) where T
+    μ = chebyshevlogmoments1(T, N)
+    if N > 1
+        μ[2] *= two(T)
+        for i=1:N-2
+            @inbounds μ[i+2] = 2μ[i+2] + μ[i]
+        end
+    end
+    μ
+end
+
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
 """
 function incrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)

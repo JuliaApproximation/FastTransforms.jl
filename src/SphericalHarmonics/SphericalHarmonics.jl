@@ -1,4 +1,4 @@
-@compat abstract type SphericalHarmonicPlan{T} end
+abstract type SphericalHarmonicPlan{T} end
 
 function *(P::SphericalHarmonicPlan, X::AbstractMatrix)
     mul!(zero(X), P, X)
@@ -32,10 +32,10 @@ fourier2sph(A::AbstractMatrix; opts...) = plan_sph2fourier(A; opts...)\A
 Computes the bivariate Fourier series given by the spherical harmonic expansion:
 
 ```math
-{\\rm SHT} : \\sum_{\\ell=0}^n\\sum_{m=-\\ell}^{\\ell} f_{\\ell}^m Y_{\\ell}^m(\\theta,\\varphi) \\to \\sum_{\\ell=0}^n\\sum_{m=-n}^{n} g_{\\ell}^m \\frac{e^{{\\rm i} m \\varphi}}{\\sqrt{2\\pi}} \\left\\{\\begin{array}{c}\\cos\\ell\\theta\\\\ \\sin(\\ell+1)\\theta\\end{array}\\right\\},
+{\rm SHT} : \sum_{\ell=0}^n\sum_{m=-\ell}^{\ell} f_{\ell}^m Y_{\ell}^m(\theta,\varphi) \to \sum_{\ell=0}^n\sum_{m=-n}^{n} g_{\ell}^m \left\{\begin{array}{ccc}\cos\ell\theta & {\rm for} & m{\rm~even}\\ \sin(\ell+1)\theta & {\rm for} & m{\rm~odd}\end{array}\right\}\times \sqrt{\frac{2-\delta_{m,0}}{2\pi}} \left\{\begin{array}{ccc} \cos m\varphi & {\rm for} & m \ge 0,\\ \sin(-m\varphi) & {\rm for} & m < 0.\end{array}\right.
 ```
 
-where the cosines are used when ``m`` is even and the sines are used when ``m`` is odd. The spherical harmonic expansion coefficients are organized as follows:
+The spherical harmonic expansion coefficients are organized as follows:
 
 ```math
 F = \\begin{pmatrix}
@@ -66,10 +66,10 @@ sph2fourier(::AbstractMatrix; opts...)
 Computes the spherical harmonic expansion given by the bivariate Fourier series:
 
 ```math
-{\\rm iSHT} : \\sum_{\\ell=0}^n\\sum_{m=-n}^{n} g_{\\ell}^m \\frac{e^{{\\rm i} m \\varphi}}{\\sqrt{2\\pi}} \\left\\{\\begin{array}{c}\\cos\\ell\\theta\\\\ \\sin(\\ell+1)\\theta\\end{array}\\right\\} \\to \\sum_{\\ell=0}^n\\sum_{m=-\\ell}^{\\ell} f_{\\ell}^m Y_{\\ell}^m(\\theta,\\varphi),
+{\rm iSHT} : \sum_{\ell=0}^n\sum_{m=-n}^{n} g_{\ell}^m \left\{\begin{array}{ccc}\cos\ell\theta & {\rm for} & m{\rm~even}\\ \sin(\ell+1)\theta & {\rm for} & m{\rm~odd}\end{array}\right\}\times \sqrt{\frac{2-\delta_{m,0}}{2\pi}} \left\{\begin{array}{ccc} \cos m\varphi & {\rm for} & m \ge 0,\\ \sin(-m\varphi) & {\rm for} & m < 0,\end{array}\right. \to \sum_{\ell=0}^n\sum_{m=-\ell}^{\ell} f_{\ell}^m Y_{\ell}^m(\theta,\varphi).
 ```
 
-where the cosines are used when ``m`` is even and the sines are used when ``m`` is odd. The spherical harmonic expansion coefficients are organized as follows:
+The spherical harmonic expansion coefficients are organized as follows:
 
 ```math
 F = \\begin{pmatrix}

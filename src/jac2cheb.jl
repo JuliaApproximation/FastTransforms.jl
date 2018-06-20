@@ -1,4 +1,4 @@
-function jac2cheb{T<:AbstractFloat}(c_jac::AbstractVector{T},α::T,β::T,plan::ChebyshevJacobiPlan{FORWARD,T})
+function jac2cheb(c_jac::AbstractVector{T},α::T,β::T,plan::ChebyshevJacobiPlan{FORWARD,T}) where T<:AbstractFloat
     M,N,nM₀,αN,K = getconstants(plan)
     i₁,i₂,j₁,j₂ = getindices(plan)
     p₁,p₂,rp,c₁,c₂,um,vm,cfs,θ,tempcos,tempsin,tempcosβsinα,tempmindices,cnαβ,cnmαβ = getplan(plan)

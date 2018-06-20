@@ -26,8 +26,9 @@ Calculates the Gaunt coefficients in 64-bit floating-point arithmetic.
 """
 gaunt(m::Integer,n::Integer,μ::Integer,ν::Integer;kwds...) = gaunt(Float64,m,n,μ,ν;kwds...)
 
-gaunt(::Type{T},m::Int32,n::Int32,μ::Int32,ν::Int32;normalized::Bool=false)  where T =
+gaunt(::Type{T},m::Int32,n::Int32,μ::Int32,ν::Int32;normalized::Bool=false) where T =
     gaunt(T,Int64(m),Int64(n),Int64(μ),Int64(ν);normalized=normalized)
+
 
 function normalization(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer) where T
     pochhammer(n+one(T),n)*pochhammer(ν+one(T),ν)/pochhammer(n+ν+one(T),n+ν)*gamma(n+ν-m-μ+one(T))/gamma(n-m+one(T))/gamma(ν-μ+one(T))

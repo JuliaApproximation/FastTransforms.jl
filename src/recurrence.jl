@@ -37,7 +37,6 @@ rf1(α::T,β::T,k::Int) where T = -(k+β+one(T))/(k+one(T))
 rb0(α::T,β::T,k::Int) where T = (k+one(T))/k*(α+β+k+1)/(k+β)*(α+β+2k)/(α+β+2k+2)
 rb1(α::T,β::T,k::Int) where T = -(k+one(T))/k*(α+β+k+1)/(k+α)*(α+β+2k)/(α+β+2k+2)
 
-
 # Forward polynomial recurrence. Select modified algorithms for x≈±1.
 
 function forward_recurrence!(p::AbstractVector,N::Int,θ::Number,plan::RecurrencePlan{T}) where T
@@ -49,8 +48,10 @@ function forward_recurrence!(p::AbstractVector,N::Int,θ::Number,plan::Recurrenc
         orthogonal_polynomial_recurrence!(p,N,cospi(θ),plan)
     end
 end
+
 forward_recurrence!(p::AbstractVector,θ::Number,plan::RecurrencePlan{T}) where T =
     forward_recurrence!(p,length(p),θ,plan)
+
 
 function forward_recurrence!(p::AbstractVector,N::Int,θ::Number,cpθ::Number,spθ::Number,plan::RecurrencePlan{T}) where T
     if θ ≤ 1/4
@@ -64,7 +65,7 @@ end
 
 # Forward recurrence
 
-function orthogonal_polynomial_recurrence!{V}(p::AbstractVector,N::Int,x::Number,plan::RecurrencePlan{V})
+function orthogonal_polynomial_recurrence!(p::AbstractVector,N::Int,x::Number,plan::RecurrencePlan{V}) where V
     A=plan.A
     B=plan.B
     C=plan.C
@@ -83,7 +84,7 @@ end
 # Modified forward recurrence algorithm for θ near 0
 # spθ = sinpi(θ/2)
 
-function reinsch_f0!{V}(p::AbstractVector,N::Int,spθ::Number,plan::RecurrencePlan{V})
+function reinsch_f0!(p::AbstractVector,N::Int,spθ::Number,plan::RecurrencePlan{V}) where V
     A=plan.A
     C=plan.C
     r=plan.rf₀
@@ -105,7 +106,7 @@ end
 # Modified forward recurrence for θ near 1
 # cpθ = cospi(θ/2)
 
-function reinsch_f1!{V}(p::AbstractVector,N::Int,cpθ::Number,plan::RecurrencePlan{V})
+function reinsch_f1!(p::AbstractVector,N::Int,cpθ::Number,plan::RecurrencePlan{V}) where V
     A=plan.A
     C=plan.C
     r=plan.rf₁
@@ -136,6 +137,7 @@ function backward_recurrence(c::AbstractVector,N::Int,θ::Number,plan::Recurrenc
         clenshaw(c,N,cospi(θ),plan)
     end
 end
+
 backward_recurrence(c::AbstractVector,θ::Number,plan::RecurrencePlan{T}) where T =
     backward_recurrence(c,length(c),θ,plan)
 
@@ -151,7 +153,7 @@ end
 
 # Clenshaw-Smith algorithm
 
-function clenshaw{V}(c::AbstractVector,N::Int,x::Number,plan::RecurrencePlan{V})
+function clenshaw(c::AbstractVector,N::Int,x::Number,plan::RecurrencePlan{V}) where V
     A=plan.A
     B=plan.B
     C=plan.C
@@ -172,7 +174,7 @@ end
 # Modified Clenshaw-Smith algorithm for θ near 0
 # spθ = sinpi(θ/2)
 
-function reinsch_b0{V}(c::AbstractVector,N::Int,spθ::Number,plan::RecurrencePlan{V})
+function reinsch_b0(c::AbstractVector,N::Int,spθ::Number,plan::RecurrencePlan{V}) where V
     A=plan.A
     C=plan.C
     r=plan.rb₀
@@ -195,7 +197,7 @@ end
 # Modified Clenshaw-Smith algorithm for θ near 1
 # cpθ = cospi(θ/2)
 
-function reinsch_b1{V}(c::AbstractVector,N::Int,cpθ::Number,plan::RecurrencePlan{V})
+function reinsch_b1(c::AbstractVector,N::Int,cpθ::Number,plan::RecurrencePlan{V}) where V
     A=plan.A
     C=plan.C
     r=plan.rb₁
