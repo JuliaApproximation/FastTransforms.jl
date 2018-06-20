@@ -14,7 +14,7 @@ This is a Julia implementation of the stable recurrence described in:
 
 Y.-l. Xu, Fast evaluation of Gaunt coefficients: recursive approach, *J. Comp. Appl. Math.*, **85**:53–65, 1997.
 """
-function gaunt{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer;normalized::Bool=false)
+function gaunt(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer;normalized::Bool=false) where T
     if normalized
         normalizedgaunt(T,m,n,μ,ν)
     else
@@ -26,9 +26,9 @@ Calculates the Gaunt coefficients in 64-bit floating-point arithmetic.
 """
 gaunt(m::Integer,n::Integer,μ::Integer,ν::Integer;kwds...) = gaunt(Float64,m,n,μ,ν;kwds...)
 
-gaunt{T}(::Type{T},m::Int32,n::Int32,μ::Int32,ν::Int32;normalized::Bool=false) = gaunt(T,Int64(m),Int64(n),Int64(μ),Int64(ν);normalized=normalized)
+gaunt(::Type{T},m::Int32,n::Int32,μ::Int32,ν::Int32;normalized::Bool=false) where {T} = gaunt(T,Int64(m),Int64(n),Int64(μ),Int64(ν);normalized=normalized)
 
-function normalization{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer)
+function normalization(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer) where T
     pochhammer(n+one(T),n)*pochhammer(ν+one(T),ν)/pochhammer(n+ν+one(T),n+ν)*gamma(n+ν-m-μ+one(T))/gamma(n-m+one(T))/gamma(ν-μ+one(T))
 end
 
@@ -62,7 +62,7 @@ function normalization2(::Type{Float64},nm::Integer,νμ::Integer)
     end
 end
 
-function normalizedgaunt{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer)
+function normalizedgaunt(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer) where T
     qmax = min(n,ν,(n+ν-abs(m+μ))÷2)
     a = Vector{T}(qmax+1)
     a[1] = one(T)
@@ -108,7 +108,7 @@ function normalizedgaunt{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Inte
     a
 end
 
-function secondinitialcondition{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer)
+function secondinitialcondition(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer) where T
     n₄ = n+ν-m-μ
     mn = m-n
     μν = μ-ν
@@ -116,7 +116,7 @@ function secondinitialcondition{T}(::Type{T},m::Integer,n::Integer,μ::Integer,�
     return (temp-2)/2*(1-temp/n₄/(n₄-1)*(mn*(mn+one(T))/(2n-1)+μν*(μν+one(T))/(2ν-1)))
 end
 
-function thirdinitialcondition{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer)
+function thirdinitialcondition(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer) where T
     n₄ = n+ν-m-μ
     mn = m-n
     μν = μ-ν
@@ -126,14 +126,14 @@ function thirdinitialcondition{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν
     return temp*(temp-6)/4*( (temp-2)/n₄/(n₄-1)*temp2 + one(T)/2 )
 end
 
-α{T}(::Type{T},n::Integer,ν::Integer,p::Integer) = (p^2-(n+ν+1)^2)*(p^2-(n-ν)^2)/(4p^2-one(T))
-A{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer) = p*(p-one(T))*(m-μ)-(m+μ)*(n-ν)*(n+ν+one(T))
+α(::Type{T},n::Integer,ν::Integer,p::Integer) where {T} = (p^2-(n+ν+1)^2)*(p^2-(n-ν)^2)/(4p^2-one(T))
+A(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer) where {T} = p*(p-one(T))*(m-μ)-(m+μ)*(n-ν)*(n+ν+one(T))
 
-c₀{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer) = (p+2)*(p+3)*(p₁+1)*(p₁+2)*A(T,m,n,μ,ν,p+4)*α(T,n,ν,p+1)
-c₁{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer,p₂::Integer) = A(T,m,n,μ,ν,p+2)*A(T,m,n,μ,ν,p+3)*A(T,m,n,μ,ν,p+4) + (p+1)*(p+3)*(p₁+2)*(p₂+2)*A(T,m,n,μ,ν,p+4)*α(T,n,ν,p+2) + (p+2)*(p+4)*(p₁+3)*(p₂+3)*A(T,m,n,μ,ν,p+2)*α(T,n,ν,p+3)
-c₂{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₂::Integer) = -(p+2)*(p+3)*(p₂+3)*(p₂+4)*A(T,m,n,μ,ν,p+2)*α(T,n,ν,p+4)
+c₀(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer) where {T} = (p+2)*(p+3)*(p₁+1)*(p₁+2)*A(T,m,n,μ,ν,p+4)*α(T,n,ν,p+1)
+c₁(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer,p₂::Integer) where {T} = A(T,m,n,μ,ν,p+2)*A(T,m,n,μ,ν,p+3)*A(T,m,n,μ,ν,p+4) + (p+1)*(p+3)*(p₁+2)*(p₂+2)*A(T,m,n,μ,ν,p+4)*α(T,n,ν,p+2) + (p+2)*(p+4)*(p₁+3)*(p₂+3)*A(T,m,n,μ,ν,p+2)*α(T,n,ν,p+3)
+c₂(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₂::Integer) where {T} = -(p+2)*(p+3)*(p₂+3)*(p₂+4)*A(T,m,n,μ,ν,p+2)*α(T,n,ν,p+4)
 
-d₀{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer) = (p+2)*(p+3)*(p+5)*(p₁+2)*(p₁+4)*A(T,m,n,μ,ν,p+6)*α(T,n,ν,p+1)
-d₁{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer,p₂::Integer) = (p+5)*(p₁+4)*A(T,m,n,μ,ν,p+6)*( A(T,m,n,μ,ν,p+2)*A(T,m,n,μ,ν,p+3) + (p+1)*(p+3)*(p₁+2)*(p₂+2)*α(T,n,ν,p+2) )
-d₂{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer,p₂::Integer) = (p+2)*(p₂+3)*A(T,m,n,μ,ν,p+2)*( A(T,m,n,μ,ν,p+5)*A(T,m,n,μ,ν,p+6) + (p+4)*(p+6)*(p₁+5)*(p₂+5)*α(T,n,ν,p+5) )
-d₃{T}(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₂::Integer) = -(p+2)*(p+4)*(p+5)*(p₂+3)*(p₂+5)*(p₂+6)*A(T,m,n,μ,ν,p+2)*α(T,n,ν,p+6)
+d₀(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer) where {T} = (p+2)*(p+3)*(p+5)*(p₁+2)*(p₁+4)*A(T,m,n,μ,ν,p+6)*α(T,n,ν,p+1)
+d₁(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer,p₂::Integer) where {T} = (p+5)*(p₁+4)*A(T,m,n,μ,ν,p+6)*( A(T,m,n,μ,ν,p+2)*A(T,m,n,μ,ν,p+3) + (p+1)*(p+3)*(p₁+2)*(p₂+2)*α(T,n,ν,p+2) )
+d₂(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₁::Integer,p₂::Integer) where {T} = (p+2)*(p₂+3)*A(T,m,n,μ,ν,p+2)*( A(T,m,n,μ,ν,p+5)*A(T,m,n,μ,ν,p+6) + (p+4)*(p+6)*(p₁+5)*(p₂+5)*α(T,n,ν,p+5) )
+d₃(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer,p::Integer,p₂::Integer) where {T} = -(p+2)*(p+4)*(p+5)*(p₂+3)*(p₂+5)*(p₂+6)*A(T,m,n,μ,ν,p+2)*α(T,n,ν,p+6)

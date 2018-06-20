@@ -43,10 +43,10 @@ size(P::HierarchicalPlanWithParity) = (size(P.even, 1)+size(P.odd, 1), size(P.ev
 evensize(v::AbstractVecOrMat, d) = (L = size(v, d); iseven(L) ? L÷2 : (L+1)÷2)
 oddsize(v::AbstractVecOrMat, d) = (L = size(v, d); iseven(L) ? L÷2 : (L-1)÷2)
 
-UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, bd::Int) = UpperTriangularHierarchicalMatrix(T, f, bd, bd)
-UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, b::Int, d::Int) = UpperTriangularHierarchicalMatrix(T, f, 1, b, 1, d)
+UpperTriangularHierarchicalMatrix(::Type{T}, f::Function, bd::Int) where {T} = UpperTriangularHierarchicalMatrix(T, f, bd, bd)
+UpperTriangularHierarchicalMatrix(::Type{T}, f::Function, b::Int, d::Int) where {T} = UpperTriangularHierarchicalMatrix(T, f, 1, b, 1, d)
 
-function UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, a::Int, b::Int, c::Int, d::Int)
+function UpperTriangularHierarchicalMatrix(::Type{T}, f::Function, a::Int, b::Int, c::Int, d::Int) where T
     if (b-a+1) < BLOCKSIZE(T) && (d-c+1) < BLOCKSIZE(T)
         i = (b-a)÷2
         j = (d-c)÷2
@@ -68,7 +68,7 @@ function UpperTriangularHierarchicalMatrix{T}(::Type{T}, f::Function, a::Int, b:
     end
 end
 
-function HierarchicalMatrix{T}(::Type{T}, f::Function, a::Int, b::Int, c::Int, d::Int)
+function HierarchicalMatrix(::Type{T}, f::Function, a::Int, b::Int, c::Int, d::Int) where T
     if (b-a+1) < BLOCKSIZE(T) && (d-c+1) < BLOCKSIZE(T)
         i = (b-a)÷2
         j = (d-c)÷2
@@ -92,15 +92,15 @@ function HierarchicalMatrix{T}(::Type{T}, f::Function, a::Int, b::Int, c::Int, d
     end
 end
 
-function Meven{T}(::Type{T}, x, y)
+function Meven(::Type{T}, x, y) where T
     T(Λ(1.0*(y-x)).*Λ(1.0*(y+x-2)))
 end
 
-function Modd{T}(::Type{T}, x, y)
+function Modd(::Type{T}, x, y) where T
     T(Λ(1.0*(y-x)).*Λ(1.0*(y+x-1)))
 end
 
-function Leven{T}(::Type{T}, x, y)
+function Leven(::Type{T}, x, y) where T
     if x == y
         if x == 1.0
             T(1.0)
@@ -112,7 +112,7 @@ function Leven{T}(::Type{T}, x, y)
     end
 end
 
-function Lodd{T}(::Type{T}, x, y)
+function Lodd(::Type{T}, x, y) where T
     if x == y
         if x == 1.0
             T(1.0)
@@ -192,15 +192,15 @@ end
 ################################################################################
 # NORMLEG2CHEB
 
-function Mevennorm{T}(::Type{T}, x, y)
+function Mevennorm(::Type{T}, x, y) where T
     T(Λ(1.0*(y-x)).*Λ(1.0*(y+x-2)))
 end
 
-function Moddnorm{T}(::Type{T}, x, y)
+function Moddnorm(::Type{T}, x, y) where T
     T(Λ(1.0*(y-x)).*Λ(1.0*(y+x-1)))
 end
 
-function Levennorm{T}(::Type{T}, x, y)
+function Levennorm(::Type{T}, x, y) where T
     if x == y
         if x == 1.0
             two(T)
@@ -212,7 +212,7 @@ function Levennorm{T}(::Type{T}, x, y)
     end
 end
 
-function Loddnorm{T}(::Type{T}, x, y)
+function Loddnorm(::Type{T}, x, y) where T
     if x == y
         if x == 1.0
             two(T)/T(3)
@@ -316,19 +316,19 @@ end
 ################################################################################
 # NORMLEG12CHEB2
 
-function Mnormeven{T}(::Type{T}, x, y)
+function Mnormeven(::Type{T}, x, y) where T
     T(Λ(1.0*(y-x))*Λ(1.0*(y+x-1))*(4.0*x-2.0)/π)
 end
 
-function Mnormodd{T}(::Type{T}, x, y)
+function Mnormodd(::Type{T}, x, y) where T
     T(Λ(1.0*(y-x))*Λ(1.0*(y+x))*(4.0*x)/π)
 end
 
-function Lnormeven{T}(::Type{T}, x, y)
+function Lnormeven(::Type{T}, x, y) where T
     -T(Λ(1.0*(y-x))/(2.0*y-2.0*x-1.0)*Λ(1.0*(y+x-1)+0.5)/(2.0*y+2.0*x-2.0)*(2.0*x-0.5))
 end
 
-function Lnormodd{T}(::Type{T}, x, y)
+function Lnormodd(::Type{T}, x, y) where T
     -T(Λ(1.0*(y-x))/(2.0*y-2.0*x-1.0)*Λ(1.0*(y+x)+0.5)/(2.0*y+2.0*x)*(2.0*x+0.5))
 end
 

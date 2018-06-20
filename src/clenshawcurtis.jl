@@ -22,36 +22,36 @@ end
 
 applyTN_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : ones(x)'
 
-applyTN!{T<:AbstractFloat}(x::Vector{T}) = applyTN!(x,applyTN_plan(x))
-function applyTN!{T<:AbstractFloat}(x::Vector{T},plan)
+applyTN!(x::Vector{T}) where {T<:AbstractFloat} = applyTN!(x,applyTN_plan(x))
+function applyTN!(x::Vector{T},plan) where T<:AbstractFloat
     x[1] *= 2; x[end] *=2
     plan*x
     scale!(x,half(T))
 end
-applyTN{T<:AbstractFloat}(x::Vector{T},plan) = applyTN!(copy(x),plan)
-applyTN{T<:AbstractFloat}(x::Vector{T}) = applyTN!(copy(x))
+applyTN(x::Vector{T},plan) where {T<:AbstractFloat} = applyTN!(copy(x),plan)
+applyTN(x::Vector{T}) where {T<:AbstractFloat} = applyTN!(copy(x))
 
 # Values at Clenshaw-Curtis nodes to Chebyshev-T coefficients
 
 applyTNinv_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : ones(x)'
 
-applyTNinv!{T<:AbstractFloat}(x::Vector{T}) = applyTNinv!(x,applyTNinv_plan(x))
-function applyTNinv!{T<:AbstractFloat}(x::Vector{T},plan)
+applyTNinv!(x::Vector{T}) where {T<:AbstractFloat} = applyTNinv!(x,applyTNinv_plan(x))
+function applyTNinv!(x::Vector{T},plan) where T<:AbstractFloat
     plan*x
     x[1] /= 2;x[end] /= 2
     scale!(x,inv(length(x)-one(T)))
 end
-applyTNinv{T<:AbstractFloat}(x::Vector{T},plan) = applyTNinv!(copy(x),plan)
-applyTNinv{T<:AbstractFloat}(x::Vector{T}) = applyTNinv!(copy(x))
+applyTNinv(x::Vector{T},plan) where {T<:AbstractFloat} = applyTNinv!(copy(x),plan)
+applyTNinv(x::Vector{T}) where {T<:AbstractFloat} = applyTNinv!(copy(x))
 
 # sin(nθ) coefficients to values at Clenshaw-Curtis nodes except ±1
 
 applyUN_plan(x) = length(x) > 0 ? FFTW.plan_r2r!(x, FFTW.RODFT00) : ones(x)'
 
-applyUN!{T<:AbstractFloat}(x::AbstractVector{T}) = applyUN!(x,applyUN_plan(x))
-function applyUN!{T<:AbstractFloat}(x::AbstractVector{T},plan)
+applyUN!(x::AbstractVector{T}) where {T<:AbstractFloat} = applyUN!(x,applyUN_plan(x))
+function applyUN!(x::AbstractVector{T},plan) where T<:AbstractFloat
     plan*x
     scale!(x,half(T))
 end
-applyUN{T<:AbstractFloat}(x::AbstractVector{T},plan) = applyUN!(copy(x),plan)
-applyUN{T<:AbstractFloat}(x::AbstractVector{T}) = applyUN!(copy(x))
+applyUN(x::AbstractVector{T},plan) where {T<:AbstractFloat} = applyUN!(copy(x),plan)
+applyUN(x::AbstractVector{T}) where {T<:AbstractFloat} = applyUN!(copy(x))

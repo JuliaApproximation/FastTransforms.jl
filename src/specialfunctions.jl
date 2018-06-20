@@ -11,14 +11,14 @@ Compute a typed 0.5.
 """
 half(x::Number) = oftype(x,0.5)
 half(x::Integer) = half(float(x))
-half{T<:Number}(::Type{T}) = convert(T,0.5)
-half{T<:Integer}(::Type{T}) = half(AbstractFloat)
+half(::Type{T}) where {T<:Number} = convert(T,0.5)
+half(::Type{T}) where {T<:Integer} = half(AbstractFloat)
 
 doc"""
 Compute a typed 2.
 """
 two(x::Number) = oftype(x,2)
-two{T<:Number}(::Type{T}) = convert(T,2)
+two(::Type{T}) where {T<:Number} = convert(T,2)
 
 doc"""
 The Kronecker ``\delta`` function:
@@ -45,14 +45,14 @@ function pochhammer(x::Number,n::Integer)
     ret
 end
 
-pochhammer{T<:Number}(x::AbstractArray{T,1},n::Integer) = [pochhammer(x[i],n) for i=1:length(x)]
-pochhammer{T<:Number}(x::AbstractArray{T,2},n::Integer) = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
-pochhammer{T<:Number}(x::AbstractArray{T},n::Integer) = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
+pochhammer(x::AbstractArray{T,1},n::Integer) where {T<:Number} = [pochhammer(x[i],n) for i=1:length(x)]
+pochhammer(x::AbstractArray{T,2},n::Integer) where {T<:Number} = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
+pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
 
 pochhammer(x::Number,n::Number) = gamma(x+n)/gamma(x)
-pochhammer{T<:Number}(x::AbstractArray{T},n::Number) = gamma(x+n)./gamma(x)
+pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = gamma(x+n)./gamma(x)
 
-function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
+function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret = Vector{promote_type(typeof(x),T)}(length(n))
     ret[1] = pochhammer(x,first(n))
     for i=2:length(n)
@@ -194,7 +194,7 @@ lambertw(x::Real) = lambertw(float(x))
 
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
 Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)
-function Cnλ{T<:Integer}(n::UnitRange{T},λ::Number)
+function Cnλ(n::UnitRange{T},λ::Number) where T<:Integer
     ret = Vector{typeof(λ)}(length(n))
     ret[1] = Cnλ(first(n),λ)
     for i=2:length(n)
@@ -241,7 +241,7 @@ function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
 end
 
 
-function Cnmαβ{T<:Number}(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T})
+function Cnmαβ(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T}) where T<:Number
     shp = promote_shape(size(α),size(β))
     reshape([ Cnmαβ(n,m,α[i],β[i]) for i in eachindex(α,β) ], shp)
 end
@@ -255,12 +255,12 @@ function absf(α::Number,β::Number,m::Int,θ::Number)
     ret
 end
 
-function absf{T<:Number}(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number)
+function absf(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number) where T<:Number
     shp = promote_shape(size(α),size(β))
     reshape([ absf(α[i],β[i],m,θ) for i in eachindex(α,β) ], shp)
 end
 
-function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
+function absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,1}) where T<:Number
     ret = zero(θ)
     cfs = zeros(T,m+1)
     for l=0:m
@@ -271,10 +271,10 @@ function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
     end
     ret
 end
-absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
-absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T}) = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
+absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) where {T<:Number} = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
+absf(α::Number,β::Number,m::Int,θ::AbstractArray{T}) where {T<:Number} = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
 
-function compute_absf!{T<:AbstractFloat}(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int)
+function compute_absf!(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int) where T<:AbstractFloat
     @inbounds for i=1:length(ret)
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
         ret[i] = cfs[m+1,1]*temp
@@ -286,14 +286,14 @@ function compute_absf!{T<:AbstractFloat}(ret::Vector{T},cfs::Matrix{T},α::T,β:
     ret
 end
 
-function compute_absf!{T<:AbstractFloat}(ret::Vector{T},tempsin::Vector{T},tempsinλ::Vector{T},m::Int)
+function compute_absf!(ret::Vector{T},tempsin::Vector{T},tempsinλ::Vector{T},m::Int) where T<:AbstractFloat
     for i=1:length(ret)
         @inbounds ret[i] = inv(tempsin[i]^m*tempsinλ[i])
     end
     ret
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
+function compute_umvm!(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int}) where T<:AbstractFloat
     @inbounds for i in ir
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
         ϑ = (α+half(α))/2-(α+β+m+1)*θ[i]/2
@@ -308,7 +308,7 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix
     end
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
+function compute_umvm!(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int}) where T<:AbstractFloat
     @inbounds @simd for i in ir
         temp = inv(tempsinλm[i])
         ϑ = (m+λ)*(half(T)-θ[i])
@@ -317,7 +317,7 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,temps
     end
 end
 
-function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},cfs::Matrix{T},α::T,β::T,j::Int,m::Int,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T})
+function findmindices!(Rαβjm::Vector{T},cfs::Matrix{T},α::T,β::T,j::Int,m::Int,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T}) where T<:AbstractFloat
     compute_absf!(Rαβjm,cfs,α,β,tempcos,tempsin,tempcosβsinα,m)
     scale!(Rαβjm,Cnmαβ(j,m,α,β))
     rmin,imin = findmin(Rαβjm)
@@ -344,7 +344,7 @@ function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},cfs::Matrix{T},α::T
     end
 end
 
-function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},λ::T,j::Int,m::Int,tempsin::Vector{T},tempsinλ::Vector{T})
+function findmindices!(Rαβjm::Vector{T},λ::T,j::Int,m::Int,tempsin::Vector{T},tempsinλ::Vector{T}) where T<:AbstractFloat
     compute_absf!(Rαβjm,tempsin,tempsinλ,m)
     scale!(Rαβjm,Cnmλ(j,m,λ))
     rmin,imin = findmin(Rαβjm)
@@ -373,7 +373,7 @@ end
 
 # initialization methods
 
-function init_cfs{T<:AbstractFloat}(α::T,β::T,M::Int)
+function init_cfs(α::T,β::T,M::Int) where T<:AbstractFloat
     cfs = zeros(T,M+1,M+1)
     @inbounds for m=0:M,l=0:m
         cfs[m+1,l+1] = pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)

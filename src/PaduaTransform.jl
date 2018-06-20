@@ -7,13 +7,13 @@ struct IPaduaTransformPlan{lex,IDCTPLAN,T}
     idctplan::IDCTPLAN
 end
 
-IPaduaTransformPlan{T,lex}(cfsmat::Matrix{T},idctplan,::Type{Val{lex}}) =
+IPaduaTransformPlan(cfsmat::Matrix{T},idctplan,::Type{Val{lex}}) where {T,lex} =
     IPaduaTransformPlan{lex,typeof(idctplan),T}(cfsmat,idctplan)
 
 doc"""
 Pre-plan an Inverse Padua Transform.
 """
-function plan_ipaduatransform!{T}(::Type{T},N::Integer,lex)
+function plan_ipaduatransform!(::Type{T},N::Integer,lex) where T
     n=Int(cld(-3+sqrt(1+8N),2))
     if N ≠ div((n+1)*(n+2),2)
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
@@ -22,10 +22,10 @@ function plan_ipaduatransform!{T}(::Type{T},N::Integer,lex)
 end
 
 
-plan_ipaduatransform!{T}(::Type{T},N::Integer) = plan_ipaduatransform!(T,N,Val{true})
-plan_ipaduatransform!{T}(v::AbstractVector{T},lex...) = plan_ipaduatransform!(eltype(v),length(v),lex...)
+plan_ipaduatransform!(::Type{T},N::Integer) where {T} = plan_ipaduatransform!(T,N,Val{true})
+plan_ipaduatransform!(v::AbstractVector{T},lex...) where {T} = plan_ipaduatransform!(eltype(v),length(v),lex...)
 
-function *{T}(P::IPaduaTransformPlan,v::AbstractVector{T})
+function *(P::IPaduaTransformPlan,v::AbstractVector{T}) where T
     cfsmat=trianglecfsmat(P,v)
     n,m=size(cfsmat)
     scale!(view(cfsmat,:,2:m-1),0.5)
@@ -108,13 +108,13 @@ struct PaduaTransformPlan{lex,DCTPLAN,T}
     dctplan::DCTPLAN
 end
 
-PaduaTransformPlan{T,lex}(vals::Matrix{T},dctplan,::Type{Val{lex}}) =
+PaduaTransformPlan(vals::Matrix{T},dctplan,::Type{Val{lex}}) where {T,lex} =
     PaduaTransformPlan{lex,typeof(dctplan),T}(vals,dctplan)
 
 doc"""
 Pre-plan a Padua Transform.
 """
-function plan_paduatransform!{T}(::Type{T},N::Integer,lex)
+function plan_paduatransform!(::Type{T},N::Integer,lex) where T
     n=Int(cld(-3+sqrt(1+8N),2))
     if N ≠ ((n+1)*(n+2))÷2
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
@@ -122,10 +122,10 @@ function plan_paduatransform!{T}(::Type{T},N::Integer,lex)
     PaduaTransformPlan(Array{T}(n+2,n+1),FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00),lex)
 end
 
-plan_paduatransform!{T}(::Type{T},N::Integer) = plan_paduatransform!(T,N,Val{true})
-plan_paduatransform!{T}(v::AbstractVector{T},lex...) = plan_paduatransform!(eltype(v),length(v),lex...)
+plan_paduatransform!(::Type{T},N::Integer) where {T} = plan_paduatransform!(T,N,Val{true})
+plan_paduatransform!(v::AbstractVector{T},lex...) where {T} = plan_paduatransform!(eltype(v),length(v),lex...)
 
-function *{T}(P::PaduaTransformPlan,v::AbstractVector{T})
+function *(P::PaduaTransformPlan,v::AbstractVector{T}) where T
     N=length(v)
     n=Int(cld(-3+sqrt(1+8N),2))
     vals=paduavalsmat(P,v)
@@ -197,7 +197,7 @@ end
 doc"""
 Returns coordinates of the ``(n+1)(n+2)/2`` Padua points.
 """
-function paduapoints{T}(::Type{T},n::Integer)
+function paduapoints(::Type{T},n::Integer) where T
     N=div((n+1)*(n+2),2)
     MM=Matrix{T}(N,2)
     m=0
