@@ -409,7 +409,7 @@ end
 Modified Chebyshev moments of the first kind:
 
 ```math
-    \int_{-1}^{+1} T_n(x) {\rm\,d}x.
+    \\int_{-1}^{+1} T_n(x) {\\rm\\,d}x.
 ```
 """
 function chebyshevmoments1(::Type{T}, N::Int) where T
@@ -443,7 +443,7 @@ end
 Modified Chebyshev moments of the first kind with respect to the logarithmic weight:
 
 ```math
-    \int_{-1}^{+1} T_n(x) \log\left(\frac{1-x}{2}\right){\rm\,d}x.
+    \\int_{-1}^{+1} T_n(x) \\log\\left(\\frac{1-x}{2}\\right){\\rm\\,d}x.
 ```
 """
 function chebyshevlogmoments1(::Type{T}, N::Int) where T
@@ -463,7 +463,7 @@ end
 Modified Chebyshev moments of the second kind:
 
 ```math
-    \int_{-1}^{+1} U_n(x) {\rm\,d}x.
+    \\int_{-1}^{+1} U_n(x) {\\rm\\,d}x.
 ```
 """
 function chebyshevmoments2(::Type{T}, N::Int) where T
@@ -497,7 +497,7 @@ end
 Modified Chebyshev moments of the second kind with respect to the logarithmic weight:
 
 ```math
-    \int_{-1}^{+1} U_n(x) \log\left(\frac{1-x}{2}\right){\rm\,d}x.
+    \\int_{-1}^{+1} U_n(x) \\log\\left(\\frac{1-x}{2}\\right){\\rm\\,d}x.
 ```
 """
 function chebyshevlogmoments2(::Type{T}, N::Int) where T
@@ -512,7 +512,7 @@ function chebyshevlogmoments2(::Type{T}, N::Int) where T
 end
 
 """
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function incrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)

@@ -1,4 +1,4 @@
-import Base.LinAlg: Givens, AbstractRotation
+import Compat.LinearAlgebra: Givens, AbstractRotation
 
 ### These three mul! should be in Base, but for the time being they do not add methods to Base.mul!; they add methods to the internal mul!.
 

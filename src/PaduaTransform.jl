@@ -1,7 +1,8 @@
+
+# lex indicates if its lexigraphical (i.e., x, y) or reverse (y, x)
 """
 Pre-plan an Inverse Padua Transform.
 """
-# lex indicates if its lexigraphical (i.e., x, y) or reverse (y, x)
 struct IPaduaTransformPlan{lex,IDCTPLAN,T}
     cfsmat::Matrix{T}
     idctplan::IDCTPLAN

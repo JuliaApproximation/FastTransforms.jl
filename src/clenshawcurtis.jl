@@ -1,12 +1,12 @@
 plan_clenshawcurtis(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
 
-doc"""
+"""
 Compute nodes of the Clenshaw—Curtis quadrature rule.
 """
 clenshawcurtisnodes(::Type{T}, N::Int) where T = T[cospi(k/(N-one(T))) for k=0:N-1]
 
-doc"""
-Compute weights of the Clenshaw—Curtis quadrature rule with modified Chebyshev moments of the first kind ``\mu``.
+"""
+Compute weights of the Clenshaw—Curtis quadrature rule with modified Chebyshev moments of the first kind ``\\mu``.
 """
 clenshawcurtisweights(μ::Vector) = clenshawcurtisweights!(copy(μ))
 clenshawcurtisweights!(μ::Vector) = clenshawcurtisweights!(μ, plan_clenshawcurtis(μ))
