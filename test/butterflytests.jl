@@ -1,5 +1,11 @@
 using FastTransforms, LowRankApprox, Compat
-using Compat.Test
+using Compat.Test, Compat.LinearAlgebra
+
+if VERSION < v"0.7-"
+    const mul! = Base.A_mul_B!
+else
+    Ac_mul_B!(C, A, B) = mul!(C, A', B)
+end
 
 import FastTransforms: Butterfly
 
@@ -32,7 +38,7 @@ import FastTransforms: Butterfly
         b = rand(Complex{Float64}, nb)./(1:nb)
         u = zero(b)
         @time uf = A[n]*b
-        @time A_mul_B!(u, B, b)
+        @time mul!(u, B, b)
         w = zero(b)
         @time Ac_mul_B!(w, B, u)
         scale!(inv(2^n), w)
@@ -55,7 +61,7 @@ import FastTransforms: Butterfly
         b = rand(Float64, nb)./(1:nb)
         u = zero(b)
         @time uf = A[n]*b
-        @time A_mul_B!(u, B, b)
+        @time mul!(u, B, b)
         w = zero(b)
         @time At_mul_B!(w, B, b)
         println(norm(u-uf)/nb)
@@ -78,8 +84,8 @@ import FastTransforms: Butterfly
         b = rand(Complex{Float64}, nb)./(1:nb)
         uf = zero(b)
         u = zero(b)
-        @time A_mul_B!(uf, A[n], b)
-        @time A_mul_B!(u, B[n], b)
+        @time mul!(uf, A[n], b)
+        @time mul!(u, B[n], b)
         println(norm(u-uf))
     end
 end

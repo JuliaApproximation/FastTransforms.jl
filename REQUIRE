@@ -7,3 +7,4 @@ SpecialFunctions 0.3.4
 Compat 0.17
 AbstractFFTs 0.3.1
 FFTW 0.0.4
+DSP 0.4

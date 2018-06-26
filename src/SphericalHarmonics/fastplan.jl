@@ -36,11 +36,11 @@ end
 
 FastSphericalHarmonicPlan(A::Matrix; opts...) = FastSphericalHarmonicPlan(A, floor(Int, log2(size(A, 1)+1)-6); opts...)
 
-function Base.A_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
+function LAmul!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = FP.RP, FP.BF, FP.p1, FP.p2, FP.B
     fill!(B, zero(eltype(B)))
     M, N = size(X)
-    copy!(B, 1, X, 1, 3M)
+    copyto!(B, 1, X, 1, 3M)
     @stepthreads for J = 2:N÷2
         mul_col_J!(B, BF[J-1], X, 2J)
         2J < N && mul_col_J!(B, BF[J-1], X, 2J+1)
@@ -57,29 +57,56 @@ function Base.A_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     end
     Y
 end
+if VERSION < v"0.7-"
+    function Base.At_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
+        RP, BF, p1inv, p2inv, B = FP.RP, FP.BF, FP.p1inv, FP.p2inv, FP.B
+        copyto!(B, X)
+        M, N = size(X)
+        mul_col_J!!(Y, p1inv, B, 1)
+        @stepthreads for J = 2:4:N
+            mul_col_J!!(Y, p2inv, B, J)
+            J < N && mul_col_J!!(Y, p2inv, B, J+1)
+        end
+        @stepthreads for J = 4:4:N
+            mul_col_J!!(Y, p1inv, B, J)
+            J < N && mul_col_J!!(Y, p1inv, B, J+1)
+        end
 
-function Base.At_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
-    RP, BF, p1inv, p2inv, B = FP.RP, FP.BF, FP.p1inv, FP.p2inv, FP.B
-    copy!(B, X)
-    M, N = size(X)
-    mul_col_J!!(Y, p1inv, B, 1)
-    @stepthreads for J = 2:4:N
-        mul_col_J!!(Y, p2inv, B, J)
-        J < N && mul_col_J!!(Y, p2inv, B, J+1)
-    end
-    @stepthreads for J = 4:4:N
-        mul_col_J!!(Y, p1inv, B, J)
-        J < N && mul_col_J!!(Y, p1inv, B, J+1)
+        copyto!(B, Y)
+        @stepthreads for J = 2:N÷2
+            At_mul_B_col_J!(Y, BF[J-1], B, 2J)
+            2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
+        end
+        sph_zero_spurious_modes!(Y)
     end
 
-    copy!(B, Y)
-    @stepthreads for J = 2:N÷2
-        At_mul_B_col_J!(Y, BF[J-1], B, 2J)
-        2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
+    Base.Ac_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, FP, X)
+else
+    function LinearAlgebra.mul!(Y::Matrix, FPt::Transpose{T,<:FastSphericalHarmonicPlan}, X::Matrix) where T
+        FP = parent(FPt)
+        RP, BF, p1inv, p2inv, B = FP.RP, FP.BF, FP.p1inv, FP.p2inv, FP.B
+        copyto!(B, X)
+        M, N = size(X)
+        mul_col_J!!(Y, p1inv, B, 1)
+        @stepthreads for J = 2:4:N
+            mul_col_J!!(Y, p2inv, B, J)
+            J < N && mul_col_J!!(Y, p2inv, B, J+1)
+        end
+        @stepthreads for J = 4:4:N
+            mul_col_J!!(Y, p1inv, B, J)
+            J < N && mul_col_J!!(Y, p1inv, B, J+1)
+        end
+
+        copyto!(B, Y)
+        @stepthreads for J = 2:N÷2
+            At_mul_B_col_J!(Y, BF[J-1], B, 2J)
+            2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
+        end
+        sph_zero_spurious_modes!(Y)
     end
-    sph_zero_spurious_modes!(Y)
+
+    LinearAlgebra.mul!(Y::Matrix, FPc::Adjoint{T,<:FastSphericalHarmonicPlan}, X::Matrix) where T =
+        mul!(Y, transpose(parent(FPc)), X)
 end
-
-Base.Ac_mul_B!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, FP, X)
 
 allranks(FP::FastSphericalHarmonicPlan) = mapreduce(allranks,vcat,FP.BF)

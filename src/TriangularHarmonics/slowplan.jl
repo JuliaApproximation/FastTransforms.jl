@@ -15,14 +15,14 @@ end
 @inline length(P::Pnmp1toPlm) = length(P.rotations)
 @inline getindex(P::Pnmp1toPlm, i::Int) = P.rotations[i]
 
-function Base.A_mul_B!(C::Pnmp1toPlm, A::AbstractVecOrMat)
+function LAmul!(C::Pnmp1toPlm, A::AbstractVecOrMat)
     @inbounds for i = 1:length(C)
         mul!(C.rotations[i], A)
     end
     A
 end
 
-function Base.A_mul_B!(A::AbstractMatrix, C::Pnmp1toPlm)
+function LAmul!(A::AbstractMatrix, C::Pnmp1toPlm)
     @inbounds for i = length(C):-1:1
         mul!(A, C.rotations[i])
     end
@@ -41,7 +41,7 @@ function TriRotationPlan(::Type{T}, n::Int, α::T, β::T, γ::T) where T
     TriRotationPlan(layers)
 end
 
-function Base.A_mul_B!(P::TriRotationPlan, A::AbstractMatrix)
+function LAmul!(P::TriRotationPlan, A::AbstractMatrix)
     M, N = size(A)
     @inbounds for m = N-1:-1:1
         layer = P.layers[m]
@@ -95,9 +95,9 @@ function SlowTriangularHarmonicPlan(A::Matrix{T}, α, β, γ) where T
     SlowTriangularHarmonicPlan(RP, p, pinv, B)
 end
 
-function Base.A_mul_B!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
+function LAmul!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
     RP, p, B = SP.RP, SP.p, SP.B
-    copy!(B, X)
+    copyto!(B, X)
     mul!(RP, B)
     M, N = size(X)
     for J = 1:N
@@ -114,7 +114,7 @@ end
 
 function Base.At_mul_B!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
     RP, pinv, B = SP.RP, SP.pinv, SP.B
-    copy!(B, X)
+    copyto!(B, X)
     M, N = size(X)
     @inbounds for J = 1:N
         nrm = sqrt(π/(2-δ(J-1,0)))

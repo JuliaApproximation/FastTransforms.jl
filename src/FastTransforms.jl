@@ -8,15 +8,19 @@ if VERSION < v"0.7-"
     using Base.FFTW
     import Base.FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
     import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+    const LAmul! = LAmul!
+    import Base: Factorization
 else
-    using FFTW, LinearAlgebra
+    using FFTW, LinearAlgebra, DSP
     import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
     import FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+    const LAmul! = LinearAlgebra.mul!
+    import LinearAlgebra: Factorization
 end
 
 import Base: *, \, size, view
-import Base: getindex, setindex!, Factorization, length
-import Base.LinAlg: BlasFloat, BlasInt
+import Base: getindex, setindex!, length
+import Compat.LinearAlgebra: BlasFloat, BlasInt
 import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
 import HierarchicalMatrices: mul!, At_mul_B!, Ac_mul_B!
 import HierarchicalMatrices: ThreadSafeVector, threadsafezeros

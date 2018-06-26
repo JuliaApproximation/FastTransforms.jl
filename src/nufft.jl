@@ -263,7 +263,7 @@ function plan_nufft2(x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) where T<
     NUFFT2DPlan(p1, p2, temp)
 end
 
-function (*){T,V}(p::NUFFT2DPlan{T}, C::Matrix{V})
+function (*)(p::NUFFT2DPlan{T}, C::Matrix{V}) where {T,V}
     mul!(zeros(promote_type(T,V), size(C)), p, C)
 end
 

@@ -386,7 +386,7 @@ function init_c₁c₂!(c₁::Vector,c₂::Vector,a::Vector,b::Vector,j₁::Int,
     @inbounds for j=1:j₁-1 c₁[j] = 0 end
     @inbounds for j=j₁:j₂ c₁[j] = a[j]*b[j] end
     @inbounds for j=j₂+1:length(c₁) c₁[j] = 0 end
-    copy!(c₂,c₁)
+    copyto!(c₂,c₁)
 end
 
 function init_c₁c₂!(c₁::Vector,c₂::Vector,u::Vector,v::Vector,c::Vector,i₁::Int,i₂::Int)

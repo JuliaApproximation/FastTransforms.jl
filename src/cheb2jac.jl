@@ -17,8 +17,9 @@ function cheb2jac(c_cheb::AbstractVector{T},α::T,β::T,plan::ChebyshevJacobiPla
     @inbounds for i=1:2N+1 c_cheb2[i] *= w[i] end
 
     k=0
-    for k=1:K
-        copy!(cnmαβ,cnαβ)
+    for κ = 1:K
+        k = κ
+        copyto!(cnmαβ,cnαβ)
 
         j₁[k] < nM₀ && (k-=1; break)
 

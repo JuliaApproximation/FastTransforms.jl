@@ -40,9 +40,9 @@ end
 
 ThinSphericalHarmonicPlan(A::Matrix; opts...) = ThinSphericalHarmonicPlan(A, floor(Int, log2(size(A, 1)+1)-6); opts...)
 
-function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
+function LAmul!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = TP.RP, TP.BF, TP.p1, TP.p2, TP.B
-    copy!(B, X)
+    copyto!(B, X)
     M, N = size(X)
 
     @stepthreads for J = 3:2:N÷2
@@ -57,7 +57,7 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
                 mul_col_J!(Y, BF[ℓ], B, 2J)
                 2J < N && mul_col_J!(Y, BF[ℓ], B, 2J+1)
             else
-                copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
+                copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
         end
     end
@@ -74,13 +74,13 @@ function Base.A_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
                 mul_col_J!(Y, BF[ℓ-1], B, 2J)
                 2J < N && mul_col_J!(Y, BF[ℓ-1], B, 2J+1)
             else
-                copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
+                copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
         end
     end
 
-    copy!(Y, 1, X, 1, 3M)
-    copy!(B, Y)
+    copyto!(Y, 1, X, 1, 3M)
+    copyto!(B, Y)
     fill!(Y, zero(eltype(Y)))
 
     mul_col_J!!(Y, p1, B, 1)
@@ -98,7 +98,7 @@ end
 
 function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1inv, p2inv, B = TP.RP, TP.BF, TP.p1inv, TP.p2inv, TP.B
-    copy!(B, X)
+    copyto!(B, X)
     M, N = size(X)
     mul_col_J!!(Y, p1inv, B, 1)
     @stepthreads for J = 2:4:N
@@ -110,9 +110,9 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
         J < N && mul_col_J!!(Y, p1inv, B, J+1)
     end
 
-    copy!(B, Y)
+    copyto!(B, Y)
     fill!(Y, zero(eltype(Y)))
-    copy!(Y, 1, B, 1, 3M)
+    copyto!(Y, 1, B, 1, 3M)
 
     @stepthreads for J = 3:2:N÷2
         if checklayer(J-1)
@@ -124,7 +124,7 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
                 At_mul_B_col_J!(Y, BF[ℓ], B, 2J)
                 2J < N && At_mul_B_col_J!(Y, BF[ℓ], B, 2J+1)
             else
-                copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
+                copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
             At_mul_B_col_J!(RP, Y, 2J, ℓ+1, J-1)
             2J < N && At_mul_B_col_J!(RP, Y, 2J+1, ℓ+1, J-1)
@@ -141,7 +141,7 @@ function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
                 At_mul_B_col_J!(Y, BF[ℓ-1], B, 2J)
                 2J < N && At_mul_B_col_J!(Y, BF[ℓ-1], B, 2J+1)
             else
-                copy!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
+                copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
             At_mul_B_col_J!(RP, Y, 2J, ℓ, J-1)
             2J < N && At_mul_B_col_J!(RP, Y, 2J+1, ℓ, J-1)

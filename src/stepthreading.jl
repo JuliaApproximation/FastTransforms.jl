@@ -40,7 +40,7 @@ function _stepthreadsfor(iter,lbody)
         else
             Threads.in_threaded_loop[] = true
             # the ccall is not expected to throw
-            ccall(:jl_threading_run, Ref{Void}, (Any,), stepthreadsfor_fun)
+            ccall(:jl_threading_run, Ref{Nothing}, (Any,), stepthreadsfor_fun)
             Threads.in_threaded_loop[] = false
         end
         nothing

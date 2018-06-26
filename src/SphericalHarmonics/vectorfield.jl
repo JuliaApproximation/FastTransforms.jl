@@ -45,9 +45,9 @@ function At_mul_B_vf!(P::RotationPlan, A::AbstractMatrix)
 end
 
 
-function Base.A_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix)
+function LAmul!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix)
     RP, p1, p2, B = SP.RP, SP.p1, SP.p2, SP.B
-    copy!(B, X1)
+    copyto!(B, X1)
     mul_vf!(RP, B)
     M, N = size(X1)
     mul_col_J!!(Y1, p2, B, 1)
@@ -59,7 +59,7 @@ function Base.A_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1
         mul_col_J!!(Y1, p2, B, J)
         J < N && mul_col_J!!(Y1, p2, B, J+1)
     end
-    copy!(B, X2)
+    copyto!(B, X2)
     mul_vf!(RP, B)
     M, N = size(X2)
     mul_col_J!!(Y2, p2, B, 1)
@@ -76,7 +76,7 @@ end
 
 function Base.At_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix)
     RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
-    copy!(B, X1)
+    copyto!(B, X1)
     M, N = size(X1)
     mul_col_J!!(Y1, p2inv, B, 1)
     @stepthreads for J = 2:4:N
@@ -88,7 +88,7 @@ function Base.At_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X
         J < N && mul_col_J!!(Y1, p2inv, B, J+1)
     end
     sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y1))
-    copy!(B, X2)
+    copyto!(B, X2)
     M, N = size(X2)
     mul_col_J!!(Y2, p2inv, B, 1)
     @stepthreads for J = 2:4:N
@@ -106,7 +106,7 @@ end
 Base.Ac_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix) = At_mul_B!(Y1, Y2, SP, X1, X2)
 
 
-function Base.A_mul_B!(Y1::Matrix{T}, Y2::Matrix{T}, P::SynthesisPlan{T}, X1::Matrix{T}, X2::Matrix{T}) where T
+function LAmul!(Y1::Matrix{T}, Y2::Matrix{T}, P::SynthesisPlan{T}, X1::Matrix{T}, X2::Matrix{T}) where T
     M, N = size(X1)
 
     # Column synthesis
@@ -181,7 +181,7 @@ function Base.A_mul_B!(Y1::Matrix{T}, Y2::Matrix{T}, P::SynthesisPlan{T}, X1::Ma
     Y1
 end
 
-function Base.A_mul_B!(Y1::Matrix{T}, Y2::Matrix{T}, P::AnalysisPlan{T}, X1::Matrix{T}, X2::Matrix{T}) where T
+function LAmul!(Y1::Matrix{T}, Y2::Matrix{T}, P::AnalysisPlan{T}, X1::Matrix{T}, X2::Matrix{T}) where T
     M, N = size(X1)
 
     # Row analysis

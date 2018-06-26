@@ -52,7 +52,7 @@ function plan_analysis2(A::Matrix{T}) where T<:fftwNumber
     AnalysisPlan(planθ, planφ, C, zeros(T, n))
 end
 
-function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT01,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT01,),true,1}}}, X::Matrix{T}) where T
+function LAmul!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT01,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT01,),true,1}}}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Column synthesis
@@ -93,7 +93,7 @@ function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FF
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT00,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT00,),true,1}}}, X::Matrix{T}) where T
+function LAmul!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT00,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT00,),true,1}}}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Column synthesis
@@ -138,7 +138,7 @@ function Base.A_mul_B!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FF
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT10,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT10,),true,1}}}, X::Matrix{T}) where T
+function LAmul!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT10,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT10,),true,1}}}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Row analysis
@@ -174,7 +174,7 @@ function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFT
     Y
 end
 
-function Base.A_mul_B!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT00,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT00,),true,1}}}, X::Matrix{T}) where T
+function LAmul!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT00,),true,1}, r2rFFTWPlan{T,(FFTW.RODFT00,),true,1}}}, X::Matrix{T}) where T
     M, N = size(X)
 
     # Row analysis
@@ -282,12 +282,12 @@ end
 
 function unsafe_execute_col_J!(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T}, J::Int) where T<:fftwDouble
     M = size(X, 1)
-    ccall((:fftw_execute_r2r, libfftw), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+1))
+    ccall((:fftw_execute_r2r, libfftw), Nothing, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+1))
 end
 
 function unsafe_execute_col_J!(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T}, J::Int) where T<:fftwSingle
     M = size(X, 1)
-    ccall((:fftwf_execute_r2r, libfftwf), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+1))
+    ccall((:fftwf_execute_r2r, libfftwf), Nothing, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+1))
 end
 
 function mul_col_J!(Y::Matrix{T}, P::r2rFFTWPlan{T}, X::Matrix{T}, J::Int, TF::Bool) where T
@@ -298,17 +298,17 @@ end
 function unsafe_execute_col_J!(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T}, J::Int, TF::Bool) where T<:fftwDouble
     M = size(X, 1)
     if TF
-        ccall((:fftw_execute_r2r, libfftw), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+2), pointer(Y, M*(J-1)+1))
+        ccall((:fftw_execute_r2r, libfftw), Nothing, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+2), pointer(Y, M*(J-1)+1))
     else
-        ccall((:fftw_execute_r2r, libfftw), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+2))
+        ccall((:fftw_execute_r2r, libfftw), Nothing, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+2))
     end
 end
 
 function unsafe_execute_col_J!(plan::r2rFFTWPlan{T}, X::Matrix{T}, Y::Matrix{T}, J::Int, TF::Bool) where T<:fftwSingle
     M = size(X, 1)
     if TF
-        ccall((:fftwf_execute_r2r, libfftwf), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+2), pointer(Y, M*(J-1)+1))
+        ccall((:fftwf_execute_r2r, libfftwf), Nothing, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+2), pointer(Y, M*(J-1)+1))
     else
-        ccall((:fftwf_execute_r2r, libfftwf), Void, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+2))
+        ccall((:fftwf_execute_r2r, libfftwf), Nothing, (PlanPtr, Ptr{T}, Ptr{T}), plan, pointer(X, M*(J-1)+1), pointer(Y, M*(J-1)+2))
     end
 end

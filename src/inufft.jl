@@ -53,7 +53,7 @@ end
 
 
 function (*)(p::iNUFFTPlan{N,T}, x::AbstractVector{V}) where {N,T,V}
-    A_mul_B!(zeros(promote_type(T,V), length(x)), p, x)
+    mul!(zeros(promote_type(T,V), length(x)), p, x)
 end
 
 function mul!(c::AbstractVector{T}, P::iNUFFTPlan{1,T}, f::AbstractVector{T}) where T
@@ -86,14 +86,14 @@ function cg_for_inufft(A::ToeplitzMatrices.AbstractToeplitz{T}, x::AbstractVecto
 	n == n1 == n2 || throw(DimensionMismatch(""))
     nrmb = norm(b)
     if nrmb == 0 nrmb = one(typeof(nrmb)) end
-	copy!(x, b)
+	copyto!(x, b)
     fill!(r, zero(T))
     fill!(p, zero(T))
     fill!(Ap, zero(T))
     # r = b - A*x
-    copy!(r, b)
+    copyto!(r, b)
     mul!(r, A, x, -one(T), one(T))
-	copy!(p, r)
+	copyto!(p, r)
 	nrm2 = r⋅r
     for k = 1:max_it
         # Ap = A*p
