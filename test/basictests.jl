@@ -10,7 +10,7 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimome
     @time FastTransforms.Cnλ(n,λ)
     @time FastTransforms.Cnλ(n,λ)
 
-    x = linspace(0,20,81)
+    x =range(0,stop=20,length=81)
     @test norm((Λ.(x)-Λ.(big.(x)))./Λ.(x),Inf) < 2eps()
     @test norm((lambertw.(x)-lambertw.(big.(x)))./max.(lambertw.(x),1), Inf) < 2eps()
 
@@ -46,7 +46,7 @@ end
 
     μ = chebyshevlogmoments1(Float64, N)
     w = clenshawcurtisweights(μ)
-    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(x.-3)) - π^2/12) ≤ 4eps()
 
     x = fejernodes1(Float64, N)
     μ = chebyshevmoments1(Float64, N)
@@ -76,7 +76,7 @@ end
 end
 
 @testset "Allocation-free ID matrix-vector products" begin
-    for T in (Float64, Complex128)
+    for T in (Float64, ComplexF64)
         r = rand(T)
         A = idfact([r/(i+j-1) for i in 1:200, j = 1:50])
         P = A[:P]

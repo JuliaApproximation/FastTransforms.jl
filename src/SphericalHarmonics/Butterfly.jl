@@ -123,7 +123,7 @@ end
 function rowperm!(fwd::Bool, x::AbstractVecOrMat, p::Vector{Int}, jstart::Int)
     n = length(p)
     jshift = jstart-1
-    scale!(p, -1)
+    rmul!(p, -1)
     @inbounds if (fwd)
         for i = 1:n
             p[i] > 0 && continue

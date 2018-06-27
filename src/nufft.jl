@@ -339,7 +339,7 @@ end
 function ChebyshevP(n::Int, x::AbstractVector{T}) where T<:AbstractFloat
     # Evaluate Chebyshev polynomials of degree 0,...,n at x:
     N = size(x, 1)
-    Tcheb = Matrix{T}(N, n+1)
+    Tcheb = Matrix{T}(undef, N, n+1)
 
     # T_0(x) = 1.0
     One = convert(eltype(x),1.0)

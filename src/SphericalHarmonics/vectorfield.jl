@@ -74,36 +74,71 @@ function LAmul!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matri
     Y1
 end
 
-function Base.At_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix)
-    RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
-    copyto!(B, X1)
-    M, N = size(X1)
-    mul_col_J!!(Y1, p2inv, B, 1)
-    @stepthreads for J = 2:4:N
-        mul_col_J!!(Y1, p1inv, B, J)
-        J < N && mul_col_J!!(Y1, p1inv, B, J+1)
+if VERSION < v"0.7-"
+    function Base.At_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix)
+        RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
+        copyto!(B, X1)
+        M, N = size(X1)
+        mul_col_J!!(Y1, p2inv, B, 1)
+        @stepthreads for J = 2:4:N
+            mul_col_J!!(Y1, p1inv, B, J)
+            J < N && mul_col_J!!(Y1, p1inv, B, J+1)
+        end
+        @stepthreads for J = 4:4:N
+            mul_col_J!!(Y1, p2inv, B, J)
+            J < N && mul_col_J!!(Y1, p2inv, B, J+1)
+        end
+        sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y1))
+        copyto!(B, X2)
+        M, N = size(X2)
+        mul_col_J!!(Y2, p2inv, B, 1)
+        @stepthreads for J = 2:4:N
+            mul_col_J!!(Y2, p1inv, B, J)
+            J < N && mul_col_J!!(Y2, p1inv, B, J+1)
+        end
+        @stepthreads for J = 4:4:N
+            mul_col_J!!(Y2, p2inv, B, J)
+            J < N && mul_col_J!!(Y2, p2inv, B, J+1)
+        end
+        sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y2))
+        Y1
     end
-    @stepthreads for J = 4:4:N
-        mul_col_J!!(Y1, p2inv, B, J)
-        J < N && mul_col_J!!(Y1, p2inv, B, J+1)
-    end
-    sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y1))
-    copyto!(B, X2)
-    M, N = size(X2)
-    mul_col_J!!(Y2, p2inv, B, 1)
-    @stepthreads for J = 2:4:N
-        mul_col_J!!(Y2, p1inv, B, J)
-        J < N && mul_col_J!!(Y2, p1inv, B, J+1)
-    end
-    @stepthreads for J = 4:4:N
-        mul_col_J!!(Y2, p2inv, B, J)
-        J < N && mul_col_J!!(Y2, p2inv, B, J+1)
-    end
-    sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y2))
-    Y1
-end
 
-Base.Ac_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix) = At_mul_B!(Y1, Y2, SP, X1, X2)
+    Base.Ac_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix) = At_mul_B!(Y1, Y2, SP, X1, X2)
+else
+    function LinearAlgebra.mul!(Y1::Matrix, Y2t::Transpose{T,Matrix{T}}, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix) where T
+        Y2 = parent(Y2t)
+        RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
+        copyto!(B, X1)
+        M, N = size(X1)
+        mul_col_J!!(Y1, p2inv, B, 1)
+        @stepthreads for J = 2:4:N
+            mul_col_J!!(Y1, p1inv, B, J)
+            J < N && mul_col_J!!(Y1, p1inv, B, J+1)
+        end
+        @stepthreads for J = 4:4:N
+            mul_col_J!!(Y1, p2inv, B, J)
+            J < N && mul_col_J!!(Y1, p2inv, B, J+1)
+        end
+        sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y1))
+        copyto!(B, X2)
+        M, N = size(X2)
+        mul_col_J!!(Y2, p2inv, B, 1)
+        @stepthreads for J = 2:4:N
+            mul_col_J!!(Y2, p1inv, B, J)
+            J < N && mul_col_J!!(Y2, p1inv, B, J+1)
+        end
+        @stepthreads for J = 4:4:N
+            mul_col_J!!(Y2, p2inv, B, J)
+            J < N && mul_col_J!!(Y2, p2inv, B, J+1)
+        end
+        sph_zero_spurious_modes_vf!(At_mul_B_vf!(RP, Y2))
+        Y1
+    end
+
+    LinearAlgebra.mul!(Y1::Matrix, Y2::Adjoint{T,Matrix{T}}, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix) where T =
+        At_mul_B!(Y1, Y2, SP, X1, X2)
+end
 
 
 function LAmul!(Y1::Matrix{T}, Y2::Matrix{T}, P::SynthesisPlan{T}, X1::Matrix{T}, X2::Matrix{T}) where T

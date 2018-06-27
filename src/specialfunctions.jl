@@ -195,7 +195,7 @@ lambertw(x::Real) = lambertw(float(x))
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
 Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)
 function Cnλ(n::UnitRange{T},λ::Number) where T<:Integer
-    ret = Vector{typeof(λ)}(length(n))
+    ret = Vector{typeof(λ)}(undef, length(n))
     ret[1] = Cnλ(first(n),λ)
     for i=2:length(n)
         ret[i] = (n[i]+λ-half(λ))/(n[i]+λ)*ret[i-1]
@@ -320,7 +320,7 @@ end
 
 function findmindices!(Rαβjm::Vector{T},cfs::Matrix{T},α::T,β::T,j::Int,m::Int,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T}) where T<:AbstractFloat
     compute_absf!(Rαβjm,cfs,α,β,tempcos,tempsin,tempcosβsinα,m)
-    scale!(Rαβjm,Cnmαβ(j,m,α,β))
+    rmul!(Rαβjm,Cnmαβ(j,m,α,β))
     rmin,imin = findmin(Rαβjm)
     if rmin < eps(T)
         i₁ = imin-1
@@ -347,7 +347,7 @@ end
 
 function findmindices!(Rαβjm::Vector{T},λ::T,j::Int,m::Int,tempsin::Vector{T},tempsinλ::Vector{T}) where T<:AbstractFloat
     compute_absf!(Rαβjm,tempsin,tempsinλ,m)
-    scale!(Rαβjm,Cnmλ(j,m,λ))
+    rmul!(Rαβjm,Cnmλ(j,m,λ))
     rmin,imin = findmin(Rαβjm)
     if rmin < eps(T)
         i₁ = imin-1

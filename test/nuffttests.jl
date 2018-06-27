@@ -13,7 +13,7 @@ end
         # Nonuniform discrete Fourier transform of type I
 
         N = size(ω, 1)
-        output = zeros(c)
+        output = zero(c)
         for j = 1:N
         	output[j] = dot(exp.(2*T(π)*im*(j-1)/N*ω), c)
         end
@@ -25,7 +25,7 @@ end
         # Nonuniform discrete Fourier transform of type II
 
         N = size(x, 1)
-        output = zeros(c)
+        output = zero(c)
         ω = collect(0:N-1)
         for j = 1:N
         	output[j] = dot(exp.(2*T(π)*im*x[j]*ω), c)
@@ -38,7 +38,7 @@ end
         # Nonuniform discrete Fourier transform of type III
 
         N = size(x, 1)
-        output = zeros(c)
+        output = zero(c)
         for j = 1:N
             output[j] = dot(exp.(2*T(π)*im*x[j]*ω), c)
         end
@@ -46,7 +46,7 @@ end
         return output
     end
 
-    N = round.([Int],logspace(1,3,10))
+    N = round.([Int],10.^range(1,stop=3,length=10))
 
     for n in N, ϵ in (1e-4, 1e-8, 1e-12, eps(Float64))
         c = complex(rand(n))

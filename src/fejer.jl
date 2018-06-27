@@ -13,7 +13,7 @@ fejerweights1(μ::Vector) = fejerweights1!(copy(μ))
 fejerweights1!(μ::Vector) = fejerweights1!(μ, plan_fejer1(μ))
 function fejerweights1!(μ::Vector{T}, plan) where T
     N = length(μ)
-    scale!(μ, inv(T(N)))
+    rmul!(μ, inv(T(N)))
     return plan*μ
 end
 
@@ -33,7 +33,7 @@ fejerweights2!(μ::Vector) = fejerweights2!(μ, plan_fejer2(μ))
 function fejerweights2!(μ::Vector{T}, plan) where T
     N = length(μ)
     Np1 = N+one(T)
-    scale!(μ, inv(Np1))
+    rmul!(μ, inv(Np1))
     plan*μ
     @inbounds for i=1:N μ[i] = sinpi(i/Np1)*μ[i] end
     return μ
