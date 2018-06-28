@@ -3,6 +3,7 @@ using Compat.Test
 import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ
 import FastTransforms: clenshawcurtisnodes, clenshawcurtisweights, fejernodes1, fejerweights1, fejernodes2, fejerweights2
 import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimoments1, chebyshevjacobimoments2, chebyshevlogmoments1, chebyshevlogmoments2
+import Compat: range
 
 @testset "Special functions" begin
     n = 0:1000_000

@@ -10,6 +10,10 @@ if VERSION < v"0.7-"
     import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
     const LAmul! = Base.A_mul_B!
     import Base: Factorization
+    rmul!(A::AbstractArray, c::Number) = scale!(A,c)
+    lmul!(c::Number, A::AbstractArray) = scale!(c,A)
+    lmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
+    rmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
 else
     using FFTW, LinearAlgebra, DSP
     import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
