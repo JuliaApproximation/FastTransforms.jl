@@ -16,10 +16,10 @@ function FastSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
     p2 = plan_normleg12cheb2(A)
     p1inv = plan_cheb2normleg(A)
     p2inv = plan_cheb22normleg1(A)
-    B = zeros(A)
-    Ce = eye(T, M)
-    Co = eye(T, M)
-    BF = Vector{Butterfly{T}}(n-2)
+    B = zero(A)
+    Ce = Matrix{T}(I, M, M)
+    Co = Matrix{T}(I, M, M)
+    BF = Vector{Butterfly{T}}(undef, n-2)
     P = Progress(n-2, 0.1, "Pre-computing...", 43)
     for j = 1:2:n-2
         mul!(Ce, RP.layers[j])
@@ -35,6 +35,12 @@ function FastSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
 end
 
 FastSphericalHarmonicPlan(A::Matrix; opts...) = FastSphericalHarmonicPlan(A, floor(Int, log2(size(A, 1)+1)-6); opts...)
+
+if VERSION ≥ v"0.7-"
+    adjoint(P::FastSphericalHarmonicPlan) = Adjoint(P)
+    transpose(P::FastSphericalHarmonicPlan) = Transpose(P)
+end
+
 
 function LAmul!(Y::Matrix, FP::FastSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = FP.RP, FP.BF, FP.p1, FP.p2, FP.B

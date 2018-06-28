@@ -13,9 +13,11 @@ if VERSION < v"0.7-"
 else
     using FFTW, LinearAlgebra, DSP
     import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
-    import FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+    import FFTW: libfftw3, libfftw3f, PlanPtr, r2rFFTWPlan
     const LAmul! = LinearAlgebra.mul!
-    import LinearAlgebra: Factorization
+    const libfftw = libfftw3
+    const libfftwf = libfftw3f
+    import LinearAlgebra: Factorization, transpose, adjoint
     flipdim(A,d) = reverse(A; dims=d)
 end
 

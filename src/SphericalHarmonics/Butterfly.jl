@@ -55,7 +55,7 @@ function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opt
         nu = round(Int, ninds[j+1]) - 1
         nd = nu-nl+1
         if isorthogonal
-            factors[1][j] = IDPackedV{T}(collect(1:nd),Int[],Array{T}(nd,0))
+            factors[1][j] = IDPackedV{T}(collect(1:nd),Int[],Array{T}(undef,nd,0))
         else
             factors[1][j] = idfact!(A[:,nl:nu], LRAOpts)
         end
@@ -83,7 +83,7 @@ function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opt
                 lc = length(cols)
                 Av = A[ml:mu,cols]
                 if maximum(abs, Av) < realmin(real(T))/eps(real(T))
-                    factors[l][j+ctr] = IDPackedV{T}(Int[], collect(1:lc), Array{T}(0,lc))
+                    factors[l][j+ctr] = IDPackedV{T}(Int[], collect(1:lc), Array{T}(undef,0,lc))
                 else
                     LRAOpts.rtol = eps(real(T))*max(mu-ml+1, lc)
                     factors[l][j+ctr] = idfact!(Av, LRAOpts)

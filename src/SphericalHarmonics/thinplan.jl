@@ -20,10 +20,10 @@ function ThinSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
     p2 = plan_normleg12cheb2(A)
     p1inv = plan_cheb2normleg(A)
     p2inv = plan_cheb22normleg1(A)
-    B = zeros(A)
-    Ce = eye(T, M)
-    Co = eye(T, M)
-    BF = Vector{Butterfly{T}}(n-2)
+    B = zero(A)
+    Ce = Matrix{T}(I, M, M)
+    Co = Matrix{T}(I, M, M)
+    BF = Vector{Butterfly{T}}(undef, n-2)
     P = Progress(n-2, 0.1, "Pre-computing...", 43)
     for J = 1:2:n-2
         mul!(Ce, RP.layers[J])
@@ -39,6 +39,11 @@ function ThinSphericalHarmonicPlan(A::Matrix{T}, L::Int; opts...) where T
 end
 
 ThinSphericalHarmonicPlan(A::Matrix; opts...) = ThinSphericalHarmonicPlan(A, floor(Int, log2(size(A, 1)+1)-6); opts...)
+
+if VERSION ≥ v"0.7-"
+    adjoint(P::ThinSphericalHarmonicPlan) = Adjoint(P)
+    transpose(P::ThinSphericalHarmonicPlan) = Transpose(P)
+end
 
 function LAmul!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = TP.RP, TP.BF, TP.p1, TP.p2, TP.B

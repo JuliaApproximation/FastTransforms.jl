@@ -224,12 +224,13 @@ function row_analysis!(P, C, vals::Vector{T}) where T
         cfs[n÷2+1] *= half(T)
     end
 
-    negateeven!(reverseeven!(mul!(C, cfs)))
+    negateeven!(reverseeven!(lmul!(C, cfs)))
 end
+
 
 function row_synthesis!(P, C, cfs::Vector{T}) where T
     n = length(cfs)
-    Ac_mul_B!(C, reverseeven!(negateeven!(cfs)))
+    lmul!(C, reverseeven!(negateeven!(cfs)))
     if iseven(n)
         cfs[n÷2+1] *= two(T)
     end

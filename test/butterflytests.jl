@@ -5,6 +5,7 @@ if VERSION < v"0.7-"
     const mul! = Base.A_mul_B!
 else
     Ac_mul_B!(C, A, B) = mul!(C, A', B)
+    At_mul_B!(C, A, B) = mul!(C, transpose(A), B)
 end
 
 import FastTransforms: Butterfly

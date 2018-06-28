@@ -5,7 +5,7 @@ function *(P::SphericalHarmonicPlan, X::AbstractMatrix)
 end
 
 function \(P::SphericalHarmonicPlan, X::AbstractMatrix)
-    At_mul_B!(zero(X), P, X)
+    mul!(zero(X), transpose(P), X)
 end
 
 include("sphfunctions.jl")

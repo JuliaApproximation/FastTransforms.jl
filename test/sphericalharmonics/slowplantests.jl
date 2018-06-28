@@ -3,8 +3,9 @@ using Compat.Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
+
 @testset "Slow plan" begin
-    N = round.([Int],logspace(1,2.5,10))
+    N = round.([Int],10 .^ range(1,stop=2.5,length=10))
 
     t = zeros(length(N))
     err = zeros(length(N))
@@ -20,7 +21,7 @@ import FastTransforms: normalizecolumns!, maxcolnorm
             Ac = copy(A)
             B = zero(A)
             SP = SlowSphericalHarmonicPlan(A)
-            A_mul_B!(B, SP, A)
+            mul!(B, SP, A)
             fill!(A, 0.0)
             t[j] += @elapsed At_mul_B!(A, SP, B)
             nrms[kk] = maxcolnorm(A - Ac)

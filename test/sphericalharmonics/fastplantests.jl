@@ -16,8 +16,8 @@ import FastTransforms: normalizecolumns!, maxcolnorm
     @time FP = FastSphericalHarmonicPlan(A; sketch = :none);
     @time SP = SlowSphericalHarmonicPlan(A);
 
-    @time A_mul_B!(B, SP, A);
-    @time A_mul_B!(C, FP, A);
+    @time mul!(B, SP, A);
+    @time mul!(C, FP, A);
     @time At_mul_B!(D, SP, B);
     @time At_mul_B!(E, FP, C);
 

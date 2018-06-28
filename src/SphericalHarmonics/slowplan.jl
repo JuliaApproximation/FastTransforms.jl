@@ -46,7 +46,7 @@ struct Pnmp2toPlm{T} <: AbstractRotation{T}
 end
 
 function Pnmp2toPlm(::Type{T}, n::Int, m::Int) where T
-    G = Vector{Givens{T}}(n)
+    G = Vector{Givens{T}}(undef, n)
     @inbounds for ℓ = 1:n
         c = sqrt(T((2m+2)*(2ℓ+2m+3))/T((ℓ+2m+2)*(ℓ+2m+3)))
         s = sqrt(T(ℓ*(ℓ+1))/T((ℓ+2m+2)*(ℓ+2m+3)))
@@ -80,7 +80,7 @@ struct RotationPlan{T} <: AbstractRotation{T}
 end
 
 function RotationPlan(::Type{T}, n::Int) where T
-    layers = Vector{Pnmp2toPlm{T}}(n-1)
+    layers = Vector{Pnmp2toPlm{T}}(undef, n-1)
     @inbounds for m = 0:n-2
         layers[m+1] = Pnmp2toPlm(T, n-1-m, m)
     end
@@ -97,6 +97,11 @@ function RotationPlan(::Type{T}, n::Int) where T
         end
     end
     RotationPlan(layers, snm, cnm)
+end
+
+if VERSION ≥ v"0.7-"
+    adjoint(P::RotationPlan) = Adjoint(P)
+    transpose(P::RotationPlan) = Transpose(P)
 end
 
 function LAmul!(P::RotationPlan, A::AbstractMatrix)
@@ -319,7 +324,7 @@ function SlowSphericalHarmonicPlan(A::Matrix{T}) where T
     p2 = plan_normleg12cheb2(A)
     p1inv = plan_cheb2normleg(A)
     p2inv = plan_cheb22normleg1(A)
-    B = zeros(A)
+    B = zero(A)
     SlowSphericalHarmonicPlan(RP, p1, p2, p1inv, p2inv, B)
 end
 
@@ -359,6 +364,9 @@ if  VERSION < v"0.7-"
 
     Base.Ac_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, SP, X)
 else
+    transpose(P::SlowSphericalHarmonicPlan) = Transpose(P)
+    adjoint(P::SlowSphericalHarmonicPlan) = Adjoint(P)
+
     function LinearAlgebra.mul!(Y::Matrix, SPt::Transpose{T,<:SlowSphericalHarmonicPlan}, X::Matrix) where T
         SP = parent(SPt)
         RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
