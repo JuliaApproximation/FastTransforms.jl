@@ -8,7 +8,7 @@ if VERSION < v"0.7-"
     using Base.FFTW
     import Base.FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
     import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
-    const LAmul! = LAmul!
+    const LAmul! = Base.A_mul_B!
     import Base: Factorization
 else
     using FFTW, LinearAlgebra, DSP
@@ -16,6 +16,7 @@ else
     import FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
     const LAmul! = LinearAlgebra.mul!
     import LinearAlgebra: Factorization
+    flipdim(A,d) = reverse(A; dims=d)
 end
 
 import Base: *, \, size, view

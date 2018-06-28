@@ -157,7 +157,7 @@ end
 function mul!(y::Vector, P::LegendreToChebyshevPlan, x::AbstractVector)
     mul!(y, P.even, x, 1, 1, 2, 2)
     mul!(y, P.odd, x, 2, 2, 2, 2)
-    scale!(2/π, y)
+    lmul!(2/π, y)
     y[1] *= 0.5
     y
 end
@@ -173,7 +173,7 @@ function mul!(Y::Matrix, P::LegendreToChebyshevPlan, X::Matrix)
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
         mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
-    scale!(2/π, Y)
+    lmul!(2/π, Y)
     for j = 1:n
         Y[1+m*(j-1)] *= 0.5
     end
@@ -260,7 +260,7 @@ function mul!!(y::Vector, P::NormalizedLegendreToChebyshevPlan, x::AbstractVecto
     unsafe_broadcasttimes!(x, P.scl)
     mul!(y, P.even, x, 1, 1, 2, 2)
     mul!(y, P.odd, x, 2, 2, 2, 2)
-    scale!(2/π, y)
+    lmul!(2/π, y)
     y[1] *= 0.5
     y
 end
@@ -273,12 +273,12 @@ end
 
 function mul!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix)
     m, n = size(X)
-    scale!(P.scl, X)
+    lmul!(P.scl, X)
     for j = 1:n
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
         mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
-    scale!(2/π, Y)
+    lmul!(2/π, Y)
     @inbounds @simd for j = 1:n
         Y[1+m*(j-1)] *= 0.5
     end
@@ -291,7 +291,7 @@ function mul!(Y::Matrix, P::ChebyshevToNormalizedLegendrePlan, X::Matrix)
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
         mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
-    scale!(P.scl, Y)
+    lmul!(P.scl, Y)
 end
 
 function mul_col_J!!(Y::Matrix, P::NormalizedLegendreToChebyshevPlan, X::Matrix, J::Int)
@@ -378,7 +378,7 @@ end
 
 function mul!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix)
     m, n = size(X)
-    scale!(P.scl, X)
+    lmul!(P.scl, X)
     for j = 1:n
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
         mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
@@ -392,7 +392,7 @@ function mul!(Y::Matrix, P::Chebyshev2ToNormalizedLegendre1Plan, X::Matrix)
         mul!(Y, P.even, X, 1+m*(j-1), 1+m*(j-1), 2, 2)
         mul!(Y, P.odd, X, 2+m*(j-1), 2+m*(j-1), 2, 2)
     end
-    scale!(P.scl, Y)
+    lmul!(P.scl, Y)
 end
 
 function mul_col_J!!(Y::Matrix, P::NormalizedLegendre1ToChebyshev2Plan, X::Matrix, J::Int)

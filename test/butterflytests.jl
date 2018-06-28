@@ -13,21 +13,21 @@ import FastTransforms: Butterfly
     kernel = (x,y) -> exp(im*x*y)
 
     function randfft(m,n,σ)
-        x = (linspace(0,m-1,m)+σ*rand(m))
-        y = (linspace(0,n-1,n)+σ*rand(n))*2π/n
+        x = (range(0,stop=m-1,length=m)+σ*rand(m))
+        y = (range(0,stop=n-1,length=n)+σ*rand(n))*2π/n
         Complex{Float64}[kernel(x,y) for x in x, y in y]
     end
 
     function randnfft(m,n,σ)
-        x = (linspace(0,m-1,m)+σ*randn(m))
-        y = (linspace(0,n-1,n)+σ*randn(n))*2π/n
+        x = (range(0,stop=m-1,length=m)+σ*randn(m))
+        y = (range(0,stop=n-1,length=n)+σ*randn(n))*2π/n
         Complex{Float64}[kernel(x,y) for x in x, y in y]
     end
 
     println("Testing the butterflied FFT")
 
     N = 10
-    A = Vector{Matrix{Complex{Float64}}}(N)
+    A = Vector{Matrix{Complex{Float64}}}(undef,N)
     for n in 1:N
         A[n] = randnfft(2^n,2^n,0.0)
     end
@@ -41,7 +41,7 @@ import FastTransforms: Butterfly
         @time mul!(u, B, b)
         w = zero(b)
         @time Ac_mul_B!(w, B, u)
-        scale!(inv(2^n), w)
+        lmul!(inv(2^n), w)
         println(norm(u-uf)/2^n)
         println(norm(w-b))
         println(norm(w-A[n]\u))
@@ -50,7 +50,7 @@ import FastTransforms: Butterfly
     println("Testing the butterflied Hilbert matrix")
 
     N = 10
-    A = Vector{Matrix{Float64}}(N)
+    A = Vector{Matrix{Float64}}(undef,N)
     for n in 1:N
         A[n] = Float64[1/(i+j-1) for i = 1:2^n+50,j=1:2^n+50]
     end
@@ -72,8 +72,8 @@ import FastTransforms: Butterfly
     println("Testing the butterflied NUFFT")
 
     N = 10
-    A = Vector{Matrix{Complex{Float64}}}(N)
-    B = Vector{Butterfly{Complex{Float64}}}(N)
+    A = Vector{Matrix{Complex{Float64}}}(undef,N)
+    B = Vector{Butterfly{Complex{Float64}}}(undef,N)
     for n in 7:N
         A[n] = randnfft(2^n+50,2^n+50,0.1)
         @time B[n] = Butterfly(A[n], n-6)

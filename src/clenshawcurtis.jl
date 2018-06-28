@@ -48,7 +48,7 @@ applyTNinv(x::Vector{T}) where {T<:AbstractFloat} = applyTNinv!(copy(x))
 
 # sin(nθ) coefficients to values at Clenshaw-Curtis nodes except ±1
 
-applyUN_plan(x) = length(x) > 0 ? FFTW.plan_r2r!(x, FFTW.RODFT00) : ones(x)'
+applyUN_plan(x) = length(x) > 0 ? FFTW.plan_r2r!(x, FFTW.RODFT00) : fill!(similar(x),1)'
 
 applyUN!(x::AbstractVector{T}) where {T<:AbstractFloat} = applyUN!(x,applyUN_plan(x))
 

@@ -42,13 +42,13 @@ function partialchol(H::Hankel)
         push!(C, v[idx:n+idx-1])
         for j=1:k-1
             nCjidxσj = -C[j][idx]*σ[j]
-            Base.axpy!(nCjidxσj, C[j], C[k])
+            Compat.LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
         end
         @simd for p=1:n
             @inbounds d[p] -= C[k][p]^2/mx
         end
     end
-    for k=1:length(σ) scale!(C[k],sqrt(σ[k])) end
+    for k=1:length(σ) rmul!(C[k],sqrt(σ[k])) end
     C
 end
 
@@ -69,13 +69,13 @@ function partialchol(H::Hankel, D::AbstractVector)
         push!(C,v[idx:n+idx-1].*D.*D[idx])
         for j=1:k-1
             nCjidxσj = -C[j][idx]*σ[j]
-            Base.axpy!(nCjidxσj, C[j], C[k])
+            Compat.LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
         end
         @simd for p=1:n
             @inbounds d[p]-=C[k][p]^2/mx
         end
     end
-    for k=1:length(σ) scale!(C[k],sqrt(σ[k])) end
+    for k=1:length(σ) rmul!(C[k],sqrt(σ[k])) end
     C
 end
 
@@ -84,11 +84,11 @@ function toeplitzcholmult(T,C,v)
     ret,temp1,temp2 = zero(v),zero(v),zero(v)
     un,ze = one(eltype(v)),zero(eltype(v))
     broadcast!(*, temp1, C[K], v)
-    mul!(un, T, temp1, ze, temp2)
+    mul!(temp2, T, temp1, un, ze)
     broadcast!(*, ret, C[K], temp2)
     for k=K-1:-1:1
         broadcast!(*, temp1, C[k], v)
-        mul!(un, T, temp1, ze, temp2)
+        mul!(temp2, T, temp1, un, ze)
         broadcast!(*, temp1, C[k], temp2)
         broadcast!(+, ret, ret, temp1)
     end
@@ -136,9 +136,9 @@ function ultra2ultraTH(::Type{S},n,λ₁,λ₂) where S
     jk = 0:half(S):n-1
     t = zeros(S,n)
     t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S))[1:2:n]
-    T = TriangularToeplitz(scale!(inv(gamma(λ₁-λ₂)),t),:U)
+    T = TriangularToeplitz(lmul!(inv(gamma(λ₁-λ₂)),t),:U)
     h = Λ.(jk,λ₁,λ₂+one(S))
-    scale!(gamma(λ₂)/gamma(λ₁),h)
+    lmul!(gamma(λ₂)/gamma(λ₁),h)
     H = Hankel(h[1:n],h[n:end])
     DR = ones(S,n)
     T,H,DL,DR

@@ -75,10 +75,10 @@ function LAmul!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDF
         X[1,J] *= half(T)
         J < N && (X[1,J+1] *= half(T))
     end
-    scale!(half(T), Y)
+    lmul!(half(T), Y)
 
     # Row synthesis
-    scale!(inv(sqrt(π)), Y)
+    lmul!(inv(sqrt(π)), Y)
     invsqrttwo = inv(sqrt(2))
     @inbounds for i = 1:M Y[i] *= invsqrttwo end
 
@@ -120,10 +120,10 @@ function LAmul!(Y::Matrix{T}, P::SynthesisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDF
         X[M,J] *= half(T)
         J < N && (X[1,J+1] *= half(T); X[M,J+1] *= half(T))
     end
-    scale!(half(T), Y)
+    lmul!(half(T), Y)
 
     # Row synthesis
-    scale!(inv(sqrt(π)), Y)
+    lmul!(inv(sqrt(π)), Y)
     invsqrttwo = inv(sqrt(2))
     @inbounds for i = 1:M Y[i] *= invsqrttwo end
 
@@ -167,7 +167,7 @@ function LAmul!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT
         Y[1,J] *= half(T)
         J < N && (Y[1,J+1] *= half(T))
     end
-    scale!(sqrt(π)*inv(T(M)), Y)
+    lmul!(sqrt(π)*inv(T(M)), Y)
     sqrttwo = sqrt(2)
     @inbounds for i = 1:M Y[i] *= sqrttwo end
 
@@ -207,7 +207,7 @@ function LAmul!(Y::Matrix{T}, P::AnalysisPlan{T, Tuple{r2rFFTWPlan{T,(FFTW.REDFT
         Y[M,J] *= half(T)
         J < N && (Y[1,J+1] *= half(T); Y[M,J+1] *= half(T))
     end
-    scale!(sqrt(π)*inv(T(M-1)), Y)
+    lmul!(sqrt(π)*inv(T(M-1)), Y)
     sqrttwo = sqrt(2)
     @inbounds for i = 1:M Y[i] *= sqrttwo end
 
@@ -218,7 +218,7 @@ end
 
 function row_analysis!(P, C, vals::Vector{T}) where T
     n = length(vals)
-    cfs = scale!(two(T)/n,P*vals)
+    cfs = lmul!(two(T)/n,P*vals)
     cfs[1] *= half(T)
     if iseven(n)
         cfs[n÷2+1] *= half(T)
@@ -234,7 +234,7 @@ function row_synthesis!(P, C, cfs::Vector{T}) where T
         cfs[n÷2+1] *= two(T)
     end
     cfs[1] *= two(T)
-    P*scale!(half(T), cfs)
+    P*lmul!(half(T), cfs)
 end
 
 function copy_row_I!(temp::Vector, Y::Matrix, I::Int)

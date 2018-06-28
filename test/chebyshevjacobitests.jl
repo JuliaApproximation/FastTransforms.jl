@@ -9,7 +9,7 @@ using Compat.Test
     Na,Nb = 5,5
     V = zeros(Na,Nb)
 
-    for N in round.([Int],logspace(1,3,3))
+    for N in round.([Int],10 .^ range(1,stop=3,length=3))
         for αi=1:Na, βi=1:Nb
             α,β = -0.45+(αi-1)/Na,-0.45+(βi-1)/Nb
             p1,p2 = plan_cjt(rand(N),α,β),plan_icjt(rand(N),α,β)

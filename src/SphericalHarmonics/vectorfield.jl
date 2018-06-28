@@ -162,10 +162,10 @@ function LAmul!(Y1::Matrix{T}, Y2::Matrix{T}, P::SynthesisPlan{T}, X1::Matrix{T}
         mul_col_J!(Y1, PCo, X1, J)
         J < N && mul_col_J!(Y1, PCo, X1, J+1)
     end
-    scale!(half(T), Y1)
+    lmul!(half(T), Y1)
 
     # Row synthesis
-    scale!(inv(sqrt(π)), Y1)
+    lmul!(inv(sqrt(π)), Y1)
     invsqrttwo = inv(sqrt(2))
     @inbounds for i = 1:M Y1[i] *= invsqrttwo end
 
@@ -198,10 +198,10 @@ function LAmul!(Y1::Matrix{T}, Y2::Matrix{T}, P::SynthesisPlan{T}, X1::Matrix{T}
         mul_col_J!(Y2, PCo, X2, J)
         J < N && mul_col_J!(Y2, PCo, X2, J+1)
     end
-    scale!(half(T), Y2)
+    lmul!(half(T), Y2)
 
     # Row synthesis
-    scale!(inv(sqrt(π)), Y2)
+    lmul!(inv(sqrt(π)), Y2)
     invsqrttwo = inv(sqrt(2))
     @inbounds for i = 1:M Y2[i] *= invsqrttwo end
 
@@ -244,7 +244,7 @@ function LAmul!(Y1::Matrix{T}, Y2::Matrix{T}, P::AnalysisPlan{T}, X1::Matrix{T},
         mul_col_J!(Y1, PCo, Y1, J)
         J < N && mul_col_J!(Y1, PCo, Y1, J+1)
     end
-    scale!(sqrt(π)*inv(T(M)), Y1)
+    lmul!(sqrt(π)*inv(T(M)), Y1)
     sqrttwo = sqrt(2)
     @inbounds for i = 1:M Y1[i] *= sqrttwo end
 
@@ -275,7 +275,7 @@ function LAmul!(Y1::Matrix{T}, Y2::Matrix{T}, P::AnalysisPlan{T}, X1::Matrix{T},
         mul_col_J!(Y2, PCo, Y2, J)
         J < N && mul_col_J!(Y2, PCo, Y2, J+1)
     end
-    scale!(sqrt(π)*inv(T(M)), Y2)
+    lmul!(sqrt(π)*inv(T(M)), Y2)
     sqrttwo = sqrt(2)
     @inbounds for i = 1:M Y2[i] *= sqrttwo end
 

@@ -6,11 +6,11 @@ end
 
 @testset "BigFloat FFT and DCT" begin
 
-    c = collect(linspace(-big(1.0),1,16))
+    c = collect(range(-big(1.0),stop=1,length=16))
     @test norm(fft(c) - fft(Float64.(c))) < 3Float64(norm(c))*eps()
     @test norm(ifft(c) - ifft(Float64.(c))) < 3Float64(norm(c))*eps()
 
-    c = collect(linspace(-big(1.0),1.0,201))
+    c = collect(range(-big(1.0),stop=1.0,length=201))
     @test norm(ifft(fft(c))-c) < 200norm(c)eps(BigFloat)
 
     p = plan_dct(c)

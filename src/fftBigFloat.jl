@@ -5,9 +5,10 @@ if VERSION < v"0.7-"
                         plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
                         plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct
 else
-    import FFTW: fft, fft!, rfft, irfft, ifft, conv, dct, idct, dct!, idct!,
+    import FFTW: fft, fft!, rfft, irfft, ifft, dct, idct, dct!, idct!,
                         plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
                         plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct
+    import DSP: conv
 end
 
 # The following implements Bluestein's algorithm, following http://www.dsprelated.com/dspbooks/mdft/Bluestein_s_FFT_Algorithm.html
@@ -15,7 +16,7 @@ end
 function fft(x::Vector{T}) where T<:BigFloats
     n = length(x)
     ispow2(n) && return fft_pow2(x)
-    ks = linspace(zero(real(T)),n-one(real(T)),n)
+    ks = range(zero(real(T)),stop=n-one(real(T)),length=n)
     Wks = exp.((-im).*convert(T,π).*ks.^2 ./ n)
     xq, wq = x.*Wks, conj([exp(-im*convert(T,π)*n);reverse(Wks);Wks[2:end]])
     return Wks.*conv(xq,wq)[n+1:2n]
@@ -115,7 +116,7 @@ function dct(a::AbstractArray{Complex{BigFloat}})
     d = c[1:N]
     d .*= exp.((-im*big(pi)).*(0:N-1)./(2*N))
     d[1] = d[1] / sqrt(big(2))
-    scale!(inv(sqrt(2N)), d)
+    lmul!(inv(sqrt(2N)), d)
 end
 
 dct(a::AbstractArray{BigFloat}) = real(dct(complex(a)))

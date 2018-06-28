@@ -11,14 +11,14 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimome
     @time FastTransforms.Cnλ(n,λ)
 
     x =range(0,stop=20,length=81)
-    @test norm((Λ.(x)-Λ.(big.(x)))./Λ.(x),Inf) < 2eps()
-    @test norm((lambertw.(x)-lambertw.(big.(x)))./max.(lambertw.(x),1), Inf) < 2eps()
+    @test norm((Λ.(x) .- Λ.(big.(x)))./Λ.(x),Inf) < 2eps()
+    @test norm((lambertw.(x) .- lambertw.(big.(x)))./max.(lambertw.(x),1), Inf) < 2eps()
 
     x = 0:0.5:10_000
     λ₁,λ₂ = 0.125,0.875
-    @test norm((Λ.(x,λ₁,λ₂).-Λ.(big.(x),big(λ₁),big(λ₂)))./Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
+    @test norm((Λ.(x,λ₁,λ₂) .- Λ.(big.(x),big(λ₁),big(λ₂)))./Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
     λ₁,λ₂ = 1//3,2//3
-    @test norm((Λ.(x,Float64(λ₁),Float64(λ₂))-Λ.(big.(x),big(λ₁),big(λ₂)))./Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
+    @test norm((Λ.(x,Float64(λ₁),Float64(λ₂)) .- Λ.(big.(x),big(λ₁),big(λ₂))) ./ Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
 
     n = 0:1000
     α = 0.125
@@ -46,7 +46,7 @@ end
 
     μ = chebyshevlogmoments1(Float64, N)
     w = clenshawcurtisweights(μ)
-    @test norm(sum(w./(x.-3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
 
     x = fejernodes1(Float64, N)
     μ = chebyshevmoments1(Float64, N)
@@ -59,7 +59,7 @@ end
 
     μ = chebyshevlogmoments1(Float64, N)
     w = fejerweights1(μ)
-    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
 
     x = fejernodes2(Float64, N)
     μ = chebyshevmoments2(Float64, N)
@@ -72,7 +72,7 @@ end
 
     μ = chebyshevlogmoments2(Float64, N)
     w = fejerweights2(μ)
-    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
 end
 
 @testset "Allocation-free ID matrix-vector products" begin

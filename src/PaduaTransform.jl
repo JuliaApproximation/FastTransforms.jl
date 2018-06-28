@@ -19,7 +19,7 @@ function plan_ipaduatransform!(::Type{T},N::Integer,lex) where T
     if N ≠ div((n+1)*(n+2),2)
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
     end
-    IPaduaTransformPlan(Array{T}(n+2,n+1),FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00),lex)
+    IPaduaTransformPlan(Array{T}(undef,n+2,n+1),FFTW.plan_r2r!(Array{T}(undef,n+2,n+1),FFTW.REDFT00),lex)
 end
 
 
@@ -30,8 +30,8 @@ plan_ipaduatransform!(v::AbstractVector{T},lex...) where {T} = plan_ipaduatransf
 function *(P::IPaduaTransformPlan,v::AbstractVector{T}) where T
     cfsmat=trianglecfsmat(P,v)
     n,m=size(cfsmat)
-    scale!(view(cfsmat,:,2:m-1),0.5)
-    scale!(view(cfsmat,2:n-1,:),0.5)
+    rmul!(view(cfsmat,:,2:m-1),0.5)
+    rmul!(view(cfsmat,2:n-1,:),0.5)
     tensorvals=P.idctplan*cfsmat
     paduavec!(v,P,tensorvals)
 end
@@ -121,7 +121,7 @@ function plan_paduatransform!(::Type{T},N::Integer,lex) where T
     if N ≠ ((n+1)*(n+2))÷2
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
     end
-    PaduaTransformPlan(Array{T}(n+2,n+1),FFTW.plan_r2r!(Array{T}(n+2,n+1),FFTW.REDFT00),lex)
+    PaduaTransformPlan(Array{T}(undef,n+2,n+1),FFTW.plan_r2r!(Array{T}(undef,n+2,n+1),FFTW.REDFT00),lex)
 end
 
 plan_paduatransform!(::Type{T},N::Integer) where {T} = plan_paduatransform!(T,N,Val{true})
@@ -133,11 +133,11 @@ function *(P::PaduaTransformPlan,v::AbstractVector{T}) where T
     vals=paduavalsmat(P,v)
     tensorcfs=P.dctplan*vals
     m,l=size(tensorcfs)
-    scale!(tensorcfs,T(2)/(n*(n+1)))
-    scale!(view(tensorcfs,1,:),0.5)
-    scale!(view(tensorcfs,:,1),0.5)
-    scale!(view(tensorcfs,m,:),0.5)
-    scale!(view(tensorcfs,:,l),0.5)
+    rmul!(tensorcfs,T(2)/(n*(n+1)))
+    rmul!(view(tensorcfs,1,:),0.5)
+    rmul!(view(tensorcfs,:,1),0.5)
+    rmul!(view(tensorcfs,m,:),0.5)
+    rmul!(view(tensorcfs,:,l),0.5)
     trianglecfsvec!(v,P,tensorcfs)
 end
 

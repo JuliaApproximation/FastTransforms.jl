@@ -37,18 +37,18 @@ function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opt
     LRAOpts = LRAOptions(T; opts...)
     LRAOpts.rtol = eps(real(T))*max(m, n)
 
-    columns = Vector{Matrix{T}}(tL)
-    factors = Vector{Vector{IDPackedV{T}}}(L+1)
-    permutations = Vector{Vector{ColumnPermutation}}(L+1)
-    indices = Vector{Vector{Int}}(L+1)
-    cs = Vector{Vector{Vector{Int}}}(L+1)
+    columns = Vector{Matrix{T}}(undef, tL)
+    factors = Vector{Vector{IDPackedV{T}}}(undef, L+1)
+    permutations = Vector{Vector{ColumnPermutation}}(undef, L+1)
+    indices = Vector{Vector{Int}}(undef, L+1)
+    cs = Vector{Vector{Vector{Int}}}(undef, L+1)
 
-    factors[1] = Vector{IDPackedV{T}}(tL)
-    permutations[1] = Vector{ColumnPermutation}(tL)
-    indices[1] = Vector{Int}(tL+1)
-    cs[1] = Vector{Vector{Int}}(tL)
+    factors[1] = Vector{IDPackedV{T}}(undef, tL)
+    permutations[1] = Vector{ColumnPermutation}(undef, tL)
+    indices[1] = Vector{Int}(undef, tL+1)
+    cs[1] = Vector{Vector{Int}}(undef, tL)
 
-    ninds = linspace(1, n+1, tL+1)
+    ninds = range(1, stop=n+1, length=tL+1)
     indices[1][1] = 1
     for j = 1:tL
         nl = round(Int, ninds[j])
@@ -66,13 +66,13 @@ function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opt
 
     ii, jj = 2, (tL>>1)
     for l = 2:L+1
-        factors[l] = Vector{IDPackedV{T}}(tL)
-        permutations[l] = Vector{ColumnPermutation}(tL)
-        indices[l] = Vector{Int}(tL+1)
-        cs[l] = Vector{Vector{Int}}(tL)
+        factors[l] = Vector{IDPackedV{T}}(undef, tL)
+        permutations[l] = Vector{ColumnPermutation}(undef, tL)
+        indices[l] = Vector{Int}(undef, tL+1)
+        cs[l] = Vector{Vector{Int}}(undef, tL)
 
         ctr = 0
-        minds = linspace(1, m+1, ii+1)
+        minds = range(1, stop=m+1, length=ii+1)
         indices[l][1] = 1
         for i = 1:ii
             shft = 2jj*div(ctr,2jj)
@@ -98,7 +98,7 @@ function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opt
         jj >>= 1
     end
 
-    minds = linspace(1, m+1, tL+1)
+    minds = range(1, stop=m+1, length=tL+1)
     for i = 1:tL
         ml = round(Int, minds[i])
         mu = round(Int, minds[i+1]) - 1
@@ -108,6 +108,11 @@ function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opt
     kk = sumkmax(indices)
 
     Butterfly(columns, factors, permutations, indices, threadsafezeros(T, kk), threadsafezeros(T, kk), threadsafezeros(T, kk), threadsafezeros(T, kk))
+end
+
+if VERSION ≥ v"0.7-"
+    LinearAlgebra.adjoint(B::Butterfly) = Adjoint(B)
+    LinearAlgebra.transpose(B::Butterfly) = Transpose(B)
 end
 
 function sumkmax(indices::Vector{Vector{Int}})
@@ -220,9 +225,11 @@ for f! in (:At_mul_B!, :Ac_mul_B!)
 end
 
 if VERSION < v"0.7-"
+    Base.A_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = mul_col_J!(u, B, b, 1)
     Base.At_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = At_mul_B_col_J!(u, B, b, 1)
     Base.Ac_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = Ac_mul_B_col_J!(u, B, b, 1)
 else
+    LinearAlgebra.mul!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = mul_col_J!(u, B, b, 1)
     LinearAlgebra.mul!(u::Vector{T}, Bt::Transpose{T,Butterfly{T}}, b::Vector{T}) where T = At_mul_B_col_J!(u, parent(Bt), b, 1)
     LinearAlgebra.mul!(u::Vector{T}, Bc::Adjoint{T,Butterfly{T}}, b::Vector{T}) where T = Ac_mul_B_col_J!(u, parent(Bc), b, 1)
 end

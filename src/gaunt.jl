@@ -18,7 +18,7 @@ function gaunt(::Type{T},m::Integer,n::Integer,μ::Integer,ν::Integer;normalize
     if normalized
         normalizedgaunt(T,m,n,μ,ν)
     else
-        scale!(normalization(T,m,n,μ,ν),gaunt(T,m,n,μ,ν;normalized=true))
+        lmul!(normalization(T,m,n,μ,ν),gaunt(T,m,n,μ,ν;normalized=true))
     end
 end
 """
