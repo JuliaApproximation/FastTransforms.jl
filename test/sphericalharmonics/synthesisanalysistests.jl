@@ -3,6 +3,10 @@ using Compat.Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
+if VERSION ≥ v"0.7-"
+    vecnorm(A, p...) = norm(A, p...)
+end
+
 @testset "Synthesis and analysis" begin
 
     # Starting with normalized spherical harmonic coefficients,

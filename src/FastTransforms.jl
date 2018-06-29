@@ -21,9 +21,10 @@ else
     const LAmul! = LinearAlgebra.mul!
     const libfftw = libfftw3
     const libfftwf = libfftw3f
-    import LinearAlgebra: Factorization, transpose, adjoint
+    import LinearAlgebra: Factorization
     flipdim(A,d) = reverse(A; dims=d)
 end
+
 
 import Base: *, \, size, view
 import Base: getindex, setindex!, length
@@ -33,7 +34,7 @@ import HierarchicalMatrices: mul!, At_mul_B!, Ac_mul_B!
 import HierarchicalMatrices: ThreadSafeVector, threadsafezeros
 import LowRankApprox: ColPerm
 import AbstractFFTs: Plan
-import Compat: range
+import Compat: range, transpose, adjoint
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac

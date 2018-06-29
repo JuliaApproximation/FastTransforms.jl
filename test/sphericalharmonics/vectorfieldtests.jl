@@ -14,24 +14,24 @@ using Compat.Test
     V1 = zero(∇θF)
     V2 = zero(∇φF)
     Pa = FastTransforms.plan_analysis(∇θF)
-    A_mul_B!(V1, V2, Pa, ∇θF, ∇φF)
+    mul!(V1, V2, Pa, ∇θF, ∇φF)
     P = SlowSphericalHarmonicPlan(V1)
 
     U1 = zero(V1)
     U2 = zero(V2)
-    At_mul_B!(U1, U2, P, V1, V2)
+    FastTransforms.At_mul_B!(U1, U2, P, V1, V2)
 
     W1 = zero(U1)
     W2 = zero(U2)
 
-    A_mul_B!(W1, W2, P, U1, U2)
+    mul!(W1, W2, P, U1, U2)
 
     Ps = FastTransforms.plan_synthesis(W1)
 
     G1 = zero(∇θF)
     G2 = zero(∇φF)
 
-    A_mul_B!(G1, G2, Ps, W1, W2)
+    mul!(G1, G2, Ps, W1, W2)
 
     @test vecnorm(∇θF - G1)/vecnorm(∇θF) < n*eps()
     @test vecnorm(∇φF - G2)/vecnorm(∇φF) < n*eps()
@@ -49,24 +49,24 @@ using Compat.Test
         V1 = zero(∇θF)
         V2 = zero(∇φF)
         Pa = FastTransforms.plan_analysis(∇θF)
-        A_mul_B!(V1, V2, Pa, ∇θF, ∇φF)
+        mul!(V1, V2, Pa, ∇θF, ∇φF)
         P = SlowSphericalHarmonicPlan(V1)
 
         U1 = zero(V1)
         U2 = zero(V2)
-        At_mul_B!(U1, U2, P, V1, V2)
+        FastTransforms.At_mul_B!(U1, U2, P, V1, V2)
 
         W1 = zero(U1)
         W2 = zero(U2)
 
-        A_mul_B!(W1, W2, P, U1, U2)
+        mul!(W1, W2, P, U1, U2)
 
         Ps = FastTransforms.plan_synthesis(W1)
 
         G1 = zero(∇θF)
         G2 = zero(∇φF)
 
-        A_mul_B!(G1, G2, Ps, W1, W2)
+        mul!(G1, G2, Ps, W1, W2)
 
         @test vecnorm(∇θF - G1)/vecnorm(∇θF) < n*eps()
         @test vecnorm(∇φF - G2)/vecnorm(∇φF) < n*eps()
