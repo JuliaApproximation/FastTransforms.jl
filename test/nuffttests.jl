@@ -80,9 +80,9 @@ end
         x = ω/n
         fftc = fft(c)
         if Base.Sys.WORD_SIZE == 64
-            @test_broken norm(nufft1(c, ω, ϵ) - fftc) == 0
+            @test_skip norm(nufft1(c, ω, ϵ) - fftc) == 0 # skip because fftw3 seems to change this
             @test norm(nufft2(c, x, ϵ) - fftc) == 0
-            @test_broken norm(nufft3(c, x, ω, ϵ) - fftc) == 0
+            @test_skip norm(nufft3(c, x, ω, ϵ) - fftc) == 0 # skip because fftw3 seems to change this
         end
         err_bnd = 500*eps(Float64)*norm(c)
         @test norm(nufft1(c, ω, ϵ) - fftc) < err_bnd

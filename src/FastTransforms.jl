@@ -33,7 +33,7 @@ import HierarchicalMatrices: mul!, At_mul_B!, Ac_mul_B!
 import HierarchicalMatrices: ThreadSafeVector, threadsafezeros
 import LowRankApprox: ColPerm
 import AbstractFFTs: Plan
-
+import Compat: range
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
