@@ -4,8 +4,14 @@ function *(P::SphericalHarmonicPlan, X::AbstractMatrix)
     mul!(zero(X), P, X)
 end
 
-function \(P::SphericalHarmonicPlan, X::AbstractMatrix)
-    mul!(zero(X), transpose(P), X)
+if VERSION < v"0.7-"
+    function \(P::SphericalHarmonicPlan, X::AbstractMatrix)
+        At_mul_B!(zero(X), P, X)
+    end
+else
+    function \(P::SphericalHarmonicPlan, X::AbstractMatrix)
+        mul!(zero(X), transpose(P), X)
+    end
 end
 
 include("sphfunctions.jl")

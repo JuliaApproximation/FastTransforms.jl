@@ -34,7 +34,7 @@ end
 rfft(v::Vector{T}) where T<:BigFloats = fft(v)[1:div(length(v),2)+1]
 function irfft(v::Vector{T},n::Integer) where T<:BigFloats
     @assert n==2length(v)-1
-    r = Vector{Complex{BigFloat}}(n)
+    r = Vector{Complex{BigFloat}}(undef, n)
     r[1:length(v)]=v
     r[length(v)+1:end]=reverse(conj(v[2:end]))
     real(ifft(r))
@@ -163,8 +163,8 @@ for (Plan,ff,ff!) in ((:DummyFFTPlan,:fft,:fft!),
     @eval begin
         *(p::$Plan{T,true}, x::StridedArray{T,N}) where {T,N} = $ff!(x)
         *(p::$Plan{T,false}, x::StridedArray{T,N}) where {T,N} = $ff(x)
-        function mul!(C::StridedVector,p::$Plan,x::StridedVector)
-            C[:]=$ff(x)
+        function LAmul!(C::StridedVector, p::$Plan, x::StridedVector)
+            C[:] = $ff(x)
             C
         end
     end

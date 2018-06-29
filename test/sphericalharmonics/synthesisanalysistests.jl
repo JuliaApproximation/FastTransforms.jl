@@ -110,27 +110,29 @@ end
     end
 end
 
-# This test confirms numerically that [P_4(z⋅y) - P_4(x⋅y)]/(z⋅y - x⋅y) is actually a degree-3 polynomial on 𝕊²
-x = [0,0,1]
-y = normalize!([.123,.456,.789])
+@testset "Degree-3 polynomial" begin
+    # This test confirms numerically that [P_4(z⋅y) - P_4(x⋅y)]/(z⋅y - x⋅y) is actually a degree-3 polynomial on 𝕊²
+    x = [0,0,1]
+    y = normalize!([.123,.456,.789])
 
-z = (θ,φ) -> [sinpi(θ)*cospi(φ), sinpi(θ)*sinpi(φ), cospi(θ)]
+    z = (θ,φ) -> [sinpi(θ)*cospi(φ), sinpi(θ)*sinpi(φ), cospi(θ)]
 
-P4 = x -> (35*x^4-30*x^2+3)/8
+    P4 = x -> (35*x^4-30*x^2+3)/8
 
-n = 5
-θ = (0.5:n-0.5)/n
-φ = (0:2n-2)*2/(2n-1)
-F = [(P4(z(θ,φ)⋅y) - P4(x⋅y))/(z(θ,φ)⋅y - x⋅y) for θ in θ, φ in φ]
-V = zero(F)
-mul!(V, FastTransforms.plan_analysis(F), F)
-U3 = fourier2sph(V)
+    n = 5
+    θ = (0.5:n-0.5)/n
+    φ = (0:2n-2)*2/(2n-1)
+    F = [(P4(z(θ,φ)⋅y) - P4(x⋅y))/(z(θ,φ)⋅y - x⋅y) for θ in θ, φ in φ]
+    V = zero(F)
+    mul!(V, FastTransforms.plan_analysis(F), F)
+    U3 = fourier2sph(V)
 
-# U3 is degree-3
+    # U3 is degree-3
 
-F = [P4(z(θ,φ)⋅y) for θ in θ, φ in φ]
-V = zero(F)
-mul!(V, FastTransforms.plan_analysis(F), F)
-U4 = fourier2sph(V)
+    F = [P4(z(θ,φ)⋅y) for θ in θ, φ in φ]
+    V = zero(F)
+    mul!(V, FastTransforms.plan_analysis(F), F)
+    U4 = fourier2sph(V)
 
-# U4 is degree-4
+    # U4 is degree-4
+end
