@@ -302,9 +302,9 @@ nufft2(C::Matrix, x::AbstractVector{T}, y::AbstractVector{T}, ϵ::T) where {T<:A
 
 
 FindK(γ::T, ϵ::T) where {T<:AbstractFloat} = γ ≤ ϵ ? 1 : Int(ceil(5*γ*exp(lambertw(log(10/ϵ)/γ/7))))
-AssignClosestEquispacedGridpoint{T<:AbstractFloat}(x::AbstractVector{T})::AbstractVector{T} = round.([Int], size(x, 1)*x)
-AssignClosestEquispacedFFTpoint{T<:AbstractFloat}(x::AbstractVector{T})::Array{Int,1} = mod.(round.([Int], size(x, 1)*x), size(x, 1)) .+ 1
-PerturbationParameter{T<:AbstractFloat}(x::AbstractVector{T}, s_vec::AbstractVector{T})::AbstractFloat = norm(size(x, 1)*x - s_vec, Inf)
+AssignClosestEquispacedGridpoint(x::AbstractVector{T})::AbstractVector{T} where {T<:AbstractFloat} = round.([Int], size(x, 1)*x)
+AssignClosestEquispacedFFTpoint(x::AbstractVector{T})::Array{Int,1} where {T<:AbstractFloat} = mod.(round.([Int], size(x, 1)*x), size(x, 1)) .+ 1
+PerturbationParameter(x::AbstractVector{T}, s_vec::AbstractVector{T})::AbstractFloat where {T<:AbstractFloat} = norm(size(x, 1)*x - s_vec, Inf)
 
 function constructU(x::AbstractVector{T}, K::Int) where T<:AbstractFloat
     # Construct a low rank approximation, using Chebyshev expansions
