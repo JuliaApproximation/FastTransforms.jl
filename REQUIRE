@@ -1,5 +1,5 @@
-julia 0.7-
-ToeplitzMatrices 0.2
+julia 0.6
+ToeplitzMatrices 0.4
 HierarchicalMatrices 0.1.1
 LowRankApprox 0.1.1
 ProgressMeter 0.3.4
