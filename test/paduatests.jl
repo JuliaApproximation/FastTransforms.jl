@@ -35,7 +35,7 @@ using Compat.Test
     function paduaeval(f::Function,x::AbstractFloat,y::AbstractFloat,m::Integer,lex)
         T=promote_type(typeof(x),typeof(y))
         M=div((m+1)*(m+2),2)
-        pvals=Vector{T}(M)
+        pvals=Vector{T}(undef,M)
         p=paduapoints(T,m)
         map!(f,pvals,p[:,1],p[:,2])
         coeffs=paduatransform(pvals,lex)

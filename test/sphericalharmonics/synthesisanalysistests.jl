@@ -3,6 +3,10 @@ using Compat.Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
+if VERSION ≥ v"0.7-"
+    vecnorm(A, p...) = norm(A, p...)
+end
+
 @testset "Synthesis and analysis" begin
 
     # Starting with normalized spherical harmonic coefficients,
@@ -30,7 +34,7 @@ import FastTransforms: normalizecolumns!, maxcolnorm
 
     Y = zero(G);
 
-    A_mul_B!(Y, Ps, G)
+    mul!(Y, Ps, G)
 
     @test maxcolnorm(SF - Y) < 10000eps()
 
@@ -40,7 +44,7 @@ import FastTransforms: normalizecolumns!, maxcolnorm
 
     Z = zero(Y);
 
-    A_mul_B!(Z, Pa, Y)
+    mul!(Z, Pa, Y)
 
     @test maxcolnorm(Z - G) < 10eps()
 
@@ -64,13 +68,13 @@ end
             φ = (0:2n-2)*2/(2n-1)
             F = [f(θ,φ) for θ in θ, φ in φ]
             V = zero(F)
-            A_mul_B!(V, FastTransforms.plan_analysis(F), F)
+            mul!(V, FastTransforms.plan_analysis(F), F)
             UO = fourier2sph(V)
 
             φ = (0:2n-3)*2/(2n-2)
             F = [f(θ,φ) for θ in θ, φ in φ]
             V = zero(F)
-            A_mul_B!(V, FastTransforms.plan_analysis(F), F)
+            mul!(V, FastTransforms.plan_analysis(F), F)
             UE = fourier2sph(V)
 
             n *= 2
@@ -89,16 +93,16 @@ end
         φ = (0:2n-2)*2/(2n-1)
         F = [f(θ,φ) for θ in θ, φ in φ]
         V = zero(F)
-        A_mul_B!(V, FastTransforms.plan_analysis(F), F)
+        mul!(V, FastTransforms.plan_analysis(F), F)
         G = zero(V)
-        A_mul_B!(G, FastTransforms.plan_synthesis(V), V)
+        mul!(G, FastTransforms.plan_synthesis(V), V)
 
         θ2 = (0.0:n-1)/(n-1)
         F2 = [f(θ,φ) for θ in θ2, φ in φ]
         V2 = zero(F2)
-        A_mul_B!(V2, FastTransforms.plan_analysis2(F2), F2)
+        mul!(V2, FastTransforms.plan_analysis2(F2), F2)
         G2 = zero(V2)
-        A_mul_B!(G2, FastTransforms.plan_synthesis2(V2), V2)
+        mul!(G2, FastTransforms.plan_synthesis2(V2), V2)
 
         @test vecnorm(V-V2) < n*vecnorm(V)*eps()
         @test vecnorm(F-G) < n*vecnorm(F)*eps()
@@ -106,27 +110,29 @@ end
     end
 end
 
-# This test confirms numerically that [P_4(z⋅y) - P_4(x⋅y)]/(z⋅y - x⋅y) is actually a degree-3 polynomial on 𝕊²
-x = [0,0,1]
-y = normalize!([.123,.456,.789])
+@testset "Degree-3 polynomial" begin
+    # This test confirms numerically that [P_4(z⋅y) - P_4(x⋅y)]/(z⋅y - x⋅y) is actually a degree-3 polynomial on 𝕊²
+    x = [0,0,1]
+    y = normalize!([.123,.456,.789])
 
-z = (θ,φ) -> [sinpi(θ)*cospi(φ), sinpi(θ)*sinpi(φ), cospi(θ)]
+    z = (θ,φ) -> [sinpi(θ)*cospi(φ), sinpi(θ)*sinpi(φ), cospi(θ)]
 
-P4 = x -> (35*x^4-30*x^2+3)/8
+    P4 = x -> (35*x^4-30*x^2+3)/8
 
-n = 5
-θ = (0.5:n-0.5)/n
-φ = (0:2n-2)*2/(2n-1)
-F = [(P4(z(θ,φ)⋅y) - P4(x⋅y))/(z(θ,φ)⋅y - x⋅y) for θ in θ, φ in φ]
-V = zero(F)
-A_mul_B!(V, FastTransforms.plan_analysis(F), F)
-U3 = fourier2sph(V)
+    n = 5
+    θ = (0.5:n-0.5)/n
+    φ = (0:2n-2)*2/(2n-1)
+    F = [(P4(z(θ,φ)⋅y) - P4(x⋅y))/(z(θ,φ)⋅y - x⋅y) for θ in θ, φ in φ]
+    V = zero(F)
+    mul!(V, FastTransforms.plan_analysis(F), F)
+    U3 = fourier2sph(V)
 
-# U3 is degree-3
+    # U3 is degree-3
 
-F = [P4(z(θ,φ)⋅y) for θ in θ, φ in φ]
-V = zero(F)
-A_mul_B!(V, FastTransforms.plan_analysis(F), F)
-U4 = fourier2sph(V)
+    F = [P4(z(θ,φ)⋅y) for θ in θ, φ in φ]
+    V = zero(F)
+    mul!(V, FastTransforms.plan_analysis(F), F)
+    U4 = fourier2sph(V)
 
-# U4 is degree-4
+    # U4 is degree-4
+end

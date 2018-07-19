@@ -40,11 +40,11 @@ end
 
 trizeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, n)
 
-doc"""
+"""
 Pointwise evaluation of triangular harmonic:
 
 ```math
-\tilde{P}_{\ell,m}^{(\alpha,\beta,\gamma)}(x,y).
+\\tilde{P}_{\\ell,m}^{(\\alpha,\\beta,\\gamma)}(x,y).
 ```
 """
 trievaluate(x, y, L, M, α, β, γ) = trievaluate(x, L, M, α, β, γ)*trievaluate(x, y, M, β, γ)

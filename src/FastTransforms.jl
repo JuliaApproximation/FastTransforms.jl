@@ -8,21 +8,33 @@ if VERSION < v"0.7-"
     using Base.FFTW
     import Base.FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
     import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+    const LAmul! = Base.A_mul_B!
+    import Base: Factorization
+    rmul!(A::AbstractArray, c::Number) = scale!(A,c)
+    lmul!(c::Number, A::AbstractArray) = scale!(c,A)
+    lmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
+    rmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
 else
-    using FFTW
+    using FFTW, LinearAlgebra, DSP
     import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
-    import FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan
+    import FFTW: libfftw3, libfftw3f, PlanPtr, r2rFFTWPlan
+    const LAmul! = LinearAlgebra.mul!
+    const libfftw = libfftw3
+    const libfftwf = libfftw3f
+    import LinearAlgebra: Factorization
+    flipdim(A,d) = reverse(A; dims=d)
 end
 
+
 import Base: *, \, size, view
-import Base: getindex, setindex!, Factorization, length
-import Base.LinAlg: BlasFloat, BlasInt
+import Base: getindex, setindex!, length
+import Compat.LinearAlgebra: BlasFloat, BlasInt
 import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
-import HierarchicalMatrices: A_mul_B!, At_mul_B!, Ac_mul_B!
+import HierarchicalMatrices: mul!, At_mul_B!, Ac_mul_B!
 import HierarchicalMatrices: ThreadSafeVector, threadsafezeros
 import LowRankApprox: ColPerm
 import AbstractFFTs: Plan
-
+import Compat: range, transpose, adjoint
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac

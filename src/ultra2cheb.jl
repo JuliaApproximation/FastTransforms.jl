@@ -6,9 +6,10 @@ function ultra2cheb(c_ultra::AbstractVector{T},λ::T,plan::ChebyshevUltraspheric
     v_cheb = zero(c_ultra)
 
     k=0
-    for k=1:K
-        copy!(cnmλ,cnλ)
-        copy!(tempsinλm,tempsinλ)
+    for j=1:K
+        k = j
+        copyto!(cnmλ,cnλ)
+        copyto!(tempsinλm,tempsinλ)
 
         j₁[k] < nM₀ && (k-=1; break)
 

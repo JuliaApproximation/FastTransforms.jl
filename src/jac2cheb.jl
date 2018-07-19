@@ -6,8 +6,9 @@ function jac2cheb(c_jac::AbstractVector{T},α::T,β::T,plan::ChebyshevJacobiPlan
     v_cheb = zero(c_jac)
 
     k=0
-    for k=1:K
-        copy!(cnmαβ,cnαβ)
+    for j = 1:K
+        k = j
+        copyto!(cnmαβ,cnαβ)
 
         j₁[k] < nM₀ && (k-=1; break)
 

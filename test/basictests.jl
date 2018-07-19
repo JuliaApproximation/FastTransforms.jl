@@ -3,6 +3,7 @@ using Compat.Test
 import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ
 import FastTransforms: clenshawcurtisnodes, clenshawcurtisweights, fejernodes1, fejerweights1, fejernodes2, fejerweights2
 import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimoments1, chebyshevjacobimoments2, chebyshevlogmoments1, chebyshevlogmoments2
+import Compat: range
 
 @testset "Special functions" begin
     n = 0:1000_000
@@ -10,15 +11,15 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimome
     @time FastTransforms.Cnλ(n,λ)
     @time FastTransforms.Cnλ(n,λ)
 
-    x = linspace(0,20,81)
-    @test norm((Λ.(x)-Λ.(big.(x)))./Λ.(x),Inf) < 2eps()
-    @test norm((lambertw.(x)-lambertw.(big.(x)))./max.(lambertw.(x),1), Inf) < 2eps()
+    x =range(0,stop=20,length=81)
+    @test norm((Λ.(x) .- Λ.(big.(x)))./Λ.(x),Inf) < 2eps()
+    @test norm((lambertw.(x) .- lambertw.(big.(x)))./max.(lambertw.(x),1), Inf) < 2eps()
 
     x = 0:0.5:10_000
     λ₁,λ₂ = 0.125,0.875
-    @test norm((Λ.(x,λ₁,λ₂).-Λ.(big.(x),big(λ₁),big(λ₂)))./Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
+    @test norm((Λ.(x,λ₁,λ₂) .- Λ.(big.(x),big(λ₁),big(λ₂)))./Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
     λ₁,λ₂ = 1//3,2//3
-    @test norm((Λ.(x,Float64(λ₁),Float64(λ₂))-Λ.(big.(x),big(λ₁),big(λ₂)))./Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
+    @test norm((Λ.(x,Float64(λ₁),Float64(λ₂)) .- Λ.(big.(x),big(λ₁),big(λ₂))) ./ Λ.(big.(x),big(λ₁),big(λ₂)),Inf) < 4eps()
 
     n = 0:1000
     α = 0.125
@@ -46,7 +47,7 @@ end
 
     μ = chebyshevlogmoments1(Float64, N)
     w = clenshawcurtisweights(μ)
-    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
 
     x = fejernodes1(Float64, N)
     μ = chebyshevmoments1(Float64, N)
@@ -59,7 +60,7 @@ end
 
     μ = chebyshevlogmoments1(Float64, N)
     w = fejerweights1(μ)
-    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
 
     x = fejernodes2(Float64, N)
     μ = chebyshevmoments2(Float64, N)
@@ -72,27 +73,51 @@ end
 
     μ = chebyshevlogmoments2(Float64, N)
     w = fejerweights2(μ)
-    @test norm(sum(w./(x-3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
 end
 
-@testset "Allocation-free ID matrix-vector products" begin
-    for T in (Float64, Complex128)
-        r = rand(T)
-        A = idfact([r/(i+j-1) for i in 1:200, j = 1:50])
-        P = A[:P]
-        k, n = size(A)
+if VERSION < v"0.7-"
+    @testset "Allocation-free ID matrix-vector products" begin
+        for T in (Float64, ComplexF64)
+            r = rand(T)
+            A = idfact([r/(i+j-1) for i in 1:200, j = 1:50])
+            P = A[:P]
+            k, n = size(A)
 
-        x = rand(T, n)
-        y = zeros(T, k)
+            x = rand(T, n)
+            y = zeros(T, k)
 
-        @test norm(FastTransforms.A_mul_B!(y, A, P, x, 1, 1) - A*x) < 10eps()*norm(A*x)
+            @test norm(FastTransforms.mul!(y, A, P, x, 1, 1) - A*x) < 10eps()*norm(A*x)
 
-        x = rand(T, k)
-        y = zeros(T, n)
+            x = rand(T, k)
+            y = zeros(T, n)
 
-        @test norm(FastTransforms.At_mul_B!(y, A, P, x, 1, 1) - A.'x, Inf) < 10eps()
+            @test norm(FastTransforms.At_mul_B!(y, A, P, x, 1, 1) - At_mul_B(A,x), Inf) < 10eps()
 
-        fill!(y, zero(T))
-        @test norm(FastTransforms.Ac_mul_B!(y, A, P, x, 1, 1) - A'x, Inf) < 10eps()
+            fill!(y, zero(T))
+            @test norm(FastTransforms.Ac_mul_B!(y, A, P, x, 1, 1) - A'x, Inf) < 10eps()
+        end
+    end
+else
+    @testset "Allocation-free ID matrix-vector products" begin
+        for T in (Float64, ComplexF64)
+            r = rand(T)
+            A = idfact([r/(i+j-1) for i in 1:200, j = 1:50])
+            P = A[:P]
+            k, n = size(A)
+
+            x = rand(T, n)
+            y = zeros(T, k)
+
+            @test norm(FastTransforms.mul!(y, A, P, x, 1, 1) - A*x) < 10eps()*norm(A*x)
+
+            x = rand(T, k)
+            y = zeros(T, n)
+
+            @test norm(FastTransforms.At_mul_B!(y, A, P, x, 1, 1) - transpose(A)*x, Inf) < 10eps()
+
+            fill!(y, zero(T))
+            @test norm(FastTransforms.Ac_mul_B!(y, A, P, x, 1, 1) - A'x, Inf) < 10eps()
+        end
     end
 end

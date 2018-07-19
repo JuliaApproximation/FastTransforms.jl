@@ -17,9 +17,10 @@ function cheb2ultra(c_cheb::AbstractVector{T},λ::T,plan::ChebyshevUltraspherica
     @inbounds for i=1:2N+1 c_cheb2[i] *= w[i] end
 
     k=0
-    for k=1:K
-        copy!(cnmλ,cnλ)
-        copy!(tempsinλm,tempsinλ)
+    for κ=1:K
+        k = κ
+        copyto!(cnmλ,cnλ)
+        copyto!(tempsinλm,tempsinλ)
 
         j₁[k] < nM₀ && (k-=1; break)
 

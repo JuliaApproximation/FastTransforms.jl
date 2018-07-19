@@ -5,9 +5,10 @@ if VERSION < v"0.7-"
                         plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
                         plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct
 else
-    import FFTW: fft, fft!, rfft, irfft, ifft, conv, dct, idct, dct!, idct!,
+    import FFTW: fft, fft!, rfft, irfft, ifft, dct, idct, dct!, idct!,
                         plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
                         plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct
+    import DSP: conv
 end
 
 # The following implements Bluestein's algorithm, following http://www.dsprelated.com/dspbooks/mdft/Bluestein_s_FFT_Algorithm.html
@@ -15,11 +16,12 @@ end
 function fft(x::Vector{T}) where T<:BigFloats
     n = length(x)
     ispow2(n) && return fft_pow2(x)
-    ks = linspace(zero(real(T)),n-one(real(T)),n)
+    ks = range(zero(real(T)),stop=n-one(real(T)),length=n)
     Wks = exp.((-im).*convert(T,π).*ks.^2 ./ n)
     xq, wq = x.*Wks, conj([exp(-im*convert(T,π)*n);reverse(Wks);Wks[2:end]])
     return Wks.*conv(xq,wq)[n+1:2n]
 end
+
 
 function fft!(x::Vector{T}) where T<:BigFloats
     x[:] = fft(x)
@@ -28,10 +30,11 @@ end
 
 # add rfft for BigFloat, by calling fft
 #  this creates ToeplitzMatrices.rfft, so avoids changing rfft
-rfft(v::Vector{T}) where {T<:BigFloats}=fft(v)[1:div(length(v),2)+1]
+
+rfft(v::Vector{T}) where T<:BigFloats = fft(v)[1:div(length(v),2)+1]
 function irfft(v::Vector{T},n::Integer) where T<:BigFloats
     @assert n==2length(v)-1
-    r = Vector{Complex{BigFloat}}(n)
+    r = Vector{Complex{BigFloat}}(undef, n)
     r[1:length(v)]=v
     r[length(v)+1:end]=reverse(conj(v[2:end]))
     real(ifft(r))
@@ -113,7 +116,7 @@ function dct(a::AbstractArray{Complex{BigFloat}})
     d = c[1:N]
     d .*= exp.((-im*big(pi)).*(0:N-1)./(2*N))
     d[1] = d[1] / sqrt(big(2))
-    scale!(inv(sqrt(2N)), d)
+    lmul!(inv(sqrt(2N)), d)
 end
 
 dct(a::AbstractArray{BigFloat}) = real(dct(complex(a)))
@@ -145,8 +148,8 @@ for (Plan,iPlan) in ((:DummyFFTPlan,:DummyiFFTPlan),
                      (:DummyrFFTPlan,:DummyirFFTPlan),
                      (:DummyDCTPlan,:DummyiDCTPlan))
    @eval begin
-       Base.inv(::$Plan{T,inplace}) where {T,inplace}=$iPlan{T,inplace}()
-       Base.inv(::$iPlan{T,inplace}) where {T,inplace}=$Plan{T,inplace}()
+       Base.inv(::$Plan{T,inplace}) where {T,inplace} = $iPlan{T,inplace}()
+       Base.inv(::$iPlan{T,inplace}) where {T,inplace} = $Plan{T,inplace}()
     end
 end
 
@@ -160,8 +163,8 @@ for (Plan,ff,ff!) in ((:DummyFFTPlan,:fft,:fft!),
     @eval begin
         *(p::$Plan{T,true}, x::StridedArray{T,N}) where {T,N} = $ff!(x)
         *(p::$Plan{T,false}, x::StridedArray{T,N}) where {T,N} = $ff(x)
-        function Base.A_mul_B!(C::StridedVector,p::$Plan,x::StridedVector)
-            C[:]=$ff(x)
+        function LAmul!(C::StridedVector, p::$Plan, x::StridedVector)
+            C[:] = $ff(x)
             C
         end
     end
@@ -172,6 +175,7 @@ end
 
 plan_fft!(x::Vector{T}) where {T<:BigFloats} = DummyFFTPlan{Complex{BigFloat},true}()
 plan_ifft!(x::Vector{T}) where {T<:BigFloats} = DummyiFFTPlan{Complex{BigFloat},true}()
+
 #plan_rfft!{T<:BigFloats}(x::Vector{T}) = DummyrFFTPlan{Complex{BigFloat},true}()
 #plan_irfft!{T<:BigFloats}(x::Vector{T},n::Integer) = DummyirFFTPlan{Complex{BigFloat},true}()
 plan_dct!(x::Vector{T}) where {T<:BigFloats} = DummyDCTPlan{T,true}()

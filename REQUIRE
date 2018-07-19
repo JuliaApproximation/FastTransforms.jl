@@ -1,5 +1,5 @@
 julia 0.6
-ToeplitzMatrices 0.2
+ToeplitzMatrices 0.4
 HierarchicalMatrices 0.1.1
 LowRankApprox 0.1.1
 ProgressMeter 0.3.4
@@ -7,3 +7,4 @@ SpecialFunctions 0.3.4
 Compat 0.17
 AbstractFFTs 0.3.1
 FFTW 0.0.4
+DSP 0.4

@@ -1,8 +1,8 @@
 using FastTransforms, Compat
-using Compat.Test
+using Compat.Test, Compat.LinearAlgebra
 
 @testset "Chebyshev--Legendre transform" begin
-    for k in round.([Int],logspace(1,4,20))
+    for k in round.([Int],10 .^ range(1,stop=4,length=20))
         r = randn(k)./(√).(1:k) # Proven 𝒪(√(log N)) error for ASY method.
         @test leg2cheb(r) ≈ cjt(r,0.,0.)
     end
