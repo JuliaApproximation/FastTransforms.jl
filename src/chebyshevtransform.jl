@@ -1,5 +1,7 @@
-export plan_chebyshevtransform, plan_ichebyshevtransform, chebyshevtransform, ichebyshevtransform, chebyshevpoints,
-            plan_chebyshevutransform, plan_ichebyshevutransform, chebyshevutransform, ichebyshevutransform
+export plan_chebyshevtransform, plan_ichebyshevtransform, plan_chebyshevtransform!, plan_ichebyshevtransform!,
+            chebyshevtransform, ichebyshevtransform, chebyshevpoints,
+            plan_chebyshevutransform, plan_ichebyshevutransform, plan_chebyshevutransform!, plan_ichebyshevutransform!,
+            chebyshevutransform, ichebyshevutransform
 
 ## Transforms take values at Chebyshev points of the first and second kinds and produce Chebyshev coefficients
 
@@ -63,7 +65,10 @@ chebyshevtransform!(x::AbstractVector{T};kind::Integer=1) where {T<:fftwNumber} 
 
 chebyshevtransform(x;kind::Integer=1) = chebyshevtransform!(copy(x);kind=kind)
 
-*(P::ChebyshevTransformPlan{T,k,false},x::AbstractVector{T}) where {T,k} = P.plan*copy(x)
+*(P::ChebyshevTransformPlan{T,k,false}, x::AbstractVector{T}) where {T,k} = P.plan*copy(x)
+
+
+
 
 ## Inverse transforms take Chebyshev coefficients and produce values at Chebyshev points of the first and second kinds
 
@@ -71,6 +76,15 @@ chebyshevtransform(x;kind::Integer=1) = chebyshevtransform!(copy(x);kind=kind)
 struct IChebyshevTransformPlan{T,kind,inplace,P}
     plan::P
 end
+
+# second kind Chebyshev transforms share a plan with their inverse
+# so we support this via inv
+inv(P::ChebyshevTransformPlan{T,2,true}) where T = IChebyshevTransformPlan{T,2,true,typeof(P)}(P)
+inv(P::IChebyshevTransformPlan{T,2,true}) where T = P.plan
+
+\(P::ChebyshevTransformPlan, x::AbstractArray) = inv(P) * x
+\(P::IChebyshevTransformPlan, x::AbstractArray) = inv(P) * x
+
 
 function plan_ichebyshevtransform!(x::AbstractVector{T};kind::Integer=1) where T<:fftwNumber
     if kind == 1
@@ -83,8 +97,7 @@ function plan_ichebyshevtransform!(x::AbstractVector{T};kind::Integer=1) where T
         if length(x) ≤ 1
             error("Cannot create a length $(length(x)) inverse chebyshev transform")
         end
-        plan = plan_chebyshevtransform!(x;kind=2)
-        IChebyshevTransformPlan{T,2,true,typeof(plan)}(plan)
+        inv(plan_chebyshevtransform!(x;kind=2))
     end
 end
 
@@ -307,3 +320,22 @@ function chebyshevpoints(::Type{T}, n::Integer; kind::Int=1) where T<:Number
     end
 end
 chebyshevpoints(n::Integer; kind::Int=1) = chebyshevpoints(Float64, n; kind=kind)
+
+
+# sin(nθ) coefficients to values at Clenshaw-Curtis nodes except ±1
+
+struct DSTPlan{T,kind,inplace,P} <: Plan{T}
+    plan::P
+end
+
+DSTPlan{k,inp}(plan) where {k,inp} =
+    DSTPlan{eltype(plan),k,inp,typeof(plan)}(plan)
+
+
+plan_DSTI!(x) = length(x) > 0 ? DSTPlan{1,true}(FFTW.plan_r2r!(x, FFTW.RODFT00)) :
+                                ones(x)'
+
+function *(P::DSTPlan{T,1}, x::AbstractArray) where {T}
+    x = P.plan*x
+    rmul!(x,half(T))
+end

@@ -1,6 +1,6 @@
 using FastTransforms, ToeplitzMatrices
 
-@testset "BigFloat TOeplitz" begin
+@testset "BigFloat Toeplitz" begin
     T = Toeplitz(BigFloat[1,2,3,4,5], BigFloat[1,6,7,8,0])
     @test T*ones(BigFloat,5) ≈ [22,24,19,16,15]
 
