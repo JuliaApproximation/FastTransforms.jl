@@ -187,7 +187,7 @@ ChebyshevUTransformPlan{k,inp}(plan) where {k,inp} =
 
 function plan_chebyshevutransform!(x::AbstractVector{T}; kind::Integer=1) where T<:fftwNumber
     if kind == 1
-        plan = plan_r2r!(x, REDFT10)
+        plan = plan_r2r!(x, RODFT10)
         ChebyshevUTransformPlan{1,true}(plan)
     elseif kind == 2
         if length(x) ≤ 1
@@ -205,13 +205,10 @@ end
 
 function *(P::ChebyshevUTransformPlan{T,1,true},x::AbstractVector{T}) where T
     n = length(x)
-    if n == 1
-        x
-    else
-        x = P.plan*x
-        x[1]/=2
-        lmul!(inv(convert(T,n)), x)
+    for k=1:n # sqrt(1-x_j^2) weight
+        x[k] *= sinpi(one(T)/(2n) + (k-one(T))/n)/n
     end
+    P.plan * x
 end
 
 function *(P::ChebyshevUTransformPlan{T,2,true},x::AbstractVector{T}) where T
@@ -242,28 +239,42 @@ function plan_ichebyshevutransform!(x::AbstractVector{T};kind::Integer=1) where 
         if length(x) == 0
             error("Cannot create a length 0 inverse chebyshevu transform")
         end
-        plan = plan_r2r!(x, REDFT01)
+        plan = plan_r2r!(x, RODFT01)
         IChebyshevUTransformPlan{T,1,true,typeof(plan)}(plan)
     elseif kind == 2
         if length(x) ≤ 1
             error("Cannot create a length $(length(x)) inverse chebyshevu transform")
         end
-        plan = plan_chebyshevutransform!(x;kind=2)
+        plan = plan_r2r!(x, RODFT00)
         IChebyshevUTransformPlan{T,2,true,typeof(plan)}(plan)
     end
 end
 
-function plan_ichebyshevutransform(x::AbstractVector{T};kind::Integer=1) where T<:fftwNumber
-    plan = plan_ichebyshevutransform!(similar(Vector{T},axes(x));kind=kind)
+function plan_ichebyshevutransform(x::AbstractVector{T}; kind::Integer=1) where T<:fftwNumber
+    plan = plan_ichebyshevutransform!(similar(Vector{T},axes(x)); kind=kind)
     IChebyshevUTransformPlan{T,kind,false,typeof(plan)}(plan)
 end
 
-function *(P::IChebyshevUTransformPlan{T,1,true},x::AbstractVector{T}) where T<:fftwNumber
-    error("Not implemented")
+function *(P::IChebyshevUTransformPlan{T,1,true}, x::AbstractVector{T}) where T<:fftwNumber
+    n = length(x)
+    x = P.plan * x
+    for k=1:n # sqrt(1-x_j^2) weight
+        x[k] /= 2sinpi(one(T)/(2n) + (k-one(T))/n)
+    end
+    x
 end
 
-function *(P::IChebyshevUTransformPlan{T,2,true},x::AbstractVector{T}) where T<:fftwNumber
-    error("Not implemented")
+
+
+function *(P::IChebyshevUTransformPlan{T,2,true}, x::AbstractVector{T}) where T<:fftwNumber
+    n = length(x)
+    c = one(T)/ (n+1)
+    lmul!((n+1)/(2n+2*one(T)), x)
+    x = P.plan * x
+    for k=1:n # sqrt(1-x_j^2) weight
+        x[k] /= sinpi(k*c)
+    end
+    x
 end
 
 ichebyshevutransform!(x::AbstractVector{T};kind::Integer=1) where {T<:fftwNumber} =
