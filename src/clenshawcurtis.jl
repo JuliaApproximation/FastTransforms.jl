@@ -1,3 +1,5 @@
+plan_clenshawcurtis(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
+
 """
 Compute nodes of the Clenshaw—Curtis quadrature rule.
 """
