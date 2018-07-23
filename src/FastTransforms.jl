@@ -71,6 +71,7 @@ export triones, trizeros, trirand, trirandn, trievaluate
 include("stepthreading.jl")
 include("fftBigFloat.jl")
 include("specialfunctions.jl")
+include("chebyshevtransform.jl")
 include("clenshawcurtis.jl")
 include("fejer.jl")
 include("recurrence.jl")
