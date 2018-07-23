@@ -3,12 +3,12 @@ using Compat.Test
 
 if VERSION ≥ v"0.7-"
     using FFTW
-    FFTW.set_num_threads(Base.Sys.CPU_THREADS)
-else
-    FFTW.set_num_threads(Base.Sys.CPU_CORES)
 end
 
 @testset "Nonuniform fast Fourier transforms" begin
+
+    FFTW.set_num_threads(Base.Sys.CPU_CORES)
+
     function nudft1(c::AbstractVector, ω::AbstractVector{T}) where {T<:AbstractFloat}
         # Nonuniform discrete Fourier transform of type I
 

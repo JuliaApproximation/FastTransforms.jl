@@ -125,7 +125,7 @@ function ForwardChebyshevUltrasphericalPlan(c_ultra::AbstractVector{T},λ::T,M::
     c₁,c₂,um,vm = zero(c_ultra),view(zero(c_ultra),2:N),zero(c_ultra),zero(c_ultra)
 
     # Initialize DCT-I and DST-I plans
-    p₁,p₂ = plan_ichebyshevtransform!(c₁; kind=2),plan_DSTI!(c₂)
+    p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
 
     # Clenshaw-Curtis points
     θ = N > 0 ? T[k/N for k=zero(T):N] : T[0]
@@ -165,7 +165,7 @@ function BackwardChebyshevUltrasphericalPlan(c_ultra::AbstractVector{T},λ::T,M:
     c₁,c₂,um,vm = zero(c_cheb2),view(zero(c_cheb2),2:2N),zero(c_cheb2),zero(c_cheb2)
 
     # Initialize DCT-I and DST-I plans
-    p₁,p₂ = plan_ichebyshevtransform!(c₁; kind=2),plan_DSTI!(c₂)
+    p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
 
     # Clenshaw-Curtis nodes and weights
     θ = N > 0 ? T[k/2N for k=zero(T):2N] : T[0]

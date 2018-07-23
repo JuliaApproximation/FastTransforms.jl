@@ -23,11 +23,6 @@ using FastTransforms, Compat, Compat.Test
             f̃ = x -> [cos(k*acos(x)) for k=0:n-1]' * f̌
             @test f̃(0.1) ≈ exp(T(0.1))
             @test ichebyshevtransform(f̌; kind=2) ≈ exp.(p_2)
-
-            P = plan_chebyshevtransform!(f; kind=2)
-            Pi = plan_ichebyshevtransform!(f; kind=2)
-            @test all((P \ copy(f)) .=== Pi * copy(f))
-            @test f ≈ P \ (P*copy(f)) ≈ P * (P\copy(f))
         end
     end
 

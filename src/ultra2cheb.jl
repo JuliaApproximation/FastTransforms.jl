@@ -21,7 +21,7 @@ function ultra2cheb(c_ultra::AbstractVector{T},λ::T,plan::ChebyshevUltraspheric
             init_c₁c₂!(c₁,c₂.parent,cnmλ,c_ultra,j₁[k],j₂[k])
 
             # Apply planned DCT-I and DST-I in-place
-            p₁*c₁; p₂*c₂
+            applyTN!(c₁,p₁);applyUN!(c₂,p₂)
 
             # Compute u_m(θ) and v_m(θ)
             compute_umvm!(um,vm,λ,tempsinλm,m,θ,i₁[k+1]:i₂[k+1])
@@ -42,5 +42,5 @@ function ultra2cheb(c_ultra::AbstractVector{T},λ::T,plan::ChebyshevUltraspheric
     @inbounds for i=i₁[k+1]:i₂[k+1] v_cheb[i] += backward_recurrence(c_ultra,j₂[k+1],θ[i],tempsin2[N+2-i],tempsin2[i],rp) end
 
     # perform IDCT-I
-    p₁ \ v_cheb
+    applyTNinv!(v_cheb,p₁)
 end
