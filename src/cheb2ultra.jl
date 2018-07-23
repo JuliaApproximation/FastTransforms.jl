@@ -11,7 +11,7 @@ function cheb2ultra(c_cheb::AbstractVector{T},λ::T,plan::ChebyshevUltraspherica
     v_ultra = zero(c_cheb2)
 
     # Perform transposed DCT-I
-    applyTN!(c_cheb2,p₁)
+    p₁*c_cheb2
 
     # Scale values by Clenshaw-Curtis weights
     @inbounds for i=1:2N+1 c_cheb2[i] *= w[i] end
@@ -44,7 +44,7 @@ function cheb2ultra(c_cheb::AbstractVector{T},λ::T,plan::ChebyshevUltraspherica
             init_c₁c₂!(c₁,c₂.parent,um,vm,c_cheb2,i₁[k+1],i₂[k+1])
 
             # Apply planned DCT-I and DST-I in-place
-            applyTN!(c₁,p₁);applyUN!(c₂,p₂)
+            p₁*c₁; p₂*c₂
 
             # Compute diagonal 2N-scaling multiplied by local coefficients and zero out excess
             @inbounds for j=j₁[k]:j₂[k] v_ultra[j] += cnmλ[j]*(c₁[j]+c₂.parent[j]) end

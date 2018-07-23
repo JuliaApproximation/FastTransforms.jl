@@ -127,7 +127,7 @@ function ForwardChebyshevJacobiPlan(c_jac::AbstractVector{T},α::T,β::T,M::Int)
     c₁,c₂,um,vm = zero(c_jac),view(zero(c_jac),2:N),zero(c_jac),zero(c_jac)
 
     # Initialize DCT-I and DST-I plans
-    p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
+    p₁,p₂ = plan_ichebyshevtransform!(c₁; kind=2), plan_DSTI!(c₂)
 
     # Initialize coefficients of the asymptotic formula
     cfs = init_cfs(α,β,M)
@@ -168,7 +168,7 @@ function BackwardChebyshevJacobiPlan(c_cheb::AbstractVector{T},α::T,β::T,M::In
     c₁,c₂,um,vm = zero(c_cheb2),view(zero(c_cheb2),2:2N),zero(c_cheb2),zero(c_cheb2)
 
     # Initialize DCT-I and DST-I plans
-    p₁,p₂ = applyTN_plan(c₁),applyUN_plan(c₂)
+    p₁,p₂ = plan_ichebyshevtransform!(c₁; kind=2),plan_DSTI!(c₂)
 
     # Initialize coefficients of the asymptotic formula
     cfs = init_cfs(α,β,M)

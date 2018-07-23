@@ -20,7 +20,7 @@ function jac2cheb(c_jac::AbstractVector{T},α::T,β::T,plan::ChebyshevJacobiPlan
             init_c₁c₂!(c₁,c₂.parent,cnmαβ,c_jac,j₁[k],j₂[k])
 
             # Apply planned DCT-I and DST-I in-place
-            applyTN!(c₁,p₁);applyUN!(c₂,p₂)
+            p₁*c₁; p₂*c₂
 
             # Compute u_m(θ) and v_m(θ)
             compute_umvm!(um,vm,cfs,α,β,tempcos,tempsin,tempcosβsinα,m,θ,i₁[k+1]:i₂[k+1])
@@ -37,5 +37,5 @@ function jac2cheb(c_jac::AbstractVector{T},α::T,β::T,plan::ChebyshevJacobiPlan
     @inbounds for i=i₁[k+1]:i₂[k+1] v_cheb[i] += backward_recurrence(c_jac,j₂[k+1],θ[i],tempcos[i],tempsin[i],rp) end
 
     # perform IDCT-I
-    applyTNinv!(v_cheb,p₁)
+    p₁ \ v_cheb
 end
