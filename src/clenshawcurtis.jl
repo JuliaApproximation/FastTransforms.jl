@@ -18,6 +18,8 @@ function clenshawcurtisweights!(μ::Vector{T}, plan) where T
     return μ
 end
 
+
+
 # Chebyshev-T coefficients to values at Clenshaw-Curtis nodes
 
 applyTN_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : fill!(similar(x),1)'
