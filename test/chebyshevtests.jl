@@ -6,11 +6,12 @@ using FastTransforms, Compat, Compat.Test
         @test chebyshevpoints(10; kind=2) == chebyshevpoints(Float64, 10; kind=2)
         for T in (Float32, Float64, ComplexF32, ComplexF64)
             @test chebyshevpoints(T, 0, kind=1) == chebyshevpoints(T, 0, kind=2) == T[]
-            @test chebyshevpoints(T, 1, kind=1) == chebyshevpoints(T, 1, kind=2) == T[]
+            @test chebyshevpoints(T, 1, kind=1) == chebyshevpoints(T, 1, kind=2) == T[0]
 
             n = 20
             @inferred(chebyshevpoints(T, n, kind=1))
-            @inferred(chebyshevpoints(T, n, kind=1))
+            @inferred(chebyshevpoints(T, n, kind=2))
+            @test_throws ArgumentError chebyshevpoints(n, kind=-1)
         end
     end
 

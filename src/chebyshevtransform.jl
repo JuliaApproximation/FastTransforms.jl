@@ -119,7 +119,7 @@ end
 
 
 # Matrix inputs
-# 
+#
 #
 # function chebyshevtransform!(X::AbstractMatrix{T}; kind::Integer=1) where T<:fftwNumber
 #     if kind == 1
@@ -296,6 +296,8 @@ function chebyshevpoints(::Type{T}, n::Integer; kind::Int=1) where T<:Number
         else
             T[cospi(k/(n-one(T))) for k=0:n-1]
         end
+    else
+        throw(ArgumentError("kind $kind not a valid kind of Chebyshev points"))
     end
 end
 chebyshevpoints(n::Integer; kind::Int=1) = chebyshevpoints(Float64, n; kind=kind)
