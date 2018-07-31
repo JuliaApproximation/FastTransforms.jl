@@ -49,7 +49,7 @@ end
 function conv(u::StridedVector{T}, v::StridedVector{T}) where T<:BigFloats
     nu,nv = length(u),length(v)
     n = nu + nv - 1
-    np2 = nextpow2(n)
+    np2 = nextpow(2,n)
     append!(u,zeros(T,np2-nu)),append!(v,zeros(T,np2-nv))
     y = ifft_pow2(fft_pow2(u).*fft_pow2(v))
     #TODO This would not handle Dual/ComplexDual numbers correctly
