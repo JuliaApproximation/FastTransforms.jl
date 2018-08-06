@@ -145,15 +145,25 @@ function ultra2ultraTH(::Type{S},n,λ₁,λ₂) where S
 end
 
 function jac2jacTH(::Type{S},n,α,β,γ,δ) where S
-    @assert β == δ
-    @assert abs(α-γ) < 1
-    @assert α+β > -1
-    jk = zero(S):n-one(S)
-    DL = (2jk .+ γ .+ β .+ one(S)).*Λ.(jk,γ+β+one(S),β+one(S))
-    T = TriangularToeplitz(Λ.(jk,α-γ,one(S)),:U)
-    H = Hankel(Λ.(jk,α+β+one(S),γ+β+two(S)),Λ.(jk.+n.-one(S),α+β+one(S),γ+β+two(S)))
-    DR = Λ.(jk,β+one(S),α+β+one(S))./gamma(α-γ)
-    T,H,DL,DR
+    if β == δ
+        @assert abs(α-γ) < 1
+        @assert α+β > -1
+        jk = zero(S):n-one(S)
+        DL = (2jk .+ γ .+ β .+ one(S)).*Λ.(jk,γ+β+one(S),β+one(S))
+        T = TriangularToeplitz(Λ.(jk,α-γ,one(S)),:U)
+        H = Hankel(Λ.(jk,α+β+one(S),γ+β+two(S)),Λ.(jk.+n.-one(S),α+β+one(S),γ+β+two(S)))
+        DR = Λ.(jk,β+one(S),α+β+one(S))./gamma(α-γ)
+        T,H,DL,DR
+    elseif α == γ
+        T,H,DL,DR = jac2jacTH(S,n,β,α,δ,γ)
+        ve = T.ve
+        @inbounds for k = 2:2:length(ve)
+            ve[k] *= -1
+        end
+        TriangularToeplitz(ve, :U),H,DL,DR
+    else
+        throw(ArgumentError("Cannot create Toeplitz dot Hankel, use a sequence of plans."))
+    end
 end
 
 struct ChebyshevToLegendrePlanTH{TH}

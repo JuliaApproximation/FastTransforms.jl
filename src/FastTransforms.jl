@@ -41,7 +41,7 @@ import AbstractFFTs: Plan
 import Compat: range, transpose, adjoint, axes
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
-export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac
+export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac, plan_jac2jac
 export normleg2cheb, cheb2normleg, normleg12cheb2, cheb22normleg1
 export plan_leg2cheb, plan_cheb2leg
 export plan_normleg2cheb, plan_cheb2normleg
@@ -99,9 +99,11 @@ include("toeplitzhankel.jl")
 
 #leg2cheb(x...)=th_leg2cheb(x...)
 #cheb2leg(x...)=th_cheb2leg(x...)
-leg2chebu(x...)=th_leg2chebu(x...)
-ultra2ultra(x...)=th_ultra2ultra(x...)
-jac2jac(x...)=th_jac2jac(x...)
+leg2chebu(x...) = th_leg2chebu(x...)
+ultra2ultra(x...) = th_ultra2ultra(x...)
+jac2jac(x...) = th_jac2jac(x...)
+plan_jac2jac(x...) = th_jac2jacplan(x...)
+plan_ultra2ultra(x...) = th_ultra2ultraplan(x...)
 
 include("hierarchical.jl")
 include("SphericalHarmonics/SphericalHarmonics.jl")
