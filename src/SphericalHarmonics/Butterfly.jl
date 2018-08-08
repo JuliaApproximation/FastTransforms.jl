@@ -82,7 +82,7 @@ function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opt
                 cols = vcat(cs[l-1][2j-1+shft],cs[l-1][2j+shft])
                 lc = length(cols)
                 Av = A[ml:mu,cols]
-                if maximum(abs, Av) < realmin(real(T))/eps(real(T))
+                if maximum(abs, Av) < floatmin(real(T))/eps(real(T))
                     factors[l][j+ctr] = IDPackedV{T}(Int[], collect(1:lc), Array{T}(undef,0,lc))
                 else
                     LRAOpts.rtol = eps(real(T))*max(mu-ml+1, lc)

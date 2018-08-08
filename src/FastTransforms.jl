@@ -16,6 +16,7 @@ if VERSION < v"0.7-"
     lmul!(c::Number, A::AbstractArray) = scale!(c,A)
     lmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
     rmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
+    const floatmin = realmin
 else
     using FFTW, LinearAlgebra, DSP
     import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
