@@ -253,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "FastTransforms.gaunt",
     "category": "function",
-    "text": "Calculates the Gaunt coefficients, defined by:\n\na(mnmunuq) = frac2(n+nu-2q)+12 frac(n+nu-2q-m-mu)(n+nu-2q+m+mu) int_-1^+1 P_m^n(x) P_nu^mu(x) P_n+nu-2q^m+mu(x) rmdx\n\nor defined by:\n\nP_n^m(x) P_nu^mu(x) = sum_q=0^q_rm max a(mnmunuq) P_n+nu-2q^m+mu(x)\n\nThis is a Julia implementation of the stable recurrence described in:\n\nY.-l. Xu, Fast evaluation of Gaunt coefficients: recursive approach, J. Comp. Appl. Math., 85:53–65, 1997.\n\n\n\nCalculates the Gaunt coefficients in 64-bit floating-point arithmetic.\n\n\n\n"
+    "text": "Calculates the Gaunt coefficients, defined by:\n\na(mnmunuq) = frac2(n+nu-2q)+12 frac(n+nu-2q-m-mu)(n+nu-2q+m+mu) int_-1^+1 P_n^m(x) P_nu^mu(x) P_n+nu-2q^m+mu(x) rmdx\n\nor defined by:\n\nP_n^m(x) P_nu^mu(x) = sum_q=0^q_rm max a(mnmunuq) P_n+nu-2q^m+mu(x)\n\nThis is a Julia implementation of the stable recurrence described in:\n\nY.-l. Xu, Fast evaluation of Gaunt coefficients: recursive approach, J. Comp. Appl. Math., 85:53–65, 1997.\n\n\n\nCalculates the Gaunt coefficients in 64-bit floating-point arithmetic.\n\n\n\n"
 },
 
 {
