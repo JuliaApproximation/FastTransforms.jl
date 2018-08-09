@@ -1,8 +1,9 @@
 using FastTransforms, Compat
-using Compat.Test, Compat.LinearAlgebra, Compat.Random, Compat.Statistics
+using Compat.Test, Compat.LinearAlgebra, Compat.Random
 if VERSION < v"0.7"
     srand(0)
 else
+    using Compat.Statistics
     Random.seed!(0)
 end
 
