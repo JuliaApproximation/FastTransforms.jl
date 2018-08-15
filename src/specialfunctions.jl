@@ -126,7 +126,7 @@ end
 
 function Anαβ(n::Integer,α::Float64,β::Float64)
     if n+min(α,β,α+β,0) ≥ 7.979120323411497
-        2 .^ (α+β+1)/(2n+α+β+1)*stirlingseries(n+α+1)*Aratio(n,α,β)/stirlingseries(n+α+β+1)*stirlingseries(n+β+1)/stirlingseries(n+one(Float64))
+        2 ^ (α+β+1)/(2n+α+β+1)*stirlingseries(n+α+1)*Aratio(n,α,β)/stirlingseries(n+α+β+1)*stirlingseries(n+β+1)/stirlingseries(n+one(Float64))
     else
         (n+1)*(n+α+β+1)/(n+α+1)/(n+β+1)*Anαβ(n+1,α,β)*((2n+α+β+3)/(2n+α+β+1))
     end
