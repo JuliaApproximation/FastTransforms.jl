@@ -106,8 +106,8 @@ if VERSION < v"0.7-"
 
     Base.Ac_mul_B!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix) = At_mul_B!(Y1, Y2, SP, X1, X2)
 else
-    function LinearAlgebra.mul!(Y1::Matrix, Y2t::Transpose{T,Matrix{T}}, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix) where T
-        Y2 = parent(Y2t)
+    function LinearAlgebra.mul!(Y1::Matrix, Y2::Matrix, SPt::Transpose{Any,SlowSphericalHarmonicPlan{T}}, X1::Matrix, X2::Matrix) where T
+        SP = parent(SPt)
         RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
         copyto!(B, X1)
         M, N = size(X1)
@@ -136,8 +136,8 @@ else
         Y1
     end
 
-    LinearAlgebra.mul!(Y1::Matrix, Y2::Adjoint{T,Matrix{T}}, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix) where T =
-        At_mul_B!(Y1, Y2, SP, X1, X2)
+    LinearAlgebra.mul!(Y1::Matrix, Y2::Matrix, SP::Adjoint{Any,SlowSphericalHarmonicPlan{T}}, X1::Matrix, X2::Matrix) where T =
+        At_mul_B!(Y1, Y2, transpose(parent(SP)), X1, X2)
 end
 
 

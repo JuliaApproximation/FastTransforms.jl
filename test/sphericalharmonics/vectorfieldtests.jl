@@ -36,7 +36,7 @@ if VERSION < v"0.7-"
 
         @test vecnorm(∇θF - G1)/vecnorm(∇θF) < n*eps()
         @test vecnorm(∇φF - G2)/vecnorm(∇φF) < n*eps()
-        
+
         y = (1.0, 2.0, 3.0)
         for k in (10, 20, 40)
             ∇θf = (θ,φ) -> -2k*sin(k*((sinpi(θ)*cospi(φ) - y[1])^2 + (sinpi(θ)*sinpi(φ) - y[2])^2 + (cospi(θ) - y[3])^2))*( (sinpi(θ)*cospi(φ) - y[1])*(cospi(θ)*cospi(φ)) + (sinpi(θ)*sinpi(φ) - y[2])*(cospi(θ)*sinpi(φ)) - (cospi(θ) - y[3])*sinpi(θ) )
@@ -92,7 +92,7 @@ else
 
         U1 = zero(V1)
         U2 = zero(V2)
-        mul!(U1, transpose(U2), P, V1, V2)
+        mul!(U1, U2, transpose(P), V1, V2)
 
         W1 = zero(U1)
         W2 = zero(U2)
@@ -127,7 +127,7 @@ else
 
             U1 = zero(V1)
             U2 = zero(V2)
-            FastTransforms.mul!(U1, transpose(U2), P, V1, V2)
+            FastTransforms.mul!(U1, U2, transpose(P), V1, V2)
 
             W1 = zero(U1)
             W2 = zero(U2)
