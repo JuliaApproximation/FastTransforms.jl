@@ -294,8 +294,7 @@ function chebyshevpoints(::Type{T}, n::Integer; kind::Int=1) where T<:Number
         if n == 1
             zeros(T,1)
         else
-	    m = n - 1
-	    T[sinpi(k/(T(2)*m)) for k=m:-2:-m]
+	    T[sinpi((n-2k-one(T))/(2n-2)) for k=0:n-1] 
         end
     else
         throw(ArgumentError("kind $kind not a valid kind of Chebyshev points"))
