@@ -25,6 +25,10 @@ include("paduatests.jl")
 
 include("butterflytests.jl")
 
+if Libdl.find_library(FastTransforms.libfasttransforms) ≡ FastTransforms.libfasttransforms
+    include("libfasttransformstests.jl")
+end
+
 include("sphericalharmonics/sphericalharmonictests.jl")
 
 include("toeplitztests.jl")

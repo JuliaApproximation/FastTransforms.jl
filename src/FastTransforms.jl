@@ -106,6 +106,8 @@ jac2jac(x...) = th_jac2jac(x...)
 plan_jac2jac(x...) = th_jac2jacplan(x...)
 plan_ultra2ultra(x...) = th_ultra2ultraplan(x...)
 
+include("libfasttransforms.jl")
+
 include("hierarchical.jl")
 include("SphericalHarmonics/SphericalHarmonics.jl")
 include("TriangularHarmonics/TriangularHarmonics.jl")

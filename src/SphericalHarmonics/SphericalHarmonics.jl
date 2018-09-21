@@ -1,15 +1,13 @@
-abstract type SphericalHarmonicPlan{T} end
-
-function *(P::SphericalHarmonicPlan, X::AbstractMatrix)
+function *(P::HarmonicPlan, X::AbstractMatrix)
     mul!(zero(X), P, X)
 end
 
 if VERSION < v"0.7-"
-    function \(P::SphericalHarmonicPlan, X::AbstractMatrix)
+    function \(P::HarmonicPlan, X::AbstractMatrix)
         At_mul_B!(zero(X), P, X)
     end
 else
-    function \(P::SphericalHarmonicPlan, X::AbstractMatrix)
+    function \(P::HarmonicPlan, X::AbstractMatrix)
         mul!(zero(X), transpose(P), X)
     end
 end

@@ -1,4 +1,4 @@
-struct FastSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
+struct FastSphericalHarmonicPlan{T} <: HarmonicPlan{T}
     RP::RotationPlan{T}
     BF::Vector{Butterfly{T}}
     p1::NormalizedLegendreToChebyshevPlan{T}

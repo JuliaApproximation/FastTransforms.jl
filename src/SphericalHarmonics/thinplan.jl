@@ -2,7 +2,7 @@ const LAYERSKELETON = 64
 
 checklayer(J::Int) = J÷LAYERSKELETON == J/LAYERSKELETON
 
-struct ThinSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
+struct ThinSphericalHarmonicPlan{T} <: HarmonicPlan{T}
     RP::RotationPlan{T}
     BF::Vector{Butterfly{T}}
     p1::NormalizedLegendreToChebyshevPlan{T}

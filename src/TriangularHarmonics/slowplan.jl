@@ -97,7 +97,7 @@ else
         lmul!(transpose(parent(Pc)), A)
 end
 
-struct SlowTriangularHarmonicPlan{T} <: TriangularHarmonicPlan{T}
+struct SlowTriangularHarmonicPlan{T} <: HarmonicPlan{T}
     RP::TriRotationPlan{T}
     p::NormalizedLegendreToChebyshevPlan{T}
     pinv::ChebyshevToNormalizedLegendrePlan{T}
@@ -169,6 +169,6 @@ else
         tri_zero_spurious_modes!(At_mul_B!(RP, Y))
     end
 
-    LinearAlgebra.mul!(Y::Matrix, SPc::Adjoint{T,<:SlowTriangularHarmonicPlan}, X::Matrix) where T = 
+    LinearAlgebra.mul!(Y::Matrix, SPc::Adjoint{T,<:SlowTriangularHarmonicPlan}, X::Matrix) where T =
         mul!(Y, transpose(parent(SPc)), X)
 end

@@ -308,7 +308,7 @@ end
 
 
 
-struct SlowSphericalHarmonicPlan{T} <: SphericalHarmonicPlan{T}
+struct SlowSphericalHarmonicPlan{T} <: HarmonicPlan{T}
     RP::RotationPlan{T}
     p1::NormalizedLegendreToChebyshevPlan{T}
     p2::NormalizedLegendre1ToChebyshev2Plan{T}

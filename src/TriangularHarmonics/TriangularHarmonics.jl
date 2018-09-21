@@ -1,13 +1,3 @@
-abstract type TriangularHarmonicPlan{T} end
-
-function *(P::TriangularHarmonicPlan, X::AbstractMatrix)
-    mul!(zero(X), P, X)
-end
-
-function \(P::TriangularHarmonicPlan, X::AbstractMatrix)
-    At_mul_B!(zero(X), P, X)
-end
-
 include("trifunctions.jl")
 include("slowplan.jl")
 
