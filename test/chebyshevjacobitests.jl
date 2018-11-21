@@ -1,5 +1,6 @@
 using FastTransforms, Compat
-using Compat.Test, Compat.LinearAlgebra, Compat.Statistics
+using Compat.Test, Compat.LinearAlgebra
+import Compat.Statistics
 
 @testset "Chebyshev--Jacobi transform" begin
     println("Testing the accuracy of asymptotics")
@@ -17,9 +18,9 @@ using Compat.Test, Compat.LinearAlgebra, Compat.Statistics
                 c = rand(N)
                 v[i] = log(norm(p2*(p1*c)-c,Inf)/(20N^(1+2max(α,β))*eps()))
             end
-            V[αi,βi] = mean(v)
+            V[αi,βi] = Statistics.mean(v)
         end
-        @test mean(V) < 2
+        @test Statistics.mean(V) < 2
     end
 
     println("Testing the special cases length(c) = 0,1,2:")
