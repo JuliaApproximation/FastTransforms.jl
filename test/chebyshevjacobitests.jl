@@ -1,5 +1,5 @@
-using FastTransforms, LinearAlgebra, Statistics, Compat
-using Compat.Test
+using FastTransforms, Compat
+using Compat.Test, Compat.LinearAlgebra, Compat.Statistics
 
 @testset "Chebyshev--Jacobi transform" begin
     println("Testing the accuracy of asymptotics")
