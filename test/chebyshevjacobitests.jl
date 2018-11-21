@@ -1,4 +1,4 @@
-using FastTransforms, Compat
+using FastTransforms, LinearAlgebra, Statistics, Compat
 using Compat.Test
 
 @testset "Chebyshev--Jacobi transform" begin
@@ -127,4 +127,12 @@ using Compat.Test
 
     c = rand(100,100)
     @test maximum(abs,jjt(c,α,β,α,β)-c) < 10000eps()
+
+    @testset "cjt bug (#57)" begin
+        @test cjt([1.,2],.5,.5) == [1.,3]
+        @test FastTransforms.incrementαβ!([1.0], -0.5, -0.5) == [1.0]
+        @test FastTransforms.incrementαβ!([1.0, 2.0], -0.5, -0.5) == [1.0,2/3]
+        @test FastTransforms.decrementαβ!([1.0], 0.5, 0.5) == [1.0]
+        @test FastTransforms.decrementαβ!([1.0, 2.0], 0.5, 0.5) == [1.0,6]
+    end
 end
