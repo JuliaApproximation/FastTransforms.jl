@@ -1,6 +1,5 @@
 plan_fejer1(μ) = FFTW.plan_r2r!(μ, FFTW.REDFT01)
 
-
 """
 Compute nodes of Fejer's first quadrature rule.
 """
@@ -23,7 +22,7 @@ plan_fejer2(μ) = FFTW.plan_r2r!(μ, FFTW.RODFT00)
 """
 Compute nodes of Fejer's second quadrature rule.
 """
-fejernodes2(::Type{T}, N::Int) where T = T[cospi((k+one(T))/(N+one(T))) for k=0:N-1]
+fejernodes2(::Type{T}, N::Int) where T = T[sinpi((N-2k-one(T))/(2N+two(T))) for k=0:N-1]
 
 """
 Compute weights of Fejer's second quadrature rule with modified Chebyshev moments of the second kind ``\\mu``.
