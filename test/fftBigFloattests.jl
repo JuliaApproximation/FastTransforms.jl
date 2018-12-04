@@ -24,7 +24,7 @@ end
     cc = cis.(c)
     @test norm(dct(cc)-dct(map(Complex{Float64},cc)),Inf) < 10eps()
 
-    c = rand(Complex{BigFloat}, 100)
+    c = big.(rand(100)) + im*big.(rand(100))
     @test norm(dct(c)-dct(map(ComplexF64,c)),Inf) < 10eps()
     @test norm(idct(c)-idct(map(ComplexF64,c)),Inf) < 10eps()
     @test norm(idct(dct(c))-c,Inf) < 1000eps(BigFloat)
