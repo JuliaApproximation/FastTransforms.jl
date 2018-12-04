@@ -17,10 +17,16 @@ end
     @test norm(dct(c) - p*c) == 0
 
     pi = plan_idct!(c)
-    @test norm(pi*dct(c) - c) < 500norm(c)*eps(BigFloat)
+    @test norm(pi*dct(c) - c) < 1000norm(c)*eps(BigFloat)
 
     @test norm(dct(c)-dct(map(Float64,c)),Inf) < 10eps()
 
     cc = cis.(c)
     @test norm(dct(cc)-dct(map(Complex{Float64},cc)),Inf) < 10eps()
+
+    c = rand(Complex{BigFloat}, 100)
+    @test norm(dct(c)-dct(map(ComplexF64,c)),Inf) < 10eps()
+    @test norm(idct(c)-idct(map(ComplexF64,c)),Inf) < 10eps()
+    @test norm(idct(dct(c))-c,Inf) < 1000eps(BigFloat)
+    @test norm(dct(idct(c))-c,Inf) < 1000eps(BigFloat)
 end
