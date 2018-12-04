@@ -110,7 +110,7 @@ function ifft_pow2(x::Vector{Complex{T}}) where T<:BigFloat
 end
 
 
-function dct(a::AbstractArray{Complex{BigFloat}})
+function dct(a::AbstractVector{Complex{BigFloat}})
 	N = big(length(a))
     c = fft([a; flipdim(a,1)])
     d = c[1:N]
@@ -121,14 +121,14 @@ end
 
 dct(a::AbstractArray{BigFloat}) = real(dct(complex(a)))
 
-function idct(a::AbstractArray{Complex{BigFloat}})
-    N = big(length(a))
+function idct(a::AbstractVector{Complex{BigFloat}})
+	N = big(length(a))
     b = a * sqrt(2*N)
     b[1] = b[1] * sqrt(big(2))
-    b .*= exp.((im*big(pi)).*(0:N-1)./(2*N))
-    b = [b; 0; conj(flipdim(b[2:end],1))]
+    shift = exp.(-im * 2 * big(pi) * (N - big(1)/2) * (0:(2N-1)) / (2 * N))
+    b = [b; 0; -flipdim(b[2:end],1)] .* shift
     c = ifft(b)
-    c[1:N]
+    flipdim(c[1:N],1)
 end
 
 idct(a::AbstractArray{BigFloat}) = real(idct(complex(a)))
