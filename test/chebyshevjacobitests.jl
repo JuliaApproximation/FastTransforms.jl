@@ -34,6 +34,9 @@ import Compat.Statistics
     @test cjt(c,0.12,0.34) == c
     @test icjt(c,0.12,0.34) == c
 
+    @test cjt(c,0.0,0.0) == c
+    @test icjt(c,0.0,0.0) == c
+
     c = [1.0;2.0]
     @test norm(jjt(c,0.12,0.34,0.12,0.34)-c,Inf) ≤ 2eps()
 
@@ -121,7 +124,7 @@ import Compat.Statistics
     cL64 = cjt(c64,0.,0.)
     cL32 = cjt(c32,0.f0,0.f0)
 
-    @test norm(cL32-cL64,Inf) < 20eps(Float32)
+    @test norm(cL32-cL64,Inf) < 40eps(Float32)
     @test cL32 == cjt(c32,0.,0.)
 
     println("Testing for Matrix of coefficients")
