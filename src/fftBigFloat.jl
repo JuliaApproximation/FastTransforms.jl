@@ -1,11 +1,11 @@
-const BigFloats = Union{BigFloat,Complex{BigFloat}}
+const AbstractFloats = Union{AbstractFloat,Complex{T} where T<:AbstractFloat}
 
 if VERSION < v"0.7-"
-    import Base.FFTW: fft, fft!, rfft, irfft, ifft, conv, dct, idct, dct!, idct!,
+    import Base.FFTW: fft, fft!, rfft, irfft, ifft, ifft!, conv, dct, idct, dct!, idct!,
                         plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
                         plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct
 else
-    import FFTW: fft, fft!, rfft, irfft, ifft, dct, idct, dct!, idct!,
+    import FFTW: fft, fft!, rfft, irfft, ifft, ifft!, dct, idct, dct!, idct!,
                         plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
                         plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct
     import DSP: conv
@@ -13,7 +13,7 @@ end
 
 # The following implements Bluestein's algorithm, following http://www.dsprelated.com/dspbooks/mdft/Bluestein_s_FFT_Algorithm.html
 # To add more types, add them in the union of the function's signature.
-function fft(x::Vector{T}) where T<:BigFloats
+function fft(x::Vector{T}) where T<:AbstractFloats
     n = length(x)
     ispow2(n) && return fft_pow2(x)
     ks = range(zero(real(T)),stop=n-one(real(T)),length=n)
@@ -23,30 +23,30 @@ function fft(x::Vector{T}) where T<:BigFloats
 end
 
 
-function fft!(x::Vector{T}) where T<:BigFloats
+function fft!(x::Vector{T}) where T<:AbstractFloats
     x[:] = fft(x)
     return x
 end
 
-# add rfft for BigFloat, by calling fft
+# add rfft for AbstractFloat, by calling fft
 #  this creates ToeplitzMatrices.rfft, so avoids changing rfft
 
-rfft(v::Vector{T}) where T<:BigFloats = fft(v)[1:div(length(v),2)+1]
-function irfft(v::Vector{T},n::Integer) where T<:BigFloats
+rfft(v::Vector{T}) where T<:AbstractFloats = fft(v)[1:div(length(v),2)+1]
+function irfft(v::Vector{T},n::Integer) where T<:AbstractFloats
     @assert n==2length(v)-1
-    r = Vector{Complex{BigFloat}}(undef, n)
+    r = Vector{Complex{real(T)}}(undef, n)
     r[1:length(v)]=v
     r[length(v)+1:end]=reverse(conj(v[2:end]))
     real(ifft(r))
 end
 
-ifft(x::Vector{T}) where {T<:BigFloats} = conj!(fft(conj(x)))/length(x)
-function ifft!(x::Vector{T}) where T<:BigFloats
+ifft(x::Vector{T}) where {T<:AbstractFloats} = conj!(fft(conj(x)))/length(x)
+function ifft!(x::Vector{T}) where T<:AbstractFloats
     x[:] = ifft(x)
     return x
 end
 
-function conv(u::StridedVector{T}, v::StridedVector{T}) where T<:BigFloats
+function conv(u::StridedVector{T}, v::StridedVector{T}) where T<:AbstractFloats
     nu,nv = length(u),length(v)
     n = nu + nv - 1
     np2 = nextpow(2,n)
@@ -60,7 +60,7 @@ end
 # c_radix2.c in the GNU Scientific Library and four1 in the Numerical Recipes in C.
 # However, the trigonometric recurrence is improved for greater efficiency.
 # The algorithm starts with bit-reversal, then divides and conquers in-place.
-function fft_pow2!(x::Vector{T}) where T<:BigFloat
+function fft_pow2!(x::Vector{T}) where T<:AbstractFloat
     n,big2=length(x),2one(T)
     nn,j=n÷2,1
     for i=1:2:n-1
@@ -96,45 +96,46 @@ function fft_pow2!(x::Vector{T}) where T<:BigFloat
     return x
 end
 
-function fft_pow2(x::Vector{Complex{T}}) where T<:BigFloat
+function fft_pow2(x::Vector{Complex{T}}) where T<:AbstractFloat
     y = interlace(real(x),imag(x))
     fft_pow2!(y)
     return complex.(y[1:2:end],y[2:2:end])
 end
-fft_pow2(x::Vector{T}) where {T<:BigFloat} = fft_pow2(complex(x))
+fft_pow2(x::Vector{T}) where {T<:AbstractFloat} = fft_pow2(complex(x))
 
-function ifft_pow2(x::Vector{Complex{T}}) where T<:BigFloat
+function ifft_pow2(x::Vector{Complex{T}}) where T<:AbstractFloat
     y = interlace(real(x),-imag(x))
     fft_pow2!(y)
     return complex.(y[1:2:end],-y[2:2:end])/length(x)
 end
 
-
-function dct(a::AbstractVector{Complex{BigFloat}})
-	N = big(length(a))
+function dct(a::AbstractVector{Complex{T}}) where {T <: AbstractFloat}
+	N = length(a)
+	twoN = convert(T,2) * N
     c = fft([a; flipdim(a,1)])
     d = c[1:N]
-    d .*= exp.((-im*big(pi)).*(0:N-1)./(2*N))
-    d[1] = d[1] / sqrt(big(2))
-    lmul!(inv(sqrt(2N)), d)
+    d .*= exp.((-im*convert(T, pi)).*(0:N-1)./twoN)
+    d[1] = d[1] / sqrt(convert(T, 2))
+    lmul!(inv(sqrt(twoN)), d)
 end
 
-dct(a::AbstractArray{BigFloat}) = real(dct(complex(a)))
+dct(a::AbstractArray{T}) where {T <: AbstractFloat} = real(dct(complex(a)))
 
-function idct(a::AbstractVector{Complex{BigFloat}})
-	N = big(length(a))
-    b = a * sqrt(2*N)
-    b[1] = b[1] * sqrt(big(2))
-    shift = exp.(-im * 2 * big(pi) * (N - big(1)/2) * (0:(2N-1)) / (2 * N))
+function idct(a::AbstractVector{Complex{T}}) where {T <: AbstractFloat}
+	N = length(a)
+	twoN = convert(T,2)*N
+    b = a * sqrt(twoN)
+    b[1] = b[1] * sqrt(convert(T,2))
+    shift = exp.(-im * 2 * convert(T, pi) * (N - convert(T,1)/2) * (0:(2N-1)) / twoN)
     b = [b; 0; -flipdim(b[2:end],1)] .* shift
     c = ifft(b)
     flipdim(c[1:N],1)
 end
 
-idct(a::AbstractArray{BigFloat}) = real(idct(complex(a)))
+idct(a::AbstractArray{T}) where {T <: AbstractFloat} = real(idct(complex(a)))
 
-dct!(a::AbstractArray{T}) where {T<:BigFloats} = (b = dct(a); a[:] = b)
-idct!(a::AbstractArray{T}) where {T<:BigFloats} = (b = idct(a); a[:] = b)
+dct!(a::AbstractArray{T}) where {T<:AbstractFloats} = (b = dct(a); a[:] = b)
+idct!(a::AbstractArray{T}) where {T<:AbstractFloats} = (b = idct(a); a[:] = b)
 
 # dummy plans
 struct DummyFFTPlan{T,inplace} <: Plan{T} end
@@ -173,20 +174,20 @@ end
 
 
 
-plan_fft!(x::Vector{T}) where {T<:BigFloats} = DummyFFTPlan{Complex{BigFloat},true}()
-plan_ifft!(x::Vector{T}) where {T<:BigFloats} = DummyiFFTPlan{Complex{BigFloat},true}()
+plan_fft!(x::Vector{T}) where {T<:AbstractFloats} = DummyFFTPlan{Complex{real(T)},true}()
+plan_ifft!(x::Vector{T}) where {T<:AbstractFloats} = DummyiFFTPlan{Complex{real(T)},true}()
 
-#plan_rfft!{T<:BigFloats}(x::Vector{T}) = DummyrFFTPlan{Complex{BigFloat},true}()
-#plan_irfft!{T<:BigFloats}(x::Vector{T},n::Integer) = DummyirFFTPlan{Complex{BigFloat},true}()
-plan_dct!(x::Vector{T}) where {T<:BigFloats} = DummyDCTPlan{T,true}()
-plan_idct!(x::Vector{T}) where {T<:BigFloats} = DummyiDCTPlan{T,true}()
+#plan_rfft!{T<:AbstractFloats}(x::Vector{T}) = DummyrFFTPlan{Complex{real(T)},true}()
+#plan_irfft!{T<:AbstractFloats}(x::Vector{T},n::Integer) = DummyirFFTPlan{Complex{real(T)},true}()
+plan_dct!(x::Vector{T}) where {T<:AbstractFloats} = DummyDCTPlan{T,true}()
+plan_idct!(x::Vector{T}) where {T<:AbstractFloats} = DummyiDCTPlan{T,true}()
 
-plan_fft(x::Vector{T}) where {T<:BigFloats} = DummyFFTPlan{Complex{BigFloat},false}()
-plan_ifft(x::Vector{T}) where {T<:BigFloats} = DummyiFFTPlan{Complex{BigFloat},false}()
-plan_rfft(x::Vector{T}) where {T<:BigFloats} = DummyrFFTPlan{Complex{BigFloat},false}()
-plan_irfft(x::Vector{T},n::Integer) where {T<:BigFloats} = DummyirFFTPlan{Complex{BigFloat},false}()
-plan_dct(x::Vector{T}) where {T<:BigFloats} = DummyDCTPlan{T,false}()
-plan_idct(x::Vector{T}) where {T<:BigFloats} = DummyiDCTPlan{T,false}()
+plan_fft(x::Vector{T}) where {T<:AbstractFloats} = DummyFFTPlan{Complex{real(T)},false}()
+plan_ifft(x::Vector{T}) where {T<:AbstractFloats} = DummyiFFTPlan{Complex{real(T)},false}()
+plan_rfft(x::Vector{T}) where {T<:AbstractFloats} = DummyrFFTPlan{Complex{real(T)},false}()
+plan_irfft(x::Vector{T},n::Integer) where {T<:AbstractFloats} = DummyirFFTPlan{Complex{real(T)},false}()
+plan_dct(x::Vector{T}) where {T<:AbstractFloats} = DummyDCTPlan{T,false}()
+plan_idct(x::Vector{T}) where {T<:AbstractFloats} = DummyiDCTPlan{T,false}()
 
 
 function interlace(a::Vector{S},b::Vector{V}) where {S<:Number,V<:Number}
