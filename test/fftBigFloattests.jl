@@ -14,7 +14,7 @@ end
     @test norm(ifft(fft(c))-c) < 200norm(c)eps(BigFloat)
 
     p = plan_dct(c)
-    @test norm(dct(c) - p*c) == 0
+    @test norm(FastTransforms.generic_dct(c) - p*c) == 0
 
     pi = plan_idct!(c)
     @test norm(pi*dct(c) - c) < 1000norm(c)*eps(BigFloat)
