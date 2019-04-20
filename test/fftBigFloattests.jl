@@ -29,4 +29,77 @@ end
     @test norm(idct(c)-idct(map(ComplexF64,c)),Inf) < 10eps()
     @test norm(idct(dct(c))-c,Inf) < 1000eps(BigFloat)
     @test norm(dct(idct(c))-c,Inf) < 1000eps(BigFloat)
+
+    # Make sure we don't accidentally hijack any FFTW plans
+    for T in (Float32, Float64)
+        @test plan_fft(rand(BigFloat,10)) isa FastTransforms.DummyPlan
+        @test plan_fft(rand(BigFloat,10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_fft(rand(Complex{BigFloat},10)) isa FastTransforms.DummyPlan
+        @test plan_fft(rand(Complex{BigFloat},10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_fft!(rand(Complex{BigFloat},10)) isa FastTransforms.DummyPlan
+        @test plan_fft!(rand(Complex{BigFloat},10), 1:1) isa FastTransforms.DummyPlan
+        @test !( plan_fft(rand(T,10)) isa FastTransforms.DummyPlan )
+        @test !( plan_fft(rand(T,10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_fft(rand(Complex{T},10)) isa FastTransforms.DummyPlan )
+        @test !( plan_fft(rand(Complex{T},10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_fft!(rand(Complex{T},10)) isa FastTransforms.DummyPlan )
+        @test !( plan_fft!(rand(Complex{T},10), 1:1) isa FastTransforms.DummyPlan )
+
+        @test plan_ifft(rand(T,10)) isa FFTW.ScaledPlan
+        @test plan_ifft(rand(T,10), 1:1) isa FFTW.ScaledPlan
+        @test plan_ifft(rand(Complex{T},10)) isa FFTW.ScaledPlan
+        @test plan_ifft(rand(Complex{T},10), 1:1) isa FFTW.ScaledPlan
+        @test plan_ifft!(rand(Complex{T},10)) isa FFTW.ScaledPlan
+        @test plan_ifft!(rand(Complex{T},10), 1:1) isa FFTW.ScaledPlan
+
+        @test plan_bfft(rand(BigFloat,10)) isa FastTransforms.DummyPlan
+        @test plan_bfft(rand(BigFloat,10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_bfft(rand(Complex{BigFloat},10)) isa FastTransforms.DummyPlan
+        @test plan_bfft(rand(Complex{BigFloat},10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_bfft!(rand(Complex{BigFloat},10)) isa FastTransforms.DummyPlan
+        @test plan_bfft!(rand(Complex{BigFloat},10), 1:1) isa FastTransforms.DummyPlan
+        @test !( plan_bfft(rand(T,10)) isa FastTransforms.DummyPlan )
+        @test !( plan_bfft(rand(T,10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_bfft(rand(Complex{T},10)) isa FastTransforms.DummyPlan )
+        @test !( plan_bfft(rand(Complex{T},10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_bfft!(rand(Complex{T},10)) isa FastTransforms.DummyPlan )
+        @test !( plan_bfft!(rand(Complex{T},10), 1:1) isa FastTransforms.DummyPlan )
+
+        @test plan_dct(rand(BigFloat,10)) isa FastTransforms.DummyPlan
+        @test plan_dct(rand(BigFloat,10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_dct(rand(Complex{BigFloat},10)) isa FastTransforms.DummyPlan
+        @test plan_dct(rand(Complex{BigFloat},10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_dct!(rand(Complex{BigFloat},10)) isa FastTransforms.DummyPlan
+        @test plan_dct!(rand(Complex{BigFloat},10), 1:1) isa FastTransforms.DummyPlan
+        @test !( plan_dct(rand(T,10)) isa FastTransforms.DummyPlan )
+        @test !( plan_dct(rand(T,10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_dct(rand(Complex{T},10)) isa FastTransforms.DummyPlan )
+        @test !( plan_dct(rand(Complex{T},10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_dct!(rand(Complex{T},10)) isa FastTransforms.DummyPlan )
+        @test !( plan_dct!(rand(Complex{T},10), 1:1) isa FastTransforms.DummyPlan )
+
+        @test plan_idct(rand(BigFloat,10)) isa FastTransforms.DummyPlan
+        @test plan_idct(rand(BigFloat,10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_idct(rand(Complex{BigFloat},10)) isa FastTransforms.DummyPlan
+        @test plan_idct(rand(Complex{BigFloat},10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_idct!(rand(Complex{BigFloat},10)) isa FastTransforms.DummyPlan
+        @test plan_idct!(rand(Complex{BigFloat},10), 1:1) isa FastTransforms.DummyPlan
+        @test !( plan_idct(rand(T,10)) isa FastTransforms.DummyPlan )
+        @test !( plan_idct(rand(T,10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_idct(rand(Complex{T},10)) isa FastTransforms.DummyPlan )
+        @test !( plan_idct(rand(Complex{T},10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_idct!(rand(Complex{T},10)) isa FastTransforms.DummyPlan )
+        @test !( plan_idct!(rand(Complex{T},10), 1:1) isa FastTransforms.DummyPlan )
+
+        @test plan_rfft(rand(BigFloat,10)) isa FastTransforms.DummyPlan
+        @test plan_rfft(rand(BigFloat,10), 1:1) isa FastTransforms.DummyPlan
+        @test plan_brfft(rand(Complex{BigFloat},10), 19) isa FastTransforms.DummyPlan
+        @test plan_brfft(rand(Complex{BigFloat},10), 19, 1:1) isa FastTransforms.DummyPlan
+        @test !( plan_rfft(rand(T,10)) isa FastTransforms.DummyPlan )
+        @test !( plan_rfft(rand(T,10), 1:1) isa FastTransforms.DummyPlan )
+        @test !( plan_brfft(rand(Complex{T},10), 19) isa FastTransforms.DummyPlan )
+        @test !( plan_brfft(rand(Complex{T},10), 19, 1:1) isa FastTransforms.DummyPlan )
+
+    end
+
 end
