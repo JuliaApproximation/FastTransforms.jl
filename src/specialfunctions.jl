@@ -49,7 +49,7 @@ pochhammer(x::AbstractArray{T,1},n::Integer) where {T<:Number} = [pochhammer(x[i
 pochhammer(x::AbstractArray{T,2},n::Integer) where {T<:Number} = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
 pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
 
-pochhammer(x::Number,n::Number) = gamma(x+n)/gamma(x)
+pochhammer(x::Number,n::Number) = isinteger(n) ? pochhammer(x,convert(Integer, n)) : gamma(x+n)/gamma(x)
 pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = gamma(x+n)./gamma(x)
 
 function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
