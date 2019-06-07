@@ -1,6 +1,6 @@
 using Compat, FastTransforms, LowRankApprox
 using Compat.Test
-import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ
+import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ, pochhammer
 import FastTransforms: clenshawcurtisnodes, clenshawcurtisweights, fejernodes1, fejerweights1, fejernodes2, fejerweights2
 import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimoments1, chebyshevjacobimoments2, chebyshevlogmoments1, chebyshevlogmoments2
 import Compat: range
@@ -30,6 +30,10 @@ import Compat: range
 
     @time FastTransforms.Anαβ.(n,α,β);
     @test norm(FastTransforms.Anαβ.(n,α,β) ./ FastTransforms.Anαβ.(n,big(α),big(β)) .- 1,Inf) < 4eps()
+
+    @test pochhammer(2,1) == pochhammer(2,1.0) == pochhammer(2.0,1) == 2
+    @test pochhammer(1.1,2.2) ≈ gamma(3.3)/gamma(1.1)
+    @test pochhammer(-2,1) == pochhammer(-2,1.0) == pochhammer(-2.0,1) == -2
 end
 
 @testset "Fejer and Clenshaw--Curtis quadrature" begin
