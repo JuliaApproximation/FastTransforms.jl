@@ -1,40 +1,38 @@
-fejer_plan1(μ) = FFTW.plan_r2r!(μ, FFTW.REDFT01)
-fejer_plan2(μ) = FFTW.plan_r2r!(μ, FFTW.RODFT00)
+plan_fejer1(μ) = FFTW.plan_r2r!(μ, FFTW.REDFT01)
 
-doc"""
-Compute nodes and weights of Fejer's first quadrature rule with a Jacobi weight.
 """
-fejer1{T<:AbstractFloat}(N::Int,α::T,β::T) = fejer1(N,α,β,fejer_plan1(zeros(T,N)))
-
-doc"""
-Compute nodes and weights of Fejer's second quadrature rule with a Jacobi weight.
+Compute nodes of Fejer's first quadrature rule.
 """
-fejer2{T<:AbstractFloat}(N::Int,α::T,β::T) = fejer2(N,α,β,fejer_plan2(zeros(T,N)))
+fejernodes1(::Type{T}, N::Int) where T = T[sinpi((N-2k-one(T))/2N) for k=0:N-1]
 
-fejer1{T<:AbstractFloat}(N::Int,α::T,β::T,plan) = T[sinpi((N-2k-one(T))/2N) for k=0:N-1],fejerweights1(N,α,β,plan)
-fejer2{T<:AbstractFloat}(N::Int,α::T,β::T,plan) = T[cospi((k+one(T))/(N+one(T))) for k=0:N-1],fejerweights2(N,α,β,plan)
-
-
-doc"""
-Compute weights of Fejer's first quadrature rule with a Jacobi weight.
 """
-fejerweights1{T<:AbstractFloat}(N::Int,α::T,β::T) = fejerweights1(N,α,β,fejer_plan1(zeros(T,N)))
-
-doc"""
-Compute weights of Fejer's second quadrature rule with a Jacobi weight.
+Compute weights of Fejer's first quadrature rule with modified Chebyshev moments of the first kind ``\\mu``.
 """
-fejerweights2{T<:AbstractFloat}(N::Int,α::T,β::T) = fejerweights2(N,α,β,fejer_plan2(zeros(T,N)))
-
-function fejerweights1{T<:AbstractFloat}(N::Int,α::T,β::T,plan)
-    μ = chebyshevjacobimoments1(N,α,β)
-    scale!(μ,inv(T(N)))
+fejerweights1(μ::Vector) = fejerweights1!(copy(μ))
+fejerweights1!(μ::Vector) = fejerweights1!(μ, plan_fejer1(μ))
+function fejerweights1!(μ::Vector{T}, plan) where T
+    N = length(μ)
+    rmul!(μ, inv(T(N)))
     return plan*μ
 end
 
-function fejerweights2{T<:AbstractFloat}(N::Int,α::T,β::T,plan)
-    μ = chebyshevjacobimoments2(N,α,β)
+
+plan_fejer2(μ) = FFTW.plan_r2r!(μ, FFTW.RODFT00)
+
+"""
+Compute nodes of Fejer's second quadrature rule.
+"""
+fejernodes2(::Type{T}, N::Int) where T = T[sinpi((N-2k-one(T))/(2N+two(T))) for k=0:N-1]
+
+"""
+Compute weights of Fejer's second quadrature rule with modified Chebyshev moments of the second kind ``\\mu``.
+"""
+fejerweights2(μ::Vector) = fejerweights2!(copy(μ))
+fejerweights2!(μ::Vector) = fejerweights2!(μ, plan_fejer2(μ))
+function fejerweights2!(μ::Vector{T}, plan) where T
+    N = length(μ)
     Np1 = N+one(T)
-    scale!(μ,inv(Np1))
+    rmul!(μ, inv(Np1))
     plan*μ
     @inbounds for i=1:N μ[i] = sinpi(i/Np1)*μ[i] end
     return μ

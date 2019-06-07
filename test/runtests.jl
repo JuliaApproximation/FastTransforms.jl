@@ -1,13 +1,15 @@
-using FastTransforms
-if VERSION < v"0.7-"
-    using Base.Test
+using FastTransforms, Compat
+using Compat.Test, Compat.LinearAlgebra, Compat.Random
+if VERSION < v"0.7"
+    srand(0)
 else
-    using Test
+    using Compat.Statistics
+    Random.seed!(0)
 end
 
-srand(0)
-
 include("basictests.jl")
+
+include("chebyshevtests.jl")
 
 include("nuffttests.jl")
 
@@ -24,3 +26,5 @@ include("paduatests.jl")
 include("butterflytests.jl")
 
 include("sphericalharmonics/sphericalharmonictests.jl")
+
+include("toeplitztests.jl")

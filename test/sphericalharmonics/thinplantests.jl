@@ -1,9 +1,10 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
 @testset "Thin plan" begin
-    m, n = VERSION < v"0.6.0-" ? (362, 300) : (724, 600)
+    m, n = 724, 600
 
     A = sphrandn(Float64, m, n);
     normalizecolumns!(A);
@@ -15,8 +16,8 @@ import FastTransforms: normalizecolumns!, maxcolnorm
     @time TP = ThinSphericalHarmonicPlan(A; sketch = :none);
     @time SP = SlowSphericalHarmonicPlan(A);
 
-    @time A_mul_B!(B, SP, A);
-    @time A_mul_B!(C, TP, A);
+    @time mul!(B, SP, A);
+    @time mul!(C, TP, A);
     @time At_mul_B!(D, SP, B);
     @time At_mul_B!(E, TP, C);
 

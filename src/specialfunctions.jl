@@ -6,32 +6,32 @@ const BACKWARD = false
 const sqrtpi = 1.772453850905516027298
 const edivsqrt2pi = 1.084437551419227546612
 
-doc"""
+"""
 Compute a typed 0.5.
 """
 half(x::Number) = oftype(x,0.5)
 half(x::Integer) = half(float(x))
-half{T<:Number}(::Type{T}) = convert(T,0.5)
-half{T<:Integer}(::Type{T}) = half(AbstractFloat)
+half(::Type{T}) where {T<:Number} = convert(T,0.5)
+half(::Type{T}) where {T<:Integer} = half(AbstractFloat)
 
-doc"""
+"""
 Compute a typed 2.
 """
 two(x::Number) = oftype(x,2)
-two{T<:Number}(::Type{T}) = convert(T,2)
+two(::Type{T}) where {T<:Number} = convert(T,2)
 
-doc"""
-The Kronecker ``\delta`` function:
+"""
+The Kronecker ``\\delta`` function:
 
 ```math
-\delta_{k,j} = \left\{\begin{array}{ccc} 1 & {\rm for} & k = j,\\ 0 & {\rm for} & k \ne j.\end{array}\right.
+\\delta_{k,j} = \\left\\{\\begin{array}{ccc} 1 & {\\rm for} & k = j,\\\\ 0 & {\\rm for} & k \\ne j.\\end{array}\\right.
 ```
 """
 δ(k::Integer,j::Integer) = k == j ? 1 : 0
 
 
-doc"""
-Pochhammer symbol ``(x)_n = \frac{\Gamma(x+n)}{\Gamma(x)}`` for the rising factorial.
+"""
+Pochhammer symbol ``(x)_n = \\frac{\\Gamma(x+n)}{\\Gamma(x)}`` for the rising factorial.
 """
 function pochhammer(x::Number,n::Integer)
     ret = one(x)
@@ -45,14 +45,14 @@ function pochhammer(x::Number,n::Integer)
     ret
 end
 
-pochhammer{T<:Number}(x::AbstractArray{T,1},n::Integer) = [pochhammer(x[i],n) for i=1:length(x)]
-pochhammer{T<:Number}(x::AbstractArray{T,2},n::Integer) = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
-pochhammer{T<:Number}(x::AbstractArray{T},n::Integer) = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
+pochhammer(x::AbstractArray{T,1},n::Integer) where {T<:Number} = [pochhammer(x[i],n) for i=1:length(x)]
+pochhammer(x::AbstractArray{T,2},n::Integer) where {T<:Number} = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
+pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
 
 pochhammer(x::Number,n::Number) = gamma(x+n)/gamma(x)
-pochhammer{T<:Number}(x::AbstractArray{T},n::Number) = gamma(x+n)./gamma(x)
+pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = gamma(x+n)./gamma(x)
 
-function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
+function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret = Vector{promote_type(typeof(x),T)}(length(n))
     ret[1] = pochhammer(x,first(n))
     for i=2:length(n)
@@ -61,8 +61,8 @@ function pochhammer{T<:Real}(x::Number,n::UnitRange{T})
     ret
 end
 
-doc"""
-Stirling's asymptotic series for ``\Gamma(z)``.
+"""
+Stirling's asymptotic series for ``\\Gamma(z)``.
 """
 stirlingseries(z) = gamma(z)*sqrt((z/π)/2)*exp(z)/z^z
 
@@ -103,15 +103,12 @@ end
 
 
 stirlingremainder(z::Number,N::Int) = (1+zeta(N))*gamma(N)/((2π)^(N+1)*z^N)/stirlingseries(z)
-stirlingremainder{T<:Number}(z::AbstractVector{T},N::Int) = (1+zeta(N))*gamma(N)/(2π)^(N+1)./z.^N./stirlingseries(z)
 
 Aratio(n::Int,α::Float64,β::Float64) = exp((n/2+α+1/4)*log1p(-β/(n+α+β+1))+(n/2+β+1/4)*log1p(-α/(n+α+β+1))+(n/2+1/4)*log1p(α/(n+1))+(n/2+1/4)*log1p(β/(n+1)))
 Aratio(n::Number,α::Number,β::Number) = (1+(α+1)/n)^(n+α+1/2)*(1+(β+1)/n)^(n+β+1/2)/(1+(α+β+1)/n)^(n+α+β+1/2)/(1+(zero(α)+zero(β))/n)^(n+1/2)
-Aratio(n::AbstractVector,α::Number,β::Number) = [ Aratio(n[i],α,β) for i=1:length(n) ]
 
 Cratio(n::Int,α::Float64,β::Float64) = exp((n+α+1/2)*log1p((α-β)/(2n+α+β+2))+(n+β+1/2)*log1p((β-α)/(2n+α+β+2))-log1p((α+β+2)/2n)/2)/sqrt(n)
 Cratio(n::Number,α::Number,β::Number) = n^(-1/2)*(1+(α+1)/n)^(n+α+1/2)*(1+(β+1)/n)^(n+β+1/2)/(1+(α+β+2)/2n)^(2n+α+β+3/2)
-Cratio(n::AbstractVector,α::Number,β::Number) = [ Cratio(n[i],α,β) for i=1:length(n) ]
 
 
 Anαβ(n::Number,α::Number,β::Number) = 2^(α+β+1)/(2n+α+β+1)*exp(lgamma(n+α+1)-lgamma(n+α+β+1)+lgamma(n+β+1)-lgamma(n+1))
@@ -129,22 +126,19 @@ end
 
 function Anαβ(n::Integer,α::Float64,β::Float64)
     if n+min(α,β,α+β,0) ≥ 7.979120323411497
-        2 .^ (α+β+1)/(2n+α+β+1)*stirlingseries(n+α+1)*Aratio(n,α,β)/stirlingseries(n+α+β+1)*stirlingseries(n+β+1)/stirlingseries(n+one(Float64))
+        2 ^ (α+β+1)/(2n+α+β+1)*stirlingseries(n+α+1)*Aratio(n,α,β)/stirlingseries(n+α+β+1)*stirlingseries(n+β+1)/stirlingseries(n+one(Float64))
     else
         (n+1)*(n+α+β+1)/(n+α+1)/(n+β+1)*Anαβ(n+1,α,β)*((2n+α+β+3)/(2n+α+β+1))
     end
 end
 
-Anαβ{T<:Integer}(n::AbstractVector{T},α::Number,β::Number) = [ Anαβ(n[i],α,β) for i=1:length(n) ]
-Anαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Anαβ(n[i,j],α,β) for i=1:size(n,1), j=1:size(n,2) ]
 
-
-doc"""
-The Lambda function ``\Lambda(z) = \frac{\Gamma(z+\frac{1}{2})}{\Gamma(z+1)}`` for the ratio of gamma functions.
+"""
+The Lambda function ``\\Lambda(z) = \\frac{\\Gamma(z+\\frac{1}{2})}{\\Gamma(z+1)}`` for the ratio of gamma functions.
 """
 Λ(z::Number) = exp(lgamma(z+half(z))-lgamma(z+one(z)))
-doc"""
-For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for ``\tau`` in Appendix B of
+"""
+For 64-bit floating-point arithmetic, the Lambda function uses the asymptotic series for ``\\tau`` in Appendix B of
 
 I. Bogaert and B. Michiels and J. Fostier, 𝒪(1) computation of Legendre polynomials and Gauss–Legendre nodes and weights for parallel computing, *SIAM J. Sci. Comput.*, **34**:C83–C101, 2012.
 """
@@ -157,8 +151,8 @@ function Λ(x::Float64)
     end
 end
 
-doc"""
-The Lambda function ``\Lambda(z,λ₁,λ₂) = \frac{\Gamma(z+\lambda_1)}{Γ(z+\lambda_2)}`` for the ratio of gamma functions.
+"""
+The Lambda function ``\\Lambda(z,λ₁,λ₂) = \\frac{\\Gamma(z+\\lambda_1)}{Γ(z+\\lambda_2)}`` for the ratio of gamma functions.
 """
 Λ(z::Number,λ₁::Number,λ₂::Number) = exp(lgamma(z+λ₁)-lgamma(z+λ₂))
 function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
@@ -168,11 +162,10 @@ function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
         (x+λ₂)/(x+λ₁)*Λ(x+1.,λ₁,λ₂)
     end
 end
-Λ{T<:Number}(x::AbstractArray{T},λ₁::Number,λ₂::Number) = promote_type(T,typeof(λ₁),typeof(λ₂))[ Λ(x[i],λ₁,λ₂) for i in eachindex(x) ]
 
 ## TODO: deprecate when Lambert-W is supported in a mainstream repository such as SpecialFunctions.jl
-doc"""
-The principal branch of the Lambert-W function, defined by ``x = W_0(x) e^{W_0(x)}``, computed using Halley's method for ``x \in [-e^{-1},\infty)``.
+"""
+The principal branch of the Lambert-W function, defined by ``x = W_0(x) e^{W_0(x)}``, computed using Halley's method for ``x \\in [-e^{-1},\\infty)``.
 """
 function lambertw(x::AbstractFloat)
     if x < -exp(-one(x))
@@ -201,17 +194,14 @@ lambertw(x::Real) = lambertw(float(x))
 
 Cnλ(n::Integer,λ::Float64) = 2^λ/sqrtpi*Λ(n+λ)
 Cnλ(n::Integer,λ::Number) = 2^λ/sqrt(oftype(λ,π))*Λ(n+λ)
-function Cnλ{T<:Integer}(n::UnitRange{T},λ::Number)
-    ret = Vector{typeof(λ)}(length(n))
+function Cnλ(n::UnitRange{T},λ::Number) where T<:Integer
+    ret = Vector{typeof(λ)}(undef, length(n))
     ret[1] = Cnλ(first(n),λ)
     for i=2:length(n)
         ret[i] = (n[i]+λ-half(λ))/(n[i]+λ)*ret[i-1]
     end
     ret
 end
-
-Cnλ{T<:Integer}(n::AbstractVector{T},λ::Number) = [ Cnλ(n[i],λ) for i=1:length(n) ]
-Cnλ{T<:Integer}(n::AbstractMatrix{T},λ::Number) = [ Cnλ(n[i,j],λ) for i=1:size(n,1), j=1:size(n,2) ]
 
 function Cnmλ(n::Integer,m::Integer,λ::Number)
     if m == 0
@@ -220,8 +210,6 @@ function Cnmλ(n::Integer,m::Integer,λ::Number)
         (λ+m-1)/2/m*(m-λ)/(n+λ+m)*Cnmλ(n,m-1,λ)
     end
 end
-
-Cnmλ{T<:Integer}(n::AbstractVector{T},m::Integer,λ::Number) = [ Cnmλ(n[i],m,λ) for i=1:length(n) ]
 
 
 function Cnαβ(n::Integer,α::Number,β::Number)
@@ -244,9 +232,6 @@ function Cnαβ(n::Integer,α::Float64,β::Float64)
     end
 end
 
-Cnαβ{T<:Integer}(n::AbstractVector{T},α::Number,β::Number) = [ Cnαβ(n[i],α,β) for i=1:length(n) ]
-Cnαβ{T<:Integer}(n::AbstractMatrix{T},α::Number,β::Number) = [ Cnαβ(n[i,j],α,β) for i=1:size(n,1), j=1:size(n,2) ]
-
 function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
     if m == 0
         Cnαβ(n,α,β)
@@ -255,10 +240,8 @@ function Cnmαβ(n::Integer,m::Integer,α::Number,β::Number)
     end
 end
 
-Cnmαβ{T<:Integer}(n::AbstractVector{T},m::Integer,α::Number,β::Number) = [ Cnmαβ(n[i],m,α,β) for i=1:length(n) ]
-Cnmαβ{T<:Integer}(n::AbstractMatrix{T},m::Integer,α::Number,β::Number) = [ Cnmαβ(n[i,j],m,α,β) for i=1:size(n,1), j=1:size(n,2) ]
 
-function Cnmαβ{T<:Number}(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T})
+function Cnmαβ(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T}) where T<:Number
     shp = promote_shape(size(α),size(β))
     reshape([ Cnmαβ(n,m,α[i],β[i]) for i in eachindex(α,β) ], shp)
 end
@@ -272,12 +255,13 @@ function absf(α::Number,β::Number,m::Int,θ::Number)
     ret
 end
 
-function absf{T<:Number}(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number)
+function absf(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number) where T<:Number
     shp = promote_shape(size(α),size(β))
     reshape([ absf(α[i],β[i],m,θ) for i in eachindex(α,β) ], shp)
 end
 
-function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
+
+function absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,1}) where T<:Number
     ret = zero(θ)
     cfs = zeros(T,m+1)
     for l=0:m
@@ -288,10 +272,10 @@ function absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,1})
     end
     ret
 end
-absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
-absf{T<:Number}(α::Number,β::Number,m::Int,θ::AbstractArray{T}) = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
+absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) where {T<:Number} = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
+absf(α::Number,β::Number,m::Int,θ::AbstractArray{T}) where {T<:Number} = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
 
-function compute_absf!{T<:AbstractFloat}(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int)
+function compute_absf!(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int) where T<:AbstractFloat
     @inbounds for i=1:length(ret)
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
         ret[i] = cfs[m+1,1]*temp
@@ -303,14 +287,14 @@ function compute_absf!{T<:AbstractFloat}(ret::Vector{T},cfs::Matrix{T},α::T,β:
     ret
 end
 
-function compute_absf!{T<:AbstractFloat}(ret::Vector{T},tempsin::Vector{T},tempsinλ::Vector{T},m::Int)
+function compute_absf!(ret::Vector{T},tempsin::Vector{T},tempsinλ::Vector{T},m::Int) where T<:AbstractFloat
     for i=1:length(ret)
         @inbounds ret[i] = inv(tempsin[i]^m*tempsinλ[i])
     end
     ret
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
+function compute_umvm!(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int}) where T<:AbstractFloat
     @inbounds for i in ir
         temp = inv(tempcos[i]^m*tempcosβsinα[i])
         ϑ = (α+half(α))/2-(α+β+m+1)*θ[i]/2
@@ -325,7 +309,7 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},cfs::Matrix
     end
 end
 
-function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int})
+function compute_umvm!(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int}) where T<:AbstractFloat
     @inbounds @simd for i in ir
         temp = inv(tempsinλm[i])
         ϑ = (m+λ)*(half(T)-θ[i])
@@ -334,9 +318,9 @@ function compute_umvm!{T<:AbstractFloat}(um::Vector{T},vm::Vector{T},λ::T,temps
     end
 end
 
-function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},cfs::Matrix{T},α::T,β::T,j::Int,m::Int,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T})
+function findmindices!(Rαβjm::Vector{T},cfs::Matrix{T},α::T,β::T,j::Int,m::Int,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T}) where T<:AbstractFloat
     compute_absf!(Rαβjm,cfs,α,β,tempcos,tempsin,tempcosβsinα,m)
-    scale!(Rαβjm,Cnmαβ(j,m,α,β))
+    rmul!(Rαβjm,Cnmαβ(j,m,α,β))
     rmin,imin = findmin(Rαβjm)
     if rmin < eps(T)
         i₁ = imin-1
@@ -361,9 +345,9 @@ function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},cfs::Matrix{T},α::T
     end
 end
 
-function findmindices!{T<:AbstractFloat}(Rαβjm::Vector{T},λ::T,j::Int,m::Int,tempsin::Vector{T},tempsinλ::Vector{T})
+function findmindices!(Rαβjm::Vector{T},λ::T,j::Int,m::Int,tempsin::Vector{T},tempsinλ::Vector{T}) where T<:AbstractFloat
     compute_absf!(Rαβjm,tempsin,tempsinλ,m)
-    scale!(Rαβjm,Cnmλ(j,m,λ))
+    rmul!(Rαβjm,Cnmλ(j,m,λ))
     rmin,imin = findmin(Rαβjm)
     if rmin < eps(T)
         i₁ = imin-1
@@ -390,7 +374,7 @@ end
 
 # initialization methods
 
-function init_cfs{T<:AbstractFloat}(α::T,β::T,M::Int)
+function init_cfs(α::T,β::T,M::Int) where T<:AbstractFloat
     cfs = zeros(T,M+1,M+1)
     @inbounds for m=0:M,l=0:m
         cfs[m+1,l+1] = pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)
@@ -402,7 +386,7 @@ function init_c₁c₂!(c₁::Vector,c₂::Vector,a::Vector,b::Vector,j₁::Int,
     @inbounds for j=1:j₁-1 c₁[j] = 0 end
     @inbounds for j=j₁:j₂ c₁[j] = a[j]*b[j] end
     @inbounds for j=j₂+1:length(c₁) c₁[j] = 0 end
-    copy!(c₂,c₁)
+    copyto!(c₂,c₁)
 end
 
 function init_c₁c₂!(c₁::Vector,c₂::Vector,u::Vector,v::Vector,c::Vector,i₁::Int,i₂::Int)
@@ -421,15 +405,30 @@ function init_c₁c₂!(c₁::Vector,c₂::Vector,u::Vector,v::Vector,c::Vector,
 end
 
 
-doc"""
+"""
+Modified Chebyshev moments of the first kind:
+
+```math
+    \\int_{-1}^{+1} T_n(x) {\\rm\\,d}x.
+```
+"""
+function chebyshevmoments1(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    for i = 0:2:N-1
+        @inbounds μ[i+1] = two(T)/T(1-i^2)
+    end
+    μ
+end
+
+"""
 Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
 ```math
-    \int_{-1}^{+1} T_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
+    \\int_{-1}^{+1} T_n(x) (1-x)^\\alpha(1+x)^\\beta{\\rm\\,d}x.
 ```
 """
-function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
-    μ = zeros(T,N)
+function chebyshevjacobimoments1(::Type{T}, N::Int, α, β) where T
+    μ = zeros(T, N)
     N > 0 && (μ[1] = 2 .^ (α+β+1)*beta(α+1,β+1))
     if N > 1
         μ[2] = μ[1]*(β-α)/(α+β+2)
@@ -440,15 +439,50 @@ function chebyshevjacobimoments1{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-doc"""
+"""
+Modified Chebyshev moments of the first kind with respect to the logarithmic weight:
+
+```math
+    \\int_{-1}^{+1} T_n(x) \\log\\left(\\frac{1-x}{2}\\right){\\rm\\,d}x.
+```
+"""
+function chebyshevlogmoments1(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    N > 0 && (μ[1] = -two(T))
+    if N > 1
+        μ[2] = -one(T)
+        for i=1:N-2
+            cst = isodd(i) ? T(4)/T(i^2-4) : T(4)/T(i^2-1)
+            @inbounds μ[i+2] = ((i-2)*μ[i]+cst)/(i+2)
+        end
+    end
+    μ
+end
+
+"""
+Modified Chebyshev moments of the second kind:
+
+```math
+    \\int_{-1}^{+1} U_n(x) {\\rm\\,d}x.
+```
+"""
+function chebyshevmoments2(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    for i = 0:2:N-1
+        @inbounds μ[i+1] = two(T)/T(i+1)
+    end
+    μ
+end
+
+"""
 Modified Chebyshev moments of the second kind with respect to the Jacobi weight:
 
 ```math
-    \int_{-1}^{+1} U_n(x) (1-x)^\alpha(1+x)^\beta{\rm\,d}x.
+    \\int_{-1}^{+1} U_n(x) (1-x)^\\alpha(1+x)^\\beta{\\rm\\,d}x.
 ```
 """
-function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
-    μ = zeros(T,N)
+function chebyshevjacobimoments2(::Type{T}, N::Int, α, β) where T
+    μ = zeros(T, N)
     N > 0 && (μ[1] = 2 .^ (α+β+1)*beta(α+1,β+1))
     if N > 1
         μ[2] = 2μ[1]*(β-α)/(α+β+2)
@@ -459,8 +493,26 @@ function chebyshevjacobimoments2{T<:AbstractFloat}(N::Int,α::T,β::T)
     μ
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+"""
+Modified Chebyshev moments of the second kind with respect to the logarithmic weight:
+
+```math
+    \\int_{-1}^{+1} U_n(x) \\log\\left(\\frac{1-x}{2}\\right){\\rm\\,d}x.
+```
+"""
+function chebyshevlogmoments2(::Type{T}, N::Int) where T
+    μ = chebyshevlogmoments1(T, N)
+    if N > 1
+        μ[2] *= two(T)
+        for i=1:N-2
+            @inbounds μ[i+2] = 2μ[i+2] + μ[i]
+        end
+    end
+    μ
+end
+
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function incrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -470,8 +522,8 @@ function incrementα!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha,\beta+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function incrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -481,21 +533,25 @@ function incrementβ!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha+1,\alpha+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\alpha)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\alpha+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\alpha)}(x)`` in-place.
 """
 function incrementαβ!(c::AbstractVector,α,β)
     @assert α == β
     N = length(c)
-    N > 2 && (c[1] -= (α+2)/(4α+10)*c[3])
-    @inbounds for i=2:N-2 c[i] = (2α+i)*(2α+i+1)/(2α+2i-1)/(2α+2i)*c[i] - (α+i+1)/(4α+4i+6)*c[i+2] end
-    N > 1 && (c[N-1] *= (2α+N-1)*(2α+N)/(2α+2N-3)/(2α+2N-2))
-    N > 0 && (c[N] *= (2α+N)*(2α+N+1)/(2α+2N-1)/(2α+2N))
+    if N == 2
+        c[2] *= (2α+2)/(2α+4)
+    elseif N > 2
+        c[1] -= (α+2)/(4α+10)*c[3]
+        @inbounds for i=2:N-2 c[i] = (2α+i)*(2α+i+1)/(2α+2i-1)/(2α+2i)*c[i] - (α+i+1)/(4α+4i+6)*c[i+2] end
+        c[N-1] *= (2α+N-1)*(2α+N)/(2α+2N-3)/(2α+2N-2)
+        c[N] *= (2α+N)*(2α+N+1)/(2α+2N-1)/(2α+2N)
+    end
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha-1,\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha-1,\\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function decrementα!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -505,8 +561,8 @@ function decrementα!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha,\beta-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\beta)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
 """
 function decrementβ!(c::AbstractVector,α,β)
     αβ,N = α+β,length(c)
@@ -516,16 +572,20 @@ function decrementβ!(c::AbstractVector,α,β)
     c
 end
 
-doc"""
-Compute Jacobi expansion coefficients in ``P_n^{(\alpha-1,\alpha-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\alpha,\alpha)}(x)`` in-place.
+"""
+Compute Jacobi expansion coefficients in ``P_n^{(\\alpha-1,\\alpha-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\alpha)}(x)`` in-place.
 """
 function decrementαβ!(c::AbstractVector,α,β)
     @assert α == β
     N = length(c)
-    N > 0 && (c[N] *= (2α+2N-3)*(2α+2N-2)/(2α+N-2)/(2α+N-1))
-    N > 1 && (c[N-1] *= (2α+2N-5)*(2α+2N-4)/(2α+N-3)/(2α+N-2))
-    @inbounds for i=N-2:-1:2 c[i] = (2α+2i-3)*(2α+2i-2)/(2α+i-2)/(2α+i-1)*(c[i] + (α+i)/(4α+4i+2)*c[i+2]) end
-    N > 2 && (c[1] += (α+1)/(4α+6)*c[3])
+    if N == 2
+        c[2] *= (2α+2)/(2α)
+    elseif N > 2
+        c[N] *= (2α+2N-3)*(2α+2N-2)/(2α+N-2)/(2α+N-1)
+        c[N-1] *= (2α+2N-5)*(2α+2N-4)/(2α+N-3)/(2α+N-2)
+        @inbounds for i=N-2:-1:2 c[i] = (2α+2i-3)*(2α+2i-2)/(2α+i-2)/(2α+i-1)*(c[i] + (α+i)/(4α+4i+2)*c[i+2]) end
+        c[1] += (α+1)/(4α+6)*c[3]
+    end
     c
 end
 

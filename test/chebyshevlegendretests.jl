@@ -1,7 +1,8 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test, Compat.LinearAlgebra
 
 @testset "Chebyshev--Legendre transform" begin
-    for k in round.([Int],logspace(1,4,20))
+    for k in round.([Int],10 .^ range(1,stop=4,length=20))
         r = randn(k)./(√).(1:k) # Proven 𝒪(√(log N)) error for ASY method.
         @test leg2cheb(r) ≈ cjt(r,0.,0.)
     end
@@ -16,4 +17,7 @@ using FastTransforms, Base.Test
     @test norm(jac2jac(c,0.,√2/2,-1/4,√2/2)-jjt(c,0.,√2/2,-1/4,√2/2),Inf) < 10length(c)*eps()
 
     @test norm(ultra2ultra(ultra2ultra(c,.5,.75),.75,.5)-c,Inf) < 10length(c)*eps()
+
+    @test FastTransforms.th_cheb2leg([1.0,2,3,4,5]) ≈ cheb2leg([1.0,2,3,4,5])
+    @test FastTransforms.th_leg2cheb([1.0,2,3,4,5]) ≈ leg2cheb([1.0,2,3,4,5])
 end

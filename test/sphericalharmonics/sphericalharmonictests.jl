@@ -1,6 +1,11 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test
 
-srand(0)
+if VERSION < v"0.7"
+    srand(0)
+else
+    Random.seed!(0)
+end
 
 println()
 println("Spherical harmonic transform")
@@ -15,5 +20,7 @@ include("thinplantests.jl")
 include("pointwisetests.jl")
 
 include("synthesisanalysistests.jl")
+
+include("vectorfieldtests.jl")
 
 include("apitests.jl")

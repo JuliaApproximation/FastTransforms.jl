@@ -1,4 +1,6 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test, Compat.LinearAlgebra
+import Compat.Statistics
 
 @testset "Chebyshev--Jacobi transform" begin
     println("Testing the accuracy of asymptotics")
@@ -8,7 +10,7 @@ using FastTransforms, Base.Test
     Na,Nb = 5,5
     V = zeros(Na,Nb)
 
-    for N in round.([Int],logspace(1,3,3))
+    for N in round.([Int],10 .^ range(1,stop=3,length=3))
         for αi=1:Na, βi=1:Nb
             α,β = -0.45+(αi-1)/Na,-0.45+(βi-1)/Nb
             p1,p2 = plan_cjt(rand(N),α,β),plan_icjt(rand(N),α,β)
@@ -16,9 +18,9 @@ using FastTransforms, Base.Test
                 c = rand(N)
                 v[i] = log(norm(p2*(p1*c)-c,Inf)/(20N^(1+2max(α,β))*eps()))
             end
-            V[αi,βi] = mean(v)
+            V[αi,βi] = Statistics.mean(v)
         end
-        @test mean(V) < 2
+        @test Statistics.mean(V) < 2
     end
 
     println("Testing the special cases length(c) = 0,1,2:")
@@ -31,6 +33,9 @@ using FastTransforms, Base.Test
 
     @test cjt(c,0.12,0.34) == c
     @test icjt(c,0.12,0.34) == c
+
+    @test cjt(c,0.0,0.0) == c
+    @test icjt(c,0.0,0.0) == c
 
     c = [1.0;2.0]
     @test norm(jjt(c,0.12,0.34,0.12,0.34)-c,Inf) ≤ 2eps()
@@ -119,10 +124,19 @@ using FastTransforms, Base.Test
     cL64 = cjt(c64,0.,0.)
     cL32 = cjt(c32,0.f0,0.f0)
 
-    @test norm(cL32-cL64,Inf) < 20eps(Float32)
+    @test norm(cL32-cL64,Inf) < 40eps(Float32)
+    @test cL32 == cjt(c32,0.,0.)
 
     println("Testing for Matrix of coefficients")
 
     c = rand(100,100)
     @test maximum(abs,jjt(c,α,β,α,β)-c) < 10000eps()
+
+    @testset "cjt bug (#57)" begin
+        @test cjt([1.,2],.5,.5) == [1.,3]
+        @test FastTransforms.incrementαβ!([1.0], -0.5, -0.5) == [1.0]
+        @test FastTransforms.incrementαβ!([1.0, 2.0], -0.5, -0.5) == [1.0,2/3]
+        @test FastTransforms.decrementαβ!([1.0], 0.5, 0.5) == [1.0]
+        @test FastTransforms.decrementαβ!([1.0, 2.0], 0.5, 0.5) == [1.0,6]
+    end
 end

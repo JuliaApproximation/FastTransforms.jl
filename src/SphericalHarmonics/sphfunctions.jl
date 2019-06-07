@@ -1,16 +1,20 @@
-function zero_spurious_modes!(A::AbstractMatrix)
+function sph_zero_spurious_modes!(A::AbstractMatrix)
     M, N = size(A)
     n = N÷2
-    @inbounds for j = 1:n
+    @inbounds for j = 1:n-1
         @simd for i = M-j+1:M
             A[i,2j] = 0
             A[i,2j+1] = 0
         end
     end
+    @inbounds @simd for i = M-n+1:M
+        A[i,2n] = 0
+        2n < N && (A[i,2n+1] = 0)
+    end
     A
 end
 
-function sphrand{T}(::Type{T}, m::Int, n::Int)
+function sphrand(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, 2n-1)
     for i = 1:m
         A[i,1] = rand(T)
@@ -24,7 +28,7 @@ function sphrand{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-function sphrandn{T}(::Type{T}, m::Int, n::Int)
+function sphrandn(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, 2n-1)
     for i = 1:m
         A[i,1] = randn(T)
@@ -38,7 +42,7 @@ function sphrandn{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-function sphones{T}(::Type{T}, m::Int, n::Int)
+function sphones(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, 2n-1)
     for i = 1:m
         A[i,1] = one(T)
@@ -52,7 +56,7 @@ function sphones{T}(::Type{T}, m::Int, n::Int)
     A
 end
 
-sphzeros{T}(::Type{T}, m::Int, n::Int) = zeros(T, m, 2n-1)
+sphzeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, 2n-1)
 
 function normalizecolumns!(A::AbstractMatrix)
     m, n = size(A)
@@ -82,16 +86,16 @@ function maxcolnorm(A::AbstractMatrix)
     norm(nrm, Inf)
 end
 
-doc"""
-Pointwise evaluation of spherical harmonic:
+"""
+Pointwise evaluation of real orthonormal spherical harmonic:
 
 ```math
-Y_\ell^m(\theta,\varphi) = \frac{e^{{\rm i} m\varphi}}{\sqrt{2\pi}} {\rm i}^{m+|m|}\sqrt{(\ell+\frac{1}{2})\frac{(\ell-m)!}{(\ell+m)!}} P_\ell^m(\cos\theta).
+Y_\\ell^m(\\theta,\\varphi) = (-1)^{|m|}\\sqrt{(\\ell+\\frac{1}{2})\\frac{(\\ell-|m|)!}{(\\ell+|m|)!}} P_\\ell^{|m|}(\\cos\\theta) \\sqrt{\\frac{2-\\delta_{m,0}}{2\\pi}} \\left\\{\\begin{array}{ccc} \\cos m\\varphi & {\\rm for} & m \\ge 0,\\\\ \\sin(-m\\varphi) & {\\rm for} & m < 0.\\end{array}\\right.
 ```
 """
 sphevaluate(θ, φ, L, M) = sphevaluatepi(θ/π, φ/π, L, M)
 
-sphevaluatepi(θ::Number, φ::Number, L::Integer, M::Integer) = sphevaluatepi(θ,L,M)*sphevaluatepi(φ,M)
+sphevaluatepi(θ::Number, φ::Number, L::Integer, M::Integer) = sphevaluatepi(θ, L, M)*sphevaluatepi(φ, M)
 
 function sphevaluatepi(θ::Number, L::Integer, M::Integer)
     ret = one(θ)/sqrt(two(θ))
@@ -116,4 +120,4 @@ function sphevaluatepi(θ::Number, L::Integer, M::Integer)
     end
 end
 
-sphevaluatepi(φ::Number, M::Integer) = complex(cospi(M*φ),sinpi(M*φ))/sqrt(two(φ)*π)
+sphevaluatepi(φ::Number, M::Integer) = sqrt((two(φ)-δ(M, 0))/(two(φ)*π))*(M ≥ 0 ? cospi(M*φ) : sinpi(-M*φ))

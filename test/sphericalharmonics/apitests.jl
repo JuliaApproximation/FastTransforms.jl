@@ -1,23 +1,24 @@
-using FastTransforms, Base.Test
+using FastTransforms, Compat
+using Compat.Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
 @testset "Spherical harmonic API" begin
-    n = VERSION < v"0.6.0-" ? 256 : 512
-    A = sphrandn(Float64, n, n);
-    normalizecolumns!(A);
+    let n = 512
+        A = sphrandn(Float64, n, n);
+        normalizecolumns!(A);
 
-    B = sph2fourier(A)
-    C = fourier2sph(B)
-    println("The backward difference between slow plan and original: ", maxcolnorm(A-C))
+        B = sph2fourier(A)
+        C = fourier2sph(B)
+        println("The backward difference between slow plan and original: ", maxcolnorm(A-C))
 
-    P = plan_sph2fourier(A)
-    B = P*A
-    C = P\B
+        P = plan_sph2fourier(A)
+        B = P*A
+        C = P\B
 
-    println("The backward difference between slow plan and original: ", maxcolnorm(A-C))
+        println("The backward difference between slow plan and original: ", maxcolnorm(A-C))
 
-    if VERSION ≥ v"0.6.0-"
+
         n = 1024
         A = sphrandn(Float64, n, n);
         normalizecolumns!(A);
