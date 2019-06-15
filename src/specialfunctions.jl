@@ -49,8 +49,8 @@ pochhammer(x::AbstractArray{T,1},n::Integer) where {T<:Number} = [pochhammer(x[i
 pochhammer(x::AbstractArray{T,2},n::Integer) where {T<:Number} = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
 pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
 
-pochhammer(x::Number,n::Number) = newgamma(x+n)/newgamma(x)
-pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = newgamma(x+n)./newgamma(x)
+pochhammer(x::Number,n::Number) = isinteger(n) ? pochhammer(x,Int(n)) : newgamma(x+n)/newgamma(x)
+pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = isinteger(n) ? pochhammer(x,Int(n)) : newgamma.(x.+n)./newgamma.(x)
 
 function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret = Vector{promote_type(typeof(x),T)}(length(n))
