@@ -28,3 +28,5 @@ include("butterflytests.jl")
 include("sphericalharmonics/sphericalharmonictests.jl")
 
 include("toeplitztests.jl")
+
+include("specialfunctionstests.jl")
