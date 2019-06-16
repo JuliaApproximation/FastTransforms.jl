@@ -1,5 +1,6 @@
 using FastTransforms
 using Compat.Test
+import FastTransforms.pochhammer
 
 @testset "Pochhammer" begin
     @test pochhammer(2,3) == 24
