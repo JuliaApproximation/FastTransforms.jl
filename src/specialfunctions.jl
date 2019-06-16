@@ -50,7 +50,7 @@ pochhammer(x::AbstractArray{T,2},n::Integer) where {T<:Number} = [pochhammer(x[i
 pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
 
 pochhammer(x::Number,n::Number) = isinteger(n) ? pochhammer(x,Int(n)) : ogamma(x)/ogamma(x+n)
-pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = isinteger(n) ? pochhammer(x,Int(n)) : ogamma.(x)./newgamma.(x.+n)
+pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = isinteger(n) ? pochhammer(x,Int(n)) : ogamma.(x)./ogamma.(x.+n)
 
 function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret = Vector{promote_type(typeof(x),T)}(length(n))
