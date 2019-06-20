@@ -45,12 +45,7 @@ function pochhammer(x::Number,n::Integer)
     ret
 end
 
-pochhammer(x::AbstractArray{T,1},n::Integer) where {T<:Number} = [pochhammer(x[i],n) for i=1:length(x)]
-pochhammer(x::AbstractArray{T,2},n::Integer) where {T<:Number} = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
-pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
-
 pochhammer(x::Number,n::Number) = isinteger(n) ? pochhammer(x,Int(n)) : ogamma(x)/ogamma(x+n)
-pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = isinteger(n) ? pochhammer(x,Int(n)) : ogamma.(x)./ogamma.(x.+n)
 
 function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret = Vector{promote_type(typeof(x),T)}(length(n))
@@ -61,13 +56,7 @@ function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret
 end
 
-function ogamma(x::Number)
-    if isinteger(x) && x<0
-        zero(float(x))
-    else
-        inv(gamma(x))
-    end
-end
+ogamma(x::Number) = (isinteger(x) && x<0) ? zero(float(x)) : inv(gamma(x))
 
 """
 Stirling's asymptotic series for ``\\Gamma(z)``.
