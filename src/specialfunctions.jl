@@ -63,9 +63,9 @@ end
 
 function ogamma(x::Number)
     if isinteger(x) && x<0
-        0.0
+        zero(float(x))
     else
-        1.0/gamma(x)
+        inv(gamma(x))
     end
 end
 
