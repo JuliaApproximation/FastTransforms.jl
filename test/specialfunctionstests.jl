@@ -13,7 +13,7 @@ const sqrtpi = 1.772453850905516027298
     @test pochhammer(-5,3) == -60
     @test pochhammer(-1,-0.5) == 0
     @test 1.0/pochhammer(-0.5,-0.5) == 0
-    @test pochhammer(-1+0im,-1) == -2
+    @test pochhammer(-1+0im,-1) == -0.5
     @test pochhammer([2,-5,-1],3) == [24,-60,0]
     @test pochhammer([-1,-0.5],-0.5) == [0,-Inf]
 end
