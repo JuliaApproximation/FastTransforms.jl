@@ -27,7 +27,7 @@ import FastTransforms: normalizecolumns!, maxcolnorm
             nrms[kk] = maxcolnorm(A - Ac)
         end
         t[j] /= Nr
-        err[j] = mean(nrms)
+        err[j] = Statistics.mean(nrms)
         println("At a bandlimit of ",n,", the maximum 2-norm in the columns over ",Nr," trials is: ",err[j])
         @test err[j] < 10eps()*sqrt(n)
         j+=1

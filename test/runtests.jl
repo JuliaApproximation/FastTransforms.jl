@@ -32,3 +32,5 @@ end
 include("sphericalharmonics/sphericalharmonictests.jl")
 
 include("toeplitztests.jl")
+
+include("specialfunctionstests.jl")

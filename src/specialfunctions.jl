@@ -45,12 +45,7 @@ function pochhammer(x::Number,n::Integer)
     ret
 end
 
-pochhammer(x::AbstractArray{T,1},n::Integer) where {T<:Number} = [pochhammer(x[i],n) for i=1:length(x)]
-pochhammer(x::AbstractArray{T,2},n::Integer) where {T<:Number} = [pochhammer(x[i,j],n) for i=1:size(x,1),j=1:size(x,2)]
-pochhammer(x::AbstractArray{T},n::Integer) where {T<:Number} = reshape([ pochhammer(x[i],n) for i in eachindex(x) ], size(x))
-
-pochhammer(x::Number,n::Number) = gamma(x+n)/gamma(x)
-pochhammer(x::AbstractArray{T},n::Number) where {T<:Number} = gamma(x+n)./gamma(x)
+pochhammer(x::Number,n::Number) = isinteger(n) ? pochhammer(x,Int(n)) : ogamma(x)/ogamma(x+n)
 
 function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret = Vector{promote_type(typeof(x),T)}(length(n))
@@ -60,6 +55,8 @@ function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     end
     ret
 end
+
+ogamma(x::Number) = (isinteger(x) && x<0) ? zero(float(x)) : inv(gamma(x))
 
 """
 Stirling's asymptotic series for ``\\Gamma(z)``.
@@ -539,10 +536,14 @@ Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\alpha+1)}(x)`` give
 function incrementαβ!(c::AbstractVector,α,β)
     @assert α == β
     N = length(c)
-    N > 2 && (c[1] -= (α+2)/(4α+10)*c[3])
-    @inbounds for i=2:N-2 c[i] = (2α+i)*(2α+i+1)/(2α+2i-1)/(2α+2i)*c[i] - (α+i+1)/(4α+4i+6)*c[i+2] end
-    N > 1 && (c[N-1] *= (2α+N-1)*(2α+N)/(2α+2N-3)/(2α+2N-2))
-    N > 0 && (c[N] *= (2α+N)*(2α+N+1)/(2α+2N-1)/(2α+2N))
+    if N == 2
+        c[2] *= (2α+2)/(2α+4)
+    elseif N > 2
+        c[1] -= (α+2)/(4α+10)*c[3]
+        @inbounds for i=2:N-2 c[i] = (2α+i)*(2α+i+1)/(2α+2i-1)/(2α+2i)*c[i] - (α+i+1)/(4α+4i+6)*c[i+2] end
+        c[N-1] *= (2α+N-1)*(2α+N)/(2α+2N-3)/(2α+2N-2)
+        c[N] *= (2α+N)*(2α+N+1)/(2α+2N-1)/(2α+2N)
+    end
     c
 end
 
@@ -574,10 +575,14 @@ Compute Jacobi expansion coefficients in ``P_n^{(\\alpha-1,\\alpha-1)}(x)`` give
 function decrementαβ!(c::AbstractVector,α,β)
     @assert α == β
     N = length(c)
-    N > 0 && (c[N] *= (2α+2N-3)*(2α+2N-2)/(2α+N-2)/(2α+N-1))
-    N > 1 && (c[N-1] *= (2α+2N-5)*(2α+2N-4)/(2α+N-3)/(2α+N-2))
-    @inbounds for i=N-2:-1:2 c[i] = (2α+2i-3)*(2α+2i-2)/(2α+i-2)/(2α+i-1)*(c[i] + (α+i)/(4α+4i+2)*c[i+2]) end
-    N > 2 && (c[1] += (α+1)/(4α+6)*c[3])
+    if N == 2
+        c[2] *= (2α+2)/(2α)
+    elseif N > 2
+        c[N] *= (2α+2N-3)*(2α+2N-2)/(2α+N-2)/(2α+N-1)
+        c[N-1] *= (2α+2N-5)*(2α+2N-4)/(2α+N-3)/(2α+N-2)
+        @inbounds for i=N-2:-1:2 c[i] = (2α+2i-3)*(2α+2i-2)/(2α+i-2)/(2α+i-1)*(c[i] + (α+i)/(4α+4i+2)*c[i+2]) end
+        c[1] += (α+1)/(4α+6)*c[3]
+    end
     c
 end
 
