@@ -7,7 +7,7 @@ using FastTransforms
 
 # first kind points -> first kind polynomials
 n = 20
-p_1 = [sinpi((n-2k-1)/2n) for k=0:n-1]
+p_1 = chebyshevpoints(Float64, n; kind=1)
 f = exp.(p_1)
 f̌ = chebyshevtransform(f; kind=1)
 
@@ -18,7 +18,7 @@ f̃(0.1) ≈ exp(0.1)
 ichebyshevtransform(f̌; kind=1) ≈ exp.(p_1)
 
 # second kind points -> first kind polynomials
-p_2 = [cospi(k/(n-1)) for k=0:n-1]
+p_2 = chebyshevpoints(Float64, n; kind=2)
 f = exp.(p_2)
 f̌ = chebyshevtransform(f; kind=2)
 
@@ -31,7 +31,7 @@ ichebyshevtransform(f̌; kind=2) ≈ exp.(p_2)
 
 # first kind points -> second kind polynomials
 n = 20
-p_1 = [sinpi((n-2k-1)/2n) for k=0:n-1]
+p_1 = chebyshevpoints(Float64, n; kind=1)
 f = exp.(p_1)
 f̌ = chebyshevutransform(f; kind=1)
 f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-1]' * f̌
@@ -42,7 +42,7 @@ ichebyshevutransform(f̌; kind=1) ≈ exp.(p_1)
 
 
 # second kind points -> second kind polynomials
-p_2 = [cospi(k/(n-1)) for k=1:n-2]
+p_2 = chebyshevpoints(Float64, n; kind=2)[2:n-1]
 f = exp.(p_2)
 f̌ = chebyshevutransform(f; kind=2)
 f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-3]' * f̌

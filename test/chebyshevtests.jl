@@ -1,4 +1,4 @@
-using FastTransforms, Compat, Compat.Test
+using FastTransforms, Test
 
 @testset "Chebyshev transform"  begin
     @testset "Chebyshev points" begin

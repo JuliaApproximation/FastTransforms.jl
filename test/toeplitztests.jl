@@ -1,4 +1,4 @@
-using FastTransforms, ToeplitzMatrices
+using FastTransforms, Test, ToeplitzMatrices
 
 @testset "BigFloat Toeplitz" begin
     T = Toeplitz(BigFloat[1,2,3,4,5], BigFloat[1,6,7,8,0])

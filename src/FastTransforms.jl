@@ -1,121 +1,71 @@
 __precompile__()
 module FastTransforms
 
-using ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter, Compat,
-        AbstractFFTs, SpecialFunctions
+using AbstractFFTs, DSP, FFTW, Libdl, LinearAlgebra, SpecialFunctions, ToeplitzMatrices
 
-if VERSION < v"0.7-"
-    using Base.FFTW
-    import Base.FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
-    import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan, plan_r2r!,
-                        REDFT00, REDFT01, REDFT10, REDFT11,
-                        RODFT00, RODFT01, RODFT10, RODFT11
-    const LAmul! = Base.A_mul_B!
-    import Base: Factorization
-    rmul!(A::AbstractArray, c::Number) = scale!(A,c)
-    lmul!(c::Number, A::AbstractArray) = scale!(c,A)
-    lmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
-    rmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
-    const floatmin = realmin
-else
-    using FFTW, LinearAlgebra, DSP
-    import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
-    import FFTW: libfftw3, libfftw3f, PlanPtr, r2rFFTWPlan, plan_r2r!,
-                    REDFT00, REDFT01, REDFT10, REDFT11,
-                    RODFT00, RODFT01, RODFT10, RODFT11
-    const LAmul! = LinearAlgebra.mul!
-    const libfftw = libfftw3
-    const libfftwf = libfftw3f
-    import LinearAlgebra: Factorization
-    flipdim(A,d) = reverse(A; dims=d)
-end
+import Base: unsafe_convert, eltype, ndims, adjoint, transpose, show, *, \,
+             inv, size, view
 
+import Base.GMP: Limb
+import Base.MPFR: BigFloat, _BigFloat
 
-import Base: *, \, inv, size, view
-import Base: getindex, setindex!, length
-import Compat.LinearAlgebra: BlasFloat, BlasInt
-import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
-import HierarchicalMatrices: mul!, At_mul_B!, Ac_mul_B!
-import HierarchicalMatrices: ThreadSafeVector, threadsafezeros
-import LowRankApprox: ColPerm
 import AbstractFFTs: Plan
-import Compat: range, transpose, adjoint, axes
 
-export cjt, icjt, jjt, plan_cjt, plan_icjt
-export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac, plan_jac2jac
-export normleg2cheb, cheb2normleg, normleg12cheb2, cheb22normleg1
-export plan_leg2cheb, plan_cheb2leg
-export plan_normleg2cheb, plan_cheb2normleg
-export plan_normleg12cheb2, plan_cheb22normleg1
+import DSP: conv
 
-export gaunt
+import FFTW: dct, dct!, idct, idct!,
+             plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
+             plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct,
+			 plan_bfft, plan_bfft!, plan_brfft, fftwNumber
 
-export nufft, nufft1, nufft2, nufft3, inufft1, inufft2
-export plan_nufft, plan_nufft1, plan_nufft2, plan_nufft3, plan_inufft1, plan_inufft2
+import LinearAlgebra: mul!, lmul!, ldiv!
 
-export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!, paduapoints
-export plan_paduatransform!, plan_ipaduatransform!
-
-export SlowSphericalHarmonicPlan, FastSphericalHarmonicPlan, ThinSphericalHarmonicPlan
-export sph2fourier, fourier2sph, plan_sph2fourier
-export sphones, sphzeros, sphrand, sphrandn, sphevaluate
-
-export SlowTriangularHarmonicPlan
-export tri2cheb, cheb2tri, plan_tri2cheb
-export triones, trizeros, trirand, trirandn, trievaluate
-
-# Other module methods and constants:
-#export ChebyshevJacobiPlan, jac2cheb, cheb2jac
-#export sqrtpi, pochhammer, stirlingseries, stirlingremainder, Aratio, Cratio, Anαβ
-#export Cnmαβ, Cnαβ, Cnmλ, Cnλ, Λ, absf, findmindices!
-#export plan_clenshawcurtis, clenshawcurtisnodes, clenshawcurtisweights
-#export plan_fejer1, fejernodes1, fejerweights1
-#export plan_fejer2, fejernodes2, fejerweights2
-#export RecurrencePlan, forward_recurrence!, backward_recurrence
-
-include("stepthreading.jl")
-include("fftBigFloat.jl")
-include("specialfunctions.jl")
-include("chebyshevtransform.jl")
-include("clenshawcurtis.jl")
-include("fejer.jl")
-include("recurrence.jl")
-include("PaduaTransform.jl")
-
-abstract type FastTransformPlan{D,T} end
-
-include("ChebyshevJacobiPlan.jl")
-include("jac2cheb.jl")
-include("cheb2jac.jl")
-
-include("ChebyshevUltrasphericalPlan.jl")
-include("ultra2cheb.jl")
-include("cheb2ultra.jl")
-include("nufft.jl")
-include("inufft.jl")
-
-include("cjt.jl")
-
-include("toeplitzhankel.jl")
-
-#leg2cheb(x...)=th_leg2cheb(x...)
-#cheb2leg(x...)=th_cheb2leg(x...)
-leg2chebu(x...) = th_leg2chebu(x...)
-ultra2ultra(x...) = th_ultra2ultra(x...)
-jac2jac(x...) = th_jac2jac(x...)
-plan_jac2jac(x...) = th_jac2jacplan(x...)
-plan_ultra2ultra(x...) = th_ultra2ultraplan(x...)
+export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
+       plan_lag2lag, plan_jac2ultra, plan_ultra2jac, plan_jac2cheb,
+       plan_cheb2jac, plan_ultra2cheb, plan_cheb2ultra,
+       plan_sph2fourier, plan_sph_synthesis, plan_sph_analysis,
+       plan_sphv2fourier, plan_sphv_synthesis, plan_sphv_analysis,
+       plan_disk2cxf, plan_disk_synthesis, plan_disk_analysis,
+       plan_tri2cheb, plan_tri_synthesis, plan_tri_analysis
 
 include("libfasttransforms.jl")
 
-include("hierarchical.jl")
-include("SphericalHarmonics/SphericalHarmonics.jl")
-include("TriangularHarmonics/TriangularHarmonics.jl")
+export plan_nufft, plan_nufft1, plan_nufft2, plan_nufft3, plan_inufft1, plan_inufft2
+export nufft, nufft1, nufft2, nufft3, inufft1, inufft2
+
+include("nufft.jl")
+include("inufft.jl")
+
+export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!,
+       paduapoints, plan_paduatransform!, plan_ipaduatransform!
+
+include("PaduaTransform.jl")
+
+export plan_chebyshevtransform, plan_ichebyshevtransform, plan_chebyshevtransform!, plan_ichebyshevtransform!,
+            chebyshevtransform, ichebyshevtransform, chebyshevpoints,
+            plan_chebyshevutransform, plan_ichebyshevutransform, plan_chebyshevutransform!, plan_ichebyshevutransform!,
+            chebyshevutransform, ichebyshevutransform
+
+include("chebyshevtransform.jl")
+
+export plan_clenshawcurtis, clenshawcurtisnodes, clenshawcurtisweights
+export plan_fejer1, fejernodes1, fejerweights1,
+       plan_fejer2, fejernodes2, fejerweights2
+
+include("clenshawcurtis.jl")
+include("fejer.jl")
+
+include("fftBigFloat.jl")
+
+export gaunt
 
 include("gaunt.jl")
 
+export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
+       sphvones, sphvzeros, sphvrand, sphvrandn,
+       diskones, diskzeros, diskrand, diskrandn,
+       triones, trizeros, trirand, trirandn, trievaluate
 
-include("precompile.jl")
-_precompile_()
+include("specialfunctions.jl")
 
 end # module

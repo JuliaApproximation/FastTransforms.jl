@@ -51,35 +51,34 @@ P4 = x -> (35*x^4-30*x^2+3)/8
 # On the tensor product grid, our function samples are:
 F = [(P4(z(θ,φ)⋅y) - P4(x⋅y))/(z(θ,φ)⋅y - x⋅y) for θ in θ, φ in φ]
 
-P = plan_sph2fourier(F);
-PA = FastTransforms.plan_analysis(F);
+P = plan_sph2fourier(Float64, N)
+PA = plan_sph_analysis(Float64, N, M)
 
 # Its spherical harmonic coefficients demonstrate that it is degree-3:
-V = zero(F);
-A_mul_B!(V, PA, F);
+V = PA*F
 U3 = P\V
 
 # Similarly, on the tensor product grid, the Legendre polynomial P₄(z⋅y) is:
 F = [P4(z(θ,φ)⋅y) for θ in θ, φ in φ]
 
 # Its spherical harmonic coefficients demonstrate that it is exact-degree-4:
-A_mul_B!(V, PA, F);
+V = PA*F
 U4 = P\V
 
-nrm1 = vecnorm(U4);
+nrm1 = norm(U4);
 
 # Finally, the Legendre polynomial P₄(z⋅x) is aligned with the grid:
 F = [P4(z(θ,φ)⋅x) for θ in θ, φ in φ]
 
 # It only has one nonnegligible spherical harmonic coefficient.
 # Can you spot it?
-A_mul_B!(V, PA, F);
+V = PA*F
 U4 = P\V
 
 # That nonnegligible coefficient should be approximately √(2π/(4+1/2)),
 # since the convention in this library is to orthonormalize.
 
-nrm2 = vecnorm(U4);
+nrm2 = norm(U4);
 
 # Note that the integrals of both functions P₄(z⋅y) and P₄(z⋅x) and their
 # L²(𝕊²) norms are the same because of rotational invariance. The integral of

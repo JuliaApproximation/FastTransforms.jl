@@ -1,9 +1,9 @@
-plan_clenshawcurtis(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : ones(μ)'
+plan_clenshawcurtis(μ) = length(μ) > 1 ? FFTW.plan_r2r!(μ, FFTW.REDFT00) : fill!(similar(μ),1)'
 
 """
 Compute nodes of the Clenshaw—Curtis quadrature rule.
 """
-clenshawcurtisnodes(::Type{T}, N::Int) where T = T[cospi(k/(N-one(T))) for k=0:N-1]
+clenshawcurtisnodes(::Type{T}, N::Int) where T = chebyshevpoints(T, N; kind = 2)
 
 """
 Compute weights of the Clenshaw—Curtis quadrature rule with modified Chebyshev moments of the first kind ``\\mu``.
@@ -36,7 +36,7 @@ applyTN(x::Vector{T}) where {T<:AbstractFloat} = applyTN!(copy(x))
 
 # Values at Clenshaw-Curtis nodes to Chebyshev-T coefficients
 
-applyTNinv_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : ones(x)'
+applyTNinv_plan(x) = length(x) > 1 ? FFTW.plan_r2r!(x, FFTW.REDFT00) : fill!(similar(x),1)'
 
 applyTNinv!(x::Vector{T}) where {T<:AbstractFloat} = applyTNinv!(x,applyTNinv_plan(x))
 

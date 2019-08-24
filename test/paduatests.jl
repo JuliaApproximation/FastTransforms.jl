@@ -1,5 +1,4 @@
-using FastTransforms, Compat
-using Compat.Test
+using FastTransforms, Test
 
 @testset "Padua transform and its inverse" begin
     n=200
@@ -23,11 +22,7 @@ using Compat.Test
     y=IPl*rand(N)
     @test x ≠ y
 
-    println("Testing runtimes for (I)Padua Transforms")
-    @time Pl*v
-    @time IPl*v
-
-    println("Accuracy of 2d function interpolation at a point")
+    # Accuracy of 2d function interpolation at a point
 
     """
     Interpolates a 2d function at a given point using 2d Chebyshev series.

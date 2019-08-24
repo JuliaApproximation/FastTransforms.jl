@@ -181,6 +181,22 @@ function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int) where
     F
 end
 
+mul!(y::AbstractVecOrMat{T}, A::AbstractMatrix{T}, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where T =
+    mul!(y, A, x, istart, jstart, 1, 1)
+
+function mul!(y::AbstractVecOrMat{T}, A::AbstractMatrix{T}, x::AbstractVecOrMat{T}, istart::Int, jstart::Int, INCX::Int, INCY::Int) where T
+    m, n = size(A)
+    ishift, jshift = istart-INCY, jstart-INCX
+    @inbounds for j = 1:n
+        xj = x[jshift+j*INCX]
+        for i = 1:m
+            y[ishift+i*INCY] += A[i,j]*xj
+        end
+    end
+
+    y
+end
+
 function reindex_temp!(temp::Matrix{T}, t::Vector{Int}, temp2::Matrix{T}) where {T}
     @inbounds for j = 1:size(temp, 2)
         for i = 1:size(temp, 1)
