@@ -16,6 +16,14 @@
 
 if Sys.isapple()
     const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.dylib")
+    test = download("https://github.com/MikaelSlevinsky/FastTransforms/releases/download/v0.2.3/libfasttransforms.dylib", libfasttransforms)
+    println(test)
+else
+    warn("Didn't build properly")
+end
+
+if Sys.isapple()
+    const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.dylib")
 
     println("This is libfasttransforms: ", libfasttransforms)
     println("This is find_library(libfasttransforms, [joinpath(dirname(@__DIR__), 'deps')]): ", find_library(libfasttransforms, [joinpath(dirname(@__DIR__), "deps")]))
