@@ -14,7 +14,7 @@
 # Step 4: run `make` and check the tests by running `./test_drivers 3 3 0`.
 # All the errors should be roughly on the order of machine precision.
 
-const libfasttransforms = joinpath(dirname(@__DIR__), "deps/FastTransforms", "libfasttransforms")
+const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms")
 
 if !(find_library(libfasttransforms) ≡ libfasttransforms)
     error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",

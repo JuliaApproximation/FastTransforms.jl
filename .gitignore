@@ -1,3 +1,4 @@
 docs/build/
 docs/site/
-deps/FastTransforms
+deps/build.log
+deps/libfasttransforms.*
