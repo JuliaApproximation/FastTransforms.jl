@@ -18,11 +18,11 @@ if Sys.isapple()
     const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.dylib")
 
     println("This is libfasttransforms: ", libfasttransforms)
-    println("This is find_library(libfasttransforms): ", find_library(libfasttransforms))
+    println("This is find_library(libfasttransforms, [joinpath(dirname(@__DIR__), "deps")]): ", find_library(libfasttransforms, [joinpath(dirname(@__DIR__), "deps")]))
 
 end
 
-if !(find_library(libfasttransforms) ≡ libfasttransforms)
+if !(find_library(libfasttransforms, [joinpath(dirname(@__DIR__), "deps")]) ≡ libfasttransforms)
     error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",
           "and restart Julia.")
 end
