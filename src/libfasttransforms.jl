@@ -18,7 +18,7 @@ if Sys.isapple()
     const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.dylib")
 
     println("This is libfasttransforms: ", libfasttransforms)
-    println("This is find_library(libfasttransforms, [joinpath(dirname(@__DIR__), "deps")]): ", find_library(libfasttransforms, [joinpath(dirname(@__DIR__), "deps")]))
+    println("This is find_library(libfasttransforms, [joinpath(dirname(@__DIR__), 'deps')]): ", find_library(libfasttransforms, [joinpath(dirname(@__DIR__), "deps")]))
 
 end
 
