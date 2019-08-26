@@ -20,6 +20,12 @@ import FFTW: dct, dct!, idct, idct!,
 
 import LinearAlgebra: mul!, lmul!, ldiv!
 
+export leg2cheb, cheb2leg, ultra2ultra, jac2jac,
+       lag2lag, jac2ultra, ultra2jac, jac2cheb,
+       cheb2jac, ultra2cheb, cheb2ultra,
+       sph2fourier, sphv2fourier, disk2cxf, tri2cheb,
+       fourier2sph, fourier2sphv, cxf2disk, cheb2tri
+
 export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
        plan_lag2lag, plan_jac2ultra, plan_ultra2jac, plan_jac2cheb,
        plan_cheb2jac, plan_ultra2cheb, plan_cheb2ultra,

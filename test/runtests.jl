@@ -6,7 +6,7 @@ include("chebyshevtests.jl")
 
 include("quadraturetests.jl")
 
-if Sys.isapple()
+if find_library(FastTransforms.libfasttransforms) ≡ FastTransforms.libfasttransforms
     include("libfasttransformstests.jl")
 else
     error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",

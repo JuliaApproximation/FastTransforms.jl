@@ -14,9 +14,9 @@
 # Step 4: run `make` and check the tests by running `./test_drivers 3 3 0`.
 # All the errors should be roughly on the order of machine precision.
 
-if Sys.isapple()
-    const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.dylib")
-else
+const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms")
+
+if !(find_library(libfasttransforms) ≡ libfasttransforms)
     error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",
           "and restart Julia.")
 end
@@ -185,6 +185,25 @@ checksize(p::TransposeFTPlan, x) = checksize(p.parent, x)
 
 unsafe_convert(::Type{Ptr{ft_plan_struct}}, p::TransposeFTPlan{T, FTPlan{T, N, K}}) where {T, N, K} = unsafe_convert(Ptr{ft_plan_struct}, p.parent)
 unsafe_convert(::Type{Ptr{mpfr_t}}, p::TransposeFTPlan{T, FTPlan{T, N, K}}) where {T, N, K} = unsafe_convert(Ptr{mpfr_t}, p.parent)
+
+for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
+          :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
+          :cheb2jac, :ultra2cheb, :cheb2ultra,
+          :sph2fourier, :sphv2fourier, :disk2cxf, :tri2cheb)
+    plan_f = Symbol("plan_", f)
+    @eval begin
+        $plan_f(x::AbstractArray{T}, y...; z...) where T = $plan_f(T, size(x, 1), y...; z...)
+        $f(x::AbstractArray{T}, y...; z...) where T = $plan_f(x, y...; z...)*x
+    end
+end
+
+for (f, plan_f) in ((:fourier2sph, :plan_sph2fourier), (:fourier2sphv, :plan_sphv2fourier),
+                    (:cxf2disk2, :plan_disk2cxf), (:cheb2tri, :plan_tri2cheb))
+    @eval begin
+        $f(x::AbstractArray{T}, y...; z...) where T = $plan_f(x, y...; z...)\x
+    end
+end
+
 
 function plan_leg2cheb(::Type{Float32}, n::Integer; normleg::Bool=false, normcheb::Bool=false)
     plan = ccall((:ft_plan_legendre_to_chebyshevf, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), normleg, normcheb, n)
