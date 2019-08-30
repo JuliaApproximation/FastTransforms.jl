@@ -4,6 +4,7 @@ version = "0.5.0"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
