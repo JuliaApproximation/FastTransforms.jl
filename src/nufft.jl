@@ -125,7 +125,7 @@ function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int) where
     conj!(temp2)
     broadcast!(*, temp, V, temp2)
     COLSHIFT = size(C, 1)*(J-1)
-    mul!(F, temp, Ones, 1+COLSHIFT, 1)
+    mul_for_col_J!(F, temp, Ones, 1+COLSHIFT, 1)
 
     F
 end
@@ -150,7 +150,7 @@ function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{2,T}, C::Matrix{T}, J::Int) where
     reindex_temp!(temp, t, temp2)
     broadcast!(*, temp, U, temp2)
     COLSHIFT = size(C, 1)*(J-1)
-    mul!(F, temp, Ones, 1+COLSHIFT, 1)
+    mul_for_col_J!(F, temp, Ones, 1+COLSHIFT, 1)
 
     F
 end
@@ -176,15 +176,15 @@ function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{3,T}, C::Matrix{T}, J::Int) where
     reindex_temp!(temp, t, temp2)
     broadcast!(*, temp, U, temp2)
     COLSHIFT = size(C, 1)*(J-1)
-    mul!(F, temp, Ones, 1+COLSHIFT, 1)
+    mul_for_col_J!(F, temp, Ones, 1+COLSHIFT, 1)
 
     F
 end
 
-mul!(y::AbstractVecOrMat{T}, A::AbstractMatrix{T}, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where T =
-    mul!(y, A, x, istart, jstart, 1, 1)
+mul_for_col_J!(y::AbstractVecOrMat{T}, A::AbstractMatrix{T}, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where T =
+    mul_for_col_J!(y, A, x, istart, jstart, 1, 1)
 
-function mul!(y::AbstractVecOrMat{T}, A::AbstractMatrix{T}, x::AbstractVecOrMat{T}, istart::Int, jstart::Int, INCX::Int, INCY::Int) where T
+function mul_for_col_J!(y::AbstractVecOrMat{T}, A::AbstractMatrix{T}, x::AbstractVecOrMat{T}, istart::Int, jstart::Int, INCX::Int, INCY::Int) where T
     m, n = size(A)
     ishift, jshift = istart-INCY, jstart-INCX
     @inbounds for j = 1:n
