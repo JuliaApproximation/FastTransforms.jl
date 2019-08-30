@@ -1,5 +1,4 @@
-using FastTransforms, Compat
-using Compat.Test
+using FastTransforms, Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm, sphevaluatepi
 

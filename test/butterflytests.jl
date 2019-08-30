@@ -1,14 +1,5 @@
-using FastTransforms, LowRankApprox, Compat
-using Compat.Test, Compat.LinearAlgebra
-
-if VERSION < v"0.7-"
-    const mul! = Base.A_mul_B!
-    const lmul! = Base.scale!
-    const rmul! = Base.scale!
-else
-    Ac_mul_B!(C, A, B) = mul!(C, A', B)
-    At_mul_B!(C, A, B) = mul!(C, transpose(A), B)
-end
+using FastTransforms, LowRankApprox
+using Test, LinearAlgebra
 
 import FastTransforms: Butterfly
 
@@ -43,7 +34,7 @@ import FastTransforms: Butterfly
         @time uf = A[n]*b
         @time mul!(u, B, b)
         w = zero(b)
-        @time Ac_mul_B!(w, B, u)
+        @time mul!(w, B', u)
         lmul!(inv(2^n), w)
         println(norm(u-uf)/2^n)
         println(norm(w-b))
@@ -66,7 +57,7 @@ import FastTransforms: Butterfly
         @time uf = A[n]*b
         @time mul!(u, B, b)
         w = zero(b)
-        @time At_mul_B!(w, B, b)
+        @time mul!(w, transpose(B), b)
         println(norm(u-uf)/nb)
         println(norm(w-A[n]'b))
         println(norm(u-w))

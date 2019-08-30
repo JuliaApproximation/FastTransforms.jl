@@ -1,11 +1,6 @@
-using FastTransforms, Compat
-using Compat.Test
+using FastTransforms, Test, Random
+Random.seed!(0)
 
-if VERSION < v"0.7"
-    srand(0)
-else
-    Random.seed!(0)
-end
 
 println()
 println("Spherical harmonic transform")

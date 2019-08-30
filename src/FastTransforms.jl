@@ -1,45 +1,28 @@
-__precompile__()
+
 module FastTransforms
 
-using ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter, Compat,
+using ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter,
         AbstractFFTs, SpecialFunctions
 
-if VERSION < v"0.7-"
-    using Base.FFTW
-    import Base.FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
-    import Base.FFTW: libfftw, libfftwf, PlanPtr, r2rFFTWPlan, plan_r2r!,
-                        REDFT00, REDFT01, REDFT10, REDFT11,
-                        RODFT00, RODFT01, RODFT10, RODFT11
-    const LAmul! = Base.A_mul_B!
-    import Base: Factorization
-    rmul!(A::AbstractArray, c::Number) = scale!(A,c)
-    lmul!(c::Number, A::AbstractArray) = scale!(c,A)
-    lmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
-    rmul!(A::AbstractArray, B::AbstractArray) = mul!(A,B)
-    const floatmin = realmin
-else
-    using FFTW, LinearAlgebra, DSP
-    import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
-    import FFTW: libfftw3, libfftw3f, PlanPtr, r2rFFTWPlan, plan_r2r!,
-                    REDFT00, REDFT01, REDFT10, REDFT11,
-                    RODFT00, RODFT01, RODFT10, RODFT11
-    const LAmul! = LinearAlgebra.mul!
-    const libfftw = libfftw3
-    const libfftwf = libfftw3f
-    import LinearAlgebra: Factorization
-    flipdim(A,d) = reverse(A; dims=d)
-end
+using FFTW, LinearAlgebra, DSP
+import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
+import FFTW: libfftw3, libfftw3f, PlanPtr, r2rFFTWPlan, plan_r2r!,
+                REDFT00, REDFT01, REDFT10, REDFT11,
+                RODFT00, RODFT01, RODFT10, RODFT11
 
+const libfftw = libfftw3
+const libfftwf = libfftw3f
+import LinearAlgebra: Factorization
+flipdim(A,d) = reverse(A; dims=d)
 
 import Base: *, \, inv, size, view
-import Base: getindex, setindex!, length
-import Compat.LinearAlgebra: BlasFloat, BlasInt
+import Base: getindex, setindex!, length, axes
+import LinearAlgebra: BlasFloat, BlasInt, transpose, adjoint, lmul!, rmul!
 import HierarchicalMatrices: HierarchicalMatrix, unsafe_broadcasttimes!
-import HierarchicalMatrices: mul!, At_mul_B!, Ac_mul_B!
+import HierarchicalMatrices: mul!
 import HierarchicalMatrices: ThreadSafeVector, threadsafezeros
-import LowRankApprox: ColPerm
+import LowRankApprox: ColPerm, RowPerm
 import AbstractFFTs: Plan
-import Compat: range, transpose, adjoint, axes
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac, plan_jac2jac

@@ -56,14 +56,14 @@ PA = FastTransforms.plan_analysis(F);
 
 # Its spherical harmonic coefficients demonstrate that it is degree-3:
 V = zero(F);
-A_mul_B!(V, PA, F);
+mul!(V, PA, F);
 U3 = P\V
 
 # Similarly, on the tensor product grid, the Legendre polynomial P₄(z⋅y) is:
 F = [P4(z(θ,φ)⋅y) for θ in θ, φ in φ]
 
 # Its spherical harmonic coefficients demonstrate that it is exact-degree-4:
-A_mul_B!(V, PA, F);
+mul!(V, PA, F);
 U4 = P\V
 
 nrm1 = vecnorm(U4);
@@ -73,7 +73,7 @@ F = [P4(z(θ,φ)⋅x) for θ in θ, φ in φ]
 
 # It only has one nonnegligible spherical harmonic coefficient.
 # Can you spot it?
-A_mul_B!(V, PA, F);
+mul!(V, PA, F);
 U4 = P\V
 
 # That nonnegligible coefficient should be approximately √(2π/(4+1/2)),

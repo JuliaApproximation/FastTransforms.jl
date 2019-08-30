@@ -40,12 +40,11 @@ end
 
 ThinSphericalHarmonicPlan(A::Matrix; opts...) = ThinSphericalHarmonicPlan(A, floor(Int, log2(size(A, 1)+1)-6); opts...)
 
-if VERSION ≥ v"0.7-"
-    adjoint(P::ThinSphericalHarmonicPlan) = Adjoint(P)
-    transpose(P::ThinSphericalHarmonicPlan) = Transpose(P)
-end
 
-function LAmul!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
+adjoint(P::ThinSphericalHarmonicPlan) = Adjoint(P)
+transpose(P::ThinSphericalHarmonicPlan) = Transpose(P)
+
+function LinearAlgebra.mul!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     RP, BF, p1, p2, B = TP.RP, TP.BF, TP.p1, TP.p2, TP.B
     copyto!(B, X)
     M, N = size(X)
@@ -100,123 +99,65 @@ function LAmul!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
     Y
 end
 
-if VERSION < v"0.7-"
-    function Base.At_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix)
-        RP, BF, p1inv, p2inv, B = TP.RP, TP.BF, TP.p1inv, TP.p2inv, TP.B
-        copyto!(B, X)
-        M, N = size(X)
-        mul_col_J!!(Y, p1inv, B, 1)
-        @stepthreads for J = 2:4:N
-            mul_col_J!!(Y, p2inv, B, J)
-            J < N && mul_col_J!!(Y, p2inv, B, J+1)
-        end
-        @stepthreads for J = 4:4:N
-            mul_col_J!!(Y, p1inv, B, J)
-            J < N && mul_col_J!!(Y, p1inv, B, J+1)
-        end
-
-        copyto!(B, Y)
-        fill!(Y, zero(eltype(Y)))
-        copyto!(Y, 1, B, 1, 3M)
-
-        @stepthreads for J = 3:2:N÷2
-            if checklayer(J-1)
-                At_mul_B_col_J!(Y, BF[J-1], B, 2J)
-                2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
-            else
-                ℓ = round(Int, (J-1)÷LAYERSKELETON)*LAYERSKELETON
-                if ℓ > LAYERSKELETON-2
-                    At_mul_B_col_J!(Y, BF[ℓ], B, 2J)
-                    2J < N && At_mul_B_col_J!(Y, BF[ℓ], B, 2J+1)
-                else
-                    copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
-                end
-                At_mul_B_col_J!(RP, Y, 2J, ℓ+1, J-1)
-                2J < N && At_mul_B_col_J!(RP, Y, 2J+1, ℓ+1, J-1)
-            end
-        end
-
-        @stepthreads for J = 2:2:N÷2
-            if checklayer(J)
-                At_mul_B_col_J!(Y, BF[J-1], B, 2J)
-                2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
-            else
-                ℓ = round(Int, J÷LAYERSKELETON)*LAYERSKELETON
-                if ℓ > LAYERSKELETON-2
-                    At_mul_B_col_J!(Y, BF[ℓ-1], B, 2J)
-                    2J < N && At_mul_B_col_J!(Y, BF[ℓ-1], B, 2J+1)
-                else
-                    copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
-                end
-                At_mul_B_col_J!(RP, Y, 2J, ℓ, J-1)
-                2J < N && At_mul_B_col_J!(RP, Y, 2J+1, ℓ, J-1)
-            end
-        end
-
-        sph_zero_spurious_modes!(Y)
+function LinearAlgebra.mul!(Y::Matrix, TPt::Transpose{T,<:ThinSphericalHarmonicPlan}, X::Matrix) where T
+    TP = parent(TPt)
+    RP, BF, p1inv, p2inv, B = TP.RP, TP.BF, TP.p1inv, TP.p2inv, TP.B
+    copyto!(B, X)
+    M, N = size(X)
+    mul_col_J!!(Y, p1inv, B, 1)
+    @stepthreads for J = 2:4:N
+        mul_col_J!!(Y, p2inv, B, J)
+        J < N && mul_col_J!!(Y, p2inv, B, J+1)
+    end
+    @stepthreads for J = 4:4:N
+        mul_col_J!!(Y, p1inv, B, J)
+        J < N && mul_col_J!!(Y, p1inv, B, J+1)
     end
 
-    Base.Ac_mul_B!(Y::Matrix, TP::ThinSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, TP, X)
-else
-    function LinearAlgebra.mul!(Y::Matrix, TPt::Transpose{T,<:ThinSphericalHarmonicPlan}, X::Matrix) where T
-        TP = parent(TPt)
-        RP, BF, p1inv, p2inv, B = TP.RP, TP.BF, TP.p1inv, TP.p2inv, TP.B
-        copyto!(B, X)
-        M, N = size(X)
-        mul_col_J!!(Y, p1inv, B, 1)
-        @stepthreads for J = 2:4:N
-            mul_col_J!!(Y, p2inv, B, J)
-            J < N && mul_col_J!!(Y, p2inv, B, J+1)
-        end
-        @stepthreads for J = 4:4:N
-            mul_col_J!!(Y, p1inv, B, J)
-            J < N && mul_col_J!!(Y, p1inv, B, J+1)
-        end
+    copyto!(B, Y)
+    fill!(Y, zero(eltype(Y)))
+    copyto!(Y, 1, B, 1, 3M)
 
-        copyto!(B, Y)
-        fill!(Y, zero(eltype(Y)))
-        copyto!(Y, 1, B, 1, 3M)
-
-        @stepthreads for J = 3:2:N÷2
-            if checklayer(J-1)
-                At_mul_B_col_J!(Y, BF[J-1], B, 2J)
-                2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
+    @stepthreads for J = 3:2:N÷2
+        if checklayer(J-1)
+            mul_col_J!(Y, transpose(BF[J-1]), B, 2J)
+            2J < N && mul_col_J!(Y, transpose(BF[J-1]), B, 2J+1)
+        else
+            ℓ = round(Int, (J-1)÷LAYERSKELETON)*LAYERSKELETON
+            if ℓ > LAYERSKELETON-2
+                mul_col_J!(Y, transpose(BF[ℓ]), B, 2J)
+                2J < N && mul_col_J!(Y, transpose(BF[ℓ]), B, 2J+1)
             else
-                ℓ = round(Int, (J-1)÷LAYERSKELETON)*LAYERSKELETON
-                if ℓ > LAYERSKELETON-2
-                    At_mul_B_col_J!(Y, BF[ℓ], B, 2J)
-                    2J < N && At_mul_B_col_J!(Y, BF[ℓ], B, 2J+1)
-                else
-                    copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
-                end
-                At_mul_B_col_J!(RP, Y, 2J, ℓ+1, J-1)
-                2J < N && At_mul_B_col_J!(RP, Y, 2J+1, ℓ+1, J-1)
+                copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
             end
+            mul_col_J!(RP, transpose(Y), 2J, ℓ+1, J-1)
+            2J < N && mul_col_J!(RP, transpose(Y), 2J+1, ℓ+1, J-1)
         end
-
-        @stepthreads for J = 2:2:N÷2
-            if checklayer(J)
-                At_mul_B_col_J!(Y, BF[J-1], B, 2J)
-                2J < N && At_mul_B_col_J!(Y, BF[J-1], B, 2J+1)
-            else
-                ℓ = round(Int, J÷LAYERSKELETON)*LAYERSKELETON
-                if ℓ > LAYERSKELETON-2
-                    At_mul_B_col_J!(Y, BF[ℓ-1], B, 2J)
-                    2J < N && At_mul_B_col_J!(Y, BF[ℓ-1], B, 2J+1)
-                else
-                    copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
-                end
-                At_mul_B_col_J!(RP, Y, 2J, ℓ, J-1)
-                2J < N && At_mul_B_col_J!(RP, Y, 2J+1, ℓ, J-1)
-            end
-        end
-
-        sph_zero_spurious_modes!(Y)
     end
 
-    LinearAlgebra.mul!(Y::Matrix, TPc::Adjoint{T,<:ThinSphericalHarmonicPlan}, X::Matrix) where T =
-        mul!(Y, transpose(parent(TPc)), X)
+    @stepthreads for J = 2:2:N÷2
+        if checklayer(J)
+            mul_col_J!(Y, transpose(BF[J-1]), B, 2J)
+            2J < N && mul_col_J!(Y, transpose(BF[J-1]), B, 2J+1)
+        else
+            ℓ = round(Int, J÷LAYERSKELETON)*LAYERSKELETON
+            if ℓ > LAYERSKELETON-2
+                mul_col_J!(Y, transpose(BF[ℓ-1]), B, 2J)
+                2J < N && mul_col_J!(Y, transpose(BF[ℓ-1]), B, 2J+1)
+            else
+                copyto!(Y, 1+M*(2J-1), B, 1+M*(2J-1), 2M)
+            end
+            mul_col_J!(RP, transpose(Y), 2J, ℓ, J-1)
+            2J < N && mul_col_J!(RP, transpose(Y), 2J+1, ℓ, J-1)
+        end
+    end
+
+    sph_zero_spurious_modes!(Y)
 end
+
+LinearAlgebra.mul!(Y::Matrix, TPc::Adjoint{T,<:ThinSphericalHarmonicPlan}, X::Matrix) where T =
+    mul!(Y, transpose(parent(TPc)), X)
+
 allranks(TP::ThinSphericalHarmonicPlan) = mapreduce(i->allranks(TP.BF[i]),vcat,sort!([LAYERSKELETON-1:LAYERSKELETON:length(TP.BF);LAYERSKELETON:LAYERSKELETON:length(TP.BF)]))
 
 
@@ -234,7 +175,8 @@ function mul_col_J!(P::RotationPlan, A::AbstractMatrix, J::Int, L1::Int, L2::Int
     A
 end
 
-function At_mul_B_col_J!(P::RotationPlan, A::AbstractMatrix, J::Int, L1::Int, L2::Int)
+function mul_col_J!(P::RotationPlan, At::Transpose{<:Any,<:AbstractMatrix}, J::Int, L1::Int, L2::Int)
+    A = parent(At)
     M, N = size(A)
     @inbounds for m = L1:2:L2-1
         layer = P.layers[m+1]

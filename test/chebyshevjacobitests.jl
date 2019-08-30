@@ -1,6 +1,6 @@
-using FastTransforms, Compat
-using Compat.Test, Compat.LinearAlgebra
-import Compat.Statistics
+using FastTransforms
+using Test, LinearAlgebra
+import Statistics
 
 @testset "Chebyshev--Jacobi transform" begin
     println("Testing the accuracy of asymptotics")

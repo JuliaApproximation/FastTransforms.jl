@@ -15,14 +15,14 @@ end
 @inline length(P::Pnmp1toPlm) = length(P.rotations)
 @inline getindex(P::Pnmp1toPlm, i::Int) = P.rotations[i]
 
-function LAmul!(C::Pnmp1toPlm, A::AbstractVecOrMat)
+function LinearAlgebra.mul!(C::Pnmp1toPlm, A::AbstractVecOrMat)
     @inbounds for i = 1:length(C)
         mul!(C.rotations[i], A)
     end
     A
 end
 
-function LAmul!(A::AbstractMatrix, C::Pnmp1toPlm)
+function LinearAlgebra.mul!(A::AbstractMatrix, C::Pnmp1toPlm)
     @inbounds for i = length(C):-1:1
         mul!(A, C.rotations[i])
     end
@@ -41,7 +41,7 @@ function TriRotationPlan(::Type{T}, n::Int, α::T, β::T, γ::T) where T
     TriRotationPlan(layers)
 end
 
-function LAmul!(P::TriRotationPlan, A::AbstractMatrix)
+function LinearAlgebra.mul!(P::TriRotationPlan, A::AbstractMatrix)
     M, N = size(A)
     @inbounds for m = N-1:-1:1
         layer = P.layers[m]
@@ -57,45 +57,26 @@ function LAmul!(P::TriRotationPlan, A::AbstractMatrix)
     A
 end
 
-if VERSION < v"0.7-"
-    function Base.At_mul_B!(P::TriRotationPlan, A::AbstractMatrix)
-        M, N = size(A)
-        @inbounds for m = 1:N-1
-            layer = P.layers[m]
-            for ℓ = (m+1):N
-                @simd for i = length(layer):-1:1
-                    G = layer[i]
-                    a1, a2 = A[G.i1,ℓ], A[G.i2,ℓ]
-                    A[G.i1,ℓ] = G.c*a1 - G.s*a2
-                    A[G.i2,ℓ] = G.s*a1 + G.c*a2
-                end
+function LinearAlgebra.lmul!(Pt::Transpose{T,<:TriRotationPlan}, A::AbstractMatrix) where T
+    P = parent(Pt)
+    M, N = size(A)
+    @inbounds for m = 1:N-1
+        layer = P.layers[m]
+        for ℓ = (m+1):N
+            @simd for i = length(layer):-1:1
+                G = layer[i]
+                a1, a2 = A[G.i1,ℓ], A[G.i2,ℓ]
+                A[G.i1,ℓ] = G.c*a1 - G.s*a2
+                A[G.i2,ℓ] = G.s*a1 + G.c*a2
             end
         end
-        A
     end
-
-    Base.Ac_mul_B!(P::TriRotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
-else
-    function LinearAlgebra.lmul!(Pt::Transpose{T,<:TriRotationPlan}, A::AbstractMatrix) where T
-        P = parent(Pt)
-        M, N = size(A)
-        @inbounds for m = 1:N-1
-            layer = P.layers[m]
-            for ℓ = (m+1):N
-                @simd for i = length(layer):-1:1
-                    G = layer[i]
-                    a1, a2 = A[G.i1,ℓ], A[G.i2,ℓ]
-                    A[G.i1,ℓ] = G.c*a1 - G.s*a2
-                    A[G.i2,ℓ] = G.s*a1 + G.c*a2
-                end
-            end
-        end
-        A
-    end
-
-    LinearAlgebra.lmul!(Pc::Adjoint{T,<:TriRotationPlan}, A::AbstractMatrix) where T =
-        lmul!(transpose(parent(Pc)), A)
+    A
 end
+
+LinearAlgebra.lmul!(Pc::Adjoint{T,<:TriRotationPlan}, A::AbstractMatrix) where T =
+    lmul!(transpose(parent(Pc)), A)
+
 
 struct SlowTriangularHarmonicPlan{T} <: TriangularHarmonicPlan{T}
     RP::TriRotationPlan{T}
@@ -116,7 +97,7 @@ function SlowTriangularHarmonicPlan(A::Matrix{T}, α, β, γ) where T
     SlowTriangularHarmonicPlan(RP, p, pinv, B)
 end
 
-function LAmul!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
+function LinearAlgebra.mul!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
     RP, p, B = SP.RP, SP.p, SP.B
     copyto!(B, X)
     mul!(RP, B)
@@ -133,42 +114,22 @@ function LAmul!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
     Y
 end
 
-if VERSION < v"0.7-"
-    function Base.At_mul_B!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix)
-        RP, pinv, B = SP.RP, SP.pinv, SP.B
-        copyto!(B, X)
-        M, N = size(X)
-        @inbounds for J = 1:N
-            nrm = sqrt(π/(2-δ(J-1,0)))
-            @simd for I = 1:M
-                B[I,J] *= nrm
-            end
+function LinearAlgebra.mul!(Y::Matrix, SPt::Transpose{T,<:SlowTriangularHarmonicPlan}, X::Matrix) where T
+    SP = parent(SPt)
+    RP, pinv, B = SP.RP, SP.pinv, SP.B
+    copyto!(B, X)
+    M, N = size(X)
+    @inbounds for J = 1:N
+        nrm = sqrt(π/(2-δ(J-1,0)))
+        @simd for I = 1:M
+            B[I,J] *= nrm
         end
-        for J = 1:N
-            mul_col_J!!(Y, pinv, B, J)
-        end
-        tri_zero_spurious_modes!(At_mul_B!(RP, Y))
     end
-
-    Base.Ac_mul_B!(Y::Matrix, SP::SlowTriangularHarmonicPlan, X::Matrix) = At_mul_B!(Y, SP, X)
-else
-    function LinearAlgebra.mul!(Y::Matrix, SPt::Transpose{T,<:SlowTriangularHarmonicPlan}, X::Matrix) where T
-        SP = parent(SPt)
-        RP, pinv, B = SP.RP, SP.pinv, SP.B
-        copyto!(B, X)
-        M, N = size(X)
-        @inbounds for J = 1:N
-            nrm = sqrt(π/(2-δ(J-1,0)))
-            @simd for I = 1:M
-                B[I,J] *= nrm
-            end
-        end
-        for J = 1:N
-            mul_col_J!!(Y, pinv, B, J)
-        end
-        tri_zero_spurious_modes!(At_mul_B!(RP, Y))
+    for J = 1:N
+        mul_col_J!!(Y, pinv, B, J)
     end
-
-    LinearAlgebra.mul!(Y::Matrix, SPc::Adjoint{T,<:SlowTriangularHarmonicPlan}, X::Matrix) where T = 
-        mul!(Y, transpose(parent(SPc)), X)
+    tri_zero_spurious_modes!(lmul!(transpose(RP), Y))
 end
+
+LinearAlgebra.mul!(Y::Matrix, SPc::Adjoint{T,<:SlowTriangularHarmonicPlan}, X::Matrix) where T = 
+    mul!(Y, transpose(parent(SPc)), X)

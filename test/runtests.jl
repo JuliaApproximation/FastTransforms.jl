@@ -1,11 +1,5 @@
-using FastTransforms, Compat
-using Compat.Test, Compat.LinearAlgebra, Compat.Random
-if VERSION < v"0.7"
-    srand(0)
-else
-    using Compat.Statistics
-    Random.seed!(0)
-end
+using FastTransforms, Test, LinearAlgebra, Random, Statistics
+Random.seed!(0)
 
 include("basictests.jl")
 
