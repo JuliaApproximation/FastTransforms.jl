@@ -80,7 +80,7 @@ function LinearAlgebra.mul!(Y::Matrix, FPt::Transpose{T,<:FastSphericalHarmonicP
 
     copyto!(B, Y)
     @stepthreads for J = 2:N÷2
-        mul_col_J!(Y, tranpose(BF[J-1]), B, 2J)
+        mul_col_J!(Y, transpose(BF[J-1]), B, 2J)
         2J < N && mul_col_J!(Y, transpose(BF[J-1]), B, 2J+1)
     end
     sph_zero_spurious_modes!(Y)

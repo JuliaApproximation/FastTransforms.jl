@@ -17,8 +17,8 @@ import FastTransforms: normalizecolumns!, maxcolnorm
 
     @time mul!(B, SP, A);
     @time mul!(C, TP, A);
-    @time mul!(D, tranpose(SP), B);
-    @time mul!(E, tranpose(TP), C);
+    @time mul!(D, transpose(SP), B);
+    @time mul!(E, transpose(TP), C);
 
     @test maxcolnorm(B-C) < 10eps()*max(m,n)
     @test maxcolnorm(A-D) < 10eps()*max(m,n)
