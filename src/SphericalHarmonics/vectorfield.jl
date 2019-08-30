@@ -1,4 +1,4 @@
-function mul_vf!(P::RotationPlan, A::AbstractMatrix)
+function lmul_vf!(P::RotationPlan, A::AbstractMatrix)
     N, M = size(A)
     snm = P.snm
     cnm = P.cnm
@@ -49,7 +49,7 @@ end
 function LinearAlgebra.mul!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPlan, X1::Matrix, X2::Matrix)
     RP, p1, p2, B = SP.RP, SP.p1, SP.p2, SP.B
     copyto!(B, X1)
-    mul_vf!(RP, B)
+    lmul_vf!(RP, B)
     M, N = size(X1)
     mul_col_J!!(Y1, p2, B, 1)
     @stepthreads for J = 2:4:N
@@ -61,7 +61,7 @@ function LinearAlgebra.mul!(Y1::Matrix, Y2::Matrix, SP::SlowSphericalHarmonicPla
         J < N && mul_col_J!!(Y1, p2, B, J+1)
     end
     copyto!(B, X2)
-    mul_vf!(RP, B)
+    lmul_vf!(RP, B)
     M, N = size(X2)
     mul_col_J!!(Y2, p2, B, 1)
     @stepthreads for J = 2:4:N
@@ -90,7 +90,7 @@ function LinearAlgebra.mul!(Y1::Matrix, Y2::Matrix, SPt::Transpose{Any,SlowSpher
         mul_col_J!!(Y1, p2inv, B, J)
         J < N && mul_col_J!!(Y1, p2inv, B, J+1)
     end
-    sph_zero_spurious_modes_vf!(mul_vf!(transpose(RP), Y1))
+    sph_zero_spurious_modes_vf!(lmul_vf!(transpose(RP), Y1))
     copyto!(B, X2)
     M, N = size(X2)
     mul_col_J!!(Y2, p2inv, B, 1)
@@ -102,7 +102,7 @@ function LinearAlgebra.mul!(Y1::Matrix, Y2::Matrix, SPt::Transpose{Any,SlowSpher
         mul_col_J!!(Y2, p2inv, B, J)
         J < N && mul_col_J!!(Y2, p2inv, B, J+1)
     end
-    sph_zero_spurious_modes_vf!(mul_vf!(transpose(RP), Y2))
+    sph_zero_spurious_modes_vf!(lmul_vf!(transpose(RP), Y2))
     Y1
 end
 
