@@ -2,7 +2,7 @@
 module FastTransforms
 
 using ToeplitzMatrices, HierarchicalMatrices, LowRankApprox, ProgressMeter,
-        AbstractFFTs, SpecialFunctions
+        AbstractFFTs, SpecialFunctions, FastGaussQuadrature
 
 using FFTW, LinearAlgebra, DSP
 import FFTW: r2rFFTWPlan, unsafe_execute!, fftwSingle, fftwDouble, fftwNumber
@@ -23,6 +23,8 @@ import HierarchicalMatrices: mul!
 import HierarchicalMatrices: ThreadSafeVector, threadsafezeros
 import LowRankApprox: ColPerm, RowPerm
 import AbstractFFTs: Plan
+
+import FastGaussQuadrature: unweightedgausshermite
 
 export cjt, icjt, jjt, plan_cjt, plan_icjt
 export leg2cheb, cheb2leg, leg2chebu, ultra2ultra, jac2jac, plan_jac2jac
@@ -46,6 +48,8 @@ export sphones, sphzeros, sphrand, sphrandn, sphevaluate
 export SlowTriangularHarmonicPlan
 export tri2cheb, cheb2tri, plan_tri2cheb
 export triones, trizeros, trirand, trirandn, trievaluate
+
+export hermitepoints, weightedhermitetransform, iweightedhermitetransform
 
 # Other module methods and constants:
 #export ChebyshevJacobiPlan, jac2cheb, cheb2jac
@@ -80,6 +84,7 @@ include("inufft.jl")
 include("cjt.jl")
 
 include("toeplitzhankel.jl")
+include("hermite.jl")
 
 #leg2cheb(x...)=th_leg2cheb(x...)
 #cheb2leg(x...)=th_cheb2leg(x...)

@@ -2,25 +2,15 @@ using FastTransforms, Test, LinearAlgebra, Random, Statistics
 Random.seed!(0)
 
 include("basictests.jl")
-
 include("chebyshevtests.jl")
-
 include("nuffttests.jl")
-
 include("chebyshevjacobitests.jl")
-
 include("chebyshevlegendretests.jl")
-
 include("gaunttests.jl")
-
 include("fftBigFloattests.jl")
-
 include("paduatests.jl")
-
+include("hermitetests.jl")
 include("butterflytests.jl")
-
 include("sphericalharmonics/sphericalharmonictests.jl")
-
 include("toeplitztests.jl")
-
 include("specialfunctionstests.jl")
