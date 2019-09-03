@@ -1,12 +1,6 @@
-using FastTransforms, Compat
-using Compat.Test
+using FastTransforms, Test, FFTW
+FFTW.set_num_threads(Base.Sys.CPU_THREADS)
 
-if VERSION ≥ v"0.7-"
-    using FFTW
-    FFTW.set_num_threads(Base.Sys.CPU_THREADS)
-else
-    FFTW.set_num_threads(Base.Sys.CPU_CORES)
-end
 
 @testset "Nonuniform fast Fourier transforms" begin
     function nudft1(c::AbstractVector, ω::AbstractVector{T}) where {T<:AbstractFloat}

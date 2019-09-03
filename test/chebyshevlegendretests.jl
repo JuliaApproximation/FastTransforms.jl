@@ -1,5 +1,5 @@
-using FastTransforms, Compat
-using Compat.Test, Compat.LinearAlgebra
+using FastTransforms
+using Test, LinearAlgebra
 
 @testset "Chebyshev--Legendre transform" begin
     for k in round.([Int],10 .^ range(1,stop=4,length=20))

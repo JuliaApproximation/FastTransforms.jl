@@ -1,5 +1,4 @@
-using FastTransforms, Compat
-using Compat.Test
+using FastTransforms, Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
@@ -18,8 +17,8 @@ import FastTransforms: normalizecolumns!, maxcolnorm
 
     @time mul!(B, SP, A);
     @time mul!(C, FP, A);
-    @time At_mul_B!(D, SP, B);
-    @time At_mul_B!(E, FP, C);
+    @time mul!(D, transpose(SP), B);
+    @time mul!(E, transpose(FP), C);
 
     @test maxcolnorm(B-C) < 10eps()*max(m,n)
     @test maxcolnorm(A-D) < 10eps()*max(m,n)

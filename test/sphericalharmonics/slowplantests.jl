@@ -1,5 +1,4 @@
-using FastTransforms, Compat
-using Compat.Test
+using FastTransforms, Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
@@ -23,7 +22,7 @@ import FastTransforms: normalizecolumns!, maxcolnorm
             SP = SlowSphericalHarmonicPlan(A)
             mul!(B, SP, A)
             fill!(A, 0.0)
-            t[j] += @elapsed At_mul_B!(A, SP, B)
+            t[j] += @elapsed mul!(A, transpose(SP), B)
             nrms[kk] = maxcolnorm(A - Ac)
         end
         t[j] /= Nr

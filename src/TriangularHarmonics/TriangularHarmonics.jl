@@ -5,7 +5,7 @@ function *(P::TriangularHarmonicPlan, X::AbstractMatrix)
 end
 
 function \(P::TriangularHarmonicPlan, X::AbstractMatrix)
-    At_mul_B!(zero(X), P, X)
+    mul!(zero(X), transpose(P), X)
 end
 
 include("trifunctions.jl")

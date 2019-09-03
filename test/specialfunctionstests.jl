@@ -1,5 +1,4 @@
-using FastTransforms
-using Compat.Test
+using FastTransforms, Test
 import FastTransforms.pochhammer
 
 const sqrtpi = 1.772453850905516027298
