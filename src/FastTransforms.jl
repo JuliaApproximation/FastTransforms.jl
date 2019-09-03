@@ -60,6 +60,8 @@ export hermitepoints, weightedhermitetransform, iweightedhermitetransform
 #export plan_fejer2, fejernodes2, fejerweights2
 #export RecurrencePlan, forward_recurrence!, backward_recurrence
 
+lgamma(x) = logabsgamma(x)[1]
+
 include("stepthreading.jl")
 include("fftBigFloat.jl")
 include("specialfunctions.jl")
