@@ -110,10 +110,9 @@ function Butterfly(A::AbstractMatrix{T}, L::Int; isorthogonal::Bool = false, opt
     Butterfly(columns, factors, permutations, indices, threadsafezeros(T, kk), threadsafezeros(T, kk), threadsafezeros(T, kk), threadsafezeros(T, kk))
 end
 
-if VERSION ≥ v"0.7-"
-    LinearAlgebra.adjoint(B::Butterfly) = Adjoint(B)
-    LinearAlgebra.transpose(B::Butterfly) = Transpose(B)
-end
+LinearAlgebra.adjoint(B::Butterfly) = Adjoint(B)
+LinearAlgebra.transpose(B::Butterfly) = Transpose(B)
+
 
 function sumkmax(indices::Vector{Vector{Int}})
     ret = 0
@@ -173,66 +172,61 @@ function rowperm!(fwd::Bool, y::AbstractVector, x::AbstractVector, p::Vector{Int
 end
 
 ## ColumnPermutation
-mul!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(false, B, A.p, jstart)
-At_mul_B!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(true, B, A.p, jstart)
-Ac_mul_B!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = At_mul_B!(A, B, jstart)
+lmul!(A::ColPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(false, B, A.p, jstart)
+lmul!(At::RowPerm, B::AbstractVecOrMat, jstart::Int) = rowperm!(true, B, transpose(At).p, jstart)
 
 mul!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = rowperm!(false, y, x, A.p, jstart)
-At_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = rowperm!(true, y, x, A.p, jstart)
-Ac_mul_B!(y::AbstractVector, A::ColPerm, x::AbstractVector, jstart::Int) = At_mul_B!(y, x, A, jstart)
+mul!(y::AbstractVector, At::RowPerm, x::AbstractVector, jstart::Int) = rowperm!(true, y, x, transpose(At).p, jstart)
 
-# Fast mul!, At_mul_B!, and Ac_mul_B! for an ID. These overwrite the output.
+# Fast mul! for an ID. These overwrite the output.
 
 
 function mul!(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where {T}
     k, n = size(A)
-    At_mul_B!(P, x, jstart)
+    lmul!(transpose(P), x, jstart)
     copyto!(y, istart, x, jstart, k)
     mul!(y, A.T, x, istart, jstart+k)
-    mul!(P, x, jstart)
+    lmul!(P, x, jstart)
     y
 end
 
 function mul!(y::AbstractVector{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int) where {T}
     k, n = size(A)
-    At_mul_B!(temp, P, x, jstart)
+    mul!(temp, transpose(P), x, jstart)
     copyto!(y, istart, temp, jstart, k)
     mul!(y, A.T, temp, istart, jstart+k)
     y
 end
 
-### mul!, At_mul_B!, and  Ac_mul_B! for a Butterfly factorization.
+### mul! for a Butterfly factorization.
 mul!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = mul_col_J!(u, B, b, 1)
 
-for f! in (:At_mul_B!, :Ac_mul_B!)
+for Trans in (:Transpose, :Adjoint)
     @eval begin
-        function $f!(y::AbstractVecOrMat{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where {T}
+        function mul!(y::AbstractVecOrMat{T}, Ac::$Trans{T,IDPackedV{T}}, P::ColumnPermutation, x::AbstractVecOrMat{T}, istart::Int, jstart::Int) where {T}
+            A = parent(Ac)
             k, n = size(A)
             copyto!(y, istart, x, jstart, k)
-            $f!(y, A.T, x, istart+k, jstart)
-            mul!(P, y, istart)
+            mul!(y, $Trans(A.T), x, istart+k, jstart)
+            lmul!(P, y, istart)
             y
         end
 
-        function $f!(y::AbstractVector{T}, A::IDPackedV{T}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int) where {T}
+        function mul!(y::AbstractVector{T}, Ac::$Trans{T,IDPackedV{T}}, P::ColumnPermutation, x::AbstractVector{T}, temp::AbstractVector{T}, istart::Int, jstart::Int) where {T}
+            A = parent(Ac)
             k, n = size(A)
             copyto!(temp, istart, x, jstart, k)
-            $f!(temp, A.T, x, istart+k, jstart)
+            mul!(temp, $Trans(A.T), x, istart+k, jstart)
             mul!(y, P, temp, istart)
             y
         end
     end
 end
 
-if VERSION < v"0.7-"
-    Base.A_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = mul_col_J!(u, B, b, 1)
-    Base.At_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = At_mul_B_col_J!(u, B, b, 1)
-    Base.Ac_mul_B!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = Ac_mul_B_col_J!(u, B, b, 1)
-else
-    LinearAlgebra.mul!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = mul_col_J!(u, B, b, 1)
-    LinearAlgebra.mul!(u::Vector{T}, Bt::Transpose{T,Butterfly{T}}, b::Vector{T}) where T = At_mul_B_col_J!(u, parent(Bt), b, 1)
-    LinearAlgebra.mul!(u::Vector{T}, Bc::Adjoint{T,Butterfly{T}}, b::Vector{T}) where T = Ac_mul_B_col_J!(u, parent(Bc), b, 1)
-end
+LinearAlgebra.mul!(u::Vector{T}, B::Butterfly{T}, b::Vector{T}) where T = mul_col_J!(u, B, b, 1)
+LinearAlgebra.mul!(u::Vector{T}, Bt::Transpose{T,Butterfly{T}}, b::Vector{T}) where T = mul_col_J!(u, Bt, b, 1)
+LinearAlgebra.mul!(u::Vector{T}, Bc::Adjoint{T,Butterfly{T}}, b::Vector{T}) where T = mul_col_J!(u, Bc, b, 1)
+
 
 
 function mul_col_J!(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int) where T
@@ -290,10 +284,10 @@ function mul_col_J!(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int) whe
     u
 end
 
-for f! in (:At_mul_B!,:Ac_mul_B!)
-    f_col_J! = Meta.parse(string(f!)[1:end-1]*"_col_J!")
+for Trans in (:Transpose,:Adjoint)
     @eval begin
-        function $f_col_J!(u::VecOrMat{T}, B::Butterfly{T}, b::VecOrMat{T}, J::Int) where T
+        function mul_col_J!(u::VecOrMat{T}, Bc::$Trans{T,Butterfly{T}}, b::VecOrMat{T}, J::Int) where T
+            B = parent(Bc)
             L = length(B.factors) - 1
             tL = 2^L
 
@@ -315,7 +309,7 @@ for f! in (:At_mul_B!,:Ac_mul_B!)
             for i = 1:tL
                 ml = mu+1
                 mu += size(columns[i], 1)
-                $f!(temp1, columns[i], b, inds[i], ml+COLSHIFT)
+                mul!(temp1, $Trans(columns[i]), b, inds[i], ml+COLSHIFT)
             end
 
             ii, jj = tL, 1
@@ -329,7 +323,7 @@ for f! in (:At_mul_B!,:Ac_mul_B!)
                     shft = 2jj*div(ctr,2jj)
                     fill!(temp4, zero(T))
                     for j = 1:jj
-                        $f!(temp3, factors[j+ctr], permutations[j+ctr], temp1, temp4, indsout[2j+shft-1], indsin[j+ctr])
+                        mul!(temp3, $Trans(factors[j+ctr]), permutations[j+ctr], temp1, temp4, indsout[2j+shft-1], indsin[j+ctr])
                         addtemp3totemp2!(temp2, temp3, indsout[2j+shft-1], indsout[2j+shft+1]-1)
                     end
                     ctr += jj
@@ -346,7 +340,7 @@ for f! in (:At_mul_B!,:Ac_mul_B!)
             for j = 1:tL
                 nl = nu+1
                 nu += size(factors[j], 2)
-                $f!(u, factors[j], permutations[j], temp1, nl+COLSHIFT, inds[j])
+                mul!(u, $Trans(factors[j]), permutations[j], temp1, nl+COLSHIFT, inds[j])
             end
 
             u

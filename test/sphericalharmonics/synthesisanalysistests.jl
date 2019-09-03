@@ -1,11 +1,7 @@
-using FastTransforms, Compat
-using Compat.Test
+using FastTransforms, Test
 
 import FastTransforms: normalizecolumns!, maxcolnorm
 
-if VERSION ≥ v"0.7-"
-    vecnorm(A, p...) = norm(A, p...)
-end
 
 @testset "Synthesis and analysis" begin
 
@@ -63,7 +59,7 @@ end
         n = 20
         UO = sphones(Float64, n, n)
         UE = sphones(Float64, n, n)
-        while norm(UO[:,end]) > vecnorm(UO)*eps()
+        while norm(UO[:,end]) > norm(UO)*eps()
             θ = (0.5:n-0.5)/n
             φ = (0:2n-2)*2/(2n-1)
             F = [f(θ,φ) for θ in θ, φ in φ]
@@ -79,7 +75,7 @@ end
 
             n *= 2
         end
-        @test vecnorm(UO[:,1:end-1] - UE) < n*vecnorm(UO)*eps()
+        @test norm(UO[:,1:end-1] - UE) < n*norm(UO)*eps()
     end
 end
 
@@ -104,9 +100,9 @@ end
         G2 = zero(V2)
         mul!(G2, FastTransforms.plan_synthesis2(V2), V2)
 
-        @test vecnorm(V-V2) < n*vecnorm(V)*eps()
-        @test vecnorm(F-G) < n*vecnorm(F)*eps()
-        @test vecnorm(F2-G2) < n*vecnorm(F)*eps()
+        @test norm(V-V2) < n*norm(V)*eps()
+        @test norm(F-G) < n*norm(F)*eps()
+        @test norm(F2-G2) < n*norm(F)*eps()
     end
 end
 

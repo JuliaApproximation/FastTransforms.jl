@@ -1,4 +1,4 @@
-import Compat.LinearAlgebra: Givens, AbstractRotation
+import LinearAlgebra: Givens, AbstractRotation
 
 ### These three mul! should be in Base, but for the time being they do not add methods to Base.mul!; they add methods to the internal mul!.
 
@@ -58,14 +58,14 @@ end
 @inline length(P::Pnmp2toPlm) = length(P.rotations)
 @inline getindex(P::Pnmp2toPlm, i::Int) = P.rotations[i]
 
-function LAmul!(C::Pnmp2toPlm, A::AbstractVecOrMat)
+function LinearAlgebra.mul!(C::Pnmp2toPlm, A::AbstractVecOrMat)
     @inbounds for i = 1:length(C)
         mul!(C.rotations[i], A)
     end
     A
 end
 
-function LAmul!(A::AbstractMatrix, C::Pnmp2toPlm)
+function LinearAlgebra.mul!(A::AbstractMatrix, C::Pnmp2toPlm)
     @inbounds for i = length(C):-1:1
         mul!(A, C.rotations[i])
     end
@@ -99,12 +99,11 @@ function RotationPlan(::Type{T}, n::Int) where T
     RotationPlan(layers, snm, cnm)
 end
 
-if VERSION ≥ v"0.7-"
-    adjoint(P::RotationPlan) = Adjoint(P)
-    transpose(P::RotationPlan) = Transpose(P)
-end
 
-function LAmul!(P::RotationPlan, A::AbstractMatrix)
+adjoint(P::RotationPlan) = Adjoint(P)
+transpose(P::RotationPlan) = Transpose(P)
+
+function LinearAlgebra.mul!(P::RotationPlan, A::AbstractMatrix)
     N, M = size(A)
     snm = P.snm
     cnm = P.cnm
@@ -156,155 +155,60 @@ function LAmul!(P::RotationPlan, A::AbstractMatrix)
     A
 end
 
-if VERSION < v"0.7-"
-    function Base.At_mul_B!(P::RotationPlan, A::AbstractMatrix)
-        N, M = size(A)
-        snm = P.snm
-        cnm = P.cnm
-        if isodd(M)
-            m = M÷2
-            @inbounds for j = reverse(m:-2:2)
-                for l = 1:N-j
-                    s = snm[l+(j-2)*(2*N+3-j)÷2]
-                    c = cnm[l+(j-2)*(2*N+3-j)÷2]
-                    a1 = A[l+N*(2*m-1)]
-                    a2 = A[l+2+N*(2*m-1)]
-                    a3 = A[l+N*(2*m)]
-                    a4 = A[l+2+N*(2*m)]
-                    A[l+N*(2*m-1)] = c*a1 - s*a2
-                    A[l+2+N*(2*m-1)] = c*a2 + s*a1
-                    A[l+N*(2*m)] = c*a3 - s*a4
-                    A[l+2+N*(2*m)] = c*a4 + s*a3
-                end
-            end
-        else
-            m = M÷2
-            @inbounds for j = reverse(m:-2:2)
-                for l = 1:N-j
-                    s = snm[l+(j-2)*(2*N+3-j)÷2]
-                    c = cnm[l+(j-2)*(2*N+3-j)÷2]
-                    a1 = A[l+N*(2*m-1)]
-                    a2 = A[l+2+N*(2*m-1)]
-                    A[l+N*(2*m-1)] = c*a1 - s*a2
-                    A[l+2+N*(2*m-1)] = c*a2 + s*a1
-                end
-            end
-        end
-        @stepthreads for m = M÷2-1:-1:2
-            @inbounds for j = reverse(m:-2:2)
-                for l = 1:N-j
-                    s = snm[l+(j-2)*(2*N+3-j)÷2]
-                    c = cnm[l+(j-2)*(2*N+3-j)÷2]
-                    a1 = A[l+N*(2*m-1)]
-                    a2 = A[l+2+N*(2*m-1)]
-                    a3 = A[l+N*(2*m)]
-                    a4 = A[l+2+N*(2*m)]
-                    A[l+N*(2*m-1)] = c*a1 - s*a2
-                    A[l+2+N*(2*m-1)] = c*a2 + s*a1
-                    A[l+N*(2*m)] = c*a3 - s*a4
-                    A[l+2+N*(2*m)] = c*a4 + s*a3
-                end
-            end
-        end
-        A
-    end
-    Base.Ac_mul_B!(P::RotationPlan, A::AbstractMatrix) = At_mul_B!(P, A)
-else
-    function LinearAlgebra.lmul!(Pt::Transpose{T,<:RotationPlan}, A::AbstractMatrix) where T
-        P = parent(Pt)
-        N, M = size(A)
-        snm = P.snm
-        cnm = P.cnm
-        if isodd(M)
-            m = M÷2
-            @inbounds for j = reverse(m:-2:2)
-                for l = 1:N-j
-                    s = snm[l+(j-2)*(2*N+3-j)÷2]
-                    c = cnm[l+(j-2)*(2*N+3-j)÷2]
-                    a1 = A[l+N*(2*m-1)]
-                    a2 = A[l+2+N*(2*m-1)]
-                    a3 = A[l+N*(2*m)]
-                    a4 = A[l+2+N*(2*m)]
-                    A[l+N*(2*m-1)] = c*a1 - s*a2
-                    A[l+2+N*(2*m-1)] = c*a2 + s*a1
-                    A[l+N*(2*m)] = c*a3 - s*a4
-                    A[l+2+N*(2*m)] = c*a4 + s*a3
-                end
-            end
-        else
-            m = M÷2
-            @inbounds for j = reverse(m:-2:2)
-                for l = 1:N-j
-                    s = snm[l+(j-2)*(2*N+3-j)÷2]
-                    c = cnm[l+(j-2)*(2*N+3-j)÷2]
-                    a1 = A[l+N*(2*m-1)]
-                    a2 = A[l+2+N*(2*m-1)]
-                    A[l+N*(2*m-1)] = c*a1 - s*a2
-                    A[l+2+N*(2*m-1)] = c*a2 + s*a1
-                end
-            end
-        end
-        @stepthreads for m = M÷2-1:-1:2
-            @inbounds for j = reverse(m:-2:2)
-                for l = 1:N-j
-                    s = snm[l+(j-2)*(2*N+3-j)÷2]
-                    c = cnm[l+(j-2)*(2*N+3-j)÷2]
-                    a1 = A[l+N*(2*m-1)]
-                    a2 = A[l+2+N*(2*m-1)]
-                    a3 = A[l+N*(2*m)]
-                    a4 = A[l+2+N*(2*m)]
-                    A[l+N*(2*m-1)] = c*a1 - s*a2
-                    A[l+2+N*(2*m-1)] = c*a2 + s*a1
-                    A[l+N*(2*m)] = c*a3 - s*a4
-                    A[l+2+N*(2*m)] = c*a4 + s*a3
-                end
-            end
-        end
-        A
-    end
-    LinearAlgebra.lmul!(Pc::Adjoint{T,<:RotationPlan}, A::AbstractMatrix) where T = lmul!(parent(Pc)', A)
 
-end
-
-#=
-function LAmul!(P::RotationPlan, A::AbstractMatrix)
-    M, N = size(A)
-    @inbounds for m = N÷2-2:-1:0
-        layer = P.layers[m+1]
-        for ℓ = 2*(m+2):4:N
-            @simd for i = 1:length(layer)
-                G = layer[i]
-                a1, a2 = A[G.i1,ℓ], A[G.i2,ℓ]
-                A[G.i1,ℓ] = G.c*a1 + G.s*a2
-                A[G.i2,ℓ] = G.c*a2 - G.s*a1
-                a1, a2 = A[G.i1,ℓ+1], A[G.i2,ℓ+1]
-                A[G.i1,ℓ+1] = G.c*a1 + G.s*a2
-                A[G.i2,ℓ+1] = G.c*a2 - G.s*a1
+function LinearAlgebra.lmul!(Pt::Transpose{T,<:RotationPlan}, A::AbstractMatrix) where T
+    P = parent(Pt)
+    N, M = size(A)
+    snm = P.snm
+    cnm = P.cnm
+    if isodd(M)
+        m = M÷2
+        @inbounds for j = reverse(m:-2:2)
+            for l = 1:N-j
+                s = snm[l+(j-2)*(2*N+3-j)÷2]
+                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                a1 = A[l+N*(2*m-1)]
+                a2 = A[l+2+N*(2*m-1)]
+                a3 = A[l+N*(2*m)]
+                a4 = A[l+2+N*(2*m)]
+                A[l+N*(2*m-1)] = c*a1 - s*a2
+                A[l+2+N*(2*m-1)] = c*a2 + s*a1
+                A[l+N*(2*m)] = c*a3 - s*a4
+                A[l+2+N*(2*m)] = c*a4 + s*a3
+            end
+        end
+    else
+        m = M÷2
+        @inbounds for j = reverse(m:-2:2)
+            for l = 1:N-j
+                s = snm[l+(j-2)*(2*N+3-j)÷2]
+                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                a1 = A[l+N*(2*m-1)]
+                a2 = A[l+2+N*(2*m-1)]
+                A[l+N*(2*m-1)] = c*a1 - s*a2
+                A[l+2+N*(2*m-1)] = c*a2 + s*a1
+            end
+        end
+    end
+    @stepthreads for m = M÷2-1:-1:2
+        @inbounds for j = reverse(m:-2:2)
+            for l = 1:N-j
+                s = snm[l+(j-2)*(2*N+3-j)÷2]
+                c = cnm[l+(j-2)*(2*N+3-j)÷2]
+                a1 = A[l+N*(2*m-1)]
+                a2 = A[l+2+N*(2*m-1)]
+                a3 = A[l+N*(2*m)]
+                a4 = A[l+2+N*(2*m)]
+                A[l+N*(2*m-1)] = c*a1 - s*a2
+                A[l+2+N*(2*m-1)] = c*a2 + s*a1
+                A[l+N*(2*m)] = c*a3 - s*a4
+                A[l+2+N*(2*m)] = c*a4 + s*a3
             end
         end
     end
     A
 end
-
-function Base.At_mul_B!(P::RotationPlan, A::AbstractMatrix)
-    M, N = size(A)
-    @inbounds for m = 0:N÷2-2
-        layer = P.layers[m+1]
-        for ℓ = 2*(m+2):4:N
-            @simd for i = length(layer):-1:1
-                G = layer[i]
-                a1, a2 = A[G.i1,ℓ], A[G.i2,ℓ]
-                A[G.i1,ℓ] = G.c*a1 - G.s*a2
-                A[G.i2,ℓ] = G.s*a1 + G.c*a2
-                a1, a2 = A[G.i1,ℓ+1], A[G.i2,ℓ+1]
-                A[G.i1,ℓ+1] = G.c*a1 - G.s*a2
-                A[G.i2,ℓ+1] = G.s*a1 + G.c*a2
-            end
-        end
-    end
-    A
-end
-=#
+LinearAlgebra.lmul!(Pc::Adjoint{T,<:RotationPlan}, A::AbstractMatrix) where T = lmul!(parent(Pc)', A)
 
 
 
@@ -328,7 +232,7 @@ function SlowSphericalHarmonicPlan(A::Matrix{T}) where T
     SlowSphericalHarmonicPlan(RP, p1, p2, p1inv, p2inv, B)
 end
 
-function LAmul!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
+function LinearAlgebra.mul!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     RP, p1, p2, B = SP.RP, SP.p1, SP.p2, SP.B
     copyto!(B, X)
     mul!(RP, B)
@@ -345,45 +249,27 @@ function LAmul!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
     Y
 end
 
-if  VERSION < v"0.7-"
-    function Base.At_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix)
-        RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
-        copyto!(B, X)
-        M, N = size(X)
-        mul_col_J!!(Y, p1inv, B, 1)
-        @stepthreads for J = 2:4:N
-            mul_col_J!!(Y, p2inv, B, J)
-            J < N && mul_col_J!!(Y, p2inv, B, J+1)
-        end
-        @stepthreads for J = 4:4:N
-            mul_col_J!!(Y, p1inv, B, J)
-            J < N && mul_col_J!!(Y, p1inv, B, J+1)
-        end
-        sph_zero_spurious_modes!(At_mul_B!(RP, Y))
+
+transpose(P::SlowSphericalHarmonicPlan) = Transpose(P)
+adjoint(P::SlowSphericalHarmonicPlan) = Adjoint(P)
+
+function LinearAlgebra.mul!(Y::Matrix, SPt::Transpose{T,<:SlowSphericalHarmonicPlan}, X::Matrix) where T
+    SP = parent(SPt)
+    RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
+    copyto!(B, X)
+    M, N = size(X)
+    mul_col_J!!(Y, p1inv, B, 1)
+    @stepthreads for J = 2:4:N
+        mul_col_J!!(Y, p2inv, B, J)
+        J < N && mul_col_J!!(Y, p2inv, B, J+1)
     end
-
-    Base.Ac_mul_B!(Y::Matrix, SP::SlowSphericalHarmonicPlan, X::Matrix) = At_mul_B!(Y, SP, X)
-else
-    transpose(P::SlowSphericalHarmonicPlan) = Transpose(P)
-    adjoint(P::SlowSphericalHarmonicPlan) = Adjoint(P)
-
-    function LinearAlgebra.mul!(Y::Matrix, SPt::Transpose{T,<:SlowSphericalHarmonicPlan}, X::Matrix) where T
-        SP = parent(SPt)
-        RP, p1inv, p2inv, B = SP.RP, SP.p1inv, SP.p2inv, SP.B
-        copyto!(B, X)
-        M, N = size(X)
-        mul_col_J!!(Y, p1inv, B, 1)
-        @stepthreads for J = 2:4:N
-            mul_col_J!!(Y, p2inv, B, J)
-            J < N && mul_col_J!!(Y, p2inv, B, J+1)
-        end
-        @stepthreads for J = 4:4:N
-            mul_col_J!!(Y, p1inv, B, J)
-            J < N && mul_col_J!!(Y, p1inv, B, J+1)
-        end
-        sph_zero_spurious_modes!(lmul!(transpose(RP), Y))
+    @stepthreads for J = 4:4:N
+        mul_col_J!!(Y, p1inv, B, J)
+        J < N && mul_col_J!!(Y, p1inv, B, J+1)
     end
-
-    LinearAlgebra.mul!(Y::Matrix, SPc::Adjoint{T,<:SlowSphericalHarmonicPlan}, X::Matrix) where T =
-        mul!(Y, transpose(parent(SPc)), X)
+    sph_zero_spurious_modes!(lmul!(transpose(RP), Y))
 end
+
+LinearAlgebra.mul!(Y::Matrix, SPc::Adjoint{T,<:SlowSphericalHarmonicPlan}, X::Matrix) where T =
+    mul!(Y, transpose(parent(SPc)), X)
+

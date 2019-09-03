@@ -42,7 +42,7 @@ function partialchol(H::Hankel)
         push!(C, v[idx:n+idx-1])
         for j=1:k-1
             nCjidxσj = -C[j][idx]*σ[j]
-            Compat.LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
+            LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
         end
         @simd for p=1:n
             @inbounds d[p] -= C[k][p]^2/mx
@@ -69,7 +69,7 @@ function partialchol(H::Hankel, D::AbstractVector)
         push!(C,v[idx:n+idx-1].*D.*D[idx])
         for j=1:k-1
             nCjidxσj = -C[j][idx]*σ[j]
-            Compat.LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
+            LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
         end
         @simd for p=1:n
             @inbounds d[p]-=C[k][p]^2/mx

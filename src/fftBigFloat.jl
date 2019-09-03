@@ -4,18 +4,11 @@ const AbstractFloats = Union{AbstractFloat,Complex{T} where T<:AbstractFloat}
 const RealFloats = T where T<:AbstractFloat
 const ComplexFloats = Complex{T} where T<:AbstractFloat
 
-if VERSION < v"0.7-"
-    import Base.FFTW: fft, fft!, rfft, irfft, ifft, ifft!, conv, dct, idct, dct!, idct!,
-                        plan_fft!, plan_ifft!, plan_dct!, plan_idct!, plan_bfft, plan_bfft!,
-                        plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct,
-						plan_brfft
-else
-    import FFTW:	dct, dct!, idct, idct!,
-					plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
-                    plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct,
-					plan_bfft, plan_bfft!, plan_brfft
-    import DSP: conv
-end
+import FFTW:	dct, dct!, idct, idct!,
+                plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
+                plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct,
+                plan_bfft, plan_bfft!, plan_brfft
+import DSP: conv
 
 # The following implements Bluestein's algorithm, following http://www.dsprelated.com/dspbooks/mdft/Bluestein_s_FFT_Algorithm.html
 # To add more types, add them in the union of the function's signature.
@@ -203,7 +196,7 @@ for (Plan,ff,ff!) in ((:DummyFFTPlan,:generic_fft,:generic_fft!),
     @eval begin
         *(p::$Plan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = $ff!(x)
         *(p::$Plan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = $ff(x)
-        function LAmul!(C::StridedVector, p::$Plan, x::StridedVector)
+        function LinearAlgebra.mul!(C::StridedVector, p::$Plan, x::StridedVector)
             C[:] = $ff(x)
             C
         end
@@ -213,13 +206,13 @@ end
 # Specific for irfft and brfft:
 *(p::DummyirFFTPlan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_irfft!(x, p.n)
 *(p::DummyirFFTPlan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_irfft(x, p.n)
-function LAmul!(C::StridedVector, p::DummyirFFTPlan, x::StridedVector)
+function LinearAlgebra.mul!(C::StridedVector, p::DummyirFFTPlan, x::StridedVector)
 	C[:] = generic_irfft(x, p.n)
 	C
 end
 *(p::DummybrFFTPlan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_brfft!(x, p.n)
 *(p::DummybrFFTPlan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_brfft(x, p.n)
-function LAmul!(C::StridedVector, p::DummybrFFTPlan, x::StridedVector)
+function LinearAlgebra.mul!(C::StridedVector, p::DummybrFFTPlan, x::StridedVector)
 	C[:] = generic_brfft(x, p.n)
 	C
 end
