@@ -16,9 +16,10 @@ end
 include("nuffttests.jl")
 
 include("fftBigFloattests.jl")
-
 include("paduatests.jl")
 
 include("gaunttests.jl")
+
+include("hermitetests.jl")
 
 include("toeplitztests.jl")

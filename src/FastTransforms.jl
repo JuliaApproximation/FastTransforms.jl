@@ -1,7 +1,6 @@
-__precompile__()
 module FastTransforms
 
-using AbstractFFTs, DSP, FFTW, Libdl, LinearAlgebra, SpecialFunctions, ToeplitzMatrices
+using AbstractFFTs, DSP, FastGaussQuadrature, FFTW, Libdl, LinearAlgebra, SpecialFunctions, ToeplitzMatrices
 
 import Base: unsafe_convert, eltype, ndims, adjoint, transpose, show, *, \,
              inv, size, view
@@ -12,6 +11,8 @@ import Base.MPFR: BigFloat, _BigFloat
 import AbstractFFTs: Plan
 
 import DSP: conv
+
+import FastGaussQuadrature: unweightedgausshermite
 
 import FFTW: dct, dct!, idct, idct!,
              plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
@@ -61,6 +62,10 @@ export plan_fejer1, fejernodes1, fejerweights1,
 include("clenshawcurtis.jl")
 include("fejer.jl")
 
+export hermitepoints, weightedhermitetransform, iweightedhermitetransform
+
+include("hermite.jl")
+
 include("fftBigFloat.jl")
 
 export gaunt
@@ -71,6 +76,8 @@ export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
        sphvones, sphvzeros, sphvrand, sphvrandn,
        diskones, diskzeros, diskrand, diskrandn,
        triones, trizeros, trirand, trirandn, trievaluate
+
+lgamma(x) = logabsgamma(x)[1]
 
 include("specialfunctions.jl")
 
