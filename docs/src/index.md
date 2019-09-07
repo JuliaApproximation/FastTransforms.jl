@@ -4,31 +4,13 @@
 
 `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
-Transforms include conversion between Jacobi polynomial expansions, with Chebyshev, Legendre, and ultraspherical polynomial transforms as special cases. For the signal processor, all three types of nonuniform fast Fourier transforms available. As well, spherical harmonic transforms and transforms between orthogonal polynomials on the triangle allow for the efficient simulation of partial differential equations of evolution.
+This package provides a Julia wrapper for the [C library](https://github.com/MikaelSlevinsky/FastTransforms) of the same name. Additionally, all three types of nonuniform fast Fourier transforms available, as well as the Padua transform.
 
-Algorithms include methods based on asymptotic formulae to relate the transforms to a small number of fast Fourier transforms, matrix factorizations based on the Hadamard product, hierarchical matrix decompositions à la Fast Multipole Method, and the butterfly algorithm.
+## Fast orthogonal polynomial transforms
 
-## Fast Transforms
+For this documentation, please see the documentation for [FastTransforms](https://github.com/MikaelSlevinsky/FastTransforms). Most transforms have separate forward and inverse plans. In some instances, however, the inverse is in the sense of least-squares, and therefore only the forward transform is planned.
 
-```@docs
-leg2cheb
-```
-
-```@docs
-cheb2leg
-```
-
-```@docs
-cjt
-```
-
-```@docs
-icjt
-```
-
-```@docs
-jjt
-```
+## Nonuniform fast Fourier transforms
 
 ```@docs
 nufft1
@@ -56,66 +38,6 @@ paduatransform
 
 ```@docs
 ipaduatransform
-```
-
-```@docs
-sph2fourier
-```
-
-```@docs
-fourier2sph
-```
-
-## Planning The Fast Transforms
-
-Most transforms have separate forward and inverse plans. In some instances, however, the inverse is in the sense of least-squares, and therefore only the forward transform is planned.
-
-```@docs
-plan_leg2cheb
-```
-
-```@docs
-plan_cheb2leg
-```
-
-```@docs
-plan_cjt
-```
-
-```@docs
-plan_icjt
-```
-
-```@docs
-plan_nufft1
-```
-
-```@docs
-plan_nufft2
-```
-
-```@docs
-plan_nufft3
-```
-
-```@docs
-plan_inufft1
-```
-
-```@docs
-plan_inufft2
-```
-
-```@docs
-plan_paduatransform!
-```
-
-```@docs
-plan_ipaduatransform!
-```
-
-```@docs
-plan_sph2fourier
 ```
 
 ## Other Exported Methods
@@ -212,30 +134,4 @@ FastTransforms.chebyshevjacobimoments2
 
 ```@docs
 FastTransforms.chebyshevlogmoments2
-```
-
-### Jacobi Polynomial Increment and Decrement Operators
-
-```@docs
-FastTransforms.incrementα!
-```
-
-```@docs
-FastTransforms.incrementβ!
-```
-
-```@docs
-FastTransforms.incrementαβ!
-```
-
-```@docs
-FastTransforms.decrementα!
-```
-
-```@docs
-FastTransforms.decrementβ!
-```
-
-```@docs
-FastTransforms.decrementαβ!
 ```
