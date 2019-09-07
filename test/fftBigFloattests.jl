@@ -1,6 +1,4 @@
-using FastTransforms
-using Test
-using FFTW
+using FastTransforms, FFTW, Test
 
 @testset "BigFloat FFT and DCT" begin
 

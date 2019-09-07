@@ -244,164 +244,6 @@ function Cnmαβ(n::Integer,m::Integer,α::AbstractArray{T},β::AbstractArray{T}
 end
 
 
-function absf(α::Number,β::Number,m::Int,θ::Number)
-    ret = zero(θ)
-    for l=0:m
-        ret += pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)/sinpi(θ/2)^(l+α+half(α))/cospi(θ/2)^(m-l+β+half(β))
-    end
-    ret
-end
-
-function absf(α::AbstractArray{T},β::AbstractArray{T},m::Int,θ::Number) where T<:Number
-    shp = promote_shape(size(α),size(β))
-    reshape([ absf(α[i],β[i],m,θ) for i in eachindex(α,β) ], shp)
-end
-
-
-function absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,1}) where T<:Number
-    ret = zero(θ)
-    cfs = zeros(T,m+1)
-    for l=0:m
-        @inbounds cfs[l+1] = pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)
-    end
-    @inbounds for i=1:length(θ),l=0:m
-        ret[i] += cfs[l+1]/sinpi(θ[i]/2)^(l+α+half(α))/cospi(θ[i]/2)^(m-l+β+half(β))
-    end
-    ret
-end
-absf(α::Number,β::Number,m::Int,θ::AbstractArray{T,2}) where {T<:Number} = [ absf(α,β,m,θ[i,j]) for i=1:size(θ,1), j=1:size(θ,2) ]
-absf(α::Number,β::Number,m::Int,θ::AbstractArray{T}) where {T<:Number} = reshape([ absf(α,β,m,θ[i]) for i in eachindex(θ) ], size(θ))
-
-function compute_absf!(ret::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int) where T<:AbstractFloat
-    @inbounds for i=1:length(ret)
-        temp = inv(tempcos[i]^m*tempcosβsinα[i])
-        ret[i] = cfs[m+1,1]*temp
-        for l=1:m
-            temp *= tempcos[i]/tempsin[i]
-            ret[i] += cfs[m+1,l+1]*temp
-        end
-    end
-    ret
-end
-
-function compute_absf!(ret::Vector{T},tempsin::Vector{T},tempsinλ::Vector{T},m::Int) where T<:AbstractFloat
-    for i=1:length(ret)
-        @inbounds ret[i] = inv(tempsin[i]^m*tempsinλ[i])
-    end
-    ret
-end
-
-function compute_umvm!(um::Vector{T},vm::Vector{T},cfs::Matrix{T},α::T,β::T,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int}) where T<:AbstractFloat
-    @inbounds for i in ir
-        temp = inv(tempcos[i]^m*tempcosβsinα[i])
-        ϑ = (α+half(α))/2-(α+β+m+1)*θ[i]/2
-        um[i] = cfs[m+1,1]*cospi(ϑ)*temp
-        vm[i] = cfs[m+1,1]*sinpi(ϑ)*temp
-        @inbounds for l=1:m
-            temp *= tempcos[i]/tempsin[i]
-            ϑ = (α+l+half(α))/2-(α+β+m+1)*θ[i]/2
-            um[i] += cfs[m+1,l+1]*cospi(ϑ)*temp
-            vm[i] += cfs[m+1,l+1]*sinpi(ϑ)*temp
-        end
-    end
-end
-
-function compute_umvm!(um::Vector{T},vm::Vector{T},λ::T,tempsinλm::Vector{T},m::Int,θ::Vector{T},ir::UnitRange{Int}) where T<:AbstractFloat
-    @inbounds @simd for i in ir
-        temp = inv(tempsinλm[i])
-        ϑ = (m+λ)*(half(T)-θ[i])
-        um[i] = cospi(ϑ)*temp
-        vm[i] = sinpi(ϑ)*temp
-    end
-end
-
-function findmindices!(Rαβjm::Vector{T},cfs::Matrix{T},α::T,β::T,j::Int,m::Int,tempcos::Vector{T},tempsin::Vector{T},tempcosβsinα::Vector{T}) where T<:AbstractFloat
-    compute_absf!(Rαβjm,cfs,α,β,tempcos,tempsin,tempcosβsinα,m)
-    rmul!(Rαβjm,Cnmαβ(j,m,α,β))
-    rmin,imin = findmin(Rαβjm)
-    if rmin < eps(T)
-        i₁ = imin-1
-        while i₁ ≥ 3
-            if Rαβjm[i₁] < eps(T)
-                i₁-=1
-            else
-                break
-            end
-        end
-        i₂ = imin+1
-        while i₂ ≤ length(Rαβjm)-2
-            if Rαβjm[i₂] < eps(T)
-                i₂+=1
-            else
-                break
-            end
-        end
-        return i₁,i₂
-    else
-        return 1,0# error("There are no indices such that the interior asymptotic formula is valid.")# but adding an error is type-unstable :(.
-    end
-end
-
-function findmindices!(Rαβjm::Vector{T},λ::T,j::Int,m::Int,tempsin::Vector{T},tempsinλ::Vector{T}) where T<:AbstractFloat
-    compute_absf!(Rαβjm,tempsin,tempsinλ,m)
-    rmul!(Rαβjm,Cnmλ(j,m,λ))
-    rmin,imin = findmin(Rαβjm)
-    if rmin < eps(T)
-        i₁ = imin-1
-        while i₁ ≥ 3
-            if Rαβjm[i₁] < eps(T)
-                i₁-=1
-            else
-                break
-            end
-        end
-        i₂ = imin+1
-        while i₂ ≤ length(Rαβjm)-2
-            if Rαβjm[i₂] < eps(T)
-                i₂+=1
-            else
-                break
-            end
-        end
-        return i₁,i₂
-    else
-        return 1,0# error("There are no indices such that the interior asymptotic formula is valid.")# but adding an error is type-unstable :(.
-    end
-end
-
-# initialization methods
-
-function init_cfs(α::T,β::T,M::Int) where T<:AbstractFloat
-    cfs = zeros(T,M+1,M+1)
-    @inbounds for m=0:M,l=0:m
-        cfs[m+1,l+1] = pochhammer(half(α)+α,l)*pochhammer(half(α)-α,l)*pochhammer(half(β)+β,m-l)*pochhammer(half(β)-β,m-l)/factorial(l)/factorial(m-l)
-    end
-    cfs
-end
-
-function init_c₁c₂!(c₁::Vector,c₂::Vector,a::Vector,b::Vector,j₁::Int,j₂::Int)
-    @inbounds for j=1:j₁-1 c₁[j] = 0 end
-    @inbounds for j=j₁:j₂ c₁[j] = a[j]*b[j] end
-    @inbounds for j=j₂+1:length(c₁) c₁[j] = 0 end
-    copyto!(c₂,c₁)
-end
-
-function init_c₁c₂!(c₁::Vector,c₂::Vector,u::Vector,v::Vector,c::Vector,i₁::Int,i₂::Int)
-    @inbounds for i=1:i₁-1
-        c₁[i] = 0
-        c₂[i] = 0
-    end
-    @inbounds for i=i₁:i₂
-        c₁[i] = u[i]*c[i]
-        c₂[i] = v[i]*c[i]
-    end
-    @inbounds for i=i₂+1:length(c₁)
-        c₁[i] = 0
-        c₂[i] = 0
-    end
-end
-
-
 """
 Modified Chebyshev moments of the first kind:
 
@@ -508,185 +350,258 @@ function chebyshevlogmoments2(::Type{T}, N::Int) where T
     μ
 end
 
-"""
-Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
-"""
-function incrementα!(c::AbstractVector,α,β)
-    αβ,N = α+β,length(c)
-    N > 1 && (c[1] -= (β+1)/(αβ+3)*c[2])
-    @inbounds for i=2:N-1 c[i] = (αβ+i)/(αβ+2i-1)*c[i] - (β+i)/(αβ+2i+1)*c[i+1] end
-    N > 1 && (c[N] *= (αβ+N)/(αβ+2N-1))
-    c
-end
 
-"""
-Compute Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
-"""
-function incrementβ!(c::AbstractVector,α,β)
-    αβ,N = α+β,length(c)
-    N > 1 && (c[1] += (α+1)/(αβ+3)*c[2])
-    @inbounds for i=2:N-1 c[i] = (αβ+i)/(αβ+2i-1)*c[i] + (α+i)/(αβ+2i+1)*c[i+1] end
-    N > 1 && (c[N] *= (αβ+N)/(αβ+2N-1))
-    c
-end
-
-"""
-Compute Jacobi expansion coefficients in ``P_n^{(\\alpha+1,\\alpha+1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\alpha)}(x)`` in-place.
-"""
-function incrementαβ!(c::AbstractVector,α,β)
-    @assert α == β
-    N = length(c)
-    if N == 2
-        c[2] *= (2α+2)/(2α+4)
-    elseif N > 2
-        c[1] -= (α+2)/(4α+10)*c[3]
-        @inbounds for i=2:N-2 c[i] = (2α+i)*(2α+i+1)/(2α+2i-1)/(2α+2i)*c[i] - (α+i+1)/(4α+4i+6)*c[i+2] end
-        c[N-1] *= (2α+N-1)*(2α+N)/(2α+2N-3)/(2α+2N-2)
-        c[N] *= (2α+N)*(2α+N+1)/(2α+2N-1)/(2α+2N)
+function sphrand(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m
+        A[i,1] = rand(T)
     end
-    c
-end
-
-"""
-Compute Jacobi expansion coefficients in ``P_n^{(\\alpha-1,\\beta)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
-"""
-function decrementα!(c::AbstractVector,α,β)
-    αβ,N = α+β,length(c)
-    N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N-1))
-    @inbounds for i=N-1:-1:2 c[i] = (αβ+2i-2)/(αβ+i-1)*c[i] + (αβ+2i-2)/(αβ+2i)*(β+i)/(αβ+i-1)*c[i+1] end
-    N > 1 && (c[1] += (β+1)/(αβ+2)*c[2])
-    c
-end
-
-"""
-Compute Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\beta)}(x)`` in-place.
-"""
-function decrementβ!(c::AbstractVector,α,β)
-    αβ,N = α+β,length(c)
-    N > 1 && (c[N] *= (αβ+2N-2)/(αβ+N-1))
-    @inbounds for i=N-1:-1:2 c[i] = (αβ+2i-2)/(αβ+i-1)*c[i] - (αβ+2i-2)/(αβ+2i)*(α+i)/(αβ+i-1)*c[i+1] end
-    N > 1 && (c[1] -= (α+1)/(αβ+2)*c[2])
-    c
-end
-
-"""
-Compute Jacobi expansion coefficients in ``P_n^{(\\alpha-1,\\alpha-1)}(x)`` given Jacobi expansion coefficients in ``P_n^{(\\alpha,\\alpha)}(x)`` in-place.
-"""
-function decrementαβ!(c::AbstractVector,α,β)
-    @assert α == β
-    N = length(c)
-    if N == 2
-        c[2] *= (2α+2)/(2α)
-    elseif N > 2
-        c[N] *= (2α+2N-3)*(2α+2N-2)/(2α+N-2)/(2α+N-1)
-        c[N-1] *= (2α+2N-5)*(2α+2N-4)/(2α+N-3)/(2α+N-2)
-        @inbounds for i=N-2:-1:2 c[i] = (2α+2i-3)*(2α+2i-2)/(2α+i-2)/(2α+i-1)*(c[i] + (α+i)/(4α+4i+2)*c[i+2]) end
-        c[1] += (α+1)/(4α+6)*c[3]
+    for j = 1:n÷2
+        for i = 1:m-j
+            A[i,2j] = rand(T)
+            A[i,2j+1] = rand(T)
+        end
     end
-    c
+    A
 end
 
+function sphrandn(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m
+        A[i,1] = randn(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-j
+            A[i,2j] = randn(T)
+            A[i,2j+1] = randn(T)
+        end
+    end
+    A
+end
 
-function modαβ(α)
-    if -0.5 < α ≤ 0.5
-        a = α
+function sphones(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m
+        A[i,1] = one(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-j
+            A[i,2j] = one(T)
+            A[i,2j+1] = one(T)
+        end
+    end
+    A
+end
+
+sphzeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, n)
+
+"""
+Pointwise evaluation of real orthonormal spherical harmonic:
+
+```math
+Y_\\ell^m(\\theta,\\varphi) = (-1)^{|m|}\\sqrt{(\\ell+\\frac{1}{2})\\frac{(\\ell-|m|)!}{(\\ell+|m|)!}} P_\\ell^{|m|}(\\cos\\theta) \\sqrt{\\frac{2-\\delta_{m,0}}{2\\pi}} \\left\\{\\begin{array}{ccc} \\cos m\\varphi & {\\rm for} & m \\ge 0,\\\\ \\sin(-m\\varphi) & {\\rm for} & m < 0.\\end{array}\\right.
+```
+"""
+sphevaluate(θ, φ, L, M) = sphevaluatepi(θ/π, φ/π, L, M)
+
+sphevaluatepi(θ::Number, φ::Number, L::Integer, M::Integer) = sphevaluatepi(θ, L, M)*sphevaluatepi(φ, M)
+
+function sphevaluatepi(θ::Number, L::Integer, M::Integer)
+    ret = one(θ)/sqrt(two(θ))
+    if M < 0 M = -M end
+    c, s = cospi(θ), sinpi(θ)
+    for m = 1:M
+        ret *= sqrt((m+half(θ))/m)*s
+    end
+    tc = two(c)*c
+
+    if L == M
+        return ret
+    elseif L == M+1
+        return sqrt(two(θ)*M+3)*c*ret
     else
-        a = α%1
-        a > 0.5 && (a-=1)
-        a ≤ -0.5 && (a+=1)
+        temp = ret
+        ret *= sqrt(two(θ)*M+3)*c
+        for l = M+1:L-1
+            ret, temp = (sqrt(l+half(θ))*tc*ret - sqrt((l-M)*(l+M)/(l-half(θ)))*temp)/sqrt((l-M+1)*(l+M+1)/(l+3half(θ))), ret
+        end
+        return ret
     end
-    a
 end
 
-function modλ(λ)
-    if 0 ≤ λ < 1
-        l = λ
-    else
-        l = λ%1
-        l < 0 && (l+=1)
-    end
-    l
-end
+sphevaluatepi(φ::Number, M::Integer) = sqrt((two(φ)-δ(M, 0))/(two(φ)*π))*(M ≥ 0 ? cospi(M*φ) : sinpi(-M*φ))
 
-function tosquare!(ret::AbstractVector,α,β)
-    a,b = modαβ(α),modαβ(β)
-    A,B = α-a,β-b
-    if α ≤ -0.5 && β ≤ -0.5
-        incrementα!(ret,α,β)
-        incrementβ!(ret,a,β)
-    elseif α ≤ -0.5
-        incrementα!(ret,α,β)
-        for j=B:-1:1
-            decrementβ!(ret,a,j+b)
-        end
-    elseif β ≤ -0.5
-        incrementβ!(ret,α,β)
-        for i=A:-1:1
-            decrementα!(ret,i+a,b)
-        end
-    else
-        for i=A:-1:1
-            decrementα!(ret,i+a,β)
-        end
-        for j=B:-1:1
-            decrementβ!(ret,a,j+b)
+function sphvrand(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m-1
+        A[i,1] = rand(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-j+1
+            A[i,2j] = rand(T)
+            A[i,2j+1] = rand(T)
         end
     end
-    ret
+    A
 end
 
-function fromsquare!(ret::AbstractVector,α,β)
-    a,b = modαβ(α),modαβ(β)
-    A,B = α-a,β-b
-    if α ≤ -0.5 && β ≤ -0.5
-        decrementα!(ret,a,b)
-        decrementβ!(ret,α,b)
-    elseif α ≤ -0.5
-        decrementα!(ret,a,b)
-        for j=0:B-1
-            incrementβ!(ret,α,j+b)
-        end
-    elseif β ≤ -0.5
-        decrementβ!(ret,a,b)
-        for i=0:A-1
-            incrementα!(ret,i+a,β)
-        end
-    else
-        for i=0:A-1
-            incrementα!(ret,i+a,b)
-        end
-        for j=0:B-1
-            incrementβ!(ret,α,j+b)
+function sphvrandn(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m-1
+        A[i,1] = randn(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-j+1
+            A[i,2j] = randn(T)
+            A[i,2j+1] = randn(T)
         end
     end
-    ret
+    A
 end
 
-
-function toline!(ret::AbstractVector,α,β)
-    @assert α == β
-    a,b = modαβ(α),modαβ(β)
-    A,B = α-a,β-b
-    if α ≤ -0.5
-        incrementαβ!(ret,α,β)
-    else
-        for i=A:-1:1
-            decrementαβ!(ret,i+a,i+a)
+function sphvones(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m-1
+        A[i,1] = one(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-j+1
+            A[i,2j] = one(T)
+            A[i,2j+1] = one(T)
         end
     end
-    ret
+    A
 end
 
-function fromline!(ret::AbstractVector,α,β)
-    @assert α == β
-    a,b = modαβ(α),modαβ(β)
-    A,B = α-a,β-b
-    if α ≤ -0.5
-        decrementαβ!(ret,a,b)
-    else
-        for i=0:A-1
-            incrementαβ!(ret,i+a,i+a)
+sphvzeros(::Type{T}, m::Int, n::Int) where T = sphzeros(T, m, n)
+
+function diskrand(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m
+        A[i,1] = rand(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-(j+1)÷2
+            A[i,2j] = rand(T)
+            A[i,2j+1] = rand(T)
         end
     end
-    ret
+    A
 end
+
+function diskrandn(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m
+        A[i,1] = randn(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-(j+1)÷2
+            A[i,2j] = randn(T)
+            A[i,2j+1] = randn(T)
+        end
+    end
+    A
+end
+
+function diskones(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for i = 1:m
+        A[i,1] = one(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-(j+1)÷2
+            A[i,2j] = one(T)
+            A[i,2j+1] = one(T)
+        end
+    end
+    A
+end
+
+diskzeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, n)
+
+function trirand(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for j = 1:n
+        for i = 1:m+1-j
+            A[i,j] = rand(T)
+        end
+    end
+    A
+end
+
+function trirandn(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for j = 1:n
+        for i = 1:m+1-j
+            A[i,j] = randn(T)
+        end
+    end
+    A
+end
+
+function triones(::Type{T}, m::Int, n::Int) where T
+    A = zeros(T, m, n)
+    for j = 1:n
+        for i = 1:m+1-j
+            A[i,j] = one(T)
+        end
+    end
+    A
+end
+
+trizeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, n)
+
+"""
+Pointwise evaluation of triangular harmonic:
+
+```math
+\\tilde{P}_{\\ell,m}^{(\\alpha,\\beta,\\gamma)}(x,y).
+```
+"""
+trievaluate(x, y, L, M, α, β, γ) = trievaluate(x, L, M, α, β, γ)*trievaluate(x, y, M, β, γ)
+
+function trievaluate(x::Number, L::Integer, M::Integer, α::Number, β::Number, γ::Number)
+
+end
+
+function trievaluate(x::Number, y::Number, M::Integer, β::Number, γ::Number)
+
+end
+
+function tetrand(::Type{T}, l::Int, m::Int, n::Int) where T
+    A = zeros(T, l, m, n)
+    for k = 1:n
+        for j = 1:m+1-k
+            for i = 1:l+2-k-j
+                A[i,j,k] = rand(T)
+            end
+        end
+    end
+    A
+end
+
+function tetrandn(::Type{T}, l::Int, m::Int, n::Int) where T
+    A = zeros(T, l, m, n)
+    for k = 1:n
+        for j = 1:m+1-k
+            for i = 1:l+2-k-j
+                A[i,j,k] = randn(T)
+            end
+        end
+    end
+    A
+end
+
+function tetones(::Type{T}, l::Int, m::Int, n::Int) where T
+    A = zeros(T, l, m, n)
+    for k = 1:n
+        for j = 1:m+1-k
+            for i = 1:l+2-k-j
+                A[i,j,k] = one(T)
+            end
+        end
+    end
+    A
+end
+
+tetzeros(::Type{T}, l::Int, m::Int, n::Int) where T = zeros(T, l, m, n)

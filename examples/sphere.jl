@@ -26,6 +26,13 @@
 # For the storage pattern of the arrays, please consult the documentation.
 #############
 
+function threshold!(A::AbstractArray, ϵ)
+    for i in eachindex(A)
+        if abs(A[i]) < ϵ A[i] = 0 end
+    end
+    A
+end
+
 using FastTransforms
 
 # The colatitudinal grid (mod π):
@@ -51,35 +58,34 @@ P4 = x -> (35*x^4-30*x^2+3)/8
 # On the tensor product grid, our function samples are:
 F = [(P4(z(θ,φ)⋅y) - P4(x⋅y))/(z(θ,φ)⋅y - x⋅y) for θ in θ, φ in φ]
 
-P = plan_sph2fourier(F);
-PA = FastTransforms.plan_analysis(F);
+P = plan_sph2fourier(F)
+PA = plan_sph_analysis(F)
 
 # Its spherical harmonic coefficients demonstrate that it is degree-3:
-V = zero(F);
-mul!(V, PA, F);
-U3 = P\V
+V = PA*F
+U3 = threshold!(P\V, 400*eps())
 
 # Similarly, on the tensor product grid, the Legendre polynomial P₄(z⋅y) is:
 F = [P4(z(θ,φ)⋅y) for θ in θ, φ in φ]
 
 # Its spherical harmonic coefficients demonstrate that it is exact-degree-4:
-mul!(V, PA, F);
-U4 = P\V
+V = PA*F
+U4 = threshold!(P\V, 3*eps())
 
-nrm1 = vecnorm(U4);
+nrm1 = norm(U4);
 
 # Finally, the Legendre polynomial P₄(z⋅x) is aligned with the grid:
 F = [P4(z(θ,φ)⋅x) for θ in θ, φ in φ]
 
 # It only has one nonnegligible spherical harmonic coefficient.
 # Can you spot it?
-mul!(V, PA, F);
-U4 = P\V
+V = PA*F
+U4 = threshold!(P\V, 3*eps())
 
 # That nonnegligible coefficient should be approximately √(2π/(4+1/2)),
 # since the convention in this library is to orthonormalize.
 
-nrm2 = vecnorm(U4);
+nrm2 = norm(U4);
 
 # Note that the integrals of both functions P₄(z⋅y) and P₄(z⋅x) and their
 # L²(𝕊²) norms are the same because of rotational invariance. The integral of

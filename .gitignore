@@ -1,3 +1,4 @@
 docs/build/
 docs/site/
-.DS_Store
+deps/build.log
+deps/libfasttransforms.*

@@ -1,4 +1,6 @@
-using FastTransforms
+using FastTransforms, FastGaussQuadrature, Test
+
+hermitepoints(n) = FastGaussQuadrature.unweightedgausshermite( n )[1]
 
 @testset "Hermite" begin
     @test hermitepoints(1) == [0.0]

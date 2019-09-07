@@ -1,16 +1,25 @@
-using FastTransforms, Test, LinearAlgebra, Random, Statistics
-Random.seed!(0)
+using FastTransforms, Libdl, LinearAlgebra, Test
 
-include("basictests.jl")
+include("specialfunctionstests.jl")
+
 include("chebyshevtests.jl")
+
+include("quadraturetests.jl")
+
+if find_library(FastTransforms.libfasttransforms) ≡ FastTransforms.libfasttransforms
+    include("libfasttransformstests.jl")
+else
+    error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",
+          "and restart Julia.")
+end
+
 include("nuffttests.jl")
-include("chebyshevjacobitests.jl")
-include("chebyshevlegendretests.jl")
-include("gaunttests.jl")
+
 include("fftBigFloattests.jl")
 include("paduatests.jl")
+
+include("gaunttests.jl")
+
 include("hermitetests.jl")
-include("butterflytests.jl")
-include("sphericalharmonics/sphericalharmonictests.jl")
+
 include("toeplitztests.jl")
-include("specialfunctionstests.jl")

@@ -1,8 +1,3 @@
-export plan_chebyshevtransform, plan_ichebyshevtransform, plan_chebyshevtransform!, plan_ichebyshevtransform!,
-            chebyshevtransform, ichebyshevtransform, chebyshevpoints,
-            plan_chebyshevutransform, plan_ichebyshevutransform, plan_chebyshevutransform!, plan_ichebyshevutransform!,
-            chebyshevutransform, ichebyshevutransform
-
 ## Transforms take values at Chebyshev points of the first and second kinds and produce Chebyshev coefficients
 
 
@@ -17,10 +12,10 @@ ChebyshevTransformPlan{k,inp}(plan) where {k,inp} =
 
 function plan_chebyshevtransform!(x::AbstractVector{T}; kind::Integer=1) where T<:fftwNumber
     if kind == 1
-        plan = isempty(x) ? fill(one(T),1,length(x)) : plan_r2r!(x, REDFT10)
+        plan = isempty(x) ? fill(one(T),1,length(x)) : FFTW.plan_r2r!(x, FFTW.REDFT10)
         ChebyshevTransformPlan{1,true}(plan)
     elseif kind == 2
-        plan = length(x) ≤ 1 ? fill(one(T),1,length(x)) : plan_r2r!(x, REDFT00)
+        plan = length(x) ≤ 1 ? fill(one(T),1,length(x)) : FFTW.plan_r2r!(x, FFTW.REDFT00)
         ChebyshevTransformPlan{2,true}(plan)
     end
 end
@@ -76,7 +71,7 @@ inv(P::IChebyshevTransformPlan{T,2,true}) where T = P.plan
 
 function plan_ichebyshevtransform!(x::AbstractVector{T};kind::Integer=1) where T<:fftwNumber
     if kind == 1
-        plan = isempty(x) ? fill(one(T),1,length(x)) : plan_r2r!(x, REDFT01)
+        plan = isempty(x) ? fill(one(T),1,length(x)) : FFTW.plan_r2r!(x, FFTW.REDFT01)
         IChebyshevTransformPlan{T,1,true,typeof(plan)}(plan)
     elseif kind == 2
         inv(plan_chebyshevtransform!(x;kind=2))
@@ -121,48 +116,48 @@ end
 # Matrix inputs
 #
 #
-# function chebyshevtransform!(X::AbstractMatrix{T}; kind::Integer=1) where T<:fftwNumber
-#     if kind == 1
-#         if size(X) == (1,1)
-#             X
-#         else
-#             X=r2r!(X,REDFT10)
-#             X[:,1]/=2;X[1,:]/=2;
-#             lmul!(1/(size(X,1)*size(X,2)),X)
-#         end
-#     elseif kind == 2
-#         if size(X) == (1,1)
-#             X
-#         else
-#             X=r2r!(X,REDFT00)
-#             lmul!(1/((size(X,1)-1)*(size(X,2)-1)),X)
-#             X[:,1]/=2;X[:,end]/=2
-#             X[1,:]/=2;X[end,:]/=2
-#             X
-#         end
-#     end
-# end
+function chebyshevtransform!(X::AbstractMatrix{T}; kind::Integer=1) where T<:fftwNumber
+    if kind == 1
+        if size(X) == (1,1)
+            X
+        else
+            X=FFTW.r2r!(X,FFTW.REDFT10)
+            X[:,1]/=2;X[1,:]/=2;
+            lmul!(1/(size(X,1)*size(X,2)),X)
+        end
+    elseif kind == 2
+        if size(X) == (1,1)
+            X
+        else
+            X=FFTW.r2r!(X,FFTW.REDFT00)
+            lmul!(1/((size(X,1)-1)*(size(X,2)-1)),X)
+            X[:,1]/=2;X[:,end]/=2
+            X[1,:]/=2;X[end,:]/=2
+            X
+        end
+    end
+end
 #
-# function ichebyshevtransform!(X::AbstractMatrix{T}; kind::Integer=1) where T<:fftwNumber
-#     if kind == 1
-#         if size(X) == (1,1)
-#             X
-#         else
-#             X[1,:]*=2;X[:,1]*=2
-#             X = r2r(X,REDFT01)
-#             lmul!(0.25, X)
-#         end
-#     elseif kind == 2
-#         if size(X) == (1,1)
-#             X
-#         else
-#             X[1,:]*=2;X[end,:]*=2;X[:,1]*=2;X[:,end]*=2
-#             X=chebyshevtransform!(X;kind=kind)
-#             X[1,:]*=2;X[end,:]*=2;X[:,1]*=2;X[:,end]*=2
-#             lmul!((size(X,1)-1)*(size(X,2)-1)/4,X)
-#         end
-#     end
-# end
+function ichebyshevtransform!(X::AbstractMatrix{T}; kind::Integer=1) where T<:fftwNumber
+    if kind == 1
+        if size(X) == (1,1)
+            X
+        else
+            X[1,:]*=2;X[:,1]*=2
+            X = FFTW.r2r(X,FFTW.REDFT01)
+            lmul!(0.25, X)
+        end
+    elseif kind == 2
+        if size(X) == (1,1)
+            X
+        else
+            X[1,:]*=2;X[end,:]*=2;X[:,1]*=2;X[:,end]*=2
+            X=chebyshevtransform!(X;kind=kind)
+            X[1,:]*=2;X[end,:]*=2;X[:,1]*=2;X[:,end]*=2
+            lmul!((size(X,1)-1)*(size(X,2)-1)/4,X)
+        end
+    end
+end
 #
 
 
@@ -179,10 +174,10 @@ ChebyshevUTransformPlan{k,inp}(plan) where {k,inp} =
 
 function plan_chebyshevutransform!(x::AbstractVector{T}; kind::Integer=1) where T<:fftwNumber
     if kind == 1
-        plan = isempty(x) ? fill(one(T),1,length(x)) : plan_r2r!(x, RODFT10)
+        plan = isempty(x) ? fill(one(T),1,length(x)) : FFTW.plan_r2r!(x, FFTW.RODFT10)
         ChebyshevUTransformPlan{1,true}(plan)
     elseif kind == 2
-        plan = length(x) ≤ 1 ? fill(one(T),1,length(x)) : plan_r2r!(x, RODFT00)
+        plan = length(x) ≤ 1 ? fill(one(T),1,length(x)) : FFTW.plan_r2r!(x, FFTW.RODFT00)
         ChebyshevUTransformPlan{2,true}(plan)
     end
 end
@@ -230,10 +225,10 @@ end
 
 function plan_ichebyshevutransform!(x::AbstractVector{T};kind::Integer=1) where T<:fftwNumber
     if kind == 1
-        plan = isempty(x) ? fill(one(T),1,length(x)) : plan_r2r!(x, RODFT01)
+        plan = isempty(x) ? fill(one(T),1,length(x)) : FFTW.plan_r2r!(x, FFTW.RODFT01)
         IChebyshevUTransformPlan{T,1,true,typeof(plan)}(plan)
     elseif kind == 2
-        plan = length(x) ≤ 1 ? fill(one(T),1,length(x)) : plan_r2r!(x, RODFT00)
+        plan = length(x) ≤ 1 ? fill(one(T),1,length(x)) : FFTW.plan_r2r!(x, FFTW.RODFT00)
         IChebyshevUTransformPlan{T,2,true,typeof(plan)}(plan)
     end
 end
@@ -294,7 +289,7 @@ function chebyshevpoints(::Type{T}, n::Integer; kind::Int=1) where T<:Number
         if n == 1
             zeros(T,1)
         else
-	    T[sinpi((n-2k-one(T))/(2n-2)) for k=0:n-1] 
+	    T[sinpi((n-2k-one(T))/(2n-2)) for k=0:n-1]
         end
     else
         throw(ArgumentError("kind $kind not a valid kind of Chebyshev points"))
@@ -313,7 +308,7 @@ chebyshevpoints(n::Integer; kind::Int=1) = chebyshevpoints(Float64, n; kind=kind
 #     DSTPlan{eltype(plan),k,inp,typeof(plan)}(plan)
 #
 #
-# plan_DSTI!(x) = length(x) > 0 ? DSTPlan{1,true}(FFTW.plan_r2r!(x, FFTW.RODFT00)) :
+# plan_DSTI!(x) = length(x) > 0 ? DSTPlan{1,true}(FFTW.FFTW.plan_r2r!(x, FFTW.FFTW.RODFT00)) :
 #                                 fill(one(T),1,length(x))
 #
 # function *(P::DSTPlan{T,1}, x::AbstractArray) where {T}

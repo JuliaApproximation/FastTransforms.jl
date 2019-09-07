@@ -1,6 +1,6 @@
 using FastTransforms, Test, FFTW
-FFTW.set_num_threads(Base.Sys.CPU_THREADS)
 
+FFTW.set_num_threads(ceil(Int, Sys.CPU_THREADS/2))
 
 @testset "Nonuniform fast Fourier transforms" begin
     function nudft1(c::AbstractVector, ω::AbstractVector{T}) where {T<:AbstractFloat}
@@ -73,7 +73,7 @@ FFTW.set_num_threads(Base.Sys.CPU_THREADS)
         ω = collect(0.0:n-1)
         x = ω/n
         fftc = fft(c)
-        if Base.Sys.WORD_SIZE == 64
+        if Sys.WORD_SIZE == 64
             @test_skip norm(nufft1(c, ω, ϵ) - fftc) == 0 # skip because fftw3 seems to change this
             @test norm(nufft2(c, x, ϵ) - fftc) == 0
             @test_skip norm(nufft3(c, x, ω, ϵ) - fftc) == 0 # skip because fftw3 seems to change this

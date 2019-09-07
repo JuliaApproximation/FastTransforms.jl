@@ -4,11 +4,6 @@ const AbstractFloats = Union{AbstractFloat,Complex{T} where T<:AbstractFloat}
 const RealFloats = T where T<:AbstractFloat
 const ComplexFloats = Complex{T} where T<:AbstractFloat
 
-import FFTW:	dct, dct!, idct, idct!,
-                plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
-                plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct,
-                plan_bfft, plan_bfft!, plan_brfft
-import DSP: conv
 
 # The following implements Bluestein's algorithm, following http://www.dsprelated.com/dspbooks/mdft/Bluestein_s_FFT_Algorithm.html
 # To add more types, add them in the union of the function's signature.
@@ -121,7 +116,7 @@ function generic_dct(a::AbstractVector{Complex{T}}) where {T <: AbstractFloat}
 	T <: FFTW.fftwNumber && (@warn("Using generic dct for FFTW number type."))
 	N = length(a)
 	twoN = convert(T,2) * N
-    c = generic_fft([a; flipdim(a,1)])
+    c = generic_fft([a; reverse(a, dims=1)]) # c = generic_fft([a; flipdim(a,1)])
     d = c[1:N]
     d .*= exp.((-im*convert(T, pi)).*(0:N-1)./twoN)
     d[1] = d[1] / sqrt(convert(T, 2))
@@ -137,9 +132,9 @@ function generic_idct(a::AbstractVector{Complex{T}}) where {T <: AbstractFloat}
     b = a * sqrt(twoN)
     b[1] = b[1] * sqrt(convert(T,2))
     shift = exp.(-im * 2 * convert(T, pi) * (N - convert(T,1)/2) * (0:(2N-1)) / twoN)
-    b = [b; 0; -flipdim(b[2:end],1)] .* shift
+    b = [b; 0; -reverse(b[2:end], dims=1)] .* shift # b = [b; 0; -flipdim(b[2:end],1)] .* shift
     c = ifft(b)
-    flipdim(c[1:N],1)
+    reverse(c[1:N]; dims=1)#flipdim(c[1:N],1)
 end
 
 generic_idct(a::AbstractArray{T}) where {T <: AbstractFloat} = real(generic_idct(complex(a)))
@@ -165,13 +160,13 @@ struct DummybFFTPlan{T,inplace} <: DummyPlan{T} end
 struct DummyDCTPlan{T,inplace} <: DummyPlan{T} end
 struct DummyiDCTPlan{T,inplace} <: DummyPlan{T} end
 struct DummyrFFTPlan{T,inplace} <: DummyPlan{T}
-	n	::	Integer
+	n::Integer
 end
 struct DummyirFFTPlan{T,inplace} <: DummyPlan{T}
-	n	::	Integer
+	n::Integer
 end
 struct DummybrFFTPlan{T,inplace} <: DummyPlan{T}
-	n	::	Integer
+	n::Integer
 end
 
 for (Plan,iPlan) in ((:DummyFFTPlan,:DummyiFFTPlan),
@@ -196,7 +191,7 @@ for (Plan,ff,ff!) in ((:DummyFFTPlan,:generic_fft,:generic_fft!),
     @eval begin
         *(p::$Plan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = $ff!(x)
         *(p::$Plan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = $ff(x)
-        function LinearAlgebra.mul!(C::StridedVector, p::$Plan, x::StridedVector)
+        function mul!(C::StridedVector, p::$Plan, x::StridedVector)
             C[:] = $ff(x)
             C
         end
@@ -206,13 +201,13 @@ end
 # Specific for irfft and brfft:
 *(p::DummyirFFTPlan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_irfft!(x, p.n)
 *(p::DummyirFFTPlan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_irfft(x, p.n)
-function LinearAlgebra.mul!(C::StridedVector, p::DummyirFFTPlan, x::StridedVector)
+function mul!(C::StridedVector, p::DummyirFFTPlan, x::StridedVector)
 	C[:] = generic_irfft(x, p.n)
 	C
 end
 *(p::DummybrFFTPlan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_brfft!(x, p.n)
 *(p::DummybrFFTPlan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_brfft(x, p.n)
-function LinearAlgebra.mul!(C::StridedVector, p::DummybrFFTPlan, x::StridedVector)
+function mul!(C::StridedVector, p::DummybrFFTPlan, x::StridedVector)
 	C[:] = generic_brfft(x, p.n)
 	C
 end
