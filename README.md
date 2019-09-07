@@ -4,30 +4,44 @@
 
 `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
-Transforms include conversion between Jacobi polynomial expansions, with Chebyshev, Legendre, and ultraspherical polynomial transforms as special cases. For the signal processor, all three types of nonuniform fast Fourier transforms available. As well, spherical harmonic transforms and transforms between orthogonal polynomials on the triangle allow for the efficient simulation of partial differential equations of evolution.
+This package provides a Julia wrapper for the [C library](https://github.com/MikaelSlevinsky/FastTransforms) of the same name. Additionally, all three types of nonuniform fast Fourier transforms available, as well as the Padua transform.
 
-Algorithms include methods based on asymptotic formulae to relate the transforms to a small number of fast Fourier transforms, matrix factorizations based on the Hadamard product, hierarchical matrix decompositions à la Fast Multipole Method, and the butterfly algorithm.
+## Installation
 
-## The Chebyshev—Legendre Transform
-
-The Chebyshev—Legendre transform allows the fast conversion of Chebyshev expansion coefficients to Legendre expansion coefficients and back.
+The build script, which works on macOS and Linux systems with x86_64 processors, downloads precompiled binaries of the latest version of [FastTransforms](https://github.com/MikaelSlevinsky/FastTransforms). This library depends on `FFTW`, `MPFR`, and `OpenBLAS` (on Linux). Therefore, installation may be as straightforward as:
 
 ```julia
-julia> Pkg.add("FastTransforms")
+julia> if Sys.isapple()
+           run(`brew install gcc@8 fftw mpfr`)
+       elseif Sys.islinux()
+           run(`apt-get gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`)
+       end
+
+pkg> build FastTransforms
 
 julia> using FastTransforms
 
-julia> c = rand(10001);
+```
+
+## Fast orthogonal polynomial transforms
+
+The 26 orthogonal polynomial transforms are listed in `FastTransforms.kind2string.(0:25)`. Univariate transforms may be planned with the standard normalization or with orthonormalization. For multivariate transforms, the standard normalization may be too severe for floating-point computations, so it is omitted. Here are two examples:
+
+### The Chebyshev--Legendre transform
+
+```julia
+julia> c = rand(8192);
 
 julia> leg2cheb(c);
 
 julia> cheb2leg(c);
 
-julia> norm(cheb2leg(leg2cheb(c))-c)
-5.564168202018823e-13
+julia> norm(cheb2leg(leg2cheb(c; normcheb=true); normcheb=true)-c)/norm(c)
+1.1866591414786334e-14
+
 ```
 
-The implementation separates pre-computation into a type of plan. This type is constructed with either `plan_leg2cheb` or `plan_cheb2leg`. Let's see how much faster it is if we pre-compute.
+The implementation separates pre-computation into an `FTPlan`. This type is constructed with either `plan_leg2cheb` or `plan_cheb2leg`. Let's see how much faster it is if we pre-compute.
 
 ```julia
 julia> p1 = plan_leg2cheb(c);
@@ -35,40 +49,55 @@ julia> p1 = plan_leg2cheb(c);
 julia> p2 = plan_cheb2leg(c);
 
 julia> @time leg2cheb(c);
-  0.082615 seconds (11.94 k allocations: 31.214 MiB, 6.75% gc time)
+  0.433938 seconds (9 allocations: 64.641 KiB)
 
 julia> @time p1*c;
-  0.004297 seconds (6 allocations: 78.422 KiB)
+  0.007927 seconds (79 allocations: 68.563 KiB)
 
 julia> @time cheb2leg(c);
-  0.110388 seconds (11.94 k allocations: 31.214 MiB, 8.16% gc time)
+  0.423865 seconds (9 allocations: 64.641 KiB)
 
 julia> @time p2*c;
-  0.004500 seconds (6 allocations: 78.422 KiB)
+  0.009164 seconds (89 allocations: 69.672 KiB)
+
 ```
 
-## The Chebyshev—Jacobi Transform
-
-The Chebyshev—Jacobi transform allows the fast conversion of Chebyshev expansion coefficients to Jacobi expansion coefficients and back.
+Furthermore, for orthogonal polynomial connection problems that are degree-preserving, we should expect to be able to apply the transforms in-place:
 
 ```julia
-julia> c = rand(10001);
+julia> lmul!(p1, c);
 
-julia> @time norm(icjt(cjt(c, 0.1, -0.2), 0.1, -0.2) - c, Inf)
-  0.258390 seconds (431 allocations: 6.278 MB)
-1.4830359162942841e-12
+julia> lmul!(p2, c);
 
-julia> p1 = plan_cjt(c, 0.1, -0.2);
+julia> ldiv!(p1, c);
 
-julia> p2 = plan_icjt(c, 0.1, -0.2);
-
-julia> @time norm(p2*(p1*c) - c, Inf)
-  0.244842 seconds (17 allocations: 469.344 KB)
-1.4830359162942841e-12
+julia> ldiv!(p2, c);
 
 ```
 
-Composition of transforms allows the Jacobi—Jacobi transform, computed via `jjt`. The remainder in Hahn's asymptotic expansion is valid for the half-open square `(α,β) ∈ (-1/2,1/2]^2`. Therefore, the fast transform works best when the parameters are inside. If the parameters `(α,β)` are not exceptionally beyond the square, then increment/decrement operators are used with linear complexity (and linear conditioning) in the degree.
+### The spherical harmonic transform
+
+Let `F` be an array of spherical harmonic expansion coefficients with columns arranged by increasing order in absolute value, alternating between negative and positive orders. Then `sph2fourier` converts the representation into a bivariate Fourier series, and `fourier2sph` converts it back. Once in a bivariate Fourier series on the sphere, `plan_sph_synthesis` converts the coefficients to function samples on an equiangular grid that does not sample the poles, and `plan_sph_analysis` converts them back.
+
+```julia
+julia> F = sphrandn(Float64, 1024, 2047); # convenience method
+
+julia> P = plan_sph2fourier(F);
+
+julia> PS = plan_sph_synthesis(F);
+
+julia> PA = plan_sph_analysis(F);
+
+julia> G = PS*(P*F);
+
+julia> H = P\(PA*G);
+
+julia> norm(F-H)/norm(F)
+2.1541073345177038e-15
+
+```
+
+Due to the structure of the spherical harmonic connection problem, these transforms may also be performed in-place with `lmul!` and `ldiv!`.
 
 ## Nonuniform fast Fourier transforms
 
@@ -124,40 +153,11 @@ julia> N = div((n+1)*(n+2), 2);
 
 julia> v = rand(N); # The length of v is the number of Padua points
 
-julia> @time norm(ipaduatransform(paduatransform(v)) - v)
-  0.006571 seconds (846 allocations: 1.746 MiB)
-3.123637691861415e-14
+julia> @time norm(ipaduatransform(paduatransform(v)) - v)/norm(v)
+  0.007373 seconds (543 allocations: 1.733 MiB)
+3.925164683252905e-16
 
 ```
-
-## The Spherical Harmonic Transform
-
-Let `F` be a matrix of spherical harmonic expansion coefficients with columns arranged by increasing order in absolute value, alternating between negative and positive orders. Then `sph2fourier` converts the representation into a bivariate Fourier series, and `fourier2sph` converts it back.
-
-```julia
-julia> F = sphrandn(Float64, 256, 256);
-
-julia> G = sph2fourier(F);
-
-julia> H = fourier2sph(G);
-
-julia> norm(F-H)
-4.950645831278297e-14
-
-julia> F = sphrandn(Float64, 1024, 1024);
-
-julia> G = sph2fourier(F; sketch = :none);
-Pre-computing...100%|███████████████████████████████████████████| Time: 0:00:04
-
-julia> H = fourier2sph(G; sketch = :none);
-Pre-computing...100%|███████████████████████████████████████████| Time: 0:00:04
-
-julia> norm(F-H)
-1.1510623098225283e-12
-
-```
-
-As with other fast transforms, `plan_sph2fourier` saves effort by caching the pre-computation. Be warned that for dimensions larger than `1,000`, this is no small feat!
 
 # References:
 
@@ -171,7 +171,7 @@ As with other fast transforms, `plan_sph2fourier` saves effort by caching the pr
 
    [5]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, *IMA J. Numer. Anal.*, **38**:102—124, 2018.
 
-   [6]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, in press at *Appl. Comput. Harmon. Anal.*, 2017.
+   [6]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
 
    [7]  R. M. Slevinsky, <a href="https://arxiv.org/abs/1711.07866">Conquering the pre-computation in two-dimensional harmonic polynomial transforms</a>, arXiv:1711.07866, 2017.
 

@@ -1,18 +1,17 @@
 # This file shows how to call `libfasttransforms` from Julia.
+# It is normally built by downloading precompiled binaries assuming that
+# dependencies are already installed. However, it may also be built from source.
 
-# Step 1: In this repository, `git clone -b v0.2.1 https://github.com/MikaelSlevinsky/FastTransforms.git deps/FastTransforms`
+# Step 1: In this repository,
+# `git clone -b v0.2.6 https://github.com/MikaelSlevinsky/FastTransforms.git deps/FastTransforms`
 
-# Step 2: use a version of gcc that supports OpenMP: on OS X, this means using a
-# version of `gcc` from Homebrew, `brew install gcc`; on linux, `gcc-4.6` and up should work.
-# `export CC=gcc-"the-right-version"`.
+# Step 2: Get the dependencies. On macOS, run `brew install gcc@8 fftw mpfr`.
+# On linux, run `apt-get gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`.
 
-# Step 3: get the remaining dependencies: On OS X, either `brew install openblas`
-# or change the Make.inc to use `BLAS=APPLEBLAS` instead of `BLAS=OPENBLAS`.
-# Furthermore, `brew install fftw mpfr`. For linux, see the `Travis.yml` file.
-# For Windows, see the `Appveyor.yml` file.
+# Step 3: Build the library. On macOS, run `make CC=gcc-8 FT_USE_APPLEBLAS=1`.
+# On linux, run `make CC=gcc-8`.
 
-# Step 4: run `make` and check the tests by running `./test_drivers 3 3 0`.
-# All the errors should be roughly on the order of machine precision.
+# Step 4: move `libfastfransforms.dylib` out of the folder to be found by ↓.
 
 const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms")
 
@@ -220,7 +219,7 @@ for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
     plan_f = Symbol("plan_", f)
     @eval begin
         $plan_f(x::AbstractArray{T}, y...; z...) where T = $plan_f(T, size(x, 1), y...; z...)
-        $f(x::AbstractArray{T}, y...; z...) where T = $plan_f(x, y...; z...)*x
+        $f(x::AbstractArray, y...; z...) = $plan_f(x, y...; z...)*x
     end
 end
 
@@ -228,7 +227,7 @@ for (f, plan_f) in ((:fourier2sph, :plan_sph2fourier), (:fourier2sphv, :plan_sph
                     (:cxf2disk2, :plan_disk2cxf), (:cheb2tri, :plan_tri2cheb),
                     (:cheb2tet, :plan_tet2cheb))
     @eval begin
-        $f(x::AbstractArray{T}, y...; z...) where T = $plan_f(x, y...; z...)\x
+        $f(x::AbstractArray, y...; z...) = $plan_f(x, y...; z...)\x
     end
 end
 
@@ -435,6 +434,7 @@ for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execut
                     (:plan_tri_synthesis, :ft_plan_tri_synthesis, :ft_execute_tri_synthesis, TRIANGLESYNTHESIS),
                     (:plan_tri_analysis, :ft_plan_tri_analysis, :ft_execute_tri_analysis, TRIANGLEANALYSIS))
     @eval begin
+        $fJ(x::Matrix{T}) where T = $fJ(T, size(x, 1), size(x, 2))
         function $fJ(::Type{Float64}, n::Integer, m::Integer)
             plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint), n, m)
             return FTPlan{Float64, 2, $K}(plan, n, m)
@@ -449,6 +449,8 @@ for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execut
     end
 end
 
+plan_tet_synthesis(x::Array{T, 3}) where T = plan_tet_synthesis(T, size(x, 1), size(x, 2), size(x, 3))
+
 function plan_tet_synthesis(::Type{Float64}, n::Integer, l::Integer, m::Integer)
     plan = ccall((:ft_plan_tet_synthesis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
     return FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}(plan, n, l, m)
@@ -461,6 +463,8 @@ function lmul!(p::FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}, x::Array{Float64, 3}
     ccall((:ft_execute_tet_synthesis, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), p, x, size(x, 1), size(x, 2), size(x, 3))
     return x
 end
+
+plan_tet_analysis(x::Array{T, 3}) where T = plan_tet_analysis(T, size(x, 1), size(x, 2), size(x, 3))
 
 function plan_tet_analysis(::Type{Float64}, n::Integer, l::Integer, m::Integer)
     plan = ccall((:ft_plan_tet_analysis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
