@@ -567,3 +567,41 @@ end
 function trievaluate(x::Number, y::Number, M::Integer, β::Number, γ::Number)
 
 end
+
+function tetrand(::Type{T}, l::Int, m::Int, n::Int) where T
+    A = zeros(T, l, m, n)
+    for k = 1:n
+        for j = 1:m+1-k
+            for i = 1:l+2-k-j
+                A[i,j,k] = rand(T)
+            end
+        end
+    end
+    A
+end
+
+function tetrandn(::Type{T}, l::Int, m::Int, n::Int) where T
+    A = zeros(T, l, m, n)
+    for k = 1:n
+        for j = 1:m+1-k
+            for i = 1:l+2-k-j
+                A[i,j,k] = randn(T)
+            end
+        end
+    end
+    A
+end
+
+function tetones(::Type{T}, l::Int, m::Int, n::Int) where T
+    A = zeros(T, l, m, n)
+    for k = 1:n
+        for j = 1:m+1-k
+            for i = 1:l+2-k-j
+                A[i,j,k] = one(T)
+            end
+        end
+    end
+    A
+end
+
+tetzeros(::Type{T}, l::Int, m::Int, n::Int) where T = zeros(T, l, m, n)

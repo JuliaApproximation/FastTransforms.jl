@@ -74,4 +74,15 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     lmul!(pa, A)
     ldiv!(p, A)
     @test A ≈ B
+
+    p = plan_tet2cheb(Float64, n, α, β, γ, δ)
+    ps = plan_tet_synthesis(Float64, n, n, n)
+    pa = plan_tet_analysis(Float64, n, n, n)
+    A = tetones(Float64, n, n, n)
+    B = copy(A)
+    lmul!(p, A)
+    lmul!(ps, A)
+    lmul!(pa, A)
+    ldiv!(p, A)
+    @test A ≈ B
 end

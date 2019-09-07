@@ -21,6 +21,16 @@ if !(find_library(libfasttransforms) ≡ libfasttransforms)
           "and restart Julia.")
 end
 
+function ft_fftw_plan_with_nthreads(n::Integer)
+    ccall((:ft_fftw_plan_with_nthreads, libfasttransforms), Cvoid, (Cint, ), n)
+end
+
+function __init__()
+    ccall((:ft_fftw_init_threads, libfasttransforms), Cint, ())
+    ft_fftw_plan_with_nthreads(ceil(Int, Sys.CPU_THREADS/2))
+end
+
+
 """
     mpfr_t <: AbstractFloat
 
@@ -44,53 +54,59 @@ end
 
 set_num_threads(n::Integer) = ccall((:ft_set_num_threads, libfasttransforms), Cvoid, (Cint, ), n)
 
-const LEG2CHEB           = 0
-const CHEB2LEG           = 1
-const ULTRA2ULTRA        = 2
-const JAC2JAC            = 3
-const LAG2LAG            = 4
-const JAC2ULTRA          = 5
-const ULTRA2JAC          = 6
-const JAC2CHEB           = 7
-const CHEB2JAC           = 8
-const ULTRA2CHEB         = 9
-const CHEB2ULTRA        = 10
-const SPHERE            = 11
-const SPHEREV           = 12
-const DISK              = 13
-const TRIANGLE          = 14
-const SPHERESYNTHESIS   = 15
-const SPHEREANALYSIS    = 16
-const SPHEREVSYNTHESIS  = 17
-const SPHEREVANALYSIS   = 18
-const DISKSYNTHESIS     = 19
-const DISKANALYSIS      = 20
-const TRIANGLESYNTHESIS = 21
-const TRIANGLEANALYSIS  = 22
+const LEG2CHEB              = 0
+const CHEB2LEG              = 1
+const ULTRA2ULTRA           = 2
+const JAC2JAC               = 3
+const LAG2LAG               = 4
+const JAC2ULTRA             = 5
+const ULTRA2JAC             = 6
+const JAC2CHEB              = 7
+const CHEB2JAC              = 8
+const ULTRA2CHEB            = 9
+const CHEB2ULTRA           = 10
+const SPHERE               = 11
+const SPHEREV              = 12
+const DISK                 = 13
+const TRIANGLE             = 14
+const TETRAHEDRON          = 15
+const SPHERESYNTHESIS      = 16
+const SPHEREANALYSIS       = 17
+const SPHEREVSYNTHESIS     = 18
+const SPHEREVANALYSIS      = 19
+const DISKSYNTHESIS        = 20
+const DISKANALYSIS         = 21
+const TRIANGLESYNTHESIS    = 22
+const TRIANGLEANALYSIS     = 23
+const TETRAHEDRONSYNTHESIS = 24
+const TETRAHEDRONANALYSIS  = 25
 
-let k2s = Dict(LEG2CHEB          => "Legendre--Chebyshev",
-               CHEB2LEG          => "Chebyshev--Legendre",
-               ULTRA2ULTRA       => "ultraspherical--ultraspherical",
-               JAC2JAC           => "Jacobi--Jacobi",
-               LAG2LAG           => "Laguerre--Laguerre",
-               JAC2ULTRA         => "Jacobi--ultraspherical",
-               ULTRA2JAC         => "ultraspherical--Jacobi",
-               JAC2CHEB          => "Jacobi--Chebyshev",
-               CHEB2JAC          => "Chebyshev--Jacobi",
-               ULTRA2CHEB        => "ultraspherical--Chebyshev",
-               CHEB2ULTRA        => "Chebyshev--ultraspherical",
-               SPHERE            => "Spherical harmonic--Fourier",
-               SPHEREV           => "Spherical vector field--Fourier",
-               DISK              => "Zernike--Chebyshev×Fourier",
-               TRIANGLE          => "Proriol--Chebyshev",
-               SPHERESYNTHESIS   => "FFTW Fourier synthesis on the sphere",
-               SPHEREANALYSIS    => "FFTW Fourier analysis on the sphere",
-               SPHEREVSYNTHESIS  => "FFTW Fourier synthesis on the sphere (vector field)",
-               SPHEREVANALYSIS   => "FFTW Fourier analysis on the sphere (vector field)",
-               DISKSYNTHESIS     => "FFTW Chebyshev×Fourier synthesis on the disk",
-               DISKANALYSIS      => "FFTW Chebyshev×Fourier analysis on the disk",
-               TRIANGLESYNTHESIS => "FFTW Chebyshev synthesis on the triangle",
-               TRIANGLEANALYSIS  => "FFTW Chebyshev analysis on the triangle")
+let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
+               CHEB2LEG             => "Chebyshev--Legendre",
+               ULTRA2ULTRA          => "ultraspherical--ultraspherical",
+               JAC2JAC              => "Jacobi--Jacobi",
+               LAG2LAG              => "Laguerre--Laguerre",
+               JAC2ULTRA            => "Jacobi--ultraspherical",
+               ULTRA2JAC            => "ultraspherical--Jacobi",
+               JAC2CHEB             => "Jacobi--Chebyshev",
+               CHEB2JAC             => "Chebyshev--Jacobi",
+               ULTRA2CHEB           => "ultraspherical--Chebyshev",
+               CHEB2ULTRA           => "Chebyshev--ultraspherical",
+               SPHERE               => "Spherical harmonic--Fourier",
+               SPHEREV              => "Spherical vector field--Fourier",
+               DISK                 => "Zernike--Chebyshev×Fourier",
+               TRIANGLE             => "Proriol--Chebyshev²",
+               TETRAHEDRON          => "Proriol--Chebyshev³",
+               SPHERESYNTHESIS      => "FFTW Fourier synthesis on the sphere",
+               SPHEREANALYSIS       => "FFTW Fourier analysis on the sphere",
+               SPHEREVSYNTHESIS     => "FFTW Fourier synthesis on the sphere (vector field)",
+               SPHEREVANALYSIS      => "FFTW Fourier analysis on the sphere (vector field)",
+               DISKSYNTHESIS        => "FFTW Chebyshev×Fourier synthesis on the disk",
+               DISKANALYSIS         => "FFTW Chebyshev×Fourier analysis on the disk",
+               TRIANGLESYNTHESIS    => "FFTW Chebyshev synthesis on the triangle",
+               TRIANGLEANALYSIS     => "FFTW Chebyshev analysis on the triangle",
+               TETRAHEDRONSYNTHESIS => "FFTW Chebyshev synthesis on the tetrahedron",
+               TETRAHEDRONANALYSIS  => "FFTW Chebyshev analysis on the tetrahedron")
     global kind2string
     kind2string(k::Integer) = k2s[Int(k)]
 end
@@ -100,6 +116,7 @@ struct ft_plan_struct end
 mutable struct FTPlan{T, N, K}
     plan::Ptr{ft_plan_struct}
     n::Int
+    l::Int
     m::Int
     function FTPlan{T, N, K}(plan::Ptr{ft_plan_struct}, n::Int) where {T, N, K}
         p = new(plan, n)
@@ -107,7 +124,12 @@ mutable struct FTPlan{T, N, K}
         p
     end
     function FTPlan{T, N, K}(plan::Ptr{ft_plan_struct}, n::Int, m::Int) where {T, N, K}
-        p = new(plan, n, m)
+        p = new(plan, n, -1, m)
+        finalizer(destroy_plan, p)
+        p
+    end
+    function FTPlan{T, N, K}(plan::Ptr{ft_plan_struct}, n::Int, l::Int, m::Int) where {T, N, K}
+        p = new(plan, n, l, m)
         finalizer(destroy_plan, p)
         p
     end
@@ -120,7 +142,9 @@ show(io::IO, p::FTPlan{T, 2, SPHERE}) where T = print(io, "FastTransforms ", kin
 show(io::IO, p::FTPlan{T, 2, SPHEREV}) where T = print(io, "FastTransforms ", kind2string(SPHEREV), " plan for $(p.n)×$(2p.n-1)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, DISK}) where T = print(io, "FastTransforms ", kind2string(DISK), " plan for $(p.n)×$(4p.n-3)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, TRIANGLE}) where T = print(io, "FastTransforms ", kind2string(TRIANGLE), " plan for $(p.n)×$(p.n)-element array of ", T)
+show(io::IO, p::FTPlan{T, 3, TETRAHEDRON}) where T = print(io, "FastTransforms ", kind2string(TETRAHEDRON), " plan for $(p.n)×$(p.n)×$(p.n)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, K}) where {T, K} = print(io, "FastTransforms plan for ", kind2string(K), " for $(p.n)×$(p.m)-element array of ", T)
+show(io::IO, p::FTPlan{T, 3, K}) where {T, K} = print(io, "FastTransforms plan for ", kind2string(K), " for $(p.n)×$(p.l)×$(p.m)-element array of ", T)
 
 function checksize(p::FTPlan{T}, x::Array{T}) where T
     if p.n != size(x, 1)
@@ -135,6 +159,7 @@ destroy_plan(p::FTPlan{Float32, 1}) = ccall((:ft_destroy_tb_eigen_FMMf, libfastt
 destroy_plan(p::FTPlan{Float64, 1}) = ccall((:ft_destroy_tb_eigen_FMM, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{BigFloat, 1}) = ccall((:ft_mpfr_destroy_plan, libfasttransforms), Cvoid, (Ptr{mpfr_t}, Cint), p, p.n)
 destroy_plan(p::FTPlan{Float64, 2}) = ccall((:ft_destroy_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 3}) = ccall((:ft_destroy_tetrahedral_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHERESYNTHESIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHEREANALYSIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHEREVSYNTHESIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
@@ -143,6 +168,8 @@ destroy_plan(p::FTPlan{Float64, 2, DISKSYNTHESIS}) = ccall((:ft_destroy_disk_fft
 destroy_plan(p::FTPlan{Float64, 2, DISKANALYSIS}) = ccall((:ft_destroy_disk_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, TRIANGLESYNTHESIS}) = ccall((:ft_destroy_triangle_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, TRIANGLEANALYSIS}) = ccall((:ft_destroy_triangle_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}) = ccall((:ft_destroy_tetrahedron_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 3, TETRAHEDRONANALYSIS}) = ccall((:ft_destroy_tetrahedron_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 
 struct AdjointFTPlan{T, S}
     parent::S
@@ -189,7 +216,7 @@ unsafe_convert(::Type{Ptr{mpfr_t}}, p::TransposeFTPlan{T, FTPlan{T, N, K}}) wher
 for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
           :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
           :cheb2jac, :ultra2cheb, :cheb2ultra,
-          :sph2fourier, :sphv2fourier, :disk2cxf, :tri2cheb)
+          :sph2fourier, :sphv2fourier, :disk2cxf, :tri2cheb, :tet2cheb)
     plan_f = Symbol("plan_", f)
     @eval begin
         $plan_f(x::AbstractArray{T}, y...; z...) where T = $plan_f(T, size(x, 1), y...; z...)
@@ -198,7 +225,8 @@ for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
 end
 
 for (f, plan_f) in ((:fourier2sph, :plan_sph2fourier), (:fourier2sphv, :plan_sphv2fourier),
-                    (:cxf2disk2, :plan_disk2cxf), (:cheb2tri, :plan_tri2cheb))
+                    (:cxf2disk2, :plan_disk2cxf), (:cheb2tri, :plan_tri2cheb),
+                    (:cheb2tet, :plan_tet2cheb))
     @eval begin
         $f(x::AbstractArray{T}, y...; z...) where T = $plan_f(x, y...; z...)\x
     end
@@ -393,6 +421,11 @@ function plan_tri2cheb(::Type{Float64}, n::Integer, α::Float64, β::Float64, γ
     return FTPlan{Float64, 2, TRIANGLE}(plan, n)
 end
 
+function plan_tet2cheb(::Type{Float64}, n::Integer, α::Float64, β::Float64, γ::Float64, δ::Float64)
+    plan = ccall((:ft_plan_tet2cheb, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Float64, Float64, Float64), n, α, β, γ, δ)
+    return FTPlan{Float64, 3, TETRAHEDRON}(plan, n)
+end
+
 for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execute_sph_synthesis, SPHERESYNTHESIS),
                     (:plan_sph_analysis, :ft_plan_sph_analysis, :ft_execute_sph_analysis, SPHEREANALYSIS),
                     (:plan_sphv_synthesis, :ft_plan_sphv_synthesis, :ft_execute_sphv_synthesis, SPHEREVSYNTHESIS),
@@ -416,12 +449,39 @@ for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execut
     end
 end
 
-*(p::FTPlan{T}, x::VecOrMat{T}) where T = lmul!(p, deepcopy(x))
-*(p::AdjointFTPlan{T}, x::VecOrMat{T}) where T = lmul!(p, deepcopy(x))
-*(p::TransposeFTPlan{T}, x::VecOrMat{T}) where T = lmul!(p, deepcopy(x))
-\(p::FTPlan{T}, x::VecOrMat{T}) where T = ldiv!(p, deepcopy(x))
-\(p::AdjointFTPlan{T}, x::VecOrMat{T}) where T = ldiv!(p, deepcopy(x))
-\(p::TransposeFTPlan{T}, x::VecOrMat{T}) where T = ldiv!(p, deepcopy(x))
+function plan_tet_synthesis(::Type{Float64}, n::Integer, l::Integer, m::Integer)
+    plan = ccall((:ft_plan_tet_synthesis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
+    return FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}(plan, n, l, m)
+end
+
+function lmul!(p::FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}, x::Array{Float64, 3})
+    if p.n != size(x, 1) || p.l != size(x, 2) || p.m != size(x, 3)
+        throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.l) × $(p.m), x has dimensions $(size(x, 1)) × $(size(x, 2)) × $(size(x, 3))"))
+    end
+    ccall((:ft_execute_tet_synthesis, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), p, x, size(x, 1), size(x, 2), size(x, 3))
+    return x
+end
+
+function plan_tet_analysis(::Type{Float64}, n::Integer, l::Integer, m::Integer)
+    plan = ccall((:ft_plan_tet_analysis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
+    return FTPlan{Float64, 3, TETRAHEDRONANALYSIS}(plan, n, l, m)
+end
+
+function lmul!(p::FTPlan{Float64, 3, TETRAHEDRONANALYSIS}, x::Array{Float64, 3})
+    if p.n != size(x, 1) || p.l != size(x, 2) || p.m != size(x, 3)
+        throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.l) × $(p.m), x has dimensions $(size(x, 1)) × $(size(x, 2)) × $(size(x, 3))"))
+    end
+    ccall((:ft_execute_tet_analysis, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), p, x, size(x, 1), size(x, 2), size(x, 3))
+    return x
+end
+
+
+*(p::FTPlan{T}, x::Array{T}) where T = lmul!(p, deepcopy(x))
+*(p::AdjointFTPlan{T}, x::Array{T}) where T = lmul!(p, deepcopy(x))
+*(p::TransposeFTPlan{T}, x::Array{T}) where T = lmul!(p, deepcopy(x))
+\(p::FTPlan{T}, x::Array{T}) where T = ldiv!(p, deepcopy(x))
+\(p::AdjointFTPlan{T}, x::Array{T}) where T = ldiv!(p, deepcopy(x))
+\(p::TransposeFTPlan{T}, x::Array{T}) where T = ldiv!(p, deepcopy(x))
 
 for (fJ, fC, elty) in ((:lmul!, :ft_bfmvf, :Float32),
                        (:ldiv!, :ft_bfsvf, :Float32),
@@ -544,4 +604,16 @@ for (fJ, fC, K) in ((:lmul!, :ft_execute_sph2fourier, SPHERE),
             return x
         end
     end
+end
+
+function lmul!(p::FTPlan{Float64, 3, TETRAHEDRON}, x::Array{Float64, 3})
+    checksize(p, x)
+    ccall((:ft_execute_tet2cheb, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), p, x, size(x, 1), size(x, 2), size(x, 3))
+    return x
+end
+
+function ldiv!(p::FTPlan{Float64, 3, TETRAHEDRON}, x::Array{Float64, 3})
+    checksize(p, x)
+    ccall((:ft_execute_cheb2tet, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), p, x, size(x, 1), size(x, 2), size(x, 3))
+    return x
 end

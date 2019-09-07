@@ -24,8 +24,8 @@ import LinearAlgebra: mul!, lmul!, ldiv!
 export leg2cheb, cheb2leg, ultra2ultra, jac2jac,
        lag2lag, jac2ultra, ultra2jac, jac2cheb,
        cheb2jac, ultra2cheb, cheb2ultra,
-       sph2fourier, sphv2fourier, disk2cxf, tri2cheb,
-       fourier2sph, fourier2sphv, cxf2disk, cheb2tri
+       sph2fourier, sphv2fourier, disk2cxf, tri2cheb, tet2cheb,
+       fourier2sph, fourier2sphv, cxf2disk, cheb2tri, cheb2tet
 
 export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
        plan_lag2lag, plan_jac2ultra, plan_ultra2jac, plan_jac2cheb,
@@ -33,7 +33,8 @@ export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
        plan_sph2fourier, plan_sph_synthesis, plan_sph_analysis,
        plan_sphv2fourier, plan_sphv_synthesis, plan_sphv_analysis,
        plan_disk2cxf, plan_disk_synthesis, plan_disk_analysis,
-       plan_tri2cheb, plan_tri_synthesis, plan_tri_analysis
+       plan_tri2cheb, plan_tri_synthesis, plan_tri_analysis,
+       plan_tet2cheb, plan_tet_synthesis, plan_tet_analysis
 
 include("libfasttransforms.jl")
 
@@ -62,7 +63,7 @@ export plan_fejer1, fejernodes1, fejerweights1,
 include("clenshawcurtis.jl")
 include("fejer.jl")
 
-export hermitepoints, weightedhermitetransform, iweightedhermitetransform
+export weightedhermitetransform, iweightedhermitetransform
 
 include("hermite.jl")
 
@@ -75,7 +76,8 @@ include("gaunt.jl")
 export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
        sphvones, sphvzeros, sphvrand, sphvrandn,
        diskones, diskzeros, diskrand, diskrandn,
-       triones, trizeros, trirand, trirandn, trievaluate
+       triones, trizeros, trirand, trirandn, trievaluate,
+       tetones, tetzeros, tetrand, tetrandn
 
 lgamma(x) = logabsgamma(x)[1]
 
