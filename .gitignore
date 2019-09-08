@@ -2,3 +2,4 @@ docs/build/
 docs/site/
 deps/build.log
 deps/libfasttransforms.*
+.DS_Store
