@@ -17,6 +17,8 @@ julia> if Sys.isapple()
            run(`apt-get gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`)
        end
 
+pkg> add FastTransforms
+
 pkg> build FastTransforms
 
 julia> using FastTransforms
