@@ -1,9 +1,8 @@
 using Documenter, FastTransforms
 
-makedocs(modules=[FastTransforms],
-			doctest = true,
-			clean = true,
-			format = :html,
+makedocs(
+			doctest = false,
+			format = Documenter.HTML(),
 			sitename = "FastTransforms.jl",
 			authors = "Richard Mikael Slevinsky",
 			pages = Any[
@@ -14,10 +13,4 @@ makedocs(modules=[FastTransforms],
 
 deploydocs(
     repo   = "github.com/JuliaApproximation/FastTransforms.jl.git",
-    latest = "master",
-    julia  = "0.6",
-    osname = "linux",
-    target = "build",
-    deps   = Deps.pip("pygments", "mkdocs", "python-markdown-math"),
-    make   = nothing
     )
