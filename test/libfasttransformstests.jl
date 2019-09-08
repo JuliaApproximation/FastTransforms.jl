@@ -6,6 +6,7 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     n = 64
     α, β, γ, δ, λ, μ = 0.1, 0.2, 0.3, 0.4, 0.5, 0.6
     for T in (Float32, Float64, BigFloat)
+        x = T(1)./(1:n)
         Id = Matrix{T}(I, n, n)
         for (p1, p2) in ((plan_leg2cheb(Id), plan_cheb2leg(Id)),
                           (plan_ultra2ultra(Id, T(λ), T(μ)), plan_ultra2ultra(Id, T(μ), T(λ))),
@@ -14,20 +15,40 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
                           (plan_jac2ultra(Id, T(α), T(β), T(λ)), plan_ultra2jac(Id, T(λ), T(α), T(β))),
                           (plan_jac2cheb(Id, T(α), T(β)), plan_cheb2jac(Id, T(α), T(β))),
                           (plan_ultra2cheb(Id, T(λ)), plan_cheb2ultra(Id, T(λ))))
-            P = deepcopy(Id)
-            Q = p1*P
-            P = p2*Q
-            @test P ≈ Id
-            Q = p1*P
-            P = p1'Q
-            Q = p1'\P
-            P = p1\Q
-            @test P ≈ Id
+            y = p1*x
+            z = p2*y
+            @test z ≈ x
+            y = p1*x
+            z = p1'y
+            y = transpose(p1)*z
+            z = transpose(p1)\y
+            y = p1'\z
+            z = p1\y
+            @test z ≈ x
+            y = p2*x
+            z = p2'y
+            y = transpose(p2)*z
+            z = transpose(p2)\y
+            y = p2'\z
+            z = p2\y
+            @test z ≈ x
+            P = p1*Id
             Q = p2*P
-            P = p2'Q
-            Q = p2'\P
-            P = p2\Q
-            @test P ≈ Id
+            @test Q ≈ Id
+            P = p1*Id
+            Q = p1'P
+            P = transpose(p1)*Q
+            Q = transpose(p1)\P
+            P = p1'\Q
+            Q = p1\P
+            @test Q ≈ Id
+            P = p2*Id
+            Q = p2'P
+            P = transpose(p2)*Q
+            Q = transpose(p2)\P
+            P = p2'\Q
+            Q = p2\P
+            @test Q ≈ Id
         end
     end
 
