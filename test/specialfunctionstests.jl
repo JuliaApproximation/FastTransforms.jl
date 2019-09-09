@@ -1,6 +1,7 @@
 using FastTransforms, Test
 
-import FastTransforms: pochhammer, sqrtpi, Cnλ, Λ, lambertw, Cnαβ, Anαβ
+import FastTransforms: pochhammer, sqrtpi, SpecialFunctions.gamma
+import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ
 import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimoments1, chebyshevjacobimoments2, chebyshevlogmoments1, chebyshevlogmoments2
 
 @testset "Special functions" begin
@@ -13,6 +14,9 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimome
     @test pochhammer(-1,-0.5) == 0
     @test 1.0/pochhammer(-0.5,-0.5) == 0
     @test pochhammer(-1+0im,-1) == -0.5
+    @test pochhammer(2,1) == pochhammer(2,1.0) == pochhammer(2.0,1) == 2
+    @test pochhammer(1.1,2.2) ≈ gamma(3.3)/gamma(1.1)
+    @test pochhammer(-2,1) == pochhammer(-2,1.0) == pochhammer(-2.0,1) == -2
 
     n = 0:1000
     λ = 0.125
