@@ -4,7 +4,7 @@
 
 `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
-This package provides a Julia wrapper for the [C library](https://github.com/MikaelSlevinsky/FastTransforms) of the same name. Additionally, all three types of nonuniform fast Fourier transforms available, as well as the Padua transform.
+This package provides a Julia wrapper for the [C library](https://github.com/MikaelSlevinsky/FastTransforms) of the same name. Additionally, all three types of nonuniform fast Fourier transforms are available, as well as the Padua transform.
 
 ## Installation
 
@@ -54,13 +54,13 @@ julia> @time leg2cheb(c);
   0.433938 seconds (9 allocations: 64.641 KiB)
 
 julia> @time p1*c;
-  0.007927 seconds (79 allocations: 68.563 KiB)
+  0.005713 seconds (8 allocations: 64.594 KiB)
 
 julia> @time cheb2leg(c);
   0.423865 seconds (9 allocations: 64.641 KiB)
 
 julia> @time p2*c;
-  0.009164 seconds (89 allocations: 69.672 KiB)
+  0.005829 seconds (8 allocations: 64.594 KiB)
 
 ```
 
@@ -90,9 +90,11 @@ julia> PS = plan_sph_synthesis(F);
 
 julia> PA = plan_sph_analysis(F);
 
-julia> G = PS*(P*F);
+julia> @time G = PS*(P*F);
+  0.090767 seconds (12 allocations: 31.985 MiB, 1.46% gc time)
 
-julia> H = P\(PA*G);
+julia> @time H = P\(PA*G);
+  0.092726 seconds (12 allocations: 31.985 MiB, 1.63% gc time)
 
 julia> norm(F-H)/norm(F)
 2.1541073345177038e-15
