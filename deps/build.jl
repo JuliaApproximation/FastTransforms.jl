@@ -1,6 +1,8 @@
 using BinaryProvider
 
 if Sys.isapple()
+    run(`brew update`)
+    run(`brew install gcc@8 fftw mpfr`)
     const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.dylib")
     GCC = BinaryProvider.detect_compiler_abi().gcc_version
     println("Building with ", GCC, ".")
@@ -21,6 +23,9 @@ if Sys.isapple()
         @warn "Please ensure you have a version of gcc from gcc-4.9 to gcc-9."
     end
 elseif Sys.islinux()
+    run(`sudo add-apt-repository ppa:ubuntu-toolchain-r/test`)
+    run(`sudo apt-get update`)
+    run(`sudo apt-get install gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`)
     const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.so")
     if arch(platform_key_abi()) != :x86_64
         @warn "FastTransforms only has compiled binaries for x86_64 architectures."

@@ -8,20 +8,12 @@ This package provides a Julia wrapper for the [C library](https://github.com/Mik
 
 ## Installation
 
-The build script, which works on macOS and Linux systems with x86_64 processors, downloads precompiled binaries of the latest version of [FastTransforms](https://github.com/MikaelSlevinsky/FastTransforms). This library depends on `FFTW`, `MPFR`, and `OpenBLAS` (on Linux). Therefore, installation may be as straightforward as:
+The build script, which works on macOS and Linux systems with x86_64 processors, downloads precompiled binaries of the latest version of [FastTransforms](https://github.com/MikaelSlevinsky/FastTransforms). This library depends on `FFTW`, `MPFR`, and `OpenBLAS` (on Linux). Installation may be as straightforward as:
 
 ```julia
-julia> if Sys.isapple()
-           run(`brew install gcc@8 fftw mpfr`)
-       elseif Sys.islinux()
-           run(`apt-get gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`)
-       end
-
 pkg> add FastTransforms
 
-pkg> build FastTransforms
-
-julia> using FastTransforms
+julia> using FastTransforms, LinearAlgebra
 
 ```
 
