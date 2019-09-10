@@ -32,6 +32,7 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
             y = p2'\z
             z = p2\y
             @test z ≈ x
+            Id = Matrix{T}(I, n, n)
             P = p1*Id
             Q = p2*P
             @test Q ≈ Id
