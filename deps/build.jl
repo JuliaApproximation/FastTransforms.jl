@@ -1,7 +1,7 @@
 using BinaryProvider
 
 if Sys.isapple()
-    run(`brew upgrade`)
+    run(`brew update`)
     run(`brew install gcc@8 fftw mpfr`)
     const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.dylib")
     GCC = BinaryProvider.detect_compiler_abi().gcc_version
