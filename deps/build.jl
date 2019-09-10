@@ -23,7 +23,7 @@ if Sys.isapple()
         @warn "Please ensure you have a version of gcc from gcc-4.9 to gcc-9."
     end
 elseif Sys.islinux()
-    run(`sudo apt-get gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`)
+    run(`apt-get install gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`)
     const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.so")
     if arch(platform_key_abi()) != :x86_64
         @warn "FastTransforms only has compiled binaries for x86_64 architectures."
