@@ -3,13 +3,6 @@ language: julia
 os:
   - linux
   - osx
-addons:
-  apt:
-    sources: ubuntu-toolchain-r-test
-    packages: ['gcc-8', 'libblas-dev', 'libopenblas-base', 'libfftw3-dev', 'libmpfr-dev']
-  homebrew:
-    packages: ['gcc@8', 'fftw', 'mpfr']
-    update: true
 julia:
   - 1.0
   - 1.1
