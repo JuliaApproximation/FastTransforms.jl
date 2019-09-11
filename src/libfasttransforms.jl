@@ -436,6 +436,7 @@ for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execut
                     (:plan_tri_analysis, :ft_plan_tri_analysis, :ft_execute_tri_analysis, TRIANGLEANALYSIS))
     @eval begin
         $fJ(x::Matrix{T}) where T = $fJ(T, size(x, 1), size(x, 2))
+        $fJ(x::Matrix{Complex{T}}) where T <: Real = $fJ(T, size(x, 1), size(x, 2))
         function $fJ(::Type{Float64}, n::Integer, m::Integer)
             plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint), n, m)
             return FTPlan{Float64, 2, $K}(plan, n, m)
@@ -451,6 +452,7 @@ for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execut
 end
 
 plan_tet_synthesis(x::Array{T, 3}) where T = plan_tet_synthesis(T, size(x, 1), size(x, 2), size(x, 3))
+plan_tet_synthesis(x::Array{Complex{T}, 3}) where T <: Real = plan_tet_synthesis(T, size(x, 1), size(x, 2), size(x, 3))
 
 function plan_tet_synthesis(::Type{Float64}, n::Integer, l::Integer, m::Integer)
     plan = ccall((:ft_plan_tet_synthesis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
@@ -466,6 +468,7 @@ function lmul!(p::FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}, x::Array{Float64, 3}
 end
 
 plan_tet_analysis(x::Array{T, 3}) where T = plan_tet_analysis(T, size(x, 1), size(x, 2), size(x, 3))
+plan_tet_analysis(x::Array{Complex{T}, 3}) where T <: Real = plan_tet_analysis(T, size(x, 1), size(x, 2), size(x, 3))
 
 function plan_tet_analysis(::Type{Float64}, n::Integer, l::Integer, m::Integer)
     plan = ccall((:ft_plan_tet_analysis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
