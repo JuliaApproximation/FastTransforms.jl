@@ -219,7 +219,7 @@ for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
     plan_f = Symbol("plan_", f)
     @eval begin
         $plan_f(x::AbstractArray{T}, y...; z...) where T = $plan_f(T, size(x, 1), y...; z...)
-        $plan_f(x::AbstractArray{Complex{T}}, y...; z...) where T <: Real = $plan_f(T, size(x, 1), y...; z...)
+        $plan_f(::Type{Complex{T}}, y...; z...) where T <: Real = $plan_f(T, y...; z...)
         $f(x::AbstractArray, y...; z...) = $plan_f(x, y...; z...)*x
     end
 end
@@ -436,7 +436,7 @@ for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execut
                     (:plan_tri_analysis, :ft_plan_tri_analysis, :ft_execute_tri_analysis, TRIANGLEANALYSIS))
     @eval begin
         $fJ(x::Matrix{T}) where T = $fJ(T, size(x, 1), size(x, 2))
-        $fJ(x::Matrix{Complex{T}}) where T <: Real = $fJ(T, size(x, 1), size(x, 2))
+        $fJ(::Type{Complex{T}}, x...) where T <: Real = $fJ(T, x...)
         function $fJ(::Type{Float64}, n::Integer, m::Integer)
             plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint), n, m)
             return FTPlan{Float64, 2, $K}(plan, n, m)
@@ -452,7 +452,7 @@ for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execut
 end
 
 plan_tet_synthesis(x::Array{T, 3}) where T = plan_tet_synthesis(T, size(x, 1), size(x, 2), size(x, 3))
-plan_tet_synthesis(x::Array{Complex{T}, 3}) where T <: Real = plan_tet_synthesis(T, size(x, 1), size(x, 2), size(x, 3))
+plan_tet_synthesis(::Type{Complex{T}}, x...) where T <: Real = plan_tet_synthesis(T, x...)
 
 function plan_tet_synthesis(::Type{Float64}, n::Integer, l::Integer, m::Integer)
     plan = ccall((:ft_plan_tet_synthesis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
@@ -468,7 +468,7 @@ function lmul!(p::FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}, x::Array{Float64, 3}
 end
 
 plan_tet_analysis(x::Array{T, 3}) where T = plan_tet_analysis(T, size(x, 1), size(x, 2), size(x, 3))
-plan_tet_analysis(x::Array{Complex{T}, 3}) where T <: Real = plan_tet_analysis(T, size(x, 1), size(x, 2), size(x, 3))
+plan_tet_analysis(::Type{Complex{T}}, x...) where T <: Real = plan_tet_analysis(T, x...)
 
 function plan_tet_analysis(::Type{Float64}, n::Integer, l::Integer, m::Integer)
     plan = ccall((:ft_plan_tet_analysis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
