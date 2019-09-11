@@ -6,7 +6,7 @@ if Sys.isapple()
     const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms.dylib")
     GCC = BinaryProvider.detect_compiler_abi().gcc_version
     println("Building with ", GCC, ".")
-    const release = "https://github.com/MikaelSlevinsky/FastTransforms/releases/download/v0.2.6/libfasttransforms.v0.2.6"
+    const release = "https://github.com/MikaelSlevinsky/FastTransforms/releases/download/v0.2.7/libfasttransforms.v0.2.7"
     if GCC == :gcc4
         download(release*".gcc-4.9.dylib", libfasttransforms)
     elseif GCC == :gcc5
@@ -32,7 +32,7 @@ elseif Sys.islinux()
     else
         GCC = BinaryProvider.detect_compiler_abi().gcc_version
         println("Building with ", GCC, ".")
-        const release = "https://github.com/MikaelSlevinsky/FastTransforms/releases/download/v0.2.6/libfasttransforms.v0.2.6"
+        const release = "https://github.com/MikaelSlevinsky/FastTransforms/releases/download/v0.2.7/libfasttransforms.v0.2.7"
         if GCC == :gcc4
             download(release*".gcc-4.9.so", libfasttransforms)
         elseif GCC == :gcc5
