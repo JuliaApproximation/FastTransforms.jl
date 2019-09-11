@@ -3,7 +3,7 @@
 # dependencies are already installed. However, it may also be built from source.
 
 # Step 1: In this repository,
-# `git clone -b v0.2.6 https://github.com/MikaelSlevinsky/FastTransforms.git deps/FastTransforms`
+# `git clone -b v0.2.7 https://github.com/MikaelSlevinsky/FastTransforms.git deps/FastTransforms`
 
 # Step 2: Get the dependencies. On macOS, run `brew install gcc@8 fftw mpfr`.
 # On linux, run `apt-get gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`.
