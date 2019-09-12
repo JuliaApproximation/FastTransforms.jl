@@ -17,7 +17,7 @@ const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms
 
 if !(find_library(libfasttransforms) ≡ libfasttransforms)
     error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",
-          "and restart Julia. You may need to manually build if the package is in development mode.")
+          "and restart Julia.")
 end
 
 function ft_fftw_plan_with_nthreads(n::Integer)
