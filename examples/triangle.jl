@@ -34,11 +34,6 @@ M = N
 
 α, β, γ = 0, 0, 0
 
-P = plan_tri2cheb(Float64, N, α, β, γ)
-Px = plan_tri2cheb(Float64, N, α+1, β, γ+1)
-Py = plan_tri2cheb(Float64, N, α, β+1, γ+1)
-PA = plan_tri_analysis(Float64, N, M)
-
 u = [sinpi((N-2n-1)/(2N)) for n in 0:N-1]
 v = [sinpi((M-2m-1)/(2M)) for m in 0:M-1]
 
@@ -51,6 +46,9 @@ w = [sinpi((2M-2m-1)/(4M))^2 for m in 0:M-1]
 
 # On the mapped tensor product grid, our function samples are:
 F = [f(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]
+
+P = plan_tri2cheb(F, α, β, γ)
+PA = plan_tri_analysis(F)
 
 # Its Proriol-(α,β,γ) coefficients are:
 U = P\(PA*F)
@@ -72,6 +70,7 @@ for m = 0:M-2
         Gx[n+1, m+1] = cf1*U[n+2, m+1] + cf2*U[n+1, m+2]
     end
 end
+Px = plan_tri2cheb(Fx, α+1, β, γ+1)
 Ux = Px\(PA*Fx)
 
 Gy = zeros(Float64, N, M)
@@ -80,6 +79,7 @@ for m = 0:M-2
         Gy[n+1, m+1] = 4*sqrt((m+1)*(m+β+γ+2))*U[n+1, m+2]
     end
 end
+Py = plan_tri2cheb(Fy, α, β+1, γ+1)
 Uy = Py\(PA*Fy)
 
 # The 2-norm relative error in differentiating the Proriol series

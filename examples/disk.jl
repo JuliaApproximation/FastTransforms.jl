@@ -22,17 +22,17 @@ using FastTransforms, LinearAlgebra
 
 f = (x,y) -> (x^2-y^2+1)/((x^2-y^2+1)^2+(2x*y+1)^2)
 
-N = 15
+N = 5
 M = 4N-3
 
 r = [sinpi((N-n-0.5)/(2N)) for n in 0:N-1]
-θ = 2*(0:M-1)/M # mod π.
-
-P = plan_disk2cxf(Float64, N)
-PA = plan_disk_analysis(Float64, N, M)
+θ = (0:M-1)*2/M # mod π.
 
 # On the mapped tensor product grid, our function samples are:
 F = [f(r*cospi(θ), r*sinpi(θ)) for r in r, θ in θ]
+
+P = plan_disk2cxf(F)
+PA = plan_disk_analysis(F)
 
 # Its Zernike coefficients are:
 U = P\(PA*F)
