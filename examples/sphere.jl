@@ -8,14 +8,12 @@
 # To verify, we sample the function on a 5×9 tensor product grid
 # at equispaced points-in-angle defined by:
 #
-#   θₙ = (n+1/2)π/N, for 0 ≤ n < N,
-#
-# and
+#   θₙ = (n+1/2)π/N, for 0 ≤ n < N, and
 #
 #   φₘ = 2π m/M, for 0 ≤ m < M;
 #
 # we convert the function samples to Fourier coefficients using
-# `FastTransforms.plan_analysis`; and finally, we transform
+# `plan_sph_analysis`; and finally, we transform
 # the Fourier coefficients to spherical harmonic coefficients using
 # `plan_sph2fourier`.
 #
@@ -33,7 +31,7 @@ function threshold!(A::AbstractArray, ϵ)
     A
 end
 
-using FastTransforms
+using FastTransforms, LinearAlgebra
 
 # The colatitudinal grid (mod π):
 N = 5
