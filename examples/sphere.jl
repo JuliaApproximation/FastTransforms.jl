@@ -5,8 +5,8 @@
 #
 # is actually a degree-3 polynomial on 𝕊², where P₄ is the degree-4
 # Legendre polynomial, and x,y,z ∈ 𝕊².
-# To verify, we sample the function on a 5×9 tensor product grid
-# at equispaced points-in-angle defined by:
+# To verify, we sample the function on a 5×9 equiangular grid
+# defined by:
 #
 #   θₙ = (n+1/2)π/N, for 0 ≤ n < N, and
 #

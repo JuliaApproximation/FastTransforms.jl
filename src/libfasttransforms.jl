@@ -1,18 +1,3 @@
-# This file shows how to call `libfasttransforms` from Julia.
-# It is normally built by downloading precompiled binaries assuming that
-# dependencies are already installed. However, it may also be built from source.
-
-# Step 1: In this repository,
-# `git clone -b v0.2.7 https://github.com/MikaelSlevinsky/FastTransforms.git deps/FastTransforms`
-
-# Step 2: Get the dependencies. On macOS, run `brew install gcc@8 fftw mpfr`.
-# On linux, run `apt-get gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev`.
-
-# Step 3: Build the library. On macOS, run `make CC=gcc-8 FT_USE_APPLEBLAS=1`.
-# On linux, run `make CC=gcc-8`.
-
-# Step 4: move `libfastfransforms.dylib` out of the folder to be found by ↓.
-
 const libfasttransforms = joinpath(dirname(@__DIR__), "deps", "libfasttransforms")
 
 if !(find_library(libfasttransforms) ≡ libfasttransforms)

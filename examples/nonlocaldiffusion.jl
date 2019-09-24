@@ -1,4 +1,4 @@
-using FastTransforms
+using FastTransforms, LinearAlgebra
 
 function oprec!(n::Integer, v::AbstractVector, alpha::Real, delta2::Real)
     if n > 0
@@ -13,15 +13,19 @@ function oprec!(n::Integer, v::AbstractVector, alpha::Real, delta2::Real)
     return v
 end
 
-# This example calculates the spectrum of the nonlocal diffusion operator:
-#
-#  \mathcal{L}_\delta u = \int_{\mathbb{S}^2} \rho_\delta(|\mathbf{x}-\mathbf{y}|)\left[u(\mathbf{x}) - u(\mathbf{y})\right] \,\mathrm{d}\Omega(\mathbf{y}),
-#
-#  defined in Eq. (2) of
-#
-#    R. M. Slevinsky, H. Montanelli, and Q. Du, [A spectral method for nonlocal diffusion operators on the sphere](https://doi.org/10.1016/j.jcp.2018.06.024), *J. Comp. Phys.*, **372**:893--911, 2018.
-#
+"""
+This example calculates the spectrum of the nonlocal diffusion operator:
 
+```math
+ℒ_δ u = ∫_𝕊² ρ_δ(|𝐱-𝐲|)[u(𝐱) - u(𝐲)] dΩ(𝐲),
+```
+
+defined in Eq. (2) of
+
+    R. M. Slevinsky, H. Montanelli, and Q. Du, A spectral method for nonlocal diffusion operators on the sphere, J. Comp. Phys., 372:893--911, 2018.
+
+available at https://doi.org/10.1016/j.jcp.2018.06.024
+"""
 function evaluate_lambda(n::Integer, alpha::T, delta::T) where T
     delta2 = delta*delta
     scl = (1+alpha)*(2-delta2/2)
@@ -56,7 +60,7 @@ function evaluate_lambda(n::Integer, alpha::T, delta::T) where T
     return lambda
 end
 
-lambda = evaluate_lambda(1024, -0.5, 0.025)
-lambdabf = evaluate_lambda(1024, parse(BigFloat, "-0.5"), parse(BigFloat, "0.025"))
+lambda = evaluate_lambda(1024, -0.5, 1.0)
+lambdabf = evaluate_lambda(1024, parse(BigFloat, "-0.5"), parse(BigFloat, "1.0"))
 
-norm(lambda64-lambdabf, Inf)/norm(lambda64, Inf)
+norm(lambda-lambdabf, Inf)/norm(lambda, Inf)
