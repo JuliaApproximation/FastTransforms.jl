@@ -1,6 +1,9 @@
 module FastTransforms
 
-using AbstractFFTs, DSP, FastGaussQuadrature, FFTW, Libdl, LinearAlgebra, SpecialFunctions, ToeplitzMatrices
+using DSP, FastGaussQuadrature, Libdl, LinearAlgebra, SpecialFunctions, ToeplitzMatrices
+using Reexport
+@reexport using AbstractFFTs
+@reexport using FFTW
 
 import Base: unsafe_convert, eltype, ndims, adjoint, transpose, show, *, \,
              inv, size, view
@@ -8,16 +11,20 @@ import Base: unsafe_convert, eltype, ndims, adjoint, transpose, show, *, \,
 import Base.GMP: Limb
 import Base.MPFR: BigFloat, _BigFloat
 
-import AbstractFFTs: Plan
+import AbstractFFTs: Plan, ScaledPlan,
+                     fft, ifft, bfft, fft!, ifft!, bfft!,
+                     plan_fft, plan_ifft, plan_bfft, plan_fft!, plan_ifft!, plan_bfft!,
+                     rfft, irfft, brfft, plan_rfft, plan_irfft, plan_brfft,
+                     fftshift, ifftshift,
+                     rfft_output_size, brfft_output_size,
+                     plan_inv, normalization
+
+import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
+             plan_dct, plan_idct, fftwNumber
 
 import DSP: conv
 
 import FastGaussQuadrature: unweightedgausshermite
-
-import FFTW: dct, dct!, idct, idct!,
-             plan_fft!, plan_ifft!, plan_dct!, plan_idct!,
-             plan_fft, plan_ifft, plan_rfft, plan_irfft, plan_dct, plan_idct,
-			 plan_bfft, plan_bfft!, plan_brfft, fftwNumber
 
 import LinearAlgebra: mul!, lmul!, ldiv!
 
