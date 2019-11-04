@@ -26,6 +26,14 @@ using FastTransforms, FFTW, Test
     @test norm(idct(dct(c))-c,Inf) < 1000eps(BigFloat)
     @test norm(dct(idct(c))-c,Inf) < 1000eps(BigFloat)
 
+    c = randn(ComplexF16, 20)
+    p = plan_fft(c)
+    @test inv(p) * (p * c) ≈ c
+
+    c = randn(ComplexF16, 20)
+    pinpl = plan_fft!(c)
+    @test inv(pinpl) * (pinpl * c) ≈ c
+
     # Make sure we don't accidentally hijack any FFTW plans
     for T in (Float32, Float64)
         @test plan_fft(rand(BigFloat,10)) isa FastTransforms.DummyPlan
