@@ -25,6 +25,7 @@ addons:
       - gcc@8
       - fftw
       - mpfr
+    update: true
 
 notifications:
   email: false
