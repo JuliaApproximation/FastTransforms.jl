@@ -1,7 +1,6 @@
-const lft_directiory = joinpath(dirname(@__DIR__), "deps")
-const libfasttransforms = find_library("libfasttransforms", [lft_directiory])
+const libfasttransforms = find_library("libfasttransforms", [joinpath(dirname(@__DIR__), "deps")])
 
-if libfasttransforms === nothing || length(libfasttransforms) == 0
+if libfasttransforms ≡ nothing || length(libfasttransforms) == 0
     error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",
           "and restart Julia.")
 end
