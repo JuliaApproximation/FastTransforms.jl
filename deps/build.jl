@@ -20,7 +20,7 @@ print_platform_error(::MacOS) = "On MacOS\n\tbrew install gcc@8 fftw mpfr\n"
 print_plaftorm_error(::Linux) = "On Linux\n\tsudo apt-get install gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev\n"
 print_plaftorm_error(::Windows) = "On Windows\n\tvcpkg install openblas:x64-windows fftw3[core,threads]:x64-windows mpir:x64-windows mpfr:x64-windows\n"
 
-run(`/bin/bash -c git clone -b v$version https://github.com/MikaelSlevinsky/FastTransforms.git FastTransforms`)
+run(`bash -c git clone -b v$version https://github.com/MikaelSlevinsky/FastTransforms.git FastTransforms`)
 # Rationale is as follows: The build is pretty fast, so on Linux it is typically easiest
 # to just use the gcc of the system to build the library and include it. On MacOS, however,
 # we need to actually install a gcc first, because Apple's OS comes only shipped with clang,
@@ -47,7 +47,7 @@ if ft_build_from_source == "true"
         mv -f FastTransforms/libfasttransforms.$extension libfasttransforms.$extension
     """
     try
-        run(`/bin/bash -c $(script)`)
+        run(`bash -c $(script)`)
     catch
         print_error()
     end
