@@ -136,6 +136,17 @@ function checksize(p::FTPlan{T}, x::Array{T}) where T
     end
 end
 
+for K in (SPHERE, SPHEREV, DISK)
+    @eval function checksize(p::FTPlan{T, 2, $K}, x::Matrix{T}) where T
+        if p.n != size(x, 1)
+            throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.n), x has leading dimension $(size(x, 1))"))
+        end
+        if iseven(size(x, 2))
+            throw(DimensionMismatch("This FTPlan only operates on arrays with an odd number of columns."))
+        end
+    end
+end
+
 unsafe_convert(::Type{Ptr{ft_plan_struct}}, p::FTPlan) = p.plan
 unsafe_convert(::Type{Ptr{mpfr_t}}, p::FTPlan) = unsafe_convert(Ptr{mpfr_t}, p.plan)
 
