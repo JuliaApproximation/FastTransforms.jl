@@ -34,7 +34,7 @@ install:
   - ps: iex ((new-object net.webclient).DownloadString("https://raw.githubusercontent.com/JuliaCI/Appveyor.jl/version-1/bin/install.ps1"))
   - set PATH=%PATH%;c:\tools\vcpkg
   - set PATH=%PATH%;C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin\
-  #- vcpkg install openblas:x64-windows fftw3[core,threads]:x64-windows mpfr:x64-windows mpir:x64-windows --recurse
+  - vcpkg install openblas:x64-windows fftw3[core,threads]:x64-windows mpfr:x64-windows mpir:x64-windows --recurse
   - set PATH=c:\tools\vcpkg\installed\x64-windows\bin;%PATH%
 
 build_script:
