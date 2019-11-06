@@ -1,7 +1,7 @@
 using BinaryProvider
 import Libdl
 
-version = v"0.2.8"
+version = v"0.2.9"
 
 if arch(platform_key_abi()) != :x86_64
     @warn "FastTransforms has only been tested on x86_64 architectures."
@@ -26,8 +26,9 @@ print_plaftorm_error(::Windows) = "On Windows\n\tvcpkg install openblas:x64-wind
 # so here we download the binary.
 ft_build_from_source = get(ENV, "FT_BUILD_FROM_SOURCE", Sys.isapple() ? "false" : "true")
 if ft_build_from_source == "true"
-    extra = Sys.isapple() ? "FT_USE_APPLEBLAS=1" : Sys.iswindows() ? "FT_FFTW_WITH_COMBINED_THREADS=1" : ""
+    make = Sys.iswindows() ? "mingw32-make" : "make"
     compiler = Sys.isapple() ? "CC=gcc-8" : "CC=gcc"
+    flags = Sys.isapple() ? "FT_USE_APPLEBLAS=1" : Sys.iswindows() ? "FT_FFTW_WITH_COMBINED_THREADS=1" : ""
     script = """
         set -e
         set -x
@@ -40,7 +41,7 @@ if ft_build_from_source == "true"
             git clone -b v$version https://github.com/MikaelSlevinsky/FastTransforms.git FastTransforms
         fi
         cd FastTransforms
-        make lib $compiler $extra
+        $make lib $compiler $flags
         cd ..
         mv -f FastTransforms/libfasttransforms.$extension libfasttransforms.$extension
     """
