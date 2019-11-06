@@ -1,7 +1,7 @@
 using BinaryProvider
 import Libdl
 
-version = v"0.2.8"
+version = v"0.2.9"
 
 if arch(platform_key_abi()) != :x86_64
     @warn "FastTransforms has only been tested on x86_64 architectures."
@@ -16,9 +16,9 @@ print_error() = error(
 )
 
 print_platform_error(p::Platform) = "On $(BinaryProvider.platform_name(p)), please consider opening a pull request to add support.\n"
-print_platform_error(::MacOS) = "On MacOS\n\tbrew install gcc@8 fftw mpfr\n"
-print_plaftorm_error(::Linux) = "On Linux\n\tsudo apt-get install gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev\n"
-print_plaftorm_error(::Windows) = "On Windows\n\tvcpkg install openblas:x64-windows fftw3[core,threads]:x64-windows mpir:x64-windows mpfr:x64-windows\n"
+print_platform_error(p::MacOS) = "On MacOS\n\tbrew install gcc@8 fftw mpfr\n"
+print_platform_error(p::Linux) = "On Linux\n\tsudo apt-get install gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev\n"
+print_platform_error(p::Windows) = "On Windows\n\tvcpkg install openblas:x64-windows fftw3[core,threads]:x64-windows mpir:x64-windows mpfr:x64-windows\n"
 
 # Rationale is as follows: The build is pretty fast, so on Linux it is typically easiest
 # to just use the gcc of the system to build the library and include it. On MacOS, however,
@@ -26,8 +26,9 @@ print_plaftorm_error(::Windows) = "On Windows\n\tvcpkg install openblas:x64-wind
 # so here we download the binary.
 ft_build_from_source = get(ENV, "FT_BUILD_FROM_SOURCE", Sys.isapple() ? "false" : "true")
 if ft_build_from_source == "true"
-    extra = Sys.isapple() ? "FT_USE_APPLEBLAS=1" : Sys.iswindows() ? "FT_FFTW_WITH_COMBINED_THREADS=1" : ""
+    make = Sys.iswindows() ? "mingw32-make" : "make"
     compiler = Sys.isapple() ? "CC=gcc-8" : "CC=gcc"
+    flags = Sys.isapple() ? "FT_USE_APPLEBLAS=1" : Sys.iswindows() ? "FT_FFTW_WITH_COMBINED_THREADS=1" : ""
     script = """
         set -e
         set -x
@@ -40,12 +41,12 @@ if ft_build_from_source == "true"
             git clone -b v$version https://github.com/MikaelSlevinsky/FastTransforms.git FastTransforms
         fi
         cd FastTransforms
-        make lib $compiler $extra
+        $make lib $compiler $flags
         cd ..
         mv -f FastTransforms/libfasttransforms.$extension libfasttransforms.$extension
     """
     try
-        run(`/bin/bash -c $(script)`)
+        run(`bash -c $(script)`)
     catch
         print_error()
     end
