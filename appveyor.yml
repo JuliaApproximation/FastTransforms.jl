@@ -3,6 +3,8 @@ image: Visual Studio 2017
 
 cache: c:\tools\vcpkg\installed\
 
+platform: x64
+
 environment:
   matrix:
   - julia_version: 1.0
