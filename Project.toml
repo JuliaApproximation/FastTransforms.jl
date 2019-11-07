@@ -17,9 +17,11 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [compat]
 AbstractFFTs = "0.4"
+BinaryProvider = "0.5.8"
 DSP = "0.6"
 FFTW = "1"
 FastGaussQuadrature = "0.4"
+Reexport = "0.2"
 SpecialFunctions = "0.8"
 ToeplitzMatrices = "0.6"
 julia = "1"
