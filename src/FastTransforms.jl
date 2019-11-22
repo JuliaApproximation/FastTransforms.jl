@@ -92,8 +92,8 @@ include("hermite.jl")
 #cheb2leg(x...)=th_cheb2leg(x...)
 leg2chebu(x...) = th_leg2chebu(x...)
 ultra2ultra(x...) = th_ultra2ultra(x...)
-jac2jac(x...) = th_jac2jac(x...)
-plan_jac2jac(x...) = th_jac2jacplan(x...)
+jac2jac(x...) = jjt(x...)
+plan_jac2jac(x...) = plan_jjt(x...)
 plan_ultra2ultra(x...) = th_ultra2ultraplan(x...)
 
 include("hierarchical.jl")
@@ -105,5 +105,21 @@ include("gaunt.jl")
 
 include("precompile.jl")
 _precompile_()
+
+
+##
+# FastTransform v0.7 compatibility
+##
+
+export plan_cheb2jac, plan_jac2cheb, cheb2jac, jac2cheb
+
+plan_cheb2jac(v...) = plan_icjt(v...)
+plan_jac2cheb(v...) = plan_cjt(v...)
+cheb2jac(v...) = icjt(v...)
+jac2cheb(v...) = cjt(v...)
+
+plan_cheb2leg(::Type{T}, n::Int) where T = th_cheb2legplan(T, n)
+plan_leg2cheb(::Type{T}, n::Int) where T = th_leg2chebplan(T, n)
+
 
 end # module
