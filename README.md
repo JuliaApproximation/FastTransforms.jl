@@ -8,7 +8,7 @@ This package provides a Julia wrapper for the [C library](https://github.com/Mik
 
 ## Installation
 
-Installation, which uses [BinaryBuilder](https://github.com/JuliaPackaging/BinaryBuilder.jl) for Intel processors, may be as straightforward as:
+Installation, which uses [BinaryBuilder](https://github.com/JuliaPackaging/BinaryBuilder.jl) for Intel processors (Sandybridge and beyond), may be as straightforward as:
 
 ```julia
 pkg> add FastTransforms
