@@ -1,7 +1,7 @@
 using BinaryProvider
 import Libdl
 
-version = v"0.2.9"
+version = v"0.2.12"
 
 if arch(platform_key_abi()) != :x86_64
     @warn "FastTransforms has only been tested on x86_64 architectures."
@@ -20,11 +20,7 @@ print_platform_error(p::MacOS) = "On MacOS\n\tbrew install gcc@8 fftw mpfr\n"
 print_platform_error(p::Linux) = "On Linux\n\tsudo apt-get install gcc-8 libblas-dev libopenblas-base libfftw3-dev libmpfr-dev\n"
 print_platform_error(p::Windows) = "On Windows\n\tvcpkg install openblas:x64-windows fftw3[core,threads]:x64-windows mpir:x64-windows mpfr:x64-windows\n"
 
-# Rationale is as follows: The build is pretty fast, so on Linux it is typically easiest
-# to just use the gcc of the system to build the library and include it. On MacOS, however,
-# we need to actually install a gcc first, because Apple's OS comes only shipped with clang,
-# so here we download the binary.
-ft_build_from_source = get(ENV, "FT_BUILD_FROM_SOURCE", Sys.isapple() ? "false" : "true")
+ft_build_from_source = get(ENV, "FT_BUILD_FROM_SOURCE", "false")
 if ft_build_from_source == "true"
     make = Sys.iswindows() ? "mingw32-make" : "make"
     compiler = Sys.isapple() ? "CC=gcc-8" : "CC=gcc"
@@ -51,19 +47,4 @@ if ft_build_from_source == "true"
         print_error()
     end
     println("FastTransforms built from source.")
-else
-    const GCC = BinaryProvider.detect_compiler_abi().gcc_version
-    namemap = Dict(:gcc4 => "gcc-4.9", :gcc5 => "gcc-5", :gcc6 => "gcc-6",
-                   :gcc7 => "gcc-7", :gcc8 => "gcc-8", :gcc9 => "gcc-9")
-    if !(GCC in keys(namemap))
-        error("Please ensure you have a version of gcc from gcc-4.9 to gcc-9.")
-    end
-    try
-        download("https://github.com/MikaelSlevinsky/FastTransforms/releases/download/" *
-                 "v$version/libfasttransforms.v$version.$(namemap[GCC]).$extension",
-                 joinpath(dirname(@__DIR__), "deps", "libfasttransforms.$extension"))
-    catch
-        print_error()
-    end
-    println("FastTransforms installed by downloading binaries.")
 end

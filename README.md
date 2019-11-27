@@ -1,6 +1,6 @@
 # FastTransforms.jl
 
-[![Travis](https://travis-ci.org/JuliaApproximation/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/JuliaApproximation/FastTransforms.jl) [![AppVeyor](https://ci.appveyor.com/api/projects/status/oba9qush15q3x8pb/branch/master?svg=true)](https://ci.appveyor.com/project/MikaelSlevinsky/fasttransforms-jl/branch/master) [![codecov](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/latest)
+[![Travis](https://travis-ci.org/JuliaApproximation/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/JuliaApproximation/FastTransforms.jl) [![AppVeyor](https://ci.appveyor.com/api/projects/status/oba9qush15q3x8pb/branch/master?svg=true)](https://ci.appveyor.com/project/MikaelSlevinsky/fasttransforms-jl/branch/master) [![Cirrus](https://api.cirrus-ci.com/github/JuliaApproximation/FastTransforms.jl.svg)](https://cirrus-ci.com/github/JuliaApproximation/FastTransforms.jl) [![codecov](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/latest)
 
 `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
@@ -8,7 +8,7 @@ This package provides a Julia wrapper for the [C library](https://github.com/Mik
 
 ## Installation
 
-The build script, which works on macOS, Linux, and Windows systems, downloads precompiled binaries of the latest version of [FastTransforms](https://github.com/MikaelSlevinsky/FastTransforms) or builds them from source, as governed by the environment variable `FT_BUILD_FROM_SOURCE=true/false`. This library depends on `FFTW`, `MPFR`, and `OpenBLAS` (on Linux and Windows), which must be present for a successful build. With dependencies, installation may be as straightforward as:
+Installation, which uses [BinaryBuilder](https://github.com/JuliaPackaging/BinaryBuilder.jl) for Intel processors (Sandybridge and beyond), may be as straightforward as:
 
 ```julia
 pkg> add FastTransforms

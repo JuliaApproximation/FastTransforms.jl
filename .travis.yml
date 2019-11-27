@@ -4,21 +4,11 @@ os:
   - linux
   - osx
 julia:
-  - 1.0
-  - 1.1
-  - 1.2
   - 1.3
   - nightly
 matrix:
   allow_failures:
     - julia: nightly
-addons:
-  apt:
-    packages: ['libquadmath0', 'libgomp1', 'libopenblas-dev', 'libfftw3-dev', 'libmpfr-dev']
-  homebrew:
-    packages: ['gcc@8', 'fftw', 'mpfr']
-    update: true
-
 notifications:
   email: false
 after_success:

@@ -1,8 +1,13 @@
-const libfasttransforms = find_library("libfasttransforms", [joinpath(dirname(@__DIR__), "deps")])
-
-if libfasttransforms ≡ nothing || length(libfasttransforms) == 0
-    error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",
-          "and restart Julia.")
+ft_build_from_source = get(ENV, "FT_BUILD_FROM_SOURCE", "false")
+if ft_build_from_source == "true"
+    using Libdl
+    const libfasttransforms = find_library("libfasttransforms", [joinpath(dirname(@__DIR__), "deps")])
+    if libfasttransforms ≡ nothing || length(libfasttransforms) == 0
+        error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",
+              "and restart Julia.")
+    end
+else
+    using FastTransforms_jll
 end
 
 function ft_fftw_plan_with_nthreads(n::Integer)
