@@ -8,7 +8,7 @@ This package provides a Julia wrapper for the [C library](https://github.com/Mik
 
 ## Installation
 
-The build script, which works on macOS, Linux, and Windows systems, downloads precompiled binaries of the latest version of [FastTransforms](https://github.com/MikaelSlevinsky/FastTransforms) or builds them from source, as governed by the environment variable `FT_BUILD_FROM_SOURCE=true/false`. This library depends on `FFTW`, `MPFR`, and `OpenBLAS` (on Linux and Windows), which must be present for a successful build. With dependencies, installation may be as straightforward as:
+Installation, which uses [BinaryBuilder](https://github.com/JuliaPackaging/BinaryBuilder.jl) for Intel processors, may be as straightforward as:
 
 ```julia
 pkg> add FastTransforms

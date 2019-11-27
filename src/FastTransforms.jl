@@ -1,7 +1,8 @@
 module FastTransforms
 
-using DSP, FastGaussQuadrature, Libdl, LinearAlgebra, SpecialFunctions, ToeplitzMatrices
-using Reexport
+using DSP, FastGaussQuadrature, FastTransforms_jll, LinearAlgebra
+using Reexport, SpecialFunctions, ToeplitzMatrices
+
 @reexport using AbstractFFTs
 @reexport using FFTW
 
@@ -19,10 +20,10 @@ import AbstractFFTs: Plan, ScaledPlan,
                      rfft_output_size, brfft_output_size,
                      plan_inv, normalization
 
+import DSP: conv
+
 import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
              plan_dct, plan_idct, fftwNumber
-
-import DSP: conv
 
 import FastGaussQuadrature: unweightedgausshermite
 

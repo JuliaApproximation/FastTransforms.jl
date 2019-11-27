@@ -1,10 +1,3 @@
-const libfasttransforms = find_library("libfasttransforms", [joinpath(dirname(@__DIR__), "deps")])
-
-if libfasttransforms ≡ nothing || length(libfasttransforms) == 0
-    error("FastTransforms is not properly installed. Please run Pkg.build(\"FastTransforms\") ",
-          "and restart Julia.")
-end
-
 function ft_fftw_plan_with_nthreads(n::Integer)
     ccall((:ft_fftw_plan_with_nthreads, libfasttransforms), Cvoid, (Cint, ), n)
 end
