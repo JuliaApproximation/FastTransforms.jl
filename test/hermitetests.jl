@@ -7,7 +7,7 @@ hermitepoints(n) = FastGaussQuadrature.unweightedgausshermite( n )[1]
     @test hermitepoints(100_000)[end] ≈ 446.9720305443094
 
     @test weightedhermitetransform([1.0]) == [1.0]
-    @test weightedhermitetransform(exp.(-hermitepoints(2).^2/2)) == [1.0,0.0]
+    @test weightedhermitetransform(exp.(-hermitepoints(2).^2/2)) ≈ [1.0,0.0]
     @test weightedhermitetransform(exp.(-hermitepoints(3).^2/2)) ≈ [1.0,0.0,0.0]
     @test weightedhermitetransform(exp.(-hermitepoints(1000).^2/2)) ≈ [1.0; zeros(999)]
     @test weightedhermitetransform(exp.(-hermitepoints(3000).^2/2)) ≈ [1.0; zeros(2999)]
