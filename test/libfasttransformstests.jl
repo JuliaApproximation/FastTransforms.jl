@@ -32,23 +32,23 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
             y = p2'\z
             z = p2\y
             @test z ≈ x
-            P = p1*Id
+            P = p1*I
             Q = p2*P
-            @test Q ≈ Id
-            P = p1*Id
+            @test Q ≈ I
+            P = p1*I
             Q = p1'P
             P = transpose(p1)*Q
             Q = transpose(p1)\P
             P = p1'\Q
             Q = p1\P
-            @test Q ≈ Id
-            P = p2*Id
+            @test Q ≈ I
+            P = p2*I
             Q = p2'P
             P = transpose(p2)*Q
             Q = transpose(p2)\P
             P = p2'\Q
             Q = p2\P
-            @test Q ≈ Id
+            @test Q ≈ I
         end
     end
 
@@ -79,23 +79,23 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
             y = p2'\z
             z = p2\y
             @test z ≈ x
-            P = p1*Id
+            P = p1*I
             Q = p2*P
-            @test_skip Q ≈ Id
-            P = p1*Id
+            @test_skip Q ≈ I
+            P = p1*I
             Q = p1'P
             P = transpose(p1)*Q
             Q = transpose(p1)\P
             P = p1'\Q
             Q = p1\P
-            @test_skip Q ≈ Id
-            P = p2*Id
+            @test_skip Q ≈ I
+            P = p2*I
             Q = p2'P
             P = transpose(p2)*Q
             Q = transpose(p2)\P
             P = p2'\Q
             Q = p2\P
-            @test_skip Q ≈ Id
+            @test_skip Q ≈ I
         end
     end
 

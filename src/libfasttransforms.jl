@@ -492,6 +492,13 @@ end
 \(p::AdjointFTPlan{T}, x::Array{T}) where T = ldiv!(p, deepcopy(x))
 \(p::TransposeFTPlan{T}, x::Array{T}) where T = ldiv!(p, deepcopy(x))
 
+*(p::FTPlan{T, 1}, x::UniformScaling{S}) where {T, S} = lmul!(p, Matrix{promote_type(T, S)}(x, p.n, p.n))
+*(p::AdjointFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = lmul!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
+*(p::TransposeFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = lmul!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
+\(p::FTPlan{T, 1}, x::UniformScaling{S}) where {T, S} = ldiv!(p, Matrix{promote_type(T, S)}(x, p.n, p.n))
+\(p::AdjointFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = ldiv!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
+\(p::TransposeFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = ldiv!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
+
 for (fJ, fC, elty) in ((:lmul!, :ft_bfmvf, :Float32),
                        (:ldiv!, :ft_bfsvf, :Float32),
                        (:lmul!, :ft_bfmv , :Float64),
