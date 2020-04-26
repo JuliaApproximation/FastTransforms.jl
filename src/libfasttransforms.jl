@@ -59,16 +59,20 @@ const SPHEREV              = 12
 const DISK                 = 13
 const TRIANGLE             = 14
 const TETRAHEDRON          = 15
-const SPHERESYNTHESIS      = 16
-const SPHEREANALYSIS       = 17
-const SPHEREVSYNTHESIS     = 18
-const SPHEREVANALYSIS      = 19
-const DISKSYNTHESIS        = 20
-const DISKANALYSIS         = 21
-const TRIANGLESYNTHESIS    = 22
-const TRIANGLEANALYSIS     = 23
-const TETRAHEDRONSYNTHESIS = 24
-const TETRAHEDRONANALYSIS  = 25
+const SPINSPHERE           = 16
+const SPHERESYNTHESIS      = 17
+const SPHEREANALYSIS       = 18
+const SPHEREVSYNTHESIS     = 19
+const SPHEREVANALYSIS      = 20
+const DISKSYNTHESIS        = 21
+const DISKANALYSIS         = 22
+const TRIANGLESYNTHESIS    = 23
+const TRIANGLEANALYSIS     = 24
+const TETRAHEDRONSYNTHESIS = 25
+const TETRAHEDRONANALYSIS  = 26
+const SPINSPHERESYNTHESIS  = 27
+const SPINSPHEREANALYSIS   = 28
+
 
 let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                CHEB2LEG             => "Chebyshev--Legendre",
@@ -86,6 +90,7 @@ let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                DISK                 => "Zernike--Chebyshev×Fourier",
                TRIANGLE             => "Proriol--Chebyshev²",
                TETRAHEDRON          => "Proriol--Chebyshev³",
+               SPINSPHERE           => "Spin-weighted spherical harmonic--Fourier",
                SPHERESYNTHESIS      => "FFTW Fourier synthesis on the sphere",
                SPHEREANALYSIS       => "FFTW Fourier analysis on the sphere",
                SPHEREVSYNTHESIS     => "FFTW Fourier synthesis on the sphere (vector field)",
@@ -95,7 +100,9 @@ let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                TRIANGLESYNTHESIS    => "FFTW Chebyshev synthesis on the triangle",
                TRIANGLEANALYSIS     => "FFTW Chebyshev analysis on the triangle",
                TETRAHEDRONSYNTHESIS => "FFTW Chebyshev synthesis on the tetrahedron",
-               TETRAHEDRONANALYSIS  => "FFTW Chebyshev analysis on the tetrahedron")
+               TETRAHEDRONANALYSIS  => "FFTW Chebyshev analysis on the tetrahedron",
+               SPINSPHERESYNTHESIS  => "FFTW Fourier synthesis on the sphere (spin-weighted)",
+               SPINSPHEREANALYSIS   => "FFTW Fourier analysis on the sphere (spin-weighted)")
     global kind2string
     kind2string(k::Integer) = k2s[Int(k)]
 end
@@ -132,6 +139,7 @@ show(io::IO, p::FTPlan{T, 2, SPHEREV}) where T = print(io, "FastTransforms ", ki
 show(io::IO, p::FTPlan{T, 2, DISK}) where T = print(io, "FastTransforms ", kind2string(DISK), " plan for $(p.n)×$(4p.n-3)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, TRIANGLE}) where T = print(io, "FastTransforms ", kind2string(TRIANGLE), " plan for $(p.n)×$(p.n)-element array of ", T)
 show(io::IO, p::FTPlan{T, 3, TETRAHEDRON}) where T = print(io, "FastTransforms ", kind2string(TETRAHEDRON), " plan for $(p.n)×$(p.n)×$(p.n)-element array of ", T)
+show(io::IO, p::FTPlan{T, 2, SPINSPHERE}) where T = print(io, "FastTransforms ", kind2string(SPINSPHERE), " plan for $(p.n)×$(2p.n-1)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, K}) where {T, K} = print(io, "FastTransforms plan for ", kind2string(K), " for $(p.n)×$(p.m)-element array of ", T)
 show(io::IO, p::FTPlan{T, 3, K}) where {T, K} = print(io, "FastTransforms plan for ", kind2string(K), " for $(p.n)×$(p.l)×$(p.m)-element array of ", T)
 
@@ -141,7 +149,7 @@ function checksize(p::FTPlan{T}, x::Array{T}) where T
     end
 end
 
-for K in (SPHERE, SPHEREV, DISK)
+for K in (SPHERE, SPHEREV, DISK, SPINSPHERE)
     @eval function checksize(p::FTPlan{T, 2, $K}, x::Matrix{T}) where T
         if p.n != size(x, 1)
             throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.n), x has leading dimension $(size(x, 1))"))
@@ -160,6 +168,7 @@ destroy_plan(p::FTPlan{Float64, 1}) = ccall((:ft_destroy_tb_eigen_FMM, libfasttr
 destroy_plan(p::FTPlan{BigFloat, 1}) = ccall((:ft_mpfr_destroy_plan, libfasttransforms), Cvoid, (Ptr{mpfr_t}, Cint), p, p.n)
 destroy_plan(p::FTPlan{Float64, 2}) = ccall((:ft_destroy_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 3}) = ccall((:ft_destroy_tetrahedral_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHERE}) = ccall((:ft_destroy_spin_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHERESYNTHESIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHEREANALYSIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHEREVSYNTHESIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
@@ -170,6 +179,8 @@ destroy_plan(p::FTPlan{Float64, 2, TRIANGLESYNTHESIS}) = ccall((:ft_destroy_tria
 destroy_plan(p::FTPlan{Float64, 2, TRIANGLEANALYSIS}) = ccall((:ft_destroy_triangle_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}) = ccall((:ft_destroy_tetrahedron_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 3, TETRAHEDRONANALYSIS}) = ccall((:ft_destroy_tetrahedron_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHERESYNTHESIS}) = ccall((:ft_destroy_spinsphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHEREANALYSIS}) = ccall((:ft_destroy_spinsphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 
 struct AdjointFTPlan{T, S}
     parent::S
@@ -233,6 +244,9 @@ for (f, plan_f) in ((:fourier2sph, :plan_sph2fourier), (:fourier2sphv, :plan_sph
     end
 end
 
+plan_spinsph2fourier(x::AbstractArray{T}, y...; z...) where T = plan_spinsph2fourier(T, size(x, 1), y...; z...)
+spinsph2fourier(x::AbstractArray, y...; z...) = plan_spinsph2fourier(x, y...; z...)*x
+fourier2spinsph(x::AbstractArray, y...; z...) = plan_spinsph2fourier(x, y...; z...)\x
 
 function plan_leg2cheb(::Type{Float32}, n::Integer; normleg::Bool=false, normcheb::Bool=false)
     plan = ccall((:ft_plan_legendre_to_chebyshevf, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), normleg, normcheb, n)
@@ -427,6 +441,11 @@ function plan_tet2cheb(::Type{Float64}, n::Integer, α, β, γ, δ)
     return FTPlan{Float64, 3, TETRAHEDRON}(plan, n)
 end
 
+function plan_spinsph2fourier(::Type{Complex{Float64}}, n::Integer, s::Integer)
+    plan = ccall((:ft_plan_spinsph2fourier, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint), n, s)
+    return FTPlan{Complex{Float64}, 2, SPINSPHERE}(plan, n)
+end
+
 for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execute_sph_synthesis, SPHERESYNTHESIS),
                     (:plan_sph_analysis, :ft_plan_sph_analysis, :ft_execute_sph_analysis, SPHEREANALYSIS),
                     (:plan_sphv_synthesis, :ft_plan_sphv_synthesis, :ft_execute_sphv_synthesis, SPHEREVSYNTHESIS),
@@ -484,6 +503,35 @@ function lmul!(p::FTPlan{Float64, 3, TETRAHEDRONANALYSIS}, x::Array{Float64, 3})
     return x
 end
 
+plan_spinsph_synthesis(x::Matrix{T}, s::Integer) where T = plan_spinsph_synthesis(T, size(x, 1), size(x, 2), s)
+
+function plan_spinsph_synthesis(::Type{Complex{Float64}}, n::Integer, m::Integer, s::Integer)
+    plan = ccall((:ft_plan_spinsph_synthesis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, m, s)
+    return FTPlan{Complex{Float64}, 2, SPINSPHERESYNTHESIS}(plan, n, m)
+end
+
+function lmul!(p::FTPlan{Complex{Float64}, 2, SPINSPHERESYNTHESIS}, x::Matrix{Complex{Float64}})
+    if p.n != size(x, 1) || p.m != size(x, 2)
+        throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.m), x has dimensions $(size(x, 1)) × $(size(x, 2))"))
+    end
+    ccall((:ft_execute_spinsph_synthesis, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), p, x, size(x, 1), size(x, 2))
+    return x
+end
+
+plan_spinsph_analysis(x::Matrix{T}, s::Integer) where T = plan_spinsph_analysis(T, size(x, 1), size(x, 2), s)
+
+function plan_spinsph_analysis(::Type{Complex{Float64}}, n::Integer, m::Integer, s::Integer)
+    plan = ccall((:ft_plan_spinsph_analysis, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, m, s)
+    return FTPlan{Complex{Float64}, 2, SPINSPHEREANALYSIS}(plan, n, m)
+end
+
+function lmul!(p::FTPlan{Complex{Float64}, 2, SPINSPHEREANALYSIS}, x::Matrix{Complex{Float64}})
+    if p.n != size(x, 1) || p.m != size(x, 2)
+        throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.m), x has dimensions $(size(x, 1)) × $(size(x, 2))"))
+    end
+    ccall((:ft_execute_spinsph_analysis, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), p, x, size(x, 1), size(x, 2))
+    return x
+end
 
 *(p::FTPlan{T}, x::Array{T}) where T = lmul!(p, deepcopy(x))
 *(p::AdjointFTPlan{T}, x::Array{T}) where T = lmul!(p, deepcopy(x))
@@ -631,6 +679,18 @@ end
 function ldiv!(p::FTPlan{Float64, 3, TETRAHEDRON}, x::Array{Float64, 3})
     checksize(p, x)
     ccall((:ft_execute_cheb2tet, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), p, x, size(x, 1), size(x, 2), size(x, 3))
+    return x
+end
+
+function lmul!(p::FTPlan{Complex{Float64}, 2, SPINSPHERE}, x::Matrix{Complex{Float64}})
+    checksize(p, x)
+    ccall((:ft_execute_spinsph2fourier, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Complex{Float64}}, Cint, Cint), p, x, size(x, 1), size(x, 2))
+    return x
+end
+
+function ldiv!(p::FTPlan{Complex{Float64}, 2, SPINSPHERE}, x::Matrix{Complex{Float64}})
+    checksize(p, x)
+    ccall((:ft_execute_fourier2spinsph, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Complex{Float64}}, Cint, Cint), p, x, size(x, 1), size(x, 2))
     return x
 end
 

@@ -120,7 +120,7 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     ps = plan_tri_synthesis(A)
     pa = plan_tri_analysis(A)
     test_nd_plans(p, ps, pa, A)
-
+    #=
     A = tetones(Float64, n, n, n)
     p = plan_tet2cheb(A, α, β, γ, δ)
     ps = plan_tet_synthesis(A)
@@ -130,5 +130,11 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     p = plan_tet2cheb(A, α, β, γ, δ)
     ps = plan_tet_synthesis(A)
     pa = plan_tet_analysis(A)
+    test_nd_plans(p, ps, pa, A)
+    =#
+    A = spinsphones(Complex{Float64}, n, 2n-1, 2) + im*spinsphones(Complex{Float64}, n, 2n-1, 2)
+    p = plan_spinsph2fourier(A, 2)
+    ps = plan_spinsph_synthesis(A, 2)
+    pa = plan_spinsph_analysis(A, 2)
     test_nd_plans(p, ps, pa, A)
 end

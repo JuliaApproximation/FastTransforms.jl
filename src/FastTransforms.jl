@@ -44,7 +44,8 @@ export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
        plan_sphv2fourier, plan_sphv_synthesis, plan_sphv_analysis,
        plan_disk2cxf, plan_disk_synthesis, plan_disk_analysis,
        plan_tri2cheb, plan_tri_synthesis, plan_tri_analysis,
-       plan_tet2cheb, plan_tet_synthesis, plan_tet_analysis
+       plan_tet2cheb, plan_tet_synthesis, plan_tet_analysis,
+       plan_spinsph2fourier, plan_spinsph_synthesis, plan_spinsph_analysis
 
 include("libfasttransforms.jl")
 
@@ -87,7 +88,8 @@ export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
        sphvones, sphvzeros, sphvrand, sphvrandn,
        diskones, diskzeros, diskrand, diskrandn,
        triones, trizeros, trirand, trirandn, trievaluate,
-       tetones, tetzeros, tetrand, tetrandn
+       tetones, tetzeros, tetrand, tetrandn,
+       spinsphones, spinsphzeros, spinsphrand, spinsphrandn
 
 lgamma(x) = logabsgamma(x)[1]
 

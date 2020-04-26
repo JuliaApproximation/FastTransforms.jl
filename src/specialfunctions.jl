@@ -605,3 +605,50 @@ function tetones(::Type{T}, l::Int, m::Int, n::Int) where T
 end
 
 tetzeros(::Type{T}, l::Int, m::Int, n::Int) where T = zeros(T, l, m, n)
+
+function spinsphrand(::Type{T}, m::Int, n::Int, s::Int) where T
+    A = zeros(T, m, n)
+    as = abs(s)
+    for i = 1:m-as
+        A[i,1] = rand(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-max(j, as)
+            A[i,2j] = rand(T)
+            A[i,2j+1] = rand(T)
+        end
+    end
+    A
+end
+
+function spinsphrandn(::Type{T}, m::Int, n::Int, s::Int) where T
+    A = zeros(T, m, n)
+    as = abs(s)
+    for i = 1:m-as
+        A[i,1] = randn(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-max(j, as)
+            A[i,2j] = randn(T)
+            A[i,2j+1] = randn(T)
+        end
+    end
+    A
+end
+
+function spinsphones(::Type{T}, m::Int, n::Int, s::Int) where T
+    A = zeros(T, m, n)
+    as = abs(s)
+    for i = 1:m-as
+        A[i,1] = one(T)
+    end
+    for j = 1:n÷2
+        for i = 1:m-max(j, as)
+            A[i,2j] = one(T)
+            A[i,2j+1] = one(T)
+        end
+    end
+    A
+end
+
+spinsphzeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, n)
