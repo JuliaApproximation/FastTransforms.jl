@@ -4,6 +4,25 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
 
 @testset "libfasttransforms" begin
     n = 64
+    for T in (Float32, Float64)
+        c = one(T) ./ (1:n)
+        x = collect(-1 .+ 2*(0:n-1)/T(n))
+        f = zero(x)
+        FastTransforms.horner!(c, x, f)
+        fd = T[sum(c[k]*x^(k-1) for k in 1:length(c)) for x in x]
+        @test f ≈ fd
+        FastTransforms.clenshaw!(c, x, f)
+        fd = T[sum(c[k]*cos((k-1)*acos(x)) for k in 1:length(c)) for x in x]
+        @test f ≈ fd
+        A = T[(2k+one(T))/(k+one(T)) for k in 0:length(c)-1]
+        B = T[zero(T) for k in 0:length(c)-1]
+        C = T[k/(k+one(T)) for k in 0:length(c)]
+        phi0 = ones(T, length(x))
+        c = cheb2leg(c)
+        FastTransforms.clenshaw!(c, A, B, C, x, phi0, f)
+        @test f ≈ fd
+    end
+
     α, β, γ, δ, λ, μ = 0.1, 0.2, 0.3, 0.4, 0.5, 0.6
     function test_1d_plans(p1, p2, x; skip::Bool=false)
         y = p1*x
