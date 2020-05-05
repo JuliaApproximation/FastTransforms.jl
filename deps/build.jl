@@ -1,7 +1,7 @@
 using BinaryProvider
 import Libdl
 
-version = v"0.2.13"
+version = v"0.3.1"
 
 if arch(platform_key_abi()) != :x86_64
     @warn "FastTransforms has only been tested on x86_64 architectures."
@@ -37,6 +37,7 @@ if ft_build_from_source == "true"
             git clone -b v$version https://github.com/MikaelSlevinsky/FastTransforms.git FastTransforms
         fi
         cd FastTransforms
+        $make assembly $compiler
         $make lib $compiler $flags
         cd ..
         mv -f FastTransforms/libfasttransforms.$extension libfasttransforms.$extension
