@@ -39,8 +39,8 @@ an `Array{BigFloat}` has unique pointers. For example, looking at the `Limb`s,
     Id = Matrix{BigFloat}(I, 3, 3)
     map(x->x.d, Id)
 
-shows that the zeros all share the same pointers and so do the ones.
-It is unacceptable to pass to C function that assumes unicity of each datum.
+shows that the ones and the zeros all share the same pointers. If a C function
+assumes unicity of each datum, then the array must be renewed with a `deepcopy`.
 """
 function renew!(x::Array{BigFloat})
     for i in eachindex(x)
