@@ -12,7 +12,6 @@ import Base: unsafe_convert, eltype, ndims, adjoint, transpose, show, *, \,
              inv, size, view
 
 import Base.GMP: Limb
-import Base.MPFR: BigFloat, _BigFloat
 
 import AbstractFFTs: Plan, ScaledPlan,
                      fft, ifft, bfft, fft!, ifft!, bfft!,

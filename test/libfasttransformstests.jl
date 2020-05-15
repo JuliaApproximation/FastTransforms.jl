@@ -24,7 +24,7 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     end
 
     α, β, γ, δ, λ, μ = 0.1, 0.2, 0.3, 0.4, 0.5, 0.6
-    function test_1d_plans(p1, p2, x; skip::Bool=false)
+    function test_1d_plans(p1, p2, x)
         y = p1*x
         z = p2*y
         @test z ≈ x
@@ -44,48 +44,34 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         @test z ≈ x
         P = p1*I
         Q = p2*P
-        skip ? (@test_skip Q ≈ I) : (@test Q ≈ I)
+        @test Q ≈ I
         P = p1*I
         Q = p1'P
         P = transpose(p1)*Q
         Q = transpose(p1)\P
         P = p1'\Q
         Q = p1\P
-        skip ? (@test_skip Q ≈ I) : (@test Q ≈ I)
+        @test Q ≈ I
         P = p2*I
         Q = p2'P
         P = transpose(p2)*Q
         Q = transpose(p2)\P
         P = p2'\Q
         Q = p2\P
-        skip ? (@test_skip Q ≈ I) : (@test Q ≈ I)
+        @test Q ≈ I
     end
 
-    for T in (Float32, Float64, Complex{Float32}, Complex{Float64})
+    for T in (Float32, Float64, Complex{Float32}, Complex{Float64}, BigFloat, Complex{BigFloat})
         x = T(1)./(1:n)
         Id = Matrix{T}(I, n, n)
         for (p1, p2) in ((plan_leg2cheb(Id), plan_cheb2leg(Id)),
-                          (plan_ultra2ultra(Id, λ, μ), plan_ultra2ultra(Id, μ, λ)),
-                          (plan_jac2jac(Id, α, β, γ, δ), plan_jac2jac(Id, γ, δ, α, β)),
-                          (plan_lag2lag(Id, α, β), plan_lag2lag(Id, β, α)),
-                          (plan_jac2ultra(Id, α, β, λ), plan_ultra2jac(Id, λ, α, β)),
-                          (plan_jac2cheb(Id, α, β), plan_cheb2jac(Id, α, β)),
-                          (plan_ultra2cheb(Id, λ), plan_cheb2ultra(Id, λ)))
+                         (plan_ultra2ultra(Id, λ, μ), plan_ultra2ultra(Id, μ, λ)),
+                         (plan_jac2jac(Id, α, β, γ, δ), plan_jac2jac(Id, γ, δ, α, β)),
+                         (plan_lag2lag(Id, α, β), plan_lag2lag(Id, β, α)),
+                         (plan_jac2ultra(Id, α, β, λ), plan_ultra2jac(Id, λ, α, β)),
+                         (plan_jac2cheb(Id, α, β), plan_cheb2jac(Id, α, β)),
+                         (plan_ultra2cheb(Id, λ), plan_cheb2ultra(Id, λ)))
             test_1d_plans(p1, p2, x)
-        end
-    end
-
-    for T in (BigFloat, Complex{BigFloat})
-        x = T(1)./(1:n)
-        Id = Matrix{T}(I, n, n)
-        for (p1, p2) in ((plan_leg2cheb(Id), plan_cheb2leg(Id)),
-                          (plan_ultra2ultra(Id, λ, μ), plan_ultra2ultra(Id, μ, λ)),
-                          (plan_jac2jac(Id, α, β, γ, δ), plan_jac2jac(Id, γ, δ, α, β)),
-                          (plan_lag2lag(Id, α, β), plan_lag2lag(Id, β, α)),
-                          (plan_jac2ultra(Id, α, β, λ), plan_ultra2jac(Id, λ, α, β)),
-                          (plan_jac2cheb(Id, α, β), plan_cheb2jac(Id, α, β)),
-                          (plan_ultra2cheb(Id, λ), plan_cheb2ultra(Id, λ)))
-            test_1d_plans(p1, p2, x; skip=true)
         end
     end
 
