@@ -32,13 +32,21 @@ struct mpfr_t <: AbstractFloat
     d::Ptr{Limb}
 end
 
-mpfr_t(x::BigFloat) = mpfr_t(x.prec, x.sign, x.exp, x.d)
+"""
+`BigFloat` is a mutable struct and there is no guarantee that each entry in
+an `Array{BigFloat}` has unique pointers. For example, looking at the `Limb`s,
 
-function BigFloat(x::mpfr_t)
-    nb = ccall((:mpfr_custom_get_size,:libmpfr), Csize_t, (Clong,), precision(BigFloat))
-    nb = (nb + Core.sizeof(Limb) - 1) ÷ Core.sizeof(Limb) # align to number of Limb allocations required for this
-    str = unsafe_string(Ptr{UInt8}(x.d), nb * Core.sizeof(Limb))
-    _BigFloat(x.prec, x.sign, x.exp, str)
+    Id = Matrix{BigFloat}(I, 3, 3)
+    map(x->x.d, Id)
+
+shows that the ones and the zeros all share the same pointers. If a C function
+assumes unicity of each datum, then the array must be renewed with a `deepcopy`.
+"""
+function renew!(x::Array{BigFloat})
+    for i in eachindex(x)
+        @inbounds x[i] = deepcopy(x[i])
+    end
+    return x
 end
 
 set_num_threads(n::Integer) = ccall((:ft_set_num_threads, libfasttransforms), Cvoid, (Cint, ), n)
@@ -602,31 +610,22 @@ for (fJ, fC, elty) in ((:lmul!, :ft_bfmvf, :Float32),
     end
 end
 
-for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv),
-                 (:ldiv!, :ft_mpfr_trsv))
+for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
+                 (:ldiv!, :ft_mpfr_trsv_ptr))
     @eval begin
         function $fJ(p::FTPlan{BigFloat, 1}, x::Vector{BigFloat})
             checksize(p, x)
-            xt = deepcopy.(x)
-            xc = mpfr_t.(xt)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{mpfr_t}, Int32), 'N', p.n, p, p.n, xc, Base.MPFR.ROUNDING_MODE[])
-            x .= BigFloat.(xc)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'N', p.n, p, p.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
             return x
         end
         function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::Vector{BigFloat}) where K
             checksize(p, x)
-            xt = deepcopy.(x)
-            xc = mpfr_t.(xt)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{mpfr_t}, Int32), 'T', p.parent.n, p, p.parent.n, xc, Base.MPFR.ROUNDING_MODE[])
-            x .= BigFloat.(xc)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
             return x
         end
         function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::Vector{BigFloat}) where K
             checksize(p, x)
-            xt = deepcopy.(x)
-            xc = mpfr_t.(xt)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{mpfr_t}, Int32), 'T', p.parent.n, p, p.parent.n, xc, Base.MPFR.ROUNDING_MODE[])
-            x .= BigFloat.(xc)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
             return x
         end
     end
@@ -655,31 +654,22 @@ for (fJ, fC, elty) in ((:lmul!, :ft_bfmmf, :Float32),
     end
 end
 
-for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm),
-                 (:ldiv!, :ft_mpfr_trsm))
+for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm_ptr),
+                 (:ldiv!, :ft_mpfr_trsm_ptr))
     @eval begin
         function $fJ(p::FTPlan{BigFloat, 1}, x::Matrix{BigFloat})
             checksize(p, x)
-            xt = deepcopy.(x)
-            xc = mpfr_t.(xt)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{mpfr_t}, Cint, Cint, Int32), 'N', p.n, p, p.n, xc, size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
-            x .= BigFloat.(xc)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'N', p.n, p, p.n, renew!(x), size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             return x
         end
         function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::Matrix{BigFloat}) where K
             checksize(p, x)
-            xt = deepcopy.(x)
-            xc = mpfr_t.(xt)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{mpfr_t}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, xc, size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
-            x .= BigFloat.(xc)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             return x
         end
         function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::Matrix{BigFloat}) where K
             checksize(p, x)
-            xt = deepcopy.(x)
-            xc = mpfr_t.(xt)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{mpfr_t}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, xc, size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
-            x .= BigFloat.(xc)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             return x
         end
     end
