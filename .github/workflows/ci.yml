@@ -19,11 +19,14 @@ jobs:
           - x86
           - x64
         include:
-          - os: macOS-latest
-            version:
-              - '1.3'
-              - '1.4'
-              - 'nightly'
+          - version: '1.3'
+            os: macOS-latest
+            arch: x64
+          - version: '1.4'
+            os: macOS-latest
+            arch: x64
+          - version: 'nightly'
+            os: macOS-latest
             arch: x64
     steps:
       - uses: actions/checkout@v2
