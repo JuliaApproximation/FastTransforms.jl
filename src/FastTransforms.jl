@@ -1,7 +1,7 @@
 module FastTransforms
 
 using FastGaussQuadrature, LinearAlgebra
-using Reexport, SpecialFunctions, ToeplitzMatrices
+using Reexport, SpecialFunctions, ToeplitzMatrices, FillArrays
 
 import DSP
 

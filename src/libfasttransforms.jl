@@ -76,8 +76,11 @@ function clenshaw!(c::Vector{Float32}, x::Vector{Float32}, f::Vector{Float32})
 end
 
 function clenshaw!(c::Vector{Float64}, A::Vector{Float64}, B::Vector{Float64}, C::Vector{Float64}, x::Vector{Float64}, phi0::Vector{Float64}, f::Vector{Float64})
-    @assert length(c) == length(A) == length(B) == length(C)-1
-    @assert length(x) == length(phi0) == length(f)
+    N = length(c)
+    if length(A) < N || length(B) < N || length(C) < N
+        throw(ArgumentError("A, B, C must contain at least $N entries"))
+    end
+    length(x) == length(phi0) == length(f) || throw(ArgumentError("Dimensions must match"))
     ccall((:ft_orthogonal_polynomial_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}), length(c), c, 1, A, B, C, length(x), x, phi0, f)
     f
 end
