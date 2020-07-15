@@ -1,5 +1,5 @@
 using FastTransforms, Test
-import FastTransforms: clenshaw, clenshaw!
+import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!
 
 @testset "clenshaw" begin
     @testset "Chebyshev" begin
@@ -17,10 +17,18 @@ import FastTransforms: clenshaw, clenshaw!
             @inferred(clenshaw!(c,x,similar(x))) ≈
             @inferred(clenshaw(cf,x)) ≈ @inferred(clenshaw!(cf,copy(x))) ≈ 
             @inferred(clenshaw!(cf,x,similar(x))) ≈ [6,-2,-1.74]
-            
     end
 
     @testset "general" begin
+        @testset "forwardrecurrence!" begin
+            N = 5
+            A, B, C = [1; fill(2,N-2)], fill(0,N-1), fill(1,N-1)
+            cf, Af, Bf, Cf = float(c), float(A), float(B), float(C)
+            @test forwardrecurrence!(Vector{Int}(undef,N), A, B, C, 1) == ones(Int,N)
+            @test forwardrecurrence!(Vector{Int}(undef,N), A, B, C, -1) == (-1) .^ (0:N-1)
+            @test forwardrecurrence!(Vector{Float64}(undef,N), A, B, C, 0.1) ≈ cos.((0:N-1) .* acos(0.1))
+        end
+
         @testset "Chebyshev-as-general" begin
             c, A, B, C = [1,2,3], [1,2,2], fill(0,3), fill(1,3)
             cf, Af, Bf, Cf = float(c), float(A), float(B), float(C)

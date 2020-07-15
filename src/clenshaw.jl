@@ -1,3 +1,28 @@
+"""
+   forwardrecurrence!(v, A, B, C, x, shift=0)
+
+evaluates the orthogonal polynomials at points `x`,
+where `A`, `B`, and `C` are `AbstractVector`s containing the recurrence coefficients
+as defined in DLMF,
+overwriting `v` with the results.   
+"""
+function forwardrecurrence!(v::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x)
+    N = length(v)
+    N == 0 && return v
+    length(A)+1 ≥ N && length(B)+1 ≥ N && length(C)+1 ≥ N || throw(ArgumentError("A, B, C must contain at least $(N-1) entries"))
+
+    p0 = one(x) # assume OPs are normalized to one for now
+    v[1] = p0
+    N == 1 && return v
+    p1 = A[1]x + B[1]
+    v[2] = p1
+    @inbounds for n = 2:N-1
+        p1,p0 = muladd(muladd(A[n],x,B[n]), p1, -C[n]*p0),p1
+        v[n+1] = p1
+    end
+    v
+end
+
 
 """
 clenshaw!(c, A, B, C, x)
