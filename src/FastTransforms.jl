@@ -94,4 +94,6 @@ lgamma(x) = logabsgamma(x)[1]
 
 include("specialfunctions.jl")
 
+include("clenshaw.jl")
+
 end # module
