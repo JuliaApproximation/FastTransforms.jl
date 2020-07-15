@@ -14,4 +14,3 @@ jobs:
 cache:
   directories:
     - $HOME/.julia/artifacts
-codecov: true
