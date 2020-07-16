@@ -4,6 +4,7 @@ version = "0.9.2"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
 BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
@@ -19,6 +20,7 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [compat]
 AbstractFFTs = "0.4, 0.5"
+ArrayLayouts = "0.3.7"
 BinaryProvider = "0.5"
 DSP = "0.6"
 FFTW = "1"

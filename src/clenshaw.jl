@@ -68,10 +68,14 @@ function clenshaw!(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::A
 end
 
 
-@inline _clenshaw_next(n, A, B, C, x, c, bn1, bn2) = muladd(muladd(A[n],x,B[n]), bn1, muladd(-C[n+1],bn2,c[n]))
-@inline _clenshaw_next(n, A, ::Zeros, C, x, c, bn1, bn2) = muladd(A[n]*x, bn1, muladd(-C[n+1],bn2,c[n]))
+Base.@propagate_inbounds _clenshaw_next(n, A, B, C, x, c, bn1, bn2) = muladd(muladd(A[n],x,B[n]), bn1, muladd(-C[n+1],bn2,c[n]))
+Base.@propagate_inbounds _clenshaw_next(n, A, ::Zeros, C, x, c, bn1, bn2) = muladd(A[n]*x, bn1, muladd(-C[n+1],bn2,c[n]))
 # Chebyshev U
-@inline _clenshaw_next(n, A::AbstractFill, ::Zeros, C::Ones, x, c, bn1, bn2) = muladd(getindex_value(A)*x, bn1, -bn2+c[n])
+Base.@propagate_inbounds _clenshaw_next(n, A::AbstractFill, ::Zeros, C::Ones, x, c, bn1, bn2) = muladd(getindex_value(A)*x, bn1, -bn2+c[n])
+
+# allow special casing first arg, for ChebyshevT in OrthogonalPolynomialsQuasi
+Base.@propagate_inbounds _clenshaw_first(A, B, C, x, c, bn1, bn2) = muladd(muladd(A[1],x,B[1]), bn1, muladd(-C[2],bn2,c[1]))
+
 
 """
     clenshaw(c, A, B, C, x)
@@ -90,9 +94,10 @@ function clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::Ab
     @inbounds begin
         bn2 = zero(T)
         bn1 = convert(T,c[N])
-        for n = N-1:-1:1
+        for n = N-1:-1:2
             bn1,bn2 = _clenshaw_next(n, A, B, C, x, c, bn1, bn2),bn1
         end
+        bn1 = _clenshaw_first(A, B, C, x, c, bn1, bn2)
     end
     bn1
 end
@@ -120,7 +125,9 @@ clenshaw!(c::AbstractVector, x::AbstractVector) = clenshaw!(c, x, x)
 evaluates the first-kind Chebyshev (T) expansion with coefficients `c` at points `x`,
 overwriting `f` with the results.
 """
-function clenshaw!(c::AbstractVector, x::AbstractVector, f::AbstractVector)
+clenshaw!(c::AbstractVector, x::AbstractVector, f::AbstractVector) = _clenshaw!(MemoryLayout(c), MemoryLayout(x), MemoryLayout(f), c, x, f)
+
+function _clenshaw!(_, _, _, c::AbstractVector, x::AbstractVector, f::AbstractVector)
     f .= clenshaw.(Ref(c), x)
 end
 
