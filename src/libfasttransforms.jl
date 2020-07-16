@@ -85,7 +85,7 @@ end
 
 function _clenshaw!(::AbstractStridedLayout, ::AbstractColumnMajor, ::AbstractColumnMajor, c::AbstractVector{Float32}, x::AbstractVector{Float32}, f::AbstractVector{Float32})
     @boundscheck check_clenshaw_points(x, f)
-    ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), stride(c,1), 1, length(x), x, f)
+    ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c,1), length(x), x, f)
     f
 end
 
