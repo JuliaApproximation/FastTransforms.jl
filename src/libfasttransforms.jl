@@ -73,15 +73,19 @@ function check_clenshaw_points(x, ϕ₀, f)
     length(x) == length(ϕ₀) == length(f) || throw(ArgumentError("Dimensions must match"))
 end
 
-function clenshaw!(c::Vector{Float64}, x::Vector{Float64}, f::Vector{Float64})
-    @assert length(x) == length(f)
-    ccall((:ft_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, 1, length(x), x, f)
+function check_clenshaw_points(x, f)
+    length(x) == length(f) || throw(ArgumentError("Dimensions must match"))
+end
+
+function _clenshaw!(::AbstractStridedLayout, ::AbstractColumnMajor, ::AbstractColumnMajor, c::AbstractVector{Float64}, x::AbstractVector{Float64}, f::AbstractVector{Float64})
+    @boundscheck check_clenshaw_points(x, f)
+    ccall((:ft_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c,1), length(x), x, f)
     f
 end
 
-function clenshaw!(c::Vector{Float32}, x::Vector{Float32}, f::Vector{Float32})
-    @assert length(x) == length(f)
-    ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, 1, length(x), x, f)
+function _clenshaw!(::AbstractStridedLayout, ::AbstractColumnMajor, ::AbstractColumnMajor, c::AbstractVector{Float32}, x::AbstractVector{Float32}, f::AbstractVector{Float32})
+    @boundscheck check_clenshaw_points(x, f)
+    ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c,1), length(x), x, f)
     f
 end
 

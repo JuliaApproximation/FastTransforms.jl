@@ -1,7 +1,7 @@
 module FastTransforms
 
 using FastGaussQuadrature, LinearAlgebra
-using Reexport, SpecialFunctions, ToeplitzMatrices, FillArrays
+using Reexport, SpecialFunctions, ToeplitzMatrices, FillArrays, ArrayLayouts
 
 import DSP
 
@@ -47,6 +47,8 @@ export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
        plan_tri2cheb, plan_tri_synthesis, plan_tri_analysis,
        plan_tet2cheb, plan_tet_synthesis, plan_tet_analysis,
        plan_spinsph2fourier, plan_spinsph_synthesis, plan_spinsph_analysis
+
+include("clenshaw.jl")
 
 include("libfasttransforms.jl")
 
@@ -96,6 +98,6 @@ lgamma(x) = logabsgamma(x)[1]
 
 include("specialfunctions.jl")
 
-include("clenshaw.jl")
+
 
 end # module

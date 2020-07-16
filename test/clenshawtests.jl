@@ -3,20 +3,34 @@ import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrenc
 
 @testset "clenshaw" begin
     @testset "Chebyshev T" begin
-        c = [1,2,3]
-        cf = float(c)
-        @test @inferred(clenshaw(c,1)) ≡ 1 + 2 + 3
-        @test @inferred(clenshaw(c,0)) ≡ 1 + 0 - 3
-        @test @inferred(clenshaw(c,0.1)) == 1 + 2*0.1 + 3*cos(2acos(0.1))
-        @test @inferred(clenshaw(c,[-1,0,1])) == clenshaw!(c,[-1,0,1]) == [2,-2,6]
-        @test clenshaw(c,[-1,0,1]) isa Vector{Int}
-        @test @inferred(clenshaw(Float64[],1)) ≡ 0.0
+        for elty in (Float64, Float32)
+            c = [1,2,3]
+            cf = elty.(c)
+            @test @inferred(clenshaw(c,1)) ≡ 1 + 2 + 3
+            @test @inferred(clenshaw(c,0)) ≡ 1 + 0 - 3
+            @test @inferred(clenshaw(c,0.1)) == 1 + 2*0.1 + 3*cos(2acos(0.1))
+            @test @inferred(clenshaw(c,[-1,0,1])) == clenshaw!(c,[-1,0,1]) == [2,-2,6]
+            @test clenshaw(c,[-1,0,1]) isa Vector{Int}
+            @test @inferred(clenshaw(elty[],1)) ≡ zero(elty)
 
-        x = [1,0,0.1]
-        @test @inferred(clenshaw(c,x)) ≈ @inferred(clenshaw!(c,copy(x))) ≈ 
-            @inferred(clenshaw!(c,x,similar(x))) ≈
-            @inferred(clenshaw(cf,x)) ≈ @inferred(clenshaw!(cf,copy(x))) ≈ 
-            @inferred(clenshaw!(cf,x,similar(x))) ≈ [6,-2,-1.74]
+            x = elty[1,0,0.1]
+            @test @inferred(clenshaw(c,x)) ≈ @inferred(clenshaw!(c,copy(x))) ≈ 
+                @inferred(clenshaw!(c,x,similar(x))) ≈
+                @inferred(clenshaw(cf,x)) ≈ @inferred(clenshaw!(cf,copy(x))) ≈ 
+                @inferred(clenshaw!(cf,x,similar(x))) ≈ elty[6,-2,-1.74]
+
+            @testset "Strided" begin
+                cv = view(cf,:)
+                xv = view(x,:)
+                @test clenshaw!(cv, xv, similar(xv)) == clenshaw!(cf,x,similar(x))
+
+                cv2 = view(cf,1:2:3)
+                @test clenshaw!(cv2, xv, similar(xv)) == clenshaw([1,3], x)
+
+                # modifies x and xv
+                @test clenshaw!(cv2, xv) == xv == x == clenshaw([1,3], elty[1,0,0.1])
+            end
+        end
     end
 
     @testset "Chebyshev U" begin
@@ -101,6 +115,13 @@ import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrenc
         @test v_f isa Vector{Float64}
 
         j = 3
-        clenshaw([zeros(Int,j-1); 1; zeros(Int,N-j)], A, B, C, 1) == v_i[j]
+        @test clenshaw([zeros(Int,j-1); 1; zeros(Int,N-j)], A, B, C, 1) == v_i[j]
+    end
+
+    @testset "Zeros diagonal" begin
+        N = 10; A = randn(N); B = Zeros{Int}(N); C = randn(N+1)
+        @test forwardrecurrence(N, A, B, C, 0.1) == forwardrecurrence(N, A, Vector(B), C, 0.1)
+        c = randn(N)
+        @test clenshaw(c, A, B, C, 0.1) == clenshaw(c, A, Vector(B), C, 0.1)
     end
 end
