@@ -10,18 +10,17 @@ function forwardrecurrence!(v::AbstractVector{T}, A::AbstractVector, B::Abstract
     N = length(v)
     N == 0 && return v
     length(A)+1 ≥ N && length(B)+1 ≥ N && length(C)+1 ≥ N || throw(ArgumentError("A, B, C must contain at least $(N-1) entries"))
-    p0 = one(T) # assume OPs are normalized to one for now
-    v[1] = p0
-    p1 = N == 1 ? p0 : A[1]x + B[1] # avoid accessing A[1]/B[1] if empty
+    p0 = one(T) # assume OPs are normalized to one for no
+    p1 = convert(T, N == 1 ? p0 : A[1]x + B[1]) # avoid accessing A[1]/B[1] if empty
     _forwardrecurrence!(v, A, B, C, x, p0, p1)
 end
 
 
-@inline _forwardrecurrence_next(n, A, B, C, x, p0, p1) = muladd(muladd(A[n],x,B[n]), p1, -C[n]*p0)
+Base.@propagate_inbounds _forwardrecurrence_next(n, A, B, C, x, p0, p1) = muladd(muladd(A[n],x,B[n]), p1, -C[n]*p0)
 # special case for B[n] == 0
-@inline _forwardrecurrence_next(n, A, ::Zeros, C, x, p0, p1) = muladd(A[n]*x, p1, -C[n]*p0)
+Base.@propagate_inbounds _forwardrecurrence_next(n, A, ::Zeros, C, x, p0, p1) = muladd(A[n]*x, p1, -C[n]*p0)
 # special case for Chebyshev U
-@inline _forwardrecurrence_next(n, A::AbstractFill, ::Zeros, C::Ones, x, p0, p1) = muladd(getindex_value(A)*x, p1, -p0)
+Base.@propagate_inbounds _forwardrecurrence_next(n, A::AbstractFill, ::Zeros, C::Ones, x, p0, p1) = muladd(getindex_value(A)*x, p1, -p0)
 
 
 # this supports adaptivity: we can populate `v` for large `n`
