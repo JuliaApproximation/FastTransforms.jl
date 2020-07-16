@@ -18,9 +18,17 @@ import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrenc
             @inferred(clenshaw(cf,x)) ≈ @inferred(clenshaw!(cf,copy(x))) ≈ 
             @inferred(clenshaw!(cf,x,similar(x))) ≈ [6,-2,-1.74]
 
-        cv = view(cf,:)
-        xv = view(x,:)
-        @test clenshaw!(cv, xv, similar(xv)) == clenshaw!(cf,x,similar(x))
+        @testset "Strided" begin
+            cv = view(cf,:)
+            xv = view(x,:)
+            @test clenshaw!(cv, xv, similar(xv)) == clenshaw!(cf,x,similar(x))
+
+            cv2 = view(cf,1:2:3)
+            @test clenshaw!(cv2, xv, similar(xv)) == clenshaw([1,3], x)
+
+            # modifies x and xv
+            @test clenshaw!(cv2, xv) == xv == x == clenshaw([1,3], [1,0,0.1])
+        end
     end
 
     @testset "Chebyshev U" begin
