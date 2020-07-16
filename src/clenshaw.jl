@@ -94,6 +94,7 @@ function clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::Ab
     @inbounds begin
         bn2 = zero(T)
         bn1 = convert(T,c[N])
+        N == 1 && return bn1
         for n = N-1:-1:2
             bn1,bn2 = _clenshaw_next(n, A, B, C, x, c, bn1, bn2),bn1
         end
