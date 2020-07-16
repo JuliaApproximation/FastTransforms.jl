@@ -115,6 +115,12 @@ import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrenc
         @test v_f isa Vector{Float64}
 
         j = 3
-        clenshaw([zeros(Int,j-1); 1; zeros(Int,N-j)], A, B, C, 1) == v_i[j]
+        @test clenshaw([zeros(Int,j-1); 1; zeros(Int,N-j)], A, B, C, 1) == v_i[j]
+    end
+
+    @testset "Zeros diagonal" begin
+        N = 10; A = randn(N); B = Zeros{Int}(N); C = randn(N+1)
+        c = randn(N)
+        @test clenshaw(c, A, B, C, 0.1) ≈ clenshaw(c, A, Vector(B), C, 0.1)
     end
 end
