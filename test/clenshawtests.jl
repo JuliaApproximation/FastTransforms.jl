@@ -120,7 +120,8 @@ import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrenc
 
     @testset "Zeros diagonal" begin
         N = 10; A = randn(N); B = Zeros{Int}(N); C = randn(N+1)
+        @test forwardrecurrence(N, A, B, C, 0.1) == forwardrecurrence(N, A, Vector(B), C, 0.1)
         c = randn(N)
-        @test clenshaw(c, A, B, C, 0.1) ≈ clenshaw(c, A, Vector(B), C, 0.1)
+        @test clenshaw(c, A, B, C, 0.1) == clenshaw(c, A, Vector(B), C, 0.1)
     end
 end
