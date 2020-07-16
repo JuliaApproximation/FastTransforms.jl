@@ -1,7 +1,7 @@
 module FastTransforms
 
 using FastGaussQuadrature, LinearAlgebra
-using Reexport, SpecialFunctions, ToeplitzMatrices
+using Reexport, SpecialFunctions, ToeplitzMatrices, FillArrays
 
 import DSP
 
@@ -27,6 +27,8 @@ import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
              plan_dct, plan_idct, fftwNumber
 
 import FastGaussQuadrature: unweightedgausshermite
+
+import FillArrays: AbstractFill, getindex_value
 
 import LinearAlgebra: mul!, lmul!, ldiv!
 
@@ -93,5 +95,7 @@ export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
 lgamma(x) = logabsgamma(x)[1]
 
 include("specialfunctions.jl")
+
+include("clenshaw.jl")
 
 end # module

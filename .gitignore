@@ -4,3 +4,4 @@ deps/build.log
 deps/libfasttransforms.*
 .DS_Store
 deps/FastTransforms/
+Manifest.toml
