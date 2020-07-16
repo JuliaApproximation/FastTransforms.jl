@@ -23,6 +23,9 @@ function forwardrecurrence!(v::AbstractVector, A::AbstractVector, B::AbstractVec
     v
 end
 
+forwardrecurrence(N::Integer, A::AbstractVector, B::AbstractVector, C::AbstractVector, x) =
+    forwardrecurrence!(Vector{promote_type(eltype(A),eltype(B),eltype(C),typeof(x))}(undef, N), A, B, C, x)
+
 
 """
 clenshaw!(c, A, B, C, x)
@@ -56,19 +59,17 @@ where `A`, `B`, and `C` are `AbstractVector`s containing the recurrence coeffici
 as defined in DLMF.
 `x` may also be a single `Number`.
 """
-        
+     
 function clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::Number)
     N = length(c)
     T = promote_type(eltype(c),eltype(A),eltype(B),eltype(C),typeof(x))
-    if length(A) < N || length(B) < N || length(C) < N
-        throw(ArgumentError("A, B, C must contain at least $N entries"))
-    end
+    @boundscheck check_clenshaw_recurrences(N, A, B, C)
     N == 0 && return zero(T)
     @inbounds begin
         bk2 = zero(T)
         bk1 = convert(T,c[N])
         for k = N-1:-1:1
-            bk1,bk2 = muladd(muladd(A[k],x,B[k]),bk1,muladd(-C[k],bk2,c[k])),bk1
+            bk1,bk2 = muladd(muladd(A[k],x,B[k]),bk1,muladd(-C[k+1],bk2,c[k])),bk1
         end
     end
     bk1

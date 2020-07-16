@@ -63,6 +63,16 @@ function horner!(c::Vector{Float32}, x::Vector{Float32}, f::Vector{Float32})
     f
 end
 
+function check_clenshaw_recurrences(N, A, B, C)
+    if length(A) < N || length(B) < N || length(C) < N+1
+        throw(ArgumentError("A, B must contain at least $N entries and C must contain at least $(N+1) entrie"))
+    end
+end
+
+function check_clenshaw_points(x, ϕ₀, f)
+    length(x) == length(ϕ₀) == length(f) || throw(ArgumentError("Dimensions must match"))
+end
+
 function clenshaw!(c::Vector{Float64}, x::Vector{Float64}, f::Vector{Float64})
     @assert length(x) == length(f)
     ccall((:ft_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, 1, length(x), x, f)
@@ -75,20 +85,19 @@ function clenshaw!(c::Vector{Float32}, x::Vector{Float32}, f::Vector{Float32})
     f
 end
 
-function clenshaw!(c::Vector{Float64}, A::Vector{Float64}, B::Vector{Float64}, C::Vector{Float64}, x::Vector{Float64}, phi0::Vector{Float64}, f::Vector{Float64})
+function clenshaw!(c::Vector{Float64}, A::Vector{Float64}, B::Vector{Float64}, C::Vector{Float64}, x::Vector{Float64}, ϕ₀::Vector{Float64}, f::Vector{Float64})
     N = length(c)
-    if length(A) < N || length(B) < N || length(C) < N
-        throw(ArgumentError("A, B, C must contain at least $N entries"))
-    end
-    length(x) == length(phi0) == length(f) || throw(ArgumentError("Dimensions must match"))
-    ccall((:ft_orthogonal_polynomial_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}), length(c), c, 1, A, B, C, length(x), x, phi0, f)
+    @boundscheck check_clenshaw_recurrences(N, A, B, C)
+    @boundscheck check_clenshaw_points(x, ϕ₀, f)
+    ccall((:ft_orthogonal_polynomial_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}), N, c, 1, A, B, C, length(x), x, ϕ₀, f)
     f
 end
 
-function clenshaw!(c::Vector{Float32}, A::Vector{Float32}, B::Vector{Float32}, C::Vector{Float32}, x::Vector{Float32}, phi0::Vector{Float32}, f::Vector{Float32})
-    @assert length(c) == length(A) == length(B) == length(C)-1
-    @assert length(x) == length(phi0) == length(f)
-    ccall((:ft_orthogonal_polynomial_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}), length(c), c, 1, A, B, C, length(x), x, phi0, f)
+function clenshaw!(c::Vector{Float32}, A::Vector{Float32}, B::Vector{Float32}, C::Vector{Float32}, x::Vector{Float32}, ϕ₀::Vector{Float32}, f::Vector{Float32})
+    N = length(c)
+    @boundscheck check_clenshaw_recurrences(N, A, B, C)
+    @boundscheck check_clenshaw_points(x, ϕ₀, f)
+    ccall((:ft_orthogonal_polynomial_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}), N, c, 1, A, B, C, length(x), x, ϕ₀, f)
     f
 end
 
