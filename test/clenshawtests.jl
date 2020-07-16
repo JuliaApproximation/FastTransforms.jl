@@ -1,8 +1,8 @@
-using FastTransforms, Test
+using FastTransforms, FillArrays, Test
 import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrence
 
 @testset "clenshaw" begin
-    @testset "Chebyshev" begin
+    @testset "Chebyshev T" begin
         c = [1,2,3]
         cf = float(c)
         @test @inferred(clenshaw(c,1)) ≡ 1 + 2 + 3
@@ -17,6 +17,21 @@ import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrenc
             @inferred(clenshaw!(c,x,similar(x))) ≈
             @inferred(clenshaw(cf,x)) ≈ @inferred(clenshaw!(cf,copy(x))) ≈ 
             @inferred(clenshaw!(cf,x,similar(x))) ≈ [6,-2,-1.74]
+    end
+
+    @testset "Chebyshev U" begin
+        N = 5
+        A, B, C = Fill(2,N-1), Zeros{Int}(N-1), Ones{Int}(N)
+        @testset "forwardrecurrence!" begin
+            @test @inferred(forwardrecurrence(N, A, B, C, 1)) == @inferred(forwardrecurrence!(Vector{Int}(undef,N), A, B, C, 1)) == 1:N
+            @test forwardrecurrence!(Vector{Int}(undef,N), A, B, C, -1) == (-1) .^ (0:N-1) .* (1:N)
+            @test forwardrecurrence(N, A, B, C, 0.1) ≈ forwardrecurrence!(Vector{Float64}(undef,N), A, B, C, 0.1) ≈ 
+                    sin.((1:N) .* acos(0.1)) ./ sqrt(1-0.1^2)
+        end
+
+        c = [1,2,3]
+        @test c'forwardrecurrence(3, A, B, C, 0.1) ≈ clenshaw([1,2,3], A, B, C, 0.1) ≈ 
+            1 + (2sin(2acos(0.1)) + 3sin(3acos(0.1)))/sqrt(1-0.1^2)
     end
 
     @testset "Chebyshev-as-general" begin

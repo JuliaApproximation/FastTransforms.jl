@@ -28,6 +28,8 @@ import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
 
 import FastGaussQuadrature: unweightedgausshermite
 
+import FillArrays: AbstractFill, getindex_value
+
 import LinearAlgebra: mul!, lmul!, ldiv!
 
 export leg2cheb, cheb2leg, ultra2ultra, jac2jac,

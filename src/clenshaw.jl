@@ -1,27 +1,44 @@
 """
-   forwardrecurrence!(v, A, B, C, x, shift=0)
+   forwardrecurrence!(v, A, B, C, x)
 
 evaluates the orthogonal polynomials at points `x`,
 where `A`, `B`, and `C` are `AbstractVector`s containing the recurrence coefficients
 as defined in DLMF,
 overwriting `v` with the results.   
 """
-function forwardrecurrence!(v::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x)
+function forwardrecurrence!(v::AbstractVector{T}, A::AbstractVector, B::AbstractVector, C::AbstractVector, x) where T
     N = length(v)
     N == 0 && return v
     length(A)+1 ≥ N && length(B)+1 ≥ N && length(C)+1 ≥ N || throw(ArgumentError("A, B, C must contain at least $(N-1) entries"))
+    p0 = one(T) # assume OPs are normalized to one for now
+    v[1] = p0
+    p1 = N == 1 ? p0 : A[1]x + B[1] # avoid accessing A[1]/B[1] if empty
+    _forwardrecurrence!(v, A, B, C, x, p0, p1)
+end
 
-    p0 = one(x) # assume OPs are normalized to one for now
+
+@inline _forwardrecurrence_next(n, A, B, C, x, p0, p1) = muladd(muladd(A[n],x,B[n]), p1, -C[n]*p0)
+# special case for B[n] == 0
+@inline _forwardrecurrence_next(n, A, ::Zeros, C, x, p0, p1) = muladd(A[n]*x, p1, -C[n]*p0)
+# special case for Chebyshev U
+@inline _forwardrecurrence_next(n, A::AbstractFill, ::Zeros, C::Ones, x, p0, p1) = muladd(getindex_value(A)*x, p1, -p0)
+
+
+# this supports adaptivity: we can populate `v` for large `n`
+function _forwardrecurrence!(v::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x, p0, p1)
+    N = length(v)
+    N == 0 && return v
     v[1] = p0
     N == 1 && return v
-    p1 = A[1]x + B[1]
     v[2] = p1
     @inbounds for n = 2:N-1
-        p1,p0 = muladd(muladd(A[n],x,B[n]), p1, -C[n]*p0),p1
+        p1,p0 = _forwardrecurrence_next(n, A, B, C, x, p0, p1),p1
         v[n+1] = p1
     end
     v
 end
+
+
 
 forwardrecurrence(N::Integer, A::AbstractVector, B::AbstractVector, C::AbstractVector, x) =
     forwardrecurrence!(Vector{promote_type(eltype(A),eltype(B),eltype(C),typeof(x))}(undef, N), A, B, C, x)
@@ -51,6 +68,12 @@ function clenshaw!(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::A
     f .= ϕ₀ .* clenshaw.(Ref(c), Ref(A), Ref(B), Ref(C), x)
 end
 
+
+@inline _clenshaw_next(n, A, B, C, x, c, bn1, bn2) = muladd(muladd(A[n],x,B[n]), bn1, muladd(-C[n+1],bn2,c[n]))
+@inline _clenshaw_next(n, A, ::Zeros, C, x, c, bn1, bn2) = muladd(A[n]*x, bn1, muladd(-C[n+1],bn2,c[n]))
+# Chebyshev U
+@inline _clenshaw_next(n, A::AbstractFill, ::Zeros, C::Ones, x, c, bn1, bn2) = muladd(getindex_value(A)*x, bn1, -bn2+c[n])
+
 """
     clenshaw(c, A, B, C, x)
 
@@ -66,13 +89,13 @@ function clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::Ab
     @boundscheck check_clenshaw_recurrences(N, A, B, C)
     N == 0 && return zero(T)
     @inbounds begin
-        bk2 = zero(T)
-        bk1 = convert(T,c[N])
-        for k = N-1:-1:1
-            bk1,bk2 = muladd(muladd(A[k],x,B[k]),bk1,muladd(-C[k+1],bk2,c[k])),bk1
+        bn2 = zero(T)
+        bn1 = convert(T,c[N])
+        for n = N-1:-1:1
+            bn1,bn2 = _clenshaw_next(n, A, B, C, x, c, bn1, bn2),bn1
         end
     end
-    bk1
+    bn1
 end
 
 
