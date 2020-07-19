@@ -9,7 +9,7 @@ import DSP
 @reexport using FFTW
 
 import Base: unsafe_convert, eltype, ndims, adjoint, transpose, show, *, \,
-             inv, size, view
+             inv, size, view, getindex
 
 import Base.GMP: Limb
 

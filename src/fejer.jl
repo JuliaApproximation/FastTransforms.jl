@@ -3,7 +3,7 @@ plan_fejer1(μ) = FFTW.plan_r2r!(μ, FFTW.REDFT01)
 """
 Compute nodes of Fejer's first quadrature rule.
 """
-fejernodes1(::Type{T}, N::Int) where T = chebyshevpoints(T, N; kind = 1)
+fejernodes1(::Type{T}, N::Int) where T = chebyshevpoints(T, N, Val(1))
 
 """
 Compute weights of Fejer's first quadrature rule with modified Chebyshev moments of the first kind ``\\mu``.
