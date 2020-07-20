@@ -5,13 +5,15 @@ using FastTransforms, Test
         @test chebyshevpoints(10) == chebyshevpoints(Float64, 10)
         @test chebyshevpoints(10, Val(2)) == chebyshevpoints(Float64, 10, Val(2))
         for T in (Float32, Float64, ComplexF32, ComplexF64)
-            @test chebyshevpoints(T, 0) == chebyshevpoints(T, 0, Val(2)) == T[]
-            @test chebyshevpoints(T, 1) == chebyshevpoints(T, 1, Val(2)) == T[0]
+            @test chebyshevpoints(T, 0) == T[]
+            @test chebyshevpoints(T, 1) == T[0]
 
             n = 20
             @inferred(chebyshevpoints(T, n))
             @inferred(chebyshevpoints(T, n, Val(2)))
             @test_throws MethodError chebyshevpoints(n, Val(-1))
+            @test_throws ArgumentError chebyshevpoints(T, 0, Val(2))
+            @test_throws ArgumentError chebyshevpoints(T, 1, Val(2))
         end
     end
 
@@ -91,7 +93,7 @@ using FastTransforms, Test
             n = 20
             p_1 = chebyshevpoints(T, n)
             f = exp.(p_1)
-            f̌ = chebyshevutransform(f)
+            f̌ = @inferred(chebyshevutransform(f))
 
             f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-1]' * f̌
             @test f̃(0.1) ≈ exp(T(0.1))
@@ -99,23 +101,23 @@ using FastTransforms, Test
 
             f̃ = copy(f)
             f̄ = copy(f̌)
-            P = plan_chebyshevutransform(f)
+            P = @inferred(plan_chebyshevutransform(f))
             @test P*f == f̌
             @test f == f̃
-            P = plan_chebyshevutransform!(f)
+            P = @inferred(plan_chebyshevutransform!(f))
             @test P*f == f̌
             @test f == f̌
-            Pi = plan_ichebyshevutransform(f̌)
+            Pi = @inferred(plan_ichebyshevutransform(f̌))
             @test Pi*f̌ ≈ f̃
             @test f̌ == f̄
-            Pi = plan_ichebyshevutransform!(f̌)
+            Pi = @inferred(plan_ichebyshevutransform!(f̌))
             @test Pi*f̌ ≈ f̃
             @test f̌ ≈ f̃
 
             @test chebyshevutransform(T[1]) == T[1]
             @test ichebyshevutransform(T[1]) == T[1]
-            @test chebyshevutransform(T[]) == T[]
-            @test ichebyshevutransform(T[]) == T[]
+            @test_throws ArgumentError chebyshevutransform(T[])
+            @test_throws ArgumentError ichebyshevutransform(T[])
         end
     end
 
@@ -124,31 +126,31 @@ using FastTransforms, Test
             n = 20
             p_2 = chebyshevpoints(T, n, Val(2))[2:end-1]
             f = exp.(p_2)
-            f̌ = chebyshevutransform(f, Val(2))
+            f̌ = @inferred(chebyshevutransform(f, Val(2)))
 
             f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-3]' * f̌
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test ichebyshevutransform(f̌, Val(2)) ≈ exp.(p_2)
+            @test @inferred(ichebyshevutransform(f̌, Val(2))) ≈ exp.(p_2)
 
             f̃ = copy(f)
             f̄ = copy(f̌)
-            P = plan_chebyshevutransform(f, Val(2))
-            @test P*f == f̌
+            P = @inferred(plan_chebyshevutransform(f, Val(2)))
+            @test @inferred(P*f) == f̌
             @test f == f̃
-            P = plan_chebyshevutransform!(f, Val(2))
-            @test P*f == f̌
+            P = @inferred(plan_chebyshevutransform!(f, Val(2)))
+            @test @inferred(P*f) == f̌
             @test f == f̌
-            Pi = plan_ichebyshevutransform(f̌, Val(2))
-            @test Pi*f̌ ≈ f̃
+            Pi = @inferred(plan_ichebyshevutransform(f̌, Val(2)))
+            @test @inferred(Pi*f̌) ≈ f̃
             @test f̌ == f̄
-            Pi = plan_ichebyshevutransform!(f̌, Val(2))
-            @test Pi*f̌ ≈ f̃
+            Pi = @inferred(plan_ichebyshevutransform!(f̌, Val(2)))
+            @test @inferred(Pi*f̌) ≈ f̃
             @test f̌ ≈ f̃
 
-            @test chebyshevutransform(T[1], Val(2)) == T[1]
-            @test ichebyshevutransform(T[1], Val(2)) == T[1]
-            @test chebyshevutransform(T[], Val(2)) == T[]
-            @test ichebyshevutransform(T[], Val(2)) == T[]
+            @test_throws ArgumentError chebyshevutransform(T[1], Val(2))
+            @test_throws ArgumentError ichebyshevutransform(T[1], Val(2))
+            @test_throws ArgumentError chebyshevutransform(T[], Val(2))
+            @test_throws ArgumentError ichebyshevutransform(T[], Val(2))
         end
     end
 end
