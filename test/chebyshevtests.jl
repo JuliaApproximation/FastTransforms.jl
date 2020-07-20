@@ -20,31 +20,31 @@ using FastTransforms, Test
             n = 20
             p_1 = chebyshevpoints(T, n)
             f = exp.(p_1)
-            f̌ = chebyshevtransform(f)
+            f̌ = @inferred(chebyshevtransform(f))
 
             f̃ = x -> [cos(k*acos(x)) for k=0:n-1]' * f̌
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test ichebyshevtransform(f̌) ≈ exp.(p_1)
+            @test @inferred(ichebyshevtransform(f̌)) ≈ exp.(p_1)
 
             f̃ = copy(f)
             f̄ = copy(f̌)
-            P = plan_chebyshevtransform(f)
-            @test P*f == f̌
+            P = @inferred(plan_chebyshevtransform(f))
+            @test @inferred(P*f) == f̌
             @test f == f̃
-            P = plan_chebyshevtransform!(f)
-            @test P*f == f̌
+            P = @inferred(plan_chebyshevtransform!(f))
+            @test @inferred(P*f) == f̌
             @test f == f̌
-            Pi = plan_ichebyshevtransform(f̌)
-            @test Pi*f̌ ≈ f̃
+            Pi = @inferred(plan_ichebyshevtransform(f̌))
+            @test @inferred(Pi*f̌) ≈ f̃
             @test f̌ == f̄
-            Pi = plan_ichebyshevtransform!(f̌)
-            @test Pi*f̌ ≈ f̃
+            Pi = @inferred(plan_ichebyshevtransform!(f̌))
+            @test @inferred(Pi*f̌) ≈ f̃
             @test f̌ ≈ f̃
 
             @test chebyshevtransform(T[1]) == T[1]
             @test ichebyshevtransform(T[1]) == T[1]
-            @test chebyshevtransform(T[]) == T[]
-            @test ichebyshevtransform(T[]) == T[]
+            @test_throws ArgumentError chebyshevtransform(T[])
+            @test_throws ArgumentError ichebyshevtransform(T[])
         end
     end
     @testset "Chebyshev second kind points <-> first kind coefficients" begin
@@ -52,37 +52,37 @@ using FastTransforms, Test
             n = 20
             p_2 = chebyshevpoints(T, n, Val(2))
             f = exp.(p_2)
-            f̌ = chebyshevtransform(f, Val(2))
+            f̌ = @inferred(chebyshevtransform(f, Val(2)))
 
             f̃ = x -> [cos(k*acos(x)) for k=0:n-1]' * f̌
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test ichebyshevtransform(f̌, Val(2)) ≈ exp.(p_2)
+            @test @inferred(ichebyshevtransform(f̌, Val(2))) ≈ exp.(p_2)
 
-            P = plan_chebyshevtransform!(f, Val(2))
-            Pi = plan_ichebyshevtransform!(f, Val(2))
-            @test all((P \ copy(f)) .=== Pi * copy(f))
-            @test all((Pi \ copy(f̌)) .=== P * copy(f̌))
+            P = @inferred(plan_chebyshevtransform!(f, Val(2)))
+            Pi = @inferred(plan_ichebyshevtransform!(f, Val(2)))
+            @test all(@inferred(P \ copy(f)) .=== Pi * copy(f))
+            @test all(@inferred(Pi \ copy(f̌)) .=== P * copy(f̌))
             @test f ≈ P \ (P*copy(f)) ≈ P * (P\copy(f)) ≈ Pi \ (Pi*copy(f)) ≈ Pi * (Pi \ copy(f))
 
             f̃ = copy(f)
             f̄ = copy(f̌)
-            P = plan_chebyshevtransform(f, Val(2))
+            P = @inferred(plan_chebyshevtransform(f, Val(2)))
             @test P*f == f̌
             @test f == f̃
-            P = plan_chebyshevtransform!(f, Val(2))
+            P = @inferred(plan_chebyshevtransform!(f, Val(2)))
             @test P*f == f̌
             @test f == f̌
-            Pi = plan_ichebyshevtransform(f̌, Val(2))
+            Pi = @inferred(plan_ichebyshevtransform(f̌, Val(2)))
             @test Pi*f̌ ≈ f̃
             @test f̌ == f̄
-            Pi = plan_ichebyshevtransform!(f̌, Val(2))
+            Pi = @inferred(plan_ichebyshevtransform!(f̌, Val(2)))
             @test Pi*f̌ ≈ f̃
             @test f̌ ≈ f̃
 
-            @test chebyshevtransform(T[1], Val(2)) == T[1]
-            @test ichebyshevtransform(T[1], Val(2)) == T[1]
-            @test chebyshevtransform(T[], Val(2)) == T[]
-            @test ichebyshevtransform(T[], Val(2)) == T[]
+            @test_throws ArgumentError chebyshevtransform(T[1], Val(2))
+            @test_throws ArgumentError ichebyshevtransform(T[1], Val(2))
+            @test_throws ArgumentError chebyshevtransform(T[], Val(2))
+            @test_throws ArgumentError ichebyshevtransform(T[], Val(2))
         end
     end
 
