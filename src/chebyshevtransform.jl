@@ -316,8 +316,7 @@ function getindex(g::ChebyshevGrid{2,T}, k::Integer) where T
     sinpi(convert(T,g.n-2k+1)/(2g.n-2))
 end
 
-chebyshevpoints(::Type{T}, n::Integer, ::Val{1}) where T<:Number =ChebyshevGrid{1,T}(n)
-chebyshevpoints(::Type{T}, n::Integer, ::Val{2}) where T<:Number =ChebyshevGrid{2,T}(n)
+chebyshevpoints(::Type{T}, n::Integer, ::Val{kind}) where {T<:Number,kind} = ChebyshevGrid{kind,T}(n)
 chebyshevpoints(::Type{T}, n::Integer) where T = chebyshevpoints(T, n, Val(1))
 chebyshevpoints(n::Integer, kind=Val(1)) = chebyshevpoints(Float64, n, kind)
 
