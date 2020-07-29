@@ -1,11 +1,17 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
-jobs:
-  include:
+os:
+  - freebsd
+  - linux
+arch:
+  - x64
+  - x86
+  - arm64
+matrix:
+  exclude:
     - os: freebsd
-    - os: linux
-      arch: amd64
-    - os: linux
+      arch: x86
+    - os: freebsd
       arch: arm64
 julia:
   - 1.3
