@@ -19,6 +19,7 @@ jobs:
       arch: arm64
   allow_failures:
     - julia: nightly
+    - arch: arm64
 notifications:
   email: false
 cache:
