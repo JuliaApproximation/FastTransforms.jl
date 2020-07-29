@@ -4,7 +4,7 @@
 evaluates the orthogonal polynomials at points `x`,
 where `A`, `B`, and `C` are `AbstractVector`s containing the recurrence coefficients
 as defined in DLMF,
-overwriting `v` with the results.   
+overwriting `v` with the results.
 """
 function forwardrecurrence!(v::AbstractVector{T}, A::AbstractVector, B::AbstractVector, C::AbstractVector, x) where T
     N = length(v)
@@ -51,7 +51,7 @@ where `A`, `B`, and `C` are `AbstractVector`s containing the recurrence coeffici
 as defined in DLMF,
 overwriting `x` with the results.
 """
-clenshaw!(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector) = 
+clenshaw!(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector) =
     clenshaw!(c, A, B, C, x, Ones{eltype(x)}(length(x)), x)
 
 
@@ -85,7 +85,7 @@ where `A`, `B`, and `C` are `AbstractVector`s containing the recurrence coeffici
 as defined in DLMF.
 `x` may also be a single `Number`.
 """
-     
+
 function clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::Number)
     N = length(c)
     T = promote_type(eltype(c),eltype(A),eltype(B),eltype(C),typeof(x))
@@ -104,7 +104,7 @@ function clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::Ab
 end
 
 
-clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector) = 
+clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector) =
     clenshaw!(c, A, B, C, copy(x))
 
 ###
@@ -157,4 +157,3 @@ function clenshaw(c::AbstractVector, x::Number)
 end
 
 clenshaw(c::AbstractVector, x::AbstractVector) = clenshaw!(c, copy(x))
-
