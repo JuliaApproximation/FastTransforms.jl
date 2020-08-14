@@ -6,12 +6,11 @@ where `A`, `B`, and `C` are `AbstractVector`s containing the recurrence coeffici
 as defined in DLMF,
 overwriting `v` with the results.
 """
-function forwardrecurrence!(v::AbstractVector{T}, A::AbstractVector, B::AbstractVector, C::AbstractVector, x) where T
+function forwardrecurrence!(v::AbstractVector{T}, A::AbstractVector, B::AbstractVector, C::AbstractVector, x, p0 = one(T)) where T
     N = length(v)
     N == 0 && return v
     length(A)+1 ≥ N && length(B)+1 ≥ N && length(C)+1 ≥ N || throw(ArgumentError("A, B, C must contain at least $(N-1) entries"))
-    p0 = one(T) # assume OPs are normalized to one for no
-    p1 = convert(T, N == 1 ? p0 : A[1]x + B[1]) # avoid accessing A[1]/B[1] if empty
+    p1 = convert(T, N == 1 ? p0 : (A[1]x + B[1])*p0) # avoid accessing A[1]/B[1] if empty
     _forwardrecurrence!(v, A, B, C, x, p0, p1)
 end
 
