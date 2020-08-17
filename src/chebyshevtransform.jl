@@ -1,8 +1,23 @@
 ## Transforms take values at Chebyshev points of the first and second kinds and produce Chebyshev coefficients
 
+abstract type ChebyshevPlan{T} <: Plan{T} end
 
-struct ChebyshevTransformPlan{T,kind,inplace,P} <: Plan{T}
+size(P::ChebyshevPlan) = isdefined(P, :plan) ? size(P.plan) : (0,)
+length(P::ChebyshevPlan) = isdefined(P, :plan) ? length(P.plan) : 0
+
+
+# Check whether a ChebyshevPlan is applicable to a given input array, and
+# throw an informative error if not:
+function assert_applicable(p::ChebyshevPlan{T}, X::StridedArray{T}) where T
+    if size(X) != size(p)
+        throw(ArgumentError("Chebyshev plan applied to wrong-size array"))
+    end
+end
+
+struct ChebyshevTransformPlan{T,kind,inplace,P} <: ChebyshevPlan{T}
     plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
+    ChebyshevTransformPlan{T,kind,inplace,P}(plan) where {T,kind,inplace,P} = new{T,kind,inplace,P}(plan)
+    ChebyshevTransformPlan{T,kind,inplace,P}() where {T,kind,inplace,P} = new{T,kind,inplace,P}()
 end
 
 ChebyshevTransformPlan{T,kind,inplace}(plan::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} = 
@@ -11,10 +26,12 @@ ChebyshevTransformPlan{T,kind,inplace}(plan::FFTW.r2rFFTWPlan{T,P}) where {T,kin
 ChebyshevTransformPlan{T,kind,inplace}(plan::ChebyshevTransformPlan{T,kind,inp,P}) where {T,kind,inplace,inp,P} = 
     ChebyshevTransformPlan{T,kind,inplace,P}(plan.plan)
 
-
 function plan_chebyshevtransform!(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
-    isempty(x) && throw(ArgumentError("Cannot plan empty transform"))
-    ChebyshevTransformPlan{T,1,true,(5,)}(FFTW.plan_r2r!(x, FFTW.REDFT10))
+    if isempty(x)
+        ChebyshevTransformPlan{T,1,true,(5,)}()
+    else
+        ChebyshevTransformPlan{T,1,true,(5,)}(FFTW.plan_r2r!(x, FFTW.REDFT10))
+    end
 end
 function plan_chebyshevtransform!(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
     length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
@@ -23,8 +40,11 @@ end
 
 
 function plan_chebyshevtransform(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
-    isempty(x) && throw(ArgumentError("Cannot plan empty transform"))
-    ChebyshevTransformPlan{T,1,false,(5,)}(FFTW.plan_r2r!(x, FFTW.REDFT10))
+    if isempty(x)
+        ChebyshevTransformPlan{T,1,false,(5,)}()
+    else
+        ChebyshevTransformPlan{T,1,false,(5,)}(FFTW.plan_r2r!(x, FFTW.REDFT10))
+    end
 end
 function plan_chebyshevtransform(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
     length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
@@ -34,8 +54,12 @@ end
 plan_chebyshevtransform!(x::AbstractVector) = plan_chebyshevtransform!(x, Val(1))
 plan_chebyshevtransform(x::AbstractVector) = plan_chebyshevtransform(x, Val(1))
 
+
 function *(P::ChebyshevTransformPlan{T,1,true}, x::AbstractVector{T}) where T
     n = length(x)
+    assert_applicable(P, x)
+    n == 0 && return x
+
     y = P.plan*x # will be  === x if in-place
     y[1] /= 2
     lmul!(inv(convert(T,n)), y)
@@ -67,8 +91,10 @@ chebyshevtransform(x, kind=Val(1)) = chebyshevtransform!(copy(x), kind)
 ## Inverse transforms take Chebyshev coefficients and produce values at Chebyshev points of the first and second kinds
 
 
-struct IChebyshevTransformPlan{T,kind,inplace,P}
+struct IChebyshevTransformPlan{T,kind,inplace,P} <: ChebyshevPlan{T}
     plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
+    IChebyshevTransformPlan{T,kind,inplace,P}(plan) where {T,kind,inplace,P} = new{T,kind,inplace,P}(plan)
+    IChebyshevTransformPlan{T,kind,inplace,P}() where {T,kind,inplace,P} = new{T,kind,inplace,P}()
 end
 
 IChebyshevTransformPlan{T,kind,inplace}(F::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} = 
@@ -76,6 +102,10 @@ IChebyshevTransformPlan{T,kind,inplace}(F::FFTW.r2rFFTWPlan{T,P}) where {T,kind,
 
 IChebyshevTransformPlan{T,kind,true}(F::IChebyshevTransformPlan{T,kind,false,P}) where {T,kind,P} = 
     IChebyshevTransformPlan{T,kind,true,P}(F.plan)
+
+size(P::IChebyshevTransformPlan) = isdefined(P, :plan) ? size(P.plan) : (0,)
+length(P::IChebyshevTransformPlan) = isdefined(P, :plan) ? length(P.plan) : 0
+
 
 # second kind Chebyshev transforms share a plan with their inverse
 # so we support this via inv
@@ -88,8 +118,11 @@ inv(P::IChebyshevTransformPlan{T,2,inp}) where {T,inp} = ChebyshevTransformPlan{
 
 
 function plan_ichebyshevtransform!(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
-    isempty(x) && throw(ArgumentError("Cannot plan empty transform"))
-    IChebyshevTransformPlan{T,1,true,(4,)}(FFTW.plan_r2r!(x, FFTW.REDFT01))
+    if isempty(x)
+        IChebyshevTransformPlan{T,1,true,(4,)}()
+    else
+        IChebyshevTransformPlan{T,1,true,(4,)}(FFTW.plan_r2r!(x, FFTW.REDFT01))
+    end
 end
 
 function plan_ichebyshevtransform!(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
@@ -97,8 +130,11 @@ function plan_ichebyshevtransform!(x::AbstractVector{T}, ::Val{2}) where T<:fftw
 end
 
 function plan_ichebyshevtransform(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
-    isempty(x) && throw(ArgumentError("Cannot plan empty transform"))
-    IChebyshevTransformPlan{T,1,false,(4,)}(FFTW.plan_r2r!(x, FFTW.REDFT01))
+    if isempty(x)
+        IChebyshevTransformPlan{T,1,false,(4,)}()
+    else
+        IChebyshevTransformPlan{T,1,false,(4,)}(FFTW.plan_r2r!(x, FFTW.REDFT01))
+    end
 end
 
 function plan_ichebyshevtransform(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
@@ -110,12 +146,18 @@ plan_ichebyshevtransform(x::AbstractVector) = plan_ichebyshevtransform(x, Val(1)
 
 
 function *(P::IChebyshevTransformPlan{T,1,true}, x::AbstractVector{T}) where T<:fftwNumber
+    n = length(x)
+    assert_applicable(P, x)
+    n == 0 && return x
+
     x[1] *= 2
     x = lmul!(convert(T,0.5), P.plan*x)
     x
 end 
 function *(P::IChebyshevTransformPlan{T,2, true}, x::AbstractVector{T}) where T<:fftwNumber
     n = length(x)
+    assert_applicable(P, x)
+
     x[1] *= 2; x[end] *= 2
     x = ChebyshevTransformPlan{T,2,true}(P.plan)*x
     x[1] *= 2; x[end] *= 2
@@ -129,13 +171,6 @@ ichebyshevtransform!(x::AbstractVector{T}, kind=Val(1)) where {T<:fftwNumber} =
     plan_ichebyshevtransform!(x, kind)*x
 
 ichebyshevtransform(x, kind=Val(1)) = ichebyshevtransform!(copy(x), kind)
-
-## Code generation for integer inputs
-
-for func in (:chebyshevtransform,:ichebyshevtransform)
-    @eval $func(x::AbstractVector{T}, kind=Val(1)) where {T<:Integer} = $func(convert(Float64,x), kind)
-end
-
 
 # Matrix inputs
 #
@@ -151,8 +186,8 @@ function chebyshevtransform!(X::AbstractMatrix{T}, ::Val{1}) where T<:fftwNumber
 end
 
 function chebyshevtransform!(X::AbstractMatrix{T}, ::Val{2}) where T<:fftwNumber
-    if size(X) == (1,1)
-        X
+    if size(X,1) < 2 || size(X,2) < 2
+        throw(ArgumentError("Chebyshev plan applied to wrong-size array"))
     else
         X=FFTW.r2r!(X,FFTW.REDFT00)
         lmul!(1/((size(X,1)-1)*(size(X,2)-1)),X)
@@ -172,11 +207,11 @@ function ichebyshevtransform!(X::AbstractMatrix{T}, ::Val{1}) where T<:fftwNumbe
     end
 end
 function ichebyshevtransform!(X::AbstractMatrix{T}, ::Val{2}) where T<:fftwNumber
-    if size(X) == (1,1)
-        X
+    if size(X,1) < 2 || size(X,2) < 2
+        throw(ArgumentError("Chebyshev plan applied to wrong-size array"))
     else
         X[1,:]*=2;X[end,:]*=2;X[:,1]*=2;X[:,end]*=2
-        X=chebyshevtransform!(X;kind=kind)
+        X=chebyshevtransform!(X, Val(2))
         X[1,:]*=2;X[end,:]*=2;X[:,1]*=2;X[:,end]*=2
         lmul!((size(X,1)-1)*(size(X,2)-1)/4,X)
     end
@@ -186,8 +221,10 @@ end
 
 ## Chebyshev U
 
-struct ChebyshevUTransformPlan{T,kind,inplace,P} <: Plan{T}
+struct ChebyshevUTransformPlan{T,kind,inplace,P} <: ChebyshevPlan{T}
     plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
+    ChebyshevUTransformPlan{T,kind,inplace,P}(plan) where {T,kind,inplace,P} = new{T,kind,inplace,P}(plan)
+    ChebyshevUTransformPlan{T,kind,inplace,P}() where {T,kind,inplace,P} = new{T,kind,inplace,P}()
 end
 
 ChebyshevUTransformPlan{T,kind,inplace}(plan::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} = 
@@ -199,8 +236,11 @@ ChebyshevUTransformPlan{T,kind,inplace}(plan::ChebyshevUTransformPlan{T,kind,inp
 
 
 function plan_chebyshevutransform!(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
-    isempty(x) && throw(ArgumentError("Cannot plan empty transform"))
-    ChebyshevUTransformPlan{T,1,true,(9,)}(FFTW.plan_r2r!(x, FFTW.RODFT10))
+    if isempty(x)
+        ChebyshevUTransformPlan{T,1,true,(9,)}()
+    else
+        ChebyshevUTransformPlan{T,1,true,(9,)}(FFTW.plan_r2r!(x, FFTW.RODFT10))
+    end
 end
 function plan_chebyshevutransform!(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
     length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
@@ -208,8 +248,11 @@ function plan_chebyshevutransform!(x::AbstractVector{T}, ::Val{2}) where T<:fftw
 end
 
 function plan_chebyshevutransform(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
-    isempty(x) && throw(ArgumentError("Cannot plan empty transform"))
-    ChebyshevUTransformPlan{T,1,false,(9,)}(FFTW.plan_r2r!(x, FFTW.RODFT10))
+    if isempty(x)
+        ChebyshevUTransformPlan{T,1,false,(9,)}()
+    else
+        ChebyshevUTransformPlan{T,1,false,(9,)}(FFTW.plan_r2r!(x, FFTW.RODFT10))
+    end
 end
 function plan_chebyshevutransform(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
     length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
@@ -222,6 +265,7 @@ plan_chebyshevutransform(x::AbstractVector) = plan_chebyshevutransform(x, Val(1)
 
 function *(P::ChebyshevUTransformPlan{T,1,true},x::AbstractVector{T}) where T
     n = length(x)
+    assert_applicable(P, x)
     n ≤ 1 && return x
 
     for k=1:n # sqrt(1-x_j^2) weight
@@ -232,6 +276,7 @@ end
 
 function *(P::ChebyshevUTransformPlan{T,2,true}, x::AbstractVector{T}) where T
     n = length(x)
+    assert_applicable(P, x)
     n ≤ 1 && return x
 
     c = one(T)/ (n+1)
@@ -258,8 +303,10 @@ chebyshevutransform(x, kind=Val(1)) = chebyshevutransform!(copy(x), kind)
 ## Inverse transforms take ChebyshevU coefficients and produce values at ChebyshevU points of the first and second kinds
 
 
-struct IChebyshevUTransformPlan{T,kind,inplace,P}
+struct IChebyshevUTransformPlan{T,kind,inplace,P} <: ChebyshevPlan{T}
     plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
+    IChebyshevUTransformPlan{T,kind,inplace,P}(plan) where {T,kind,inplace,P} = new{T,kind,inplace,P}(plan)
+    IChebyshevUTransformPlan{T,kind,inplace,P}() where {T,kind,inplace,P} = new{T,kind,inplace,P}()
 end
 
 IChebyshevUTransformPlan{T,kind,inplace}(F::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} = 
@@ -269,8 +316,11 @@ IChebyshevUTransformPlan{T,kind,true}(F::IChebyshevUTransformPlan{T,kind,false,P
     IChebyshevUTransformPlan{T,kind,true,P}(F.plan)
 
 function plan_ichebyshevutransform!(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
-    isempty(x) && throw(ArgumentError("Cannot plan empty transform"))
-    IChebyshevUTransformPlan{T,1,true,(8,)}(FFTW.plan_r2r!(x, FFTW.RODFT01))
+    if isempty(x)
+        IChebyshevUTransformPlan{T,1,true,(8,)}()
+    else
+        IChebyshevUTransformPlan{T,1,true,(8,)}(FFTW.plan_r2r!(x, FFTW.RODFT01))
+    end
 end
 function plan_ichebyshevutransform!(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
     length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
@@ -278,8 +328,11 @@ function plan_ichebyshevutransform!(x::AbstractVector{T}, ::Val{2}) where T<:fft
 end
 
 function plan_ichebyshevutransform(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
-    isempty(x) && throw(ArgumentError("Cannot plan empty transform"))
-    IChebyshevUTransformPlan{T,1,false,(8,)}(FFTW.plan_r2r!(x, FFTW.RODFT01))
+    if isempty(x)
+        IChebyshevUTransformPlan{T,1,false,(8,)}()
+    else
+        IChebyshevUTransformPlan{T,1,false,(8,)}(FFTW.plan_r2r!(x, FFTW.RODFT01))
+    end
 end
 function plan_ichebyshevutransform(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
     length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
@@ -292,6 +345,7 @@ plan_ichebyshevutransform(x::AbstractVector) = plan_ichebyshevutransform(x, Val(
 
 function *(P::IChebyshevUTransformPlan{T,1,true}, x::AbstractVector{T}) where T<:fftwNumber
     n = length(x)
+    assert_applicable(P, x)
     n ≤ 1 && return x
 
     x = P.plan * x
@@ -305,6 +359,7 @@ end
 
 function *(P::IChebyshevUTransformPlan{T,2,true}, x::AbstractVector{T}) where T<:fftwNumber
     n = length(x)
+    assert_applicable(P, x)
     n ≤ 1 && return x
 
     c = one(T)/ (n+1)
@@ -324,12 +379,12 @@ ichebyshevutransform(x, kind=Val(1)) = ichebyshevutransform!(copy(x), kind)
 *(P::IChebyshevUTransformPlan{T,k,false},x::AbstractVector{T}) where {T,k} = 
     IChebyshevUTransformPlan{T,k,true}(P)*copy(x)
 
+
 ## Code generation for integer inputs
 
-for func in (:chebyshevutransform,:ichebyshevutransform)
-    @eval $func(x::AbstractVector{T}, kind=Val(1)) where {T<:Integer} = $func(convert(Float64,x), kind)
+for func in (:chebyshevtransform,:ichebyshevtransform,:chebyshevutransform,:ichebyshevutransform)
+    @eval $func(x::AbstractVector{T}, kind=Val(1)) where {T<:Integer} = $func(convert(AbstractVector{Float64},x), kind)
 end
-
 
 
 
