@@ -2,7 +2,7 @@
 
 
 struct ChebyshevTransformPlan{T,kind,inplace,P} <: Plan{T}
-    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int64}}
+    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
 end
 
 ChebyshevTransformPlan{T,kind,inplace}(plan::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} = 
@@ -68,7 +68,7 @@ chebyshevtransform(x, kind=Val(1)) = chebyshevtransform!(copy(x), kind)
 
 
 struct IChebyshevTransformPlan{T,kind,inplace,P}
-    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int64}}
+    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
 end
 
 IChebyshevTransformPlan{T,kind,inplace}(F::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} = 
@@ -187,7 +187,7 @@ end
 ## Chebyshev U
 
 struct ChebyshevUTransformPlan{T,kind,inplace,P} <: Plan{T}
-    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int64}}
+    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
 end
 
 ChebyshevUTransformPlan{T,kind,inplace}(plan::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} = 
@@ -259,7 +259,7 @@ chebyshevutransform(x, kind=Val(1)) = chebyshevutransform!(copy(x), kind)
 
 
 struct IChebyshevUTransformPlan{T,kind,inplace,P}
-    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int64}}
+    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
 end
 
 IChebyshevUTransformPlan{T,kind,inplace}(F::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} = 
