@@ -4,7 +4,7 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2,
                        chebyshevjacobimoments1, chebyshevjacobimoments2,
                        chebyshevlogmoments1, chebyshevlogmoments2
 
-@testset "Fejér and Clenshaw--Curtis quadrature" begin
+@testset "Fejér and Clenshaw–Curtis quadrature" begin
     N = 20
     f = x -> exp(x)
 

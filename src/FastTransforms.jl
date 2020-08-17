@@ -9,7 +9,7 @@ import DSP
 @reexport using FFTW
 
 import Base: unsafe_convert, eltype, ndims, adjoint, transpose, show, *, \,
-             inv, size, view
+             inv, length, size, view, getindex
 
 import Base.GMP: Limb
 
@@ -66,7 +66,8 @@ include("PaduaTransform.jl")
 export plan_chebyshevtransform, plan_ichebyshevtransform, plan_chebyshevtransform!, plan_ichebyshevtransform!,
             chebyshevtransform, ichebyshevtransform, chebyshevpoints,
             plan_chebyshevutransform, plan_ichebyshevutransform, plan_chebyshevutransform!, plan_ichebyshevutransform!,
-            chebyshevutransform, ichebyshevutransform
+            chebyshevutransform, ichebyshevutransform,
+            chebyshevtransform!, ichebyshevtransform!, chebyshevutransform!, ichebyshevutransform!
 
 include("chebyshevtransform.jl")
 
