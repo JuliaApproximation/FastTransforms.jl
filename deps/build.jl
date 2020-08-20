@@ -1,8 +1,6 @@
 using BinaryProvider
 import Libdl
 
-version = v"0.3.3"
-
 const extension = Sys.isapple() ? "dylib" : Sys.islinux() ? "so" : Sys.iswindows() ? "dll" : ""
 
 print_error() = error(
@@ -26,10 +24,11 @@ if ft_build_from_source == "true"
         if [ -d "FastTransforms" ]; then
             cd FastTransforms
             git fetch
-            git checkout v$version
+            git checkout master
+            git pull
             cd ..
         else
-            git clone -b v$version https://github.com/MikaelSlevinsky/FastTransforms.git FastTransforms
+            git clone https://github.com/MikaelSlevinsky/FastTransforms.git FastTransforms
         fi
         cd FastTransforms
         $make assembly
