@@ -94,6 +94,15 @@ UR = threshold!(P\VR, 100eps())
 @test U ≈ UR
 norm(U-UR)
 
+F = f.(x, y, z)
+V = PA*F
+U = threshold!(P\V, 100eps())
+FastTransforms.execute_sph_reflection!(J, (W[1], W[2], W[3]), U)
+FR = f.(u, v, w)
+VR = PA*FR
+UR = threshold!(P\VR, 100eps())
+@test U ≈ UR
+norm(U-UR)
 
 # Random orthogonal transformation
 Random.seed!(0)

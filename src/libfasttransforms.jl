@@ -771,6 +771,7 @@ function convert(::Type{ft_orthogonal_transformation}, Q::AbstractMatrix)
     @assert size(Q, 1) ≥ 3 && size(Q, 2) ≥ 3
     return ft_orthogonal_transformation((Q[1, 1], Q[2, 1], Q[3, 1], Q[1, 2], Q[2, 2], Q[3, 2], Q[1, 3], Q[2, 3], Q[3, 3]))
 end
+convert(::Type{ft_orthogonal_transformation}, Q::NTuple{9, Float64}) = ft_orthogonal_transformation(Q)
 
 function execute_sph_orthogonal_transformation!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, Q, x::Matrix{Float64})
     checksize(p, x)
@@ -798,6 +799,7 @@ function convert(::Type{ft_reflection}, w::AbstractVector)
     @assert length(w) ≥ 3
     return ft_reflection((w[1], w[2], w[3]))
 end
+convert(::Type{ft_reflection}, w::NTuple{3, Float64}) = ft_reflection(w)
 
 function execute_sph_reflection!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, w, x::Matrix{Float64})
     checksize(p, x)
