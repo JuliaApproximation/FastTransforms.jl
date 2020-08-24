@@ -433,3 +433,67 @@ chebyshevpoints(n::Integer, kind=Val(1)) = chebyshevpoints(Float64, n, kind)
 #     x = P.plan*x
 #     rmul!(x,half(T))
 # end
+
+
+###
+# BigFloat
+# Use `Nothing` and fall back too FFT
+###
+
+plan_chebyshevtransform(x::AbstractVector{T}, ::Val{kind}) where {T,kind} =
+    ChebyshevTransformPlan{T,kind,false,Nothing}()
+plan_ichebyshevtransform(x::AbstractVector{T}, ::Val{kind}) where {T,kind} =
+    IChebyshevTransformPlan{T,kind,false,Nothing}()
+
+#following Chebfun's @Chebtech1/vals2coeffs.m and @Chebtech2/vals2coeffs.m
+function *(P::ChebyshevTransformPlan{T,1,false,Nothing}, x::AbstractVector{T}) where T
+    n = length(x)
+    if n == 1
+        x
+    else
+        w = [2exp(im*convert(T,π)*k/2n) for k=0:n-1]
+        ret = w.*ifft([x;reverse(x)])[1:n]
+        ret = T<:Real ? real(ret) : ret
+        ret[1] /= 2
+        ret
+    end
+end
+
+function *(P::ChebyshevTransformPlan{T,2,false,Nothing}, x::AbstractVector{T}) where T
+    n = length(x)
+    if n == 1
+        x
+    else
+        ret = ifft([x;x[end:-1:2]])[1:n]
+        ret = T<:Real ? real(ret) : ret
+        ret[2:n-1] *= 2
+        ret
+    end
+end
+
+#following Chebfun's @Chebtech1/vals2coeffs.m and @Chebtech2/vals2coeffs.m
+function *(P::IChebyshevTransformPlan{T,1,false,Nothing}, x::AbstractVector{T}) where T
+    n = length(x)
+    if n == 1
+        x
+    else
+        w = [exp(-im*convert(T,π)*k/2n)/2 for k=0:2n-1]
+        w[1] *= 2;w[n+1] *= 0;w[n+2:end] *= -1
+        ret = fft(w.*[x;one(T);x[end:-1:2]])
+        ret = T<:Real ? real(ret) : ret
+    end
+end
+function *(P::IChebyshevTransformPlan{T,2,false,Nothing}, x::AbstractVector{T}) where T
+    n = length(x)
+    if n == 1
+        x
+    else
+        ##TODO: make thread safe
+        x[1] *= 2;x[end] *= 2
+        ret = chebyshevtransform(x, Val(2))
+        x[1] /=2;x[end] /=2
+        ret[1] *= 2;ret[end] *= 2
+        ret *= .5*(n-1)
+        ret
+    end
+end
