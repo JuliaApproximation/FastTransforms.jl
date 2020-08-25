@@ -215,4 +215,13 @@ using FastTransforms, Test
         @test ichebyshevutransform([1,2,3]) == ichebyshevutransform([1.,2,3])
         @test ichebyshevutransform([1,2,3], Val(2)) == ichebyshevutransform([1.,2,3], Val(2))
     end
+
+    @testset "BigFloat" begin
+        x = BigFloat[1,2,3]
+        @test ichebyshevtransform(chebyshevtransform(x)) ≈ x
+        @test plan_chebyshevtransform(x)x ≈ chebyshevtransform(x)
+        @test plan_ichebyshevtransform(x)x ≈ ichebyshevtransform(x)
+        @test plan_chebyshevtransform!(x)copy(x) ≈ chebyshevtransform(x)
+        @test plan_ichebyshevtransform!(x)copy(x) ≈ ichebyshevtransform(x)
+    end
 end

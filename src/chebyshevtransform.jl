@@ -75,7 +75,7 @@ end
 *(P::ChebyshevTransformPlan{T,k,false}, x::AbstractVector{T}) where {T,k} = 
     ChebyshevTransformPlan{T,k,true}(P)*copy(x)
 
-chebyshevtransform!(x::AbstractVector{T}, kind=Val(1)) where T<:fftwNumber =
+chebyshevtransform!(x::AbstractVector{T}, kind=Val(1)) where T =
     plan_chebyshevtransform!(x, kind)*x
 
 
@@ -167,7 +167,7 @@ end
 *(P::IChebyshevTransformPlan{T,k,false},x::AbstractVector{T}) where {T,k} = 
     IChebyshevTransformPlan{T,k,true}(P)*copy(x)
 
-ichebyshevtransform!(x::AbstractVector{T}, kind=Val(1)) where {T<:fftwNumber} =
+ichebyshevtransform!(x::AbstractVector{T}, kind=Val(1)) where T =
     plan_ichebyshevtransform!(x, kind)*x
 
 ichebyshevtransform(x, kind=Val(1)) = ichebyshevtransform!(copy(x), kind)
@@ -445,6 +445,11 @@ plan_chebyshevtransform(x::AbstractVector{T}, ::Val{kind}) where {T,kind} =
 plan_ichebyshevtransform(x::AbstractVector{T}, ::Val{kind}) where {T,kind} =
     IChebyshevTransformPlan{T,kind,false,Nothing}()
 
+plan_chebyshevtransform!(x::AbstractVector{T}, ::Val{kind}) where {T,kind} =
+    ChebyshevTransformPlan{T,kind,true,Nothing}()
+plan_ichebyshevtransform!(x::AbstractVector{T}, ::Val{kind}) where {T,kind} =
+    IChebyshevTransformPlan{T,kind,true,Nothing}()
+
 #following Chebfun's @Chebtech1/vals2coeffs.m and @Chebtech2/vals2coeffs.m
 function *(P::ChebyshevTransformPlan{T,1,false,Nothing}, x::AbstractVector{T}) where T
     n = length(x)
@@ -459,17 +464,25 @@ function *(P::ChebyshevTransformPlan{T,1,false,Nothing}, x::AbstractVector{T}) w
     end
 end
 
-function *(P::ChebyshevTransformPlan{T,2,false,Nothing}, x::AbstractVector{T}) where T
-    n = length(x)
-    if n == 1
-        x
-    else
-        ret = ifft([x;x[end:-1:2]])[1:n]
-        ret = T<:Real ? real(ret) : ret
-        ret[2:n-1] *= 2
-        ret
-    end
-end
+
+# function *(P::ChebyshevTransformPlan{T,2,false,Nothing}, x::AbstractVector{T}) where T
+#     n = length(x)
+#     if n == 1
+#         x
+#     else
+#         ret = ifft([x;x[end:-1:2]])[1:n]
+#         ret = T<:Real ? real(ret) : ret
+#         ret[2:n-1] *= 2
+#         ret
+#     end
+# end
+
+
+*(P::ChebyshevTransformPlan{T,1,true,Nothing}, x::AbstractVector{T}) where T =
+    copyto!(x, ChebyshevTransformPlan{T,1,false,Nothing}() * x)
+# *(P::ChebyshevTransformPlan{T,2,true,Nothing}, x::AbstractVector{T}) where T =
+#     copyto!(x, ChebyshevTransformPlan{T,2,false,Nothing}() * x)
+
 
 #following Chebfun's @Chebtech1/vals2coeffs.m and @Chebtech2/vals2coeffs.m
 function *(P::IChebyshevTransformPlan{T,1,false,Nothing}, x::AbstractVector{T}) where T
@@ -481,19 +494,24 @@ function *(P::IChebyshevTransformPlan{T,1,false,Nothing}, x::AbstractVector{T}) 
         w[1] *= 2;w[n+1] *= 0;w[n+2:end] *= -1
         ret = fft(w.*[x;one(T);x[end:-1:2]])
         ret = T<:Real ? real(ret) : ret
+        ret[1:n]
     end
 end
-function *(P::IChebyshevTransformPlan{T,2,false,Nothing}, x::AbstractVector{T}) where T
-    n = length(x)
-    if n == 1
-        x
-    else
-        ##TODO: make thread safe
-        x[1] *= 2;x[end] *= 2
-        ret = chebyshevtransform(x, Val(2))
-        x[1] /=2;x[end] /=2
-        ret[1] *= 2;ret[end] *= 2
-        ret *= .5*(n-1)
-        ret
-    end
-end
+
+# function *(P::IChebyshevTransformPlan{T,2,true,Nothing}, x::AbstractVector{T}) where T
+#     n = length(x)
+#     if n == 1
+#         x
+#     else
+#         x[1] *= 2; x[end] *= 2
+#         chebyshevtransform!(x, Val(2))
+#         x[1] *= 2; x[end] *= 2
+#         lmul!(convert(T,n-1)/2, x)
+#         x
+#     end
+# end
+
+*(P::IChebyshevTransformPlan{T,1,true,Nothing}, x::AbstractVector{T}) where T =
+    copyto!(x, IChebyshevTransformPlan{T,1,false,Nothing}() * x)
+# *(P::IChebyshevTransformPlan{T,2,false,Nothing}, x::AbstractVector{T}) where T =
+#     IChebyshevTransformPlan{T,2,true,Nothing}() * copy(x)
