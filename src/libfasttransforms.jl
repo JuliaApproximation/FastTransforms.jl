@@ -595,12 +595,12 @@ function lmul!(p::FTPlan{Complex{Float64}, 2, SPINSPHEREANALYSIS}, x::Matrix{Com
     return x
 end
 
-*(p::FTPlan{T}, x::Array{T}) where T = lmul!(p, deepcopy(x))
-*(p::AdjointFTPlan{T}, x::Array{T}) where T = lmul!(p, deepcopy(x))
-*(p::TransposeFTPlan{T}, x::Array{T}) where T = lmul!(p, deepcopy(x))
-\(p::FTPlan{T}, x::Array{T}) where T = ldiv!(p, deepcopy(x))
-\(p::AdjointFTPlan{T}, x::Array{T}) where T = ldiv!(p, deepcopy(x))
-\(p::TransposeFTPlan{T}, x::Array{T}) where T = ldiv!(p, deepcopy(x))
+*(p::FTPlan{T}, x::AbstractArray{T}) where T = lmul!(p, Array(x))
+*(p::AdjointFTPlan{T}, x::AbstractArray{T}) where T = lmul!(p, Array(x))
+*(p::TransposeFTPlan{T}, x::AbstractArray{T}) where T = lmul!(p, Array(x))
+\(p::FTPlan{T}, x::AbstractArray{T}) where T = ldiv!(p, Array(x))
+\(p::AdjointFTPlan{T}, x::AbstractArray{T}) where T = ldiv!(p, Array(x))
+\(p::TransposeFTPlan{T}, x::AbstractArray{T}) where T = ldiv!(p, Array(x))
 
 *(p::FTPlan{T, 1}, x::UniformScaling{S}) where {T, S} = lmul!(p, Matrix{promote_type(T, S)}(x, p.n, p.n))
 *(p::AdjointFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = lmul!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
