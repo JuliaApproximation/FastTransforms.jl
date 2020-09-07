@@ -4,7 +4,13 @@ const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
 const OUTPUT_DIR   = joinpath(@__DIR__, "src/generated")
 
 examples = [
+	"chebyshev.jl",
+	"disk.jl",
+	"nonlocaldiffusion.jl",
+	"padua.jl",
 	"sphere.jl",
+	"spinweighted.jl",
+	"triangle.jl",
 ]
 
 for example in examples
@@ -20,7 +26,13 @@ makedocs(
 			pages = Any[
 					"Home" => "index.md",
 					"Examples" => [
+						"generated/chebyshev.md",
+						"generated/disk.md",
+						"generated/nonlocaldiffusion.md",
+						"generated/padua.md",
         				"generated/sphere.md",
+						"generated/spinweighted.md",
+						"generated/triangle.md",
         				],
 					]
 			)

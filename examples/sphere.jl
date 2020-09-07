@@ -1,18 +1,17 @@
 # # Spherical harmonic addition theorem
 # This example confirms numerically that
 # ```math
-# \frac{P_4(z\cdot y) - P_4(x\cdot y)}{z\cdot y - x\cdot y},
+# f(z) = \frac{P_4(z\cdot y) - P_4(x\cdot y)}{z\cdot y - x\cdot y},
 # ```
-#
 # is actually a degree-$3$ polynomial on $\mathbb{S}^2$, where $P_4$ is the degree-$4$
 # Legendre polynomial, and $x,y,z \in \mathbb{S}^2$.
 # To verify, we sample the function on a $5\times9$ equiangular grid
 # defined by:
 # ```math
-# \theta_n = (n+\frac{1}{2})\pi/N,\quad{\rm for}\quad 0\le n < N,\quad{\rm and}
-# ```
-# ```math
-# \varphi_m = 2\pi m/M,\quad{\rm for}\quad 0\le m < M;
+# \begin{aligned}
+# \theta_n & = (n+\tfrac{1}{2})\pi/N,\quad{\rm for}\quad 0\le n < N,\quad{\rm and}\\
+# \varphi_m & = 2\pi m/M,\quad{\rm for}\quad 0\le m < M;
+# \end{aligned}
 # ```
 # we convert the function samples to Fourier coefficients using
 # `plan_sph_analysis`; and finally, we transform
@@ -88,12 +87,10 @@ U4 = threshold!(P\V, 3*eps())
 
 # That nonnegligible coefficient should be approximately `√(2π/(4+1/2))`,
 # since the convention in this library is to orthonormalize.
-
 nrm2 = norm(U4)
 
 # Note that the integrals of both functions $P_4(z\cdot y)$ and $P_4(z\cdot x)$ and their
 # $L^2(\mathbb{S}^2)$ norms are the same because of rotational invariance. The integral of
 # either is perhaps not interesting as it is mathematically zero, but the norms
 # of either should be approximately the same.
-
 nrm1 ≈ nrm2
