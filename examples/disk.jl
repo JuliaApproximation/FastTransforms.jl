@@ -8,7 +8,7 @@
 # We analyze the function on an $N\times M$ tensor product grid defined by:
 # ```math
 # \begin{aligned}
-# r_n & = \cos\left[(n+\tfrac{1}{2})\pi/2N],\quad{\rm for} 0\le n < N,\quad{\rm and}\\
+# r_n & = \cos\left[(n+\tfrac{1}{2})\pi/2N\right],\quad{\rm for} 0\le n < N,\quad{\rm and}\\
 # \theta_m & = 2\pi m/M,\quad{\rm for}\quad 0\le m < M;
 # \end{aligned}
 # ```

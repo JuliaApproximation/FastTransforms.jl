@@ -11,7 +11,7 @@
 # We analyze $f(x,y)$ on an $N\times M$ mapped tensor product grid defined by:
 # ```math
 # \begin{aligned}
-# x & = (1+u)/2,\quad{\rm and}\quad y = (1-u)*(1+v)/4,\quad {\rm where:}\\
+# x & = (1+u)/2,\quad{\rm and}\quad y = (1-u)(1+v)/4,\quad {\rm where:}\\
 # u_n & = \cos\left[(n+\tfrac{1}{2})\pi/N\right],\quad{\rm for}\quad 0\le n < N,\quad{\rm and}\\
 # v_m & = \cos\left[(m+\tfrac{1}{2})\pi/M\right],\quad{\rm for}\quad 0\le m < M;
 # \end{aligned}

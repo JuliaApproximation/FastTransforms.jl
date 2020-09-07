@@ -5,7 +5,7 @@
 # ```
 # for some $k\in\mathbb{R}^3$ and where $r\in\mathbb{S}^2$, using spin-$0$ spherical harmonics.
 #
-# It applies $\dh$, the spin-raising operator,
+# It applies ð, the spin-raising operator,
 # both on the spin-$0$ coefficients as well as the original function,
 # followed by a spin-$1$ analysis to compare coefficients.
 #
@@ -36,13 +36,13 @@ P = plan_spinsph2fourier(F, 0)
 # And an FFTW Fourier analysis plan on $\mathbb{S}^2$:
 PA = plan_spinsph_analysis(F, 0)
 
-# Its spin-0 spherical harmonic coefficients are:
+# Its spin-$0$ spherical harmonic coefficients are:
 U⁰ = P\(PA*F)
 
 # We can check its $L^2(\mathbb{S}^2)$ norm against an exact result:
 norm(U⁰) ≈ sqrt(4π)
 
-# Spin can be incremented by applying $\dh$, either on the spin-$0$ coefficients:
+# Spin can be incremented by applying ð, either on the spin-$0$ coefficients:
 U¹c = zero(U⁰)
 for n in 1:N-1
     U¹c[n, 1] = sqrt(n*(n+1))*U⁰[n+1, 1]

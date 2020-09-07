@@ -7,12 +7,14 @@ using FastTransforms
 # We define the Padua points and extract Cartesian components:
 N = 15
 pts = paduapoints(N)
-x = pts[:,1];
-y = pts[:,2];
+x = pts[:,1]
+y = pts[:,2]
+nothing #hide
 
 # We take the Padua transform of the function:
 f = (x,y) -> exp(x + cos(y))
-f̌ = paduatransform(f.(x , y));
+f̌ = paduatransform(f.(x , y))
+nothing #hide
 
 # and use the coefficients to create an approximation to the function $f$:
 f̃ = (x,y) -> begin
