@@ -8,13 +8,11 @@ using FastTransforms
 N = 15
 pts = paduapoints(N)
 x = pts[:,1]
-y = pts[:,2]
-nothing #hide
+y = pts[:,2];
 
 # We take the Padua transform of the function:
 f = (x,y) -> exp(x + cos(y))
-f̌ = paduatransform(f.(x , y))
-nothing #hide
+f̌ = paduatransform(f.(x , y));
 
 # and use the coefficients to create an approximation to the function $f$:
 f̃ = (x,y) -> begin
