@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Calculus on the reference triangle · FastTransforms.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="FastTransforms.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">FastTransforms.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../chebyshev/">Chebyshev transform</a></li><li><a class="tocitem" href="../disk/">-</a></li><li><a class="tocitem" href="../nonlocaldiffusion/">Nonlocal diffusion on <span>$\mathbb{S}^2$</span></a></li><li><a class="tocitem" href="../padua/">Padua transform</a></li><li><a class="tocitem" href="../sphere/">Spherical harmonic addition theorem</a></li><li><a class="tocitem" href="../spinweighted/">Spin-weighted spherical harmonics</a></li><li class="is-active"><a class="tocitem" href>Calculus on the reference triangle</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Calculus on the reference triangle</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Calculus on the reference triangle</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaApproximation/FastTransforms.jl/blob/master/examples/triangle.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Calculus-on-the-reference-triangle-1"><a class="docs-heading-anchor" href="#Calculus-on-the-reference-triangle-1">Calculus on the reference triangle</a><a class="docs-heading-anchor-permalink" href="#Calculus-on-the-reference-triangle-1" title="Permalink"></a></h1><p>In this example, we sample a bivariate function:</p><div>\[f(x,y) = \frac{1}{1+x^2+y^2},\]</div><p>on the reference triangle with vertices <span>$(0,0)$</span>, <span>$(0,1)$</span>, and <span>$(1,0)$</span> and analyze it in a Proriol series. Then, we find Proriol series for each component of its gradient by term-by-term differentiation of our expansion, and we compare them with the true Proriol series by sampling an exact expression for the gradient.</p><p>We analyze <span>$f(x,y)$</span> on an <span>$N\times M$</span> mapped tensor product grid defined by:</p><div>\[\begin{aligned}
+x &amp; = (1+u)/2,\quad{\rm and}\quad y = (1-u)*(1+v)/4,\quad {\rm where:}\\
+u_n &amp; = \cos\left[(n+\tfrac{1}{2})\pi/N\right],\quad{\rm for}\quad 0\le n &lt; N,\quad{\rm and}\\
+v_m &amp; = \cos\left[(m+\tfrac{1}{2})\pi/M\right],\quad{\rm for}\quad 0\le m &lt; M;
+\end{aligned}\]</div><p>we convert the function samples to mapped Chebyshev² coefficients using <code>plan_tri_analysis</code>; and finally, we transform the mapped Chebyshev² coefficients to Proriol coefficients using <code>plan_tri2cheb</code>.</p><p>For the storage pattern of the arrays, please consult the <a href="https://MikaelSlevinsky.github.io/FastTransforms">documentation</a>.</p><pre><code class="language-julia">using FastTransforms, LinearAlgebra</code></pre><p>Our function <span>$f$</span> and the Cartesian components of its gradient:</p><pre><code class="language-julia">f = (x,y) -&gt; 1/(1+x^2+y^2)
+fx = (x,y) -&gt; -2x/(1+x^2+y^2)^2
+fy = (x,y) -&gt; -2y/(1+x^2+y^2)^2</code></pre><pre><code class="language-none">#5 (generic function with 1 method)</code></pre><p>The polynomial degree:</p><pre><code class="language-julia">N = 10
+M = N</code></pre><pre><code class="language-none">10</code></pre><p>The parameters of the Proriol series:</p><pre><code class="language-julia">α, β, γ = 0, 0, 0</code></pre><pre><code class="language-none">(0, 0, 0)</code></pre><p>The <span>$u$</span> grid:</p><pre><code class="language-julia">u = [sinpi((N-2n-1)/(2N)) for n in 0:N-1]</code></pre><pre><code class="language-none">10-element Array{Float64,1}:
+  0.9876883405951378
+  0.8910065241883678
+  0.7071067811865476
+  0.45399049973954675
+  0.15643446504023087
+ -0.15643446504023087
+ -0.45399049973954675
+ -0.7071067811865476
+ -0.8910065241883678
+ -0.9876883405951378</code></pre><p>And the <span>$v$</span> grid:</p><pre><code class="language-julia">v = [sinpi((M-2m-1)/(2M)) for m in 0:M-1]</code></pre><pre><code class="language-none">10-element Array{Float64,1}:
+  0.9876883405951378
+  0.8910065241883678
+  0.7071067811865476
+  0.45399049973954675
+  0.15643446504023087
+ -0.15643446504023087
+ -0.45399049973954675
+ -0.7071067811865476
+ -0.8910065241883678
+ -0.9876883405951378</code></pre><p>Instead of using the <span>$u\times v$</span> grid, we use one with more accuracy near the origin. Defining <span>$x$</span> by:</p><pre><code class="language-julia">x = [sinpi((2N-2n-1)/(4N))^2 for n in 0:N-1]</code></pre><pre><code class="language-none">10-element Array{Float64,1}:
+ 0.9938441702975689
+ 0.9455032620941839
+ 0.8535533905932737
+ 0.7269952498697735
+ 0.5782172325201155
+ 0.4217827674798846
+ 0.2730047501302265
+ 0.14644660940672624
+ 0.05449673790581606
+ 0.0061558297024311365</code></pre><p>And <span>$w$</span> by:</p><pre><code class="language-julia">w = [sinpi((2M-2m-1)/(4M))^2 for m in 0:M-1]</code></pre><pre><code class="language-none">10-element Array{Float64,1}:
+ 0.9938441702975689
+ 0.9455032620941839
+ 0.8535533905932737
+ 0.7269952498697735
+ 0.5782172325201155
+ 0.4217827674798846
+ 0.2730047501302265
+ 0.14644660940672624
+ 0.05449673790581606
+ 0.0061558297024311365</code></pre><p>We see how the two grids are related:</p><pre><code class="language-julia">((1 .+ u)./2 ≈ x) * ((1 .- u).*(1 .+ v&#39;)/4 ≈ reverse(x).*w&#39;)</code></pre><pre><code class="language-none">true</code></pre><p>On the mapped tensor product grid, our function samples are:</p><pre><code class="language-julia">F = [f(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">10×10 Array{Float64,2}:
+ 0.503078  0.503079  0.50308   0.503082  0.503084  0.503086  0.503087  0.503087  0.503087  0.503087
+ 0.527173  0.527251  0.527387  0.527552  0.527713  0.527842  0.527928  0.527972  0.527987  0.52799
+ 0.571515  0.572172  0.573336  0.57475   0.576129  0.577244  0.577984  0.578365  0.578497  0.578518
+ 0.624166  0.6269    0.631783  0.63779   0.643732  0.6486    0.651858  0.653543  0.654132  0.654226
+ 0.662229  0.669625  0.683086  0.700104  0.717456  0.732073  0.742063  0.7473    0.74914   0.749433
+ 0.663072  0.677145  0.703491  0.738223  0.775386  0.80816   0.83138   0.843831  0.848253  0.848959
+ 0.626344  0.646405  0.685125  0.738625  0.79921   0.855757  0.897728  0.920923  0.929281  0.930621
+ 0.574363  0.597816  0.644232  0.710983  0.790497  0.868767  0.929587  0.964254  0.976934  0.978977
+ 0.53023   0.554889  0.604493  0.677756  0.768133  0.860579  0.934929  0.978337  0.994407  0.997005
+ 0.506165  0.531056  0.581514  0.656999  0.751727  0.850517  0.931398  0.97922   0.997037  0.999925</code></pre><p>We precompute a Proriol–Chebyshev² plan:</p><pre><code class="language-julia">P = plan_tri2cheb(F, α, β, γ)</code></pre><pre><code class="language-none">FastTransforms Proriol--Chebyshev² plan for 10×10-element array of Float64</code></pre><p>And an FFTW Chebyshev² plan on the triangle:</p><pre><code class="language-julia">PA = plan_tri_analysis(F)</code></pre><pre><code class="language-none">FastTransforms plan for FFTW Chebyshev analysis on the triangle for 10×10-element array of Float64</code></pre><p>Its Proriol-<span>$(α,β,γ)$</span> coefficients are:</p><pre><code class="language-julia">U = P\(PA*F)</code></pre><pre><code class="language-none">10×10 Array{Float64,2}:
+  1.53694      -0.193325     -0.0251445     0.0109626    -0.000813085  -0.000299755   8.30468e-5   -1.61924e-6   -3.19816e-6    6.31957e-7
+ -0.111616      0.0391775    -0.00636096   -0.000168171   0.000311286  -5.50448e-5   -2.98987e-6    2.98314e-6   -4.06883e-7   -5.78871e-8
+ -0.0620411     0.00717665    0.00153129   -0.000551474   4.11469e-5    1.40636e-5   -4.21501e-6    2.00419e-7    1.36333e-7   -2.56682e-8
+  0.0111316    -0.00365775    0.000437389   4.52828e-5   -2.7266e-5     3.77416e-6    3.6054e-7    -2.19917e-7    3.13111e-10   1.29126e-8
+  0.00194131   -7.70783e-5   -0.000145998   3.68702e-5   -1.28779e-6   -1.24248e-6    2.77852e-7    4.79672e-8   -1.36897e-8   -3.73594e-9
+ -0.000642627   0.000243882  -2.26656e-5   -5.85628e-6    2.24633e-6   -1.97917e-7   -1.29266e-7   -1.27255e-9    9.04471e-9    6.0323e-10
+ -4.38754e-5   -1.7423e-5     1.19631e-5   -2.37625e-6   -1.47757e-7    1.49413e-7    5.42803e-8   -5.62503e-9   -4.66033e-9    1.01267e-10
+  2.80503e-5   -1.28088e-5    5.79531e-7    4.83844e-7    2.30075e-8   -6.94059e-8   -2.04348e-8    3.40901e-9    1.93914e-9   -1.14707e-10
+  1.13879e-6    2.27114e-6   -2.26963e-7   -1.25692e-7   -3.25964e-9    1.91384e-8    5.30824e-9   -9.96097e-10  -5.19607e-10   3.64107e-11
+ -1.13155e-6    6.65015e-9    1.77115e-8    9.76935e-9    2.31971e-10  -1.49625e-9   -4.12577e-10   7.82931e-11   4.05113e-11  -2.88222e-12</code></pre><p>Similarly, our function&#39;s gradient samples are:</p><pre><code class="language-julia">Fx = [fx(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">10×10 Array{Float64,2}:
+ -0.503059    -0.503061    -0.503064    -0.503068    -0.503071    -0.503074   -0.503076   -0.503077   -0.503078   -0.503078
+ -0.525533    -0.525687    -0.525959    -0.526289    -0.526609    -0.526868   -0.527039   -0.527126   -0.527157   -0.527162
+ -0.55759     -0.558874    -0.56115     -0.563921    -0.56663     -0.568827   -0.570285   -0.571037   -0.571299   -0.57134
+ -0.56645     -0.571423    -0.58036     -0.591449    -0.602521    -0.611668   -0.617827   -0.621027   -0.622146   -0.622324
+ -0.507151    -0.518542    -0.539599    -0.566821    -0.595267    -0.619769   -0.636799   -0.645819   -0.649004   -0.649511
+ -0.370886    -0.386796    -0.417481    -0.459721    -0.507171    -0.550951   -0.583067   -0.600662   -0.606973   -0.607984
+ -0.214203    -0.228144    -0.256295    -0.297885    -0.348757    -0.399854   -0.440038   -0.463071   -0.471513   -0.472874
+ -0.0966235   -0.104675    -0.121561    -0.148057    -0.183025    -0.221063   -0.253098   -0.272328   -0.279537   -0.280708
+ -0.0306429   -0.0335592   -0.0398275   -0.0500666   -0.0643093   -0.0807201  -0.0952704  -0.104322   -0.107778   -0.108342
+ -0.00315428  -0.00347214  -0.00416329  -0.00531429  -0.00695725  -0.008906   -0.0106804  -0.0118053  -0.0122388  -0.0123098</code></pre><p>and:</p><pre><code class="language-julia">Fy = [fy(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">10×10 Array{Float64,2}:
+ -0.00309674  -0.00294613  -0.00265964  -0.0022653  -0.00180173  -0.00131428  -0.000850692  -0.000456334  -0.000169814  -1.91818e-5
+ -0.0301041   -0.0286482   -0.0258756   -0.0220528  -0.0175504   -0.0128085   -0.00829316   -0.0044494    -0.00165584   -0.000187041
+ -0.0950785   -0.0906621   -0.0821785   -0.0703393  -0.0562133   -0.041164    -0.0267123    -0.014348     -0.00534173   -0.000603434
+ -0.211406    -0.202889    -0.186023    -0.161468   -0.130828    -0.0968821   -0.0633397    -0.034153     -0.0127321    -0.00143861
+ -0.367666    -0.357639    -0.335969    -0.300591   -0.251073    -0.190685    -0.126815     -0.0689903    -0.0257998    -0.00291656
+ -0.505313    -0.501357    -0.488505    -0.458171   -0.40202     -0.31857     -0.218218     -0.12059      -0.0453463    -0.00513075
+ -0.566899    -0.574426    -0.582548    -0.576688   -0.537001    -0.449109    -0.319905     -0.180588     -0.0684267    -0.00775164
+ -0.559696    -0.576844    -0.604749    -0.627351   -0.61681     -0.543446    -0.402727     -0.232446     -0.0887896    -0.0100715
+ -0.528372    -0.550513    -0.589802    -0.631498   -0.645145    -0.590695    -0.451254     -0.265063     -0.101904     -0.0115711
+ -0.506117    -0.530019    -0.573719    -0.623748   -0.649471    -0.606462    -0.470749     -0.279118     -0.107682     -0.012234</code></pre><p>For the partial derivative with respect to <span>$x$</span>, <a href="https://doi.org/10.1137/19M1245888">Olver et al.</a> derive simple expressions for the representation of this component using a Proriol-<span>$(α+1,β,γ+1)$</span> series.</p><pre><code class="language-julia">Gx = zeros(Float64, N, M)
+for m = 0:M-2
+    for n = 0:N-2
+        cf1 = m == 0 ? sqrt((n+1)*(n+2m+α+β+γ+3)/(2m+β+γ+2)*(m+γ+1)*8) : sqrt((n+1)*(n+2m+α+β+γ+3)/(2m+β+γ+1)*(m+β+γ+1)/(2m+β+γ+2)*(m+γ+1)*8)
+        cf2 = sqrt((n+α+1)*(m+1)/(2m+β+γ+2)*(m+β+1)/(2m+β+γ+3)*(n+2m+β+γ+3)*8)
+        Gx[n+1, m+1] = cf1*U[n+2, m+1] + cf2*U[n+1, m+2]
+    end
+end
+Px = plan_tri2cheb(Fx, α+1, β, γ+1)
+Ux = Px\(PA*Fx)</code></pre><pre><code class="language-none">10×10 Array{Float64,2}:
+ -0.773299      0.0719368     0.0119032   -0.00401513    0.000198561   0.000113665  -2.54675e-5   -2.2655e-7     1.03149e-6   -1.7216e-7
+ -0.223004      0.012725      0.00860848  -0.00187245   -6.32146e-5    8.83875e-5   -1.19358e-5   -1.69167e-6    7.76679e-7   -7.39561e-8
+  0.11832      -0.0184961    -0.00023125   0.000708495  -0.000135124  -8.87344e-7    5.69871e-6   -1.08572e-6   -5.1169e-8     5.59256e-8
+ -0.00167067    0.00241808   -0.0010549    0.000134307   2.30923e-5   -1.11344e-5    1.16791e-6    2.73639e-7   -7.56093e-8   -9.88051e-9
+ -0.00812992    0.00143141    9.50718e-5  -8.66652e-5    1.44746e-5    6.06362e-7   -6.84119e-7    3.76703e-8    4.17924e-8   -4.1622e-9
+  0.00134247   -0.000439988   9.61775e-5  -3.47089e-6   -3.49254e-6    1.08695e-6    1.48405e-7   -7.59334e-8   -1.44134e-8    5.66524e-9
+  0.000287448  -4.85646e-5   -1.64022e-5   7.96076e-6   -9.97598e-7   -5.74528e-7   -1.75861e-9    5.19823e-8    3.85683e-9   -3.81924e-9
+ -0.000113291   3.61147e-5   -6.74826e-6  -6.76853e-7    4.89366e-7    2.2219e-7    -1.12907e-8   -2.20735e-8   -8.87121e-10   1.62442e-9
+ -4.06399e-7   -2.15331e-6    5.99353e-7   1.29674e-7   -1.0952e-7    -4.69835e-8    3.09835e-9    4.78649e-9    1.51354e-10  -3.52555e-10
+  4.60231e-6   -2.60926e-8   -2.94735e-8  -6.31207e-9    5.41753e-9    2.3112e-9    -1.55957e-10  -2.36049e-10  -7.26455e-12   1.73881e-11</code></pre><p>For the partial derivative with respect to y, the analogous formulae result in a Proriol-<span>$(α,β+1,γ+1)$</span> series.</p><pre><code class="language-julia">Gy = zeros(Float64, N, M)
+for m = 0:M-2
+    for n = 0:N-2
+        Gy[n+1, m+1] = 4*sqrt((m+1)*(m+β+γ+2))*U[n+1, m+2]
+    end
+end
+Py = plan_tri2cheb(Fy, α, β+1, γ+1)
+Uy = Py\(PA*Fy)</code></pre><pre><code class="language-none">10×10 Array{Float64,2}:
+ -1.09361      -0.246364      0.151902     -0.014545     -0.00656717    0.00215252   -4.72964e-5   -0.000108877   2.12993e-5    1.42538e-6
+  0.221622     -0.0623246    -0.00233048    0.00556845   -0.00120596   -7.74683e-5    8.91372e-5   -1.4369e-5    -2.03658e-6    1.1703e-6
+  0.0405973     0.0150038    -0.00764115    0.00073608    0.000308021  -0.000109292   5.96196e-6    4.66644e-6   -1.12334e-6   -1.15876e-7
+ -0.0206914     0.0042851     0.00062704   -0.000487772   8.28887e-5    9.42576e-6   -6.71487e-6    8.79882e-7    3.11934e-7   -5.32669e-8
+ -0.000435917  -0.00142987    0.000511666  -2.29988e-5   -2.75726e-5    7.86154e-6   -1.19816e-7   -5.41219e-7   -2.58238e-8    3.83213e-8
+  0.00137946   -0.000223422  -8.2809e-5     4.01402e-5   -5.2886e-6    -1.3863e-6     4.58445e-7    2.06102e-7   -2.0874e-8    -1.70278e-8
+ -9.81777e-5    0.000119744  -3.23136e-5   -2.56145e-6    2.16367e-6    2.69748e-7   -2.28145e-7   -6.49962e-8    1.34347e-8    6.00796e-9
+ -7.30054e-5    6.86577e-6    1.00293e-5   -8.10204e-7   -5.44657e-7   -4.41007e-8    6.44172e-8    1.54358e-8   -4.05964e-9   -1.51096e-9
+  1.21727e-5   -7.40573e-6   -6.19814e-8    1.12925e-7    7.238e-8      4.8754e-9    -8.85313e-9   -2.01288e-9    5.68239e-10   2.00832e-10
+  1.11275e-6    8.48306e-9    1.79467e-9   -3.35205e-9   -2.13714e-9   -1.40622e-10   2.62395e-10   5.93038e-11  -1.68757e-11  -5.93006e-12</code></pre><p>The <span>$2$</span>-norm relative error in differentiating the Proriol series for <span>$f(x,y)$</span> term-by-term and its sampled gradient is:</p><pre><code class="language-julia">hypot(norm(Ux-Gx), norm(Uy-Gy))/hypot(norm(Ux), norm(Uy))</code></pre><pre><code class="language-none">1.3657153423953995e-5</code></pre><p>This error can be improved upon by increasing <span>$N$</span> and <span>$M$</span>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../spinweighted/">« Spin-weighted spherical harmonics</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 7 September 2020 19:27">Monday 7 September 2020</span>. Using Julia version 1.5.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
