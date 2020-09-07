@@ -1,4 +1,4 @@
-# ## Spherical harmonic addition theorem
+# # Spherical harmonic addition theorem
 # This example confirms numerically that
 # ```math
 # \frac{P_4(z\cdot y) - P_4(x\cdot y)}{z\cdot y - x\cdot y},
