@@ -1,4 +1,4 @@
-# Holomorphic integration
+# # Holomorphic integration on the unit disk
 # In this example, we explore integration of a harmonic function:
 # ```math
 #   f(x,y) = \frac{x^2-y^2+1}{(x^2-y^2+1)^2+(2xy+1)^2},
