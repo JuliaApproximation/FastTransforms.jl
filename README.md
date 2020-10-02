@@ -1,6 +1,6 @@
 # FastTransforms.jl
 
-[![Build Status](https://github.com/JuliaApproximation/FastTransforms.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/FastTransforms.jl/actions?query=workflow%3ACI) [![Travis](https://travis-ci.org/JuliaApproximation/FastTransforms.jl.svg?branch=master)](https://travis-ci.org/JuliaApproximation/FastTransforms.jl) [![codecov](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/dev)
+[![Build Status](https://github.com/JuliaApproximation/FastTransforms.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/FastTransforms.jl/actions?query=workflow%3ACI) [![Travis](https://travis-ci.com/JuliaApproximation/FastTransforms.jl.svg?branch=master)](https://travis-ci.com/JuliaApproximation/FastTransforms.jl) [![codecov](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/dev)
 
 `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
@@ -157,18 +157,8 @@ julia> @time norm(ipaduatransform(paduatransform(v)) - v)/norm(v)
 
 # References:
 
-   [1]  B. Alpert and V. Rokhlin. <a href="http://dx.doi.org/10.1137/0912009">A fast algorithm for the evaluation of Legendre expansions</a>, *SIAM J. Sci. Stat. Comput.*, **12**:158—179, 1991.
+   [1]  D. Ruiz—Antolín and A. Townsend. <a href="https://doi.org/10.1137/17M1134822">A nonuniform fast Fourier transform based on low rank approximation</a>, *SIAM J. Sci. Comput.*, **40**:A529–A547, 2018.
 
-   [2]  N. Hale and A. Townsend. <a href="http://dx.doi.org/10.1137/130932223">A fast, simple, and stable Chebyshev—Legendre transform using an asymptotic formula</a>, *SIAM J. Sci. Comput.*, **36**:A148—A167, 2014.
+   [2]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
 
-   [3]  J. Keiner. <a href="http://dx.doi.org/10.1137/070703065">Computing with expansions in Gegenbauer polynomials</a>, *SIAM J. Sci. Comput.*, **31**:2151—2171, 2009.
-
-   [4]  D. Ruiz—Antolín and A. Townsend. <a href="https://arxiv.org/abs/1701.04492">A nonuniform fast Fourier transform based on low rank approximation</a>, arXiv:1701.04492, 2017.
-
-   [5]  R. M. Slevinsky. <a href="https://doi.org/10.1093/imanum/drw070">On the use of Hahn's asymptotic formula and stabilized recurrence for a fast, simple, and stable Chebyshev—Jacobi transform</a>, *IMA J. Numer. Anal.*, **38**:102—124, 2018.
-
-   [6]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
-
-   [7]  R. M. Slevinsky, <a href="https://arxiv.org/abs/1711.07866">Conquering the pre-computation in two-dimensional harmonic polynomial transforms</a>, arXiv:1711.07866, 2017.
-
-   [8]  A. Townsend, M. Webb, and S. Olver. <a href="https://doi.org/10.1090/mcom/3277">Fast polynomial transforms based on Toeplitz and Hankel matrices</a>, in press at *Math. Comp.*, 2017.
+   [3]  R. M. Slevinsky, <a href="https://arxiv.org/abs/1711.07866">Conquering the pre-computation in two-dimensional harmonic polynomial transforms</a>, arXiv:1711.07866, 2017.

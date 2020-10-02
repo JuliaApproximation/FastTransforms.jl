@@ -1,5 +1,5 @@
 docs/build/
-docs/site/
+docs/src/generated
 deps/build.log
 deps/libfasttransforms.*
 .DS_Store

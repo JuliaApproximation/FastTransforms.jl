@@ -1,5 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FastTransforms = "057dd010-8810-581a-b7be-e3fc3b93f78c"
+Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 
 [compat]
 Documenter = "~0.24"
