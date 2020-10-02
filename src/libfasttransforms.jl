@@ -779,9 +779,9 @@ function execute_sph_orthogonal_transformation!(p::FTPlan{Float64, 2, SPHERICALI
     return x
 end
 
-function execute_sph_ZY_axis_exchange!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, x::Matrix{Float64})
+function execute_sph_yz_axis_exchange!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, x::Matrix{Float64})
     checksize(p, x)
-    ccall((:ft_execute_sph_ZY_axis_exchange, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), p, x, size(x, 1), size(x, 2))
+    ccall((:ft_execute_sph_yz_axis_exchange, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), p, x, size(x, 1), size(x, 2))
     return x
 end
 

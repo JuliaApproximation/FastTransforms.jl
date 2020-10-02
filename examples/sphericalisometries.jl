@@ -30,7 +30,7 @@ f = (x, y, z) -> x^2+y^4+x^2*y*z^3-x*y*z^2
 F = f.(x, y, z)
 V = PA*F
 U = threshold!(P\V, 100eps())
-FastTransforms.execute_sph_ZY_axis_exchange!(J, U)
+FastTransforms.execute_sph_yz_axis_exchange!(J, U)
 FR = f.(x, -z, -y)
 VR = PA*FR
 UR = threshold!(P\VR, 100eps())
