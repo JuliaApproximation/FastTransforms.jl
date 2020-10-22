@@ -1,6 +1,6 @@
 name = "FastTransforms"
 uuid = "057dd010-8810-581a-b7be-e3fc3b93f78c"
-version = "0.10.2"
+version = "0.10.3"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -26,7 +26,7 @@ DSP = "0.6"
 FFTW = "1"
 FastGaussQuadrature = "0.4"
 FastTransforms_jll = "0.3.3"
-FillArrays = "0.8, 0.9"
+FillArrays = "0.8, 0.9, 0.10"
 Reexport = "0.2"
 SpecialFunctions = "0.8, 0.9, 0.10"
 ToeplitzMatrices = "0.6"
