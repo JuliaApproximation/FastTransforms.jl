@@ -119,22 +119,25 @@ const CHEB2ULTRA           = 10
 const SPHERE               = 11
 const SPHEREV              = 12
 const DISK                 = 13
-const TRIANGLE             = 14
-const TETRAHEDRON          = 15
-const SPINSPHERE           = 16
-const SPHERESYNTHESIS      = 17
-const SPHEREANALYSIS       = 18
-const SPHEREVSYNTHESIS     = 19
-const SPHEREVANALYSIS      = 20
-const DISKSYNTHESIS        = 21
-const DISKANALYSIS         = 22
-const TRIANGLESYNTHESIS    = 23
-const TRIANGLEANALYSIS     = 24
-const TETRAHEDRONSYNTHESIS = 25
-const TETRAHEDRONANALYSIS  = 26
-const SPINSPHERESYNTHESIS  = 27
-const SPINSPHEREANALYSIS   = 28
-const SPHERICALISOMETRY    = 29
+const RECTDISK             = 14
+const TRIANGLE             = 15
+const TETRAHEDRON          = 16
+const SPINSPHERE           = 17
+const SPHERESYNTHESIS      = 18
+const SPHEREANALYSIS       = 19
+const SPHEREVSYNTHESIS     = 20
+const SPHEREVANALYSIS      = 21
+const DISKSYNTHESIS        = 22
+const DISKANALYSIS         = 23
+const RECTDISKSYNTHESIS    = 24
+const RECTDISKANALYSIS     = 25
+const TRIANGLESYNTHESIS    = 26
+const TRIANGLEANALYSIS     = 27
+const TETRAHEDRONSYNTHESIS = 28
+const TETRAHEDRONANALYSIS  = 29
+const SPINSPHERESYNTHESIS  = 30
+const SPINSPHEREANALYSIS   = 31
+const SPHERICALISOMETRY    = 32
 
 
 let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
@@ -151,6 +154,7 @@ let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                SPHERE               => "Spherical harmonic--Fourier",
                SPHEREV              => "Spherical vector field--Fourier",
                DISK                 => "Zernike--Chebyshev×Fourier",
+               RECTDISK             => "Dunkl-Xu--Chebyshev²",
                TRIANGLE             => "Proriol--Chebyshev²",
                TETRAHEDRON          => "Proriol--Chebyshev³",
                SPINSPHERE           => "Spin-weighted spherical harmonic--Fourier",
@@ -160,6 +164,8 @@ let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                SPHEREVANALYSIS      => "FFTW Fourier analysis on the sphere (vector field)",
                DISKSYNTHESIS        => "FFTW Chebyshev×Fourier synthesis on the disk",
                DISKANALYSIS         => "FFTW Chebyshev×Fourier analysis on the disk",
+               RECTDISKSYNTHESIS    => "FFTW Chebyshev synthesis on the rectangularized disk",
+               RECTDISKANALYSIS     => "FFTW Chebyshev analysis on the rectangularized disk",
                TRIANGLESYNTHESIS    => "FFTW Chebyshev synthesis on the triangle",
                TRIANGLEANALYSIS     => "FFTW Chebyshev analysis on the triangle",
                TETRAHEDRONSYNTHESIS => "FFTW Chebyshev synthesis on the tetrahedron",
@@ -201,6 +207,7 @@ show(io::IO, p::FTPlan{T, 1, K}) where {T, K} = print(io, "FastTransforms ", kin
 show(io::IO, p::FTPlan{T, 2, SPHERE}) where T = print(io, "FastTransforms ", kind2string(SPHERE), " plan for $(p.n)×$(2p.n-1)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, SPHEREV}) where T = print(io, "FastTransforms ", kind2string(SPHEREV), " plan for $(p.n)×$(2p.n-1)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, DISK}) where T = print(io, "FastTransforms ", kind2string(DISK), " plan for $(p.n)×$(4p.n-3)-element array of ", T)
+show(io::IO, p::FTPlan{T, 2, RECTDISK}) where T = print(io, "FastTransforms ", kind2string(RECTDISK), " plan for $(p.n)×$(p.n)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, TRIANGLE}) where T = print(io, "FastTransforms ", kind2string(TRIANGLE), " plan for $(p.n)×$(p.n)-element array of ", T)
 show(io::IO, p::FTPlan{T, 3, TETRAHEDRON}) where T = print(io, "FastTransforms ", kind2string(TETRAHEDRON), " plan for $(p.n)×$(p.n)×$(p.n)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, SPINSPHERE}) where T = print(io, "FastTransforms ", kind2string(SPINSPHERE), " plan for $(p.n)×$(2p.n-1)-element array of ", T)
@@ -246,6 +253,8 @@ destroy_plan(p::FTPlan{Float64, 2, SPHEREVSYNTHESIS}) = ccall((:ft_destroy_spher
 destroy_plan(p::FTPlan{Float64, 2, SPHEREVANALYSIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, DISKSYNTHESIS}) = ccall((:ft_destroy_disk_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, DISKANALYSIS}) = ccall((:ft_destroy_disk_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 2, RECTDISKSYNTHESIS}) = ccall((:ft_destroy_rectdisk_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 2, RECTDISKANALYSIS}) = ccall((:ft_destroy_rectdisk_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, TRIANGLESYNTHESIS}) = ccall((:ft_destroy_triangle_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, TRIANGLEANALYSIS}) = ccall((:ft_destroy_triangle_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 3, TETRAHEDRONSYNTHESIS}) = ccall((:ft_destroy_tetrahedron_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
@@ -299,7 +308,8 @@ unsafe_convert(::Type{Ptr{mpfr_t}}, p::TransposeFTPlan{T, FTPlan{T, N, K}}) wher
 for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
           :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
           :cheb2jac, :ultra2cheb, :cheb2ultra,
-          :sph2fourier, :sphv2fourier, :disk2cxf, :tri2cheb, :tet2cheb)
+          :sph2fourier, :sphv2fourier, :disk2cxf,
+          :rectdisk2cheb, :tri2cheb, :tet2cheb)
     plan_f = Symbol("plan_", f)
     @eval begin
         $plan_f(x::AbstractArray{T}, y...; z...) where T = $plan_f(T, size(x, 1), y...; z...)
@@ -309,8 +319,8 @@ for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
 end
 
 for (f, plan_f) in ((:fourier2sph, :plan_sph2fourier), (:fourier2sphv, :plan_sphv2fourier),
-                    (:cxf2disk2, :plan_disk2cxf), (:cheb2tri, :plan_tri2cheb),
-                    (:cheb2tet, :plan_tet2cheb))
+                    (:cxf2disk, :plan_disk2cxf), (:cheb2rectdisk, :plan_rectdisk2cheb),
+                    (:cheb2tri, :plan_tri2cheb), (:cheb2tet, :plan_tet2cheb))
     @eval begin
         $f(x::AbstractArray, y...; z...) = $plan_f(x, y...; z...)\x
     end
@@ -498,9 +508,14 @@ function plan_sphv2fourier(::Type{Float64}, n::Integer)
     return FTPlan{Float64, 2, SPHEREV}(plan, n)
 end
 
-function plan_disk2cxf(::Type{Float64}, n::Integer)
-    plan = ccall((:ft_plan_disk2cxf, libfasttransforms), Ptr{ft_plan_struct}, (Cint, ), n)
+function plan_disk2cxf(::Type{Float64}, n::Integer, α, β)
+    plan = ccall((:ft_plan_disk2cxf, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Float64), n, α, β)
     return FTPlan{Float64, 2, DISK}(plan, n)
+end
+
+function plan_rectdisk2cheb(::Type{Float64}, n::Integer, β)
+    plan = ccall((:ft_plan_rectdisk2cheb, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64), n, β)
+    return FTPlan{Float64, 2, RECTDISK}(plan, n)
 end
 
 function plan_tri2cheb(::Type{Float64}, n::Integer, α, β, γ)
@@ -524,6 +539,8 @@ for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execut
                     (:plan_sphv_analysis, :ft_plan_sphv_analysis, :ft_execute_sphv_analysis, SPHEREVANALYSIS),
                     (:plan_disk_synthesis, :ft_plan_disk_synthesis, :ft_execute_disk_synthesis, DISKSYNTHESIS),
                     (:plan_disk_analysis, :ft_plan_disk_analysis, :ft_execute_disk_analysis, DISKANALYSIS),
+                    (:plan_rectdisk_synthesis, :ft_plan_rectdisk_synthesis, :ft_execute_rectdisk_synthesis, RECTDISKSYNTHESIS),
+                    (:plan_rectdisk_analysis, :ft_plan_rectdisk_analysis, :ft_execute_rectdisk_analysis, RECTDISKANALYSIS),
                     (:plan_tri_synthesis, :ft_plan_tri_synthesis, :ft_execute_tri_synthesis, TRIANGLESYNTHESIS),
                     (:plan_tri_analysis, :ft_plan_tri_analysis, :ft_execute_tri_analysis, TRIANGLEANALYSIS))
     @eval begin
@@ -718,6 +735,8 @@ for (fJ, fC, K) in ((:lmul!, :ft_execute_sph2fourier, SPHERE),
                     (:ldiv!, :ft_execute_fourier2sphv, SPHEREV),
                     (:lmul!, :ft_execute_disk2cxf, DISK),
                     (:ldiv!, :ft_execute_cxf2disk, DISK),
+                    (:lmul!, :ft_execute_rectdisk2cheb, RECTDISK),
+                    (:ldiv!, :ft_execute_cheb2rectdisk, RECTDISK),
                     (:lmul!, :ft_execute_tri2cheb, TRIANGLE),
                     (:ldiv!, :ft_execute_cheb2tri, TRIANGLE))
     @eval begin
