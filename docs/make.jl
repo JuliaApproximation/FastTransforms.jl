@@ -1,4 +1,13 @@
-using Documenter, FastTransforms, Literate
+using Documenter, FastTransforms, Literate, Plots
+
+# Set matplotlib gui backend
+ENV["MPLBACKEND"] = "agg"
+ENV["PYTHON"] = ""
+
+# Initialize backends
+pyplot()
+plotlyjs()
+gr()
 
 const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
 const OUTPUT_DIR   = joinpath(@__DIR__, "src/generated")
