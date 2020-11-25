@@ -41,15 +41,6 @@ F = [f(r*cospi(θ), r*sinpi(θ)) for r in r, θ in θ]
 X = [r*cospi(θ) for r in r, θ in θ]
 Y = [r*sinpi(θ) for r in r, θ in θ]
 
-# PyPlot
-pyplot()
-contourf(X, Y, F; levels=30, linewidth=2, xlabel="x", ylabel="y")
-scatter!(X, Y; legend=false, markercolor=:red, size=(600, 600))
-
-# bis
-scatter3d(vec(X), vec(Y), vec(0X); markersize=2.0, markercolor=:red, size=(600, 600))
-surface!(X, Y, F; legend=false, xlabel="x", ylabel="y")
-
 # PlotlyJS
 plotlyjs()
 scatter3d(vec(X), vec(Y), vec(0X); markersize=0.5, markercolor=:red, size=(600, 600))
@@ -111,15 +102,6 @@ F = [f(x[n], w[n]*z) for n in 1:N, z in z]
 # We superpose the grid on top of a contour plot of $f$:
 X = [x for x in x, z in z]
 Y = [w*z for w in w, z in z]
-
-# PyPlot
-pyplot()
-contourf(X, Y, F; levels=30, linewidth=2, xlabel="x", ylabel="y")
-scatter!(X, Y; legend=false, markercolor=:green, size=(600, 600))
-
-# bis
-scatter3d(vec(X), vec(Y), vec(0X); markersize=2.0, markercolor=:green, size=(600, 600))
-surface!(X, Y, F; legend=false, xlabel="x", ylabel="y")
 
 # PlotlyJS
 plotlyjs()

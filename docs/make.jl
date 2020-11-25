@@ -1,11 +1,5 @@
 using Documenter, FastTransforms, Literate, Plots
 
-# Set matplotlib gui backend
-ENV["MPLBACKEND"] = "agg"
-ENV["PYTHON"] = ""
-
-# Initialize backends
-pyplot()
 plotlyjs()
 gr()
 
