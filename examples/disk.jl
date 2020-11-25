@@ -20,6 +20,7 @@
 # [documentation](https://MikaelSlevinsky.github.io/FastTransforms).
 
 using FastTransforms, LinearAlgebra, Plots
+plotlyjs()
 
 # Our function $f$ on the disk:
 f = (x,y) -> (x^2-y^2+1)/((x^2-y^2+1)^2+(2x*y+1)^2)
@@ -37,19 +38,11 @@ r = [sinpi((N-n-0.5)/(2N)) for n in 0:N-1]
 # On the mapped tensor product grid, our function samples are:
 F = [f(r*cospi(θ), r*sinpi(θ)) for r in r, θ in θ]
 
-# We superpose the grid on top of a contour plot of $f$:
+# We superpose a surface plot of $f$ on top of the grid:
 X = [r*cospi(θ) for r in r, θ in θ]
 Y = [r*sinpi(θ) for r in r, θ in θ]
-
-# PlotlyJS
-plotlyjs()
-scatter3d(vec(X), vec(Y), vec(0X); markersize=0.5, markercolor=:red, size=(600, 600))
+scatter3d(vec(X), vec(Y), vec(0X); markercolor=:red, size=(1000, 1000))
 surface!(X, Y, F; legend=false, xlabel="x", ylabel="y")
-
-# GR
-gr()
-scatter3d(vec(X), vec(Y), vec(0X); markersize=0.5, markercolor=:red, size=(600, 600))
-surface!(vec(X), vec(Y), vec(F); legend=false, xlabel="x", ylabel="y")
 
 # We precompute a (generalized) Zernike--Chebyshev×Fourier plan:
 α, β = 0, 0
@@ -99,19 +92,11 @@ z = [sinpi((M-2m-1)/(2M)) for m in 0:M-1]
 # On the mapped tensor product grid, our function samples are:
 F = [f(x[n], w[n]*z) for n in 1:N, z in z]
 
-# We superpose the grid on top of a contour plot of $f$:
+# We superpose a surface plot of $f$ on top of the grid:
 X = [x for x in x, z in z]
 Y = [w*z for w in w, z in z]
-
-# PlotlyJS
-plotlyjs()
-scatter3d(vec(X), vec(Y), vec(0X); markersize=0.5, markercolor=:green, size=(600, 600))
+scatter3d(vec(X), vec(Y), vec(0X); markercolor=:red, size=(1000, 1000))
 surface!(X, Y, F; legend=false, xlabel="x", ylabel="y")
-
-# GR
-gr()
-scatter3d(vec(X), vec(Y), vec(0X); markersize=0.5, markercolor=:green, size=(600, 600))
-surface!(vec(X), vec(Y), vec(F); legend=false, xlabel="x", ylabel="y")
 
 # We precompute a Dunkl-Xu--Chebyshev plan:
 P = plan_rectdisk2cheb(F, β)
