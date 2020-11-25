@@ -1,6 +1,6 @@
 name = "FastTransforms"
 uuid = "057dd010-8810-581a-b7be-e3fc3b93f78c"
-version = "0.10.3"
+version = "0.11.0"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -19,15 +19,15 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [compat]
-AbstractFFTs = "0.4, 0.5"
-ArrayLayouts = "0.3.7, 0.4"
+AbstractFFTs = "0.5"
+ArrayLayouts = "0.4"
 BinaryProvider = "0.5"
 DSP = "0.6"
 FFTW = "1"
 FastGaussQuadrature = "0.4"
-FastTransforms_jll = "0.3.3"
-FillArrays = "0.8, 0.9, 0.10"
+FastTransforms_jll = "0.4.0"
+FillArrays = "0.9, 0.10"
 Reexport = "0.2"
-SpecialFunctions = "0.8, 0.9, 0.10"
+SpecialFunctions = "0.10, 1"
 ToeplitzMatrices = "0.6"
 julia = "1.3"

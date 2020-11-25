@@ -37,8 +37,9 @@ r = [sinpi((N-n-0.5)/(2N)) for n in 0:N-1]
 # On the mapped tensor product grid, our function samples are:
 F = [f(r*cospi(θ), r*sinpi(θ)) for r in r, θ in θ]
 
-# We precompute a Zernike--Chebyshev×Fourier plan:
-P = plan_disk2cxf(F)
+# We precompute a (generalized) Zernike--Chebyshev×Fourier plan:
+α, β = 0, 0
+P = plan_disk2cxf(F, α, β)
 
 # And an FFTW Chebyshev×Fourier analysis plan on the disk:
 PA = plan_disk_analysis(F)
@@ -47,10 +48,57 @@ PA = plan_disk_analysis(F)
 U = P\(PA*F)
 
 # The Zernike coefficients are useful for integration. The integral of $f(x,y)$
-# over the disk should be $\pi/2$ by harmonicity. The coefficient of $Z_0^0$
+# over the disk should be $\pi/2$ by harmonicity. The coefficient of $Z_{0,0}$
 # multiplied by `√π` is:
 U[1, 1]*sqrt(π)
 
 # Using an orthonormal basis, the integral of $[f(x,y)]^2$ over the disk is
 # approximately the square of the 2-norm of the coefficients:
-norm(U)^2
+norm(U)^2, π/(2*sqrt(2))*log1p(sqrt(2))
+
+# But there's more! Next, we repeat the experiment using the Dunkl-Xu
+# orthonormal polynomials supported on the rectangularized disk.
+N = 2N
+M = N
+
+# We analyze the function on an $N\times M$ mapped tensor product $xy$-grid defined by:
+# ```math
+# \begin{aligned}
+# x_n & = \cos\left(\frac{2n+1}{2N}\pi\right) = \sin\left(\frac{N-2n-1}{2N}\pi\right),\quad {\rm for} \quad 0 \le n < N,\quad{\rm and}\\
+# z_m & = \cos\left(\frac{2m+1}{2M}\pi\right) = \sin\left(\frac{M-2m-1}{2M}\pi\right),\quad {\rm for} \quad 0 \le m < M,\\
+# y_{n,m} & = \sqrt{1-x_n^2}z_m.
+# \end{aligned}
+# ```
+# Slightly more accuracy can be expected by using an auxiliary array:
+# ```math
+#   w_n = \sin\left(\frac{2n+1}{2N}\pi\right),\quad {\rm for} \quad 0 \le n < N,
+# ```
+# so that $y_{n,m} = w_nz_m$.
+#
+# The x grid
+w = [sinpi((n+0.5)/N) for n in 0:N-1]
+x = [sinpi((N-2n-1)/(2N)) for n in 0:N-1]
+
+# The z grid
+z = [sinpi((M-2m-1)/(2M)) for m in 0:M-1]
+
+# On the mapped tensor product grid, our function samples are:
+F = [f(x[n], w[n]*z) for n in 1:N, z in z]
+
+# We precompute a Dunkl-Xu--Chebyshev plan:
+P = plan_rectdisk2cheb(F, β)
+
+# And an FFTW Chebyshev² analysis plan on the rectangularized disk:
+PA = plan_rectdisk_analysis(F)
+
+# Its Dunkl-Xu coefficients are:
+U = P\(PA*F)
+
+# The Dunkl-Xu coefficients are useful for integration. The integral of $f(x,y)$
+# over the disk should be $\pi/2$ by harmonicity. The coefficient of $P_{0,0}$
+# multiplied by `√π` is:
+U[1, 1]*sqrt(π)
+
+# Using an orthonormal basis, the integral of $[f(x,y)]^2$ over the disk is
+# approximately the square of the 2-norm of the coefficients:
+norm(U)^2, π/(2*sqrt(2))*log1p(sqrt(2))

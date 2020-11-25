@@ -551,6 +551,11 @@ end
 
 trizeros(::Type{T}, m::Int, n::Int) where T = zeros(T, m, n)
 
+const rectdiskrand = trirand
+const rectdiskrandn = trirandn
+const rectdiskones = triones
+const rectdiskzeros = trizeros
+
 """
 Pointwise evaluation of triangular harmonic:
 
