@@ -54,7 +54,7 @@ U[1, 1]*sqrt(π)
 
 # Using an orthonormal basis, the integral of $[f(x,y)]^2$ over the disk is
 # approximately the square of the 2-norm of the coefficients:
-(norm(U)^2, π/(2*sqrt(2))*log1p(sqrt(2)))
+norm(U)^2, π/(2*sqrt(2))*log1p(sqrt(2))
 
 # But there's more! Next, we repeat the experiment using the Dunkl-Xu
 # orthonormal polynomials supported on the rectangularized disk.
@@ -101,4 +101,4 @@ U[1, 1]*sqrt(π)
 
 # Using an orthonormal basis, the integral of $[f(x,y)]^2$ over the disk is
 # approximately the square of the 2-norm of the coefficients:
-(norm(U)^2, π/(2*sqrt(2))*log1p(sqrt(2)))
+norm(U)^2, π/(2*sqrt(2))*log1p(sqrt(2))
