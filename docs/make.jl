@@ -20,7 +20,7 @@ end
 
 makedocs(
             doctest = false,
-            format = Documenter.HTML(),
+            format = Documenter.HTML(assets = [asset("https://cdn.plot.ly/plotly-1.54.7.js")]),
             sitename = "FastTransforms.jl",
             authors = "Richard Mikael Slevinsky",
             pages = Any[
