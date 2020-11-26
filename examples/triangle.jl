@@ -62,11 +62,11 @@ F = [f(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]
 # We superpose a surface plot of $f$ on top of the grid:
 X = [x for x in x, w in w]
 Y = [x[N-n]*w[m+1] for n in 0:N-1, m in 0:M-1]
-scatter3d(vec(X), vec(Y), vec(0F); markersize=0.75, markercolor=:green, size=(800, 600))
+scatter3d(vec(X), vec(Y), vec(0F); markersize=0.75, markercolor=:blue)
 surface!(X, Y, F; legend=false, xlabel="x", ylabel="y", zlabel="f")
 savefig(joinpath(GENFIGS, "proriol.html"))
 ###```@raw html
-###<object type="text/html" data="../proriol.html" style="width:100%;height:600px;"></object>
+###<object type="text/html" data="../proriol.html" style="width:100%;height:400px;"></object>
 ###```
 
 # We precompute a Proriol--Chebyshev² plan:
