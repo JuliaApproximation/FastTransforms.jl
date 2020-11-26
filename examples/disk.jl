@@ -20,6 +20,8 @@
 # [documentation](https://MikaelSlevinsky.github.io/FastTransforms).
 
 using FastTransforms, LinearAlgebra, Plots
+const GENFIGS = joinpath(dirname(dirname(pathof(FastTransforms))), "docs/src/generated")
+!isdir(GENFIGS) && mkdir(GENFIGS)
 plotlyjs()
 
 # Our function $f$ on the disk:
@@ -41,8 +43,12 @@ F = [f(r*cospi(θ), r*sinpi(θ)) for r in r, θ in θ]
 # We superpose a surface plot of $f$ on top of the grid:
 X = [r*cospi(θ) for r in r, θ in θ]
 Y = [r*sinpi(θ) for r in r, θ in θ]
-scatter3d(vec(X), vec(Y), vec(0F); markersize=0.75, markercolor=:red, size=(1000, 1000))
+scatter3d(vec(X), vec(Y), vec(0F); markersize=0.75, markercolor=:red, size=(800, 600))
 surface!(X, Y, F; legend=false, xlabel="x", ylabel="y", zlabel="f")
+savefig(joinpath(GENFIGS, "zernike.html"))
+###```@raw html
+###<object type="text/html" data="../zernike.html" style="width:100%;height:600px;"></object>
+###```
 
 # We precompute a (generalized) Zernike--Chebyshev×Fourier plan:
 α, β = 0, 0
@@ -95,8 +101,12 @@ F = [f(x[n], w[n]*z) for n in 1:N, z in z]
 # We superpose a surface plot of $f$ on top of the grid:
 X = [x for x in x, z in z]
 Y = [w*z for w in w, z in z]
-scatter3d(vec(X), vec(Y), vec(0F); markersize=0.75, markercolor=:green, size=(1000, 1000))
+scatter3d(vec(X), vec(Y), vec(0F); markersize=0.75, markercolor=:green, size=(800, 600))
 surface!(X, Y, F; legend=false, xlabel="x", ylabel="y", zlabel="f")
+savefig(joinpath(GENFIGS, "dunklxu.html"))
+###```@raw html
+###<object type="text/html" data="../dunklxu.html" style="width:100%;height:600px;"></object>
+###```
 
 # We precompute a Dunkl-Xu--Chebyshev plan:
 P = plan_rectdisk2cheb(F, β)

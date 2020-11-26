@@ -15,14 +15,21 @@ examples = [
     "triangle.jl",
 ]
 
+function uncomment_objects(str)
+    str = replace(str, "###```@raw" => "```\n\n```@raw")
+    str = replace(str, "###<object" => "<object")
+    str = replace(str, "###```\n```" => "```")
+    str
+end
+
 for example in examples
     example_filepath = joinpath(EXAMPLES_DIR, example)
-    Literate.markdown(example_filepath, OUTPUT_DIR; execute=true)
+    Literate.markdown(example_filepath, OUTPUT_DIR; execute=true, postprocess = uncomment_objects)
 end
 
 makedocs(
             doctest = false,
-            format = Documenter.HTML(assets = [asset("https://cdn.plot.ly/plotly-1.54.7.js")]),
+            format = Documenter.HTML(),
             sitename = "FastTransforms.jl",
             authors = "Richard Mikael Slevinsky",
             pages = Any[
