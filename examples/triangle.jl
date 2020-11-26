@@ -23,7 +23,10 @@
 # For the storage pattern of the arrays, please consult the
 # [documentation](https://MikaelSlevinsky.github.io/FastTransforms).
 
-using FastTransforms, LinearAlgebra
+using FastTransforms, LinearAlgebra, Plots
+const GENFIGS = joinpath(dirname(dirname(pathof(FastTransforms))), "docs/src/generated")
+!isdir(GENFIGS) && mkdir(GENFIGS)
+plotlyjs()
 
 # Our function $f$ and the Cartesian components of its gradient:
 f = (x,y) -> 1/(1+x^2+y^2)
@@ -31,7 +34,7 @@ fx = (x,y) -> -2x/(1+x^2+y^2)^2
 fy = (x,y) -> -2y/(1+x^2+y^2)^2
 
 # The polynomial degree:
-N = 10
+N = 15
 M = N
 
 # The parameters of the Proriol series:
@@ -55,6 +58,16 @@ w = [sinpi((2M-2m-1)/(4M))^2 for m in 0:M-1]
 
 # On the mapped tensor product grid, our function samples are:
 F = [f(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]
+
+# We superpose a surface plot of $f$ on top of the grid:
+X = [x for x in x, w in w]
+Y = [x[N-n]*w[m+1] for n in 0:N-1, m in 0:M-1]
+scatter3d(vec(X), vec(Y), vec(0F); markersize=0.75, markercolor=:green, size=(800, 600))
+surface!(X, Y, F; legend=false, xlabel="x", ylabel="y", zlabel="f")
+savefig(joinpath(GENFIGS, "proriol.html"))
+###```@raw html
+###<object type="text/html" data="../proriol.html" style="width:100%;height:600px;"></object>
+###```
 
 # We precompute a Proriol--Chebyshev² plan:
 P = plan_tri2cheb(F, α, β, γ)
