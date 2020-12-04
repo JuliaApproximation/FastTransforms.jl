@@ -75,6 +75,16 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         end
     end
 
+    for T in (Float32, Float64, Complex{Float32}, Complex{Float64})
+        x = T(1)./(1:n)
+        Id = Matrix{T}(I, n, n)
+        p = plan_associatedjac2jac(Id, 1, α, β, γ, δ)
+        V = p*I
+        @test V ≈ p*Id
+        y = p*x
+        @test V\y ≈ x
+    end
+
     function test_nd_plans(p, ps, pa, A)
         B = copy(A)
         C = ps*(p*A)

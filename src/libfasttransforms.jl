@@ -116,28 +116,29 @@ const JAC2CHEB              = 7
 const CHEB2JAC              = 8
 const ULTRA2CHEB            = 9
 const CHEB2ULTRA           = 10
-const SPHERE               = 11
-const SPHEREV              = 12
-const DISK                 = 13
-const RECTDISK             = 14
-const TRIANGLE             = 15
-const TETRAHEDRON          = 16
-const SPINSPHERE           = 17
-const SPHERESYNTHESIS      = 18
-const SPHEREANALYSIS       = 19
-const SPHEREVSYNTHESIS     = 20
-const SPHEREVANALYSIS      = 21
-const DISKSYNTHESIS        = 22
-const DISKANALYSIS         = 23
-const RECTDISKSYNTHESIS    = 24
-const RECTDISKANALYSIS     = 25
-const TRIANGLESYNTHESIS    = 26
-const TRIANGLEANALYSIS     = 27
-const TETRAHEDRONSYNTHESIS = 28
-const TETRAHEDRONANALYSIS  = 29
-const SPINSPHERESYNTHESIS  = 30
-const SPINSPHEREANALYSIS   = 31
-const SPHERICALISOMETRY    = 32
+const ASSOCIATEDJAC2JAC    = 11
+const SPHERE               = 12
+const SPHEREV              = 13
+const DISK                 = 14
+const RECTDISK             = 15
+const TRIANGLE             = 16
+const TETRAHEDRON          = 17
+const SPINSPHERE           = 18
+const SPHERESYNTHESIS      = 19
+const SPHEREANALYSIS       = 20
+const SPHEREVSYNTHESIS     = 21
+const SPHEREVANALYSIS      = 22
+const DISKSYNTHESIS        = 23
+const DISKANALYSIS         = 24
+const RECTDISKSYNTHESIS    = 25
+const RECTDISKANALYSIS     = 26
+const TRIANGLESYNTHESIS    = 27
+const TRIANGLEANALYSIS     = 28
+const TETRAHEDRONSYNTHESIS = 29
+const TETRAHEDRONANALYSIS  = 30
+const SPINSPHERESYNTHESIS  = 31
+const SPINSPHEREANALYSIS   = 32
+const SPHERICALISOMETRY    = 33
 
 
 let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
@@ -151,6 +152,7 @@ let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                CHEB2JAC             => "Chebyshev--Jacobi",
                ULTRA2CHEB           => "ultraspherical--Chebyshev",
                CHEB2ULTRA           => "Chebyshev--ultraspherical",
+               ASSOCIATEDJAC2JAC    => "Associated Jacobi--Jacobi",
                SPHERE               => "Spherical harmonic--Fourier",
                SPHEREV              => "Spherical vector field--Fourier",
                DISK                 => "Zernike--Chebyshev×Fourier",
@@ -244,6 +246,8 @@ unsafe_convert(::Type{Ptr{mpfr_t}}, p::FTPlan) = unsafe_convert(Ptr{mpfr_t}, p.p
 destroy_plan(p::FTPlan{Float32, 1}) = ccall((:ft_destroy_tb_eigen_FMMf, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 1}) = ccall((:ft_destroy_tb_eigen_FMM, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{BigFloat, 1}) = ccall((:ft_mpfr_destroy_plan, libfasttransforms), Cvoid, (Ptr{mpfr_t}, Cint), p, p.n)
+destroy_plan(p::FTPlan{Float32, 1, ASSOCIATEDJAC2JAC}) = ccall((:ft_destroy_btb_eigen_FMMf, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 1, ASSOCIATEDJAC2JAC}) = ccall((:ft_destroy_btb_eigen_FMM, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2}) = ccall((:ft_destroy_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 3}) = ccall((:ft_destroy_tetrahedral_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHERE}) = ccall((:ft_destroy_spin_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
@@ -307,7 +311,7 @@ unsafe_convert(::Type{Ptr{mpfr_t}}, p::TransposeFTPlan{T, FTPlan{T, N, K}}) wher
 
 for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
           :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
-          :cheb2jac, :ultra2cheb, :cheb2ultra,
+          :cheb2jac, :ultra2cheb, :cheb2ultra, :associatedjac2jac,
           :sph2fourier, :sphv2fourier, :disk2cxf,
           :rectdisk2cheb, :tri2cheb, :tet2cheb)
     plan_f = Symbol("plan_", f)
@@ -385,6 +389,11 @@ function plan_cheb2ultra(::Type{Float32}, n::Integer, λ; normcheb::Bool=false, 
     return FTPlan{Float32, 1, CHEB2ULTRA}(plan, n)
 end
 
+function plan_associatedjac2jac(::Type{Float32}, n::Integer, c::Integer, α, β, γ, δ; norm1::Bool=false, norm2::Bool=false)
+    plan = ccall((:ft_plan_associated_jacobi_to_jacobif, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Cint, Float32, Float32, Float32, Float32), norm1, norm2, n, c, α, β, γ, δ)
+    return FTPlan{Float32, 1, ASSOCIATEDJAC2JAC}(plan, n)
+end
+
 
 function plan_leg2cheb(::Type{Float64}, n::Integer; normleg::Bool=false, normcheb::Bool=false)
     plan = ccall((:ft_plan_legendre_to_chebyshev, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), normleg, normcheb, n)
@@ -439,6 +448,11 @@ end
 function plan_cheb2ultra(::Type{Float64}, n::Integer, λ; normcheb::Bool=false, normultra::Bool=false)
     plan = ccall((:ft_plan_chebyshev_to_ultraspherical, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Float64), normcheb, normultra, n, λ)
     return FTPlan{Float64, 1, CHEB2ULTRA}(plan, n)
+end
+
+function plan_associatedjac2jac(::Type{Float64}, n::Integer, c::Integer, α, β, γ, δ; norm1::Bool=false, norm2::Bool=false)
+    plan = ccall((:ft_plan_associated_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Cint, Float64, Float64, Float64, Float64), norm1, norm2, n, c, α, β, γ, δ)
+    return FTPlan{Float64, 1, ASSOCIATEDJAC2JAC}(plan, n)
 end
 
 
@@ -664,6 +678,27 @@ for (fJ, fC, elty) in ((:lmul!, :ft_bfmvf, :Float32),
     end
 end
 
+for (fJ, fC, elty) in ((:lmul!, :ft_bbbfmvf, :Float32),
+                       (:lmul!, :ft_bbbfmv , :Float64))
+    @eval begin
+        function $fJ(p::FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}, x::Vector{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'N', '2', '1', p, x)
+            return x
+        end
+        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Vector{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', '1', '2', p, x)
+            return x
+        end
+        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Vector{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', '1', '2', p, x)
+            return x
+        end
+    end
+end
+
 for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
                  (:ldiv!, :ft_mpfr_trsv_ptr))
     @eval begin
@@ -703,6 +738,27 @@ for (fJ, fC, elty) in ((:lmul!, :ft_bfmmf, :Float32),
         function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, K}}, x::Matrix{$elty}) where K
             checksize(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+    end
+end
+
+for (fJ, fC, elty) in ((:lmul!, :ft_bbbfmmf, :Float32),
+                       (:lmul!, :ft_bbbfmm , :Float64))
+    @eval begin
+        function $fJ(p::FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}, x::Matrix{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'N', '2', '1', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Matrix{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', '1', '2', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Matrix{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', '1', '2', p, x, size(x, 1), size(x, 2))
             return x
         end
     end

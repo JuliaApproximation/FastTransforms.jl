@@ -19,7 +19,7 @@ julia> using FastTransforms, LinearAlgebra
 
 ## Fast orthogonal polynomial transforms
 
-The 33 orthogonal polynomial transforms are listed in `FastTransforms.kind2string.(0:32)`. Univariate transforms may be planned with the standard normalization or with orthonormalization. For multivariate transforms, the standard normalization may be too severe for floating-point computations, so it is omitted. Here are two examples:
+The 34 orthogonal polynomial transforms are listed in `FastTransforms.kind2string.(0:33)`. Univariate transforms may be planned with the standard normalization or with orthonormalization. For multivariate transforms, the standard normalization may be too severe for floating-point computations, so it is omitted. Here are two examples:
 
 ### The Chebyshev--Legendre transform
 
@@ -159,6 +159,8 @@ julia> @time norm(ipaduatransform(paduatransform(v)) - v)/norm(v)
 
    [1]  D. Ruiz—Antolín and A. Townsend. <a href="https://doi.org/10.1137/17M1134822">A nonuniform fast Fourier transform based on low rank approximation</a>, *SIAM J. Sci. Comput.*, **40**:A529–A547, 2018.
 
-   [2]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
+   [2] S. Olver, R. M. Slevinsky, and A. Townsend. <a href="https://doi.org/10.1017/S0962492920000045">Fast algorithms using orthogonal polynomials</a>, *Acta Numerica*, **29**:573—699, 2020.
 
-   [3]  R. M. Slevinsky, <a href="https://arxiv.org/abs/1711.07866">Conquering the pre-computation in two-dimensional harmonic polynomial transforms</a>, arXiv:1711.07866, 2017.
+   [3]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
+
+   [4]  R. M. Slevinsky, <a href="https://arxiv.org/abs/1711.07866">Conquering the pre-computation in two-dimensional harmonic polynomial transforms</a>, arXiv:1711.07866, 2017.
