@@ -12,6 +12,7 @@ examples = [
     "padua.jl",
     "sphere.jl",
     "spinweighted.jl",
+    "subspaceangles.jl",
     "triangle.jl",
 ]
 
@@ -41,6 +42,7 @@ makedocs(
                         "generated/padua.md",
                         "generated/sphere.md",
                         "generated/spinweighted.md",
+                        "generated/subspaceangles.md",
                         "generated/triangle.md",
                         ],
                     ]

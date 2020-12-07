@@ -27,7 +27,6 @@ k = [2/7, 3/7, 6/7]
 r = (θ,φ) -> [sinpi(θ)*cospi(φ), sinpi(θ)*sinpi(φ), cospi(θ)]
 
 # On the tensor product grid, our function samples are:
-
 F = [exp(im*(k⋅r(θ,φ))) for θ in θ, φ in φ]
 
 # We precompute a spin-$0$ spherical harmonic--Fourier plan:
