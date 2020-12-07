@@ -52,10 +52,11 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1.5'
-      - uses: julia-actions/julia-buildpkg@latest
       - run: |
           julia --project=docs -e '
             using Pkg
+            VERSION >= v"1.5-" && !isdir(joinpath(DEPOT_PATH[1], "registries", "General"))
+            Pkg.Registry.add("General")
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: julia --project=docs docs/make.jl
