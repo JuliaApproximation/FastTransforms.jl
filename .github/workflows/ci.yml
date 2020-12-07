@@ -52,6 +52,7 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1.5'
+      - uses: julia-actions/julia-buildpkg@latest
       - run: |
           julia --project=docs -e '
             using Pkg
