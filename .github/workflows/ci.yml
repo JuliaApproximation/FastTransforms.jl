@@ -55,8 +55,7 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Pkg
-            VERSION >= v"1.5-" && !isdir(joinpath(DEPOT_PATH[1], "registries", "General"))
-            Pkg.Registry.add("General")
+            VERSION >= v"1.5-" && !isdir(joinpath(DEPOT_PATH[1], "registries", "General")) && Pkg.Registry.add("General")
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: julia --project=docs docs/make.jl
