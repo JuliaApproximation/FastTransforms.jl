@@ -16,7 +16,7 @@ using FastTransforms, LinearAlgebra
 k, N = 1, 11
 
 # The Laguerre connection parameters:
-α, β = 0.0, 0.5
+α, β = 0.0, 0.125
 
 # We precompute a Laguerre--Laguerre plan:
 P = plan_lag2lag(Float64, N, α, β; norm2=true)
