@@ -1,13 +1,13 @@
 # # Subspace angles
 # This example considers the angles between neighbouring Laguerre polynomials with a perturbed measure:
 # ```math
-# \cos\theta_n = \dfrac{\langle L_n, L_{n+k}\rangle}{\|L_n|_2 \|L_{n+k}\|_2},\quad{\rm for}\quad 0\le n < N-k,
+# \cos\theta_n = \frac{\langle L_n, L_{n+k}\rangle}{\|L_n\|_2 \|L_{n+k}\|_2},\quad{\rm for}\quad 0\le n < N-k,
 # ```
 # where the inner product is defined by $\langle f, g\rangle = \int_0^\infty f(x) g(x) x^\beta e^{-x}{\rm\,d}x$.
 #
 # We do so by connecting Laguerre polynomials to the normalized generalized Laguerre polynomials associated with the perturbed measure. It follows by the inner product of the connection coefficients that:
 # ```math
-# \cos\theta_n = \dfrac{(V^\top V)_{n, n+k}}{\sqrt{(V^\top V)_{n, n}(V^\top V)_{n+k, n+k}}}.
+# \cos\theta_n = \frac{(V^\top V)_{n, n+k}}{\sqrt{(V^\top V)_{n, n}(V^\top V)_{n+k, n+k}}}.
 # ```
 #
 using FastTransforms, LinearAlgebra
