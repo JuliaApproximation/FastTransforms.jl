@@ -8,6 +8,42 @@ const ComplexFloats = Complex{T} where T<:AbstractFloat
 # The following implements Bluestein's algorithm, following http://www.dsprelated.com/dspbooks/mdft/Bluestein_s_FFT_Algorithm.html
 # To add more types, add them in the union of the function's signature.
 
+function generic_fft(x::StridedVector{T}, region::Integer) where T<:AbstractFloats
+    region == 1 && (ret = generic_fft(x))
+    ret
+end
+
+function generic_fft!(x::StridedVector{T}, region::Integer) where T<:AbstractFloats
+    region == 1 && (x[:] .= generic_fft(x))
+    x
+end
+
+function generic_fft(x::StridedVector{T}, region::UnitRange{I}) where {T<:AbstractFloats, I<:Integer}
+    region == 1:1 && (ret = generic_fft(x))
+    ret
+end
+
+function generic_fft!(x::StridedVector{T}, region::UnitRange{I}) where {T<:AbstractFloats, I<:Integer}
+    region == 1:1 && (x[:] .= generic_fft(x))
+    x
+end
+
+function generic_fft(x::StridedMatrix{T}, region::Integer) where T<:AbstractFloats
+    if region == 1
+        ret = hcat([generic_fft(x[:, j]) for j in 1:size(x, 2)]...)
+    end
+    ret
+end
+
+function generic_fft!(x::StridedMatrix{T}, region::Integer) where T<:AbstractFloats
+    if region == 1
+        for j in 1:size(x, 2)
+            x[:, j] .= generic_fft(x[:, j])
+        end
+    end
+    x
+end
+
 function generic_fft(x::Vector{T}) where T<:AbstractFloats
     T <: FFTW.fftwNumber && (@warn("Using generic fft for FFTW number type."))
     n = length(x)
@@ -18,36 +54,20 @@ function generic_fft(x::Vector{T}) where T<:AbstractFloats
     return Wks.*conv(xq,wq)[n+1:2n]
 end
 
+generic_bfft(x::StridedArray{T, N}, region) where {T <: AbstractFloats, N} = conj!(generic_fft(conj(x), region))
+generic_bfft!(x::StridedArray{T, N}, region) where {T <: AbstractFloats, N} = conj!(generic_fft!(conj!(x), region))
+generic_ifft(x::StridedArray{T, N}, region) where {T<:AbstractFloats, N} = ldiv!(length(x), conj!(generic_fft(conj(x), region)))
+generic_ifft!(x::StridedArray{T, N}, region) where {T<:AbstractFloats, N} = ldiv!(length(x), conj!(generic_fft!(conj!(x), region)))
 
-function generic_fft!(x::Vector{T}) where T<:AbstractFloats
-    x[:] = generic_fft(x)
-    return x
-end
-
-# add rfft for AbstractFloat, by calling fft
-generic_rfft(v::Vector{T}) where T<:AbstractFloats = generic_fft(v)[1:div(length(v),2)+1]
-
-function generic_irfft(v::Vector{T}, n::Integer) where T<:ComplexFloats
+generic_rfft(v::Vector{T}, region) where T<:AbstractFloats = generic_fft(v, region)[1:div(length(v),2)+1]
+function generic_irfft(v::Vector{T}, n::Integer, region) where T<:ComplexFloats
     @assert n==2length(v)-1
     r = Vector{T}(undef, n)
     r[1:length(v)]=v
     r[length(v)+1:end]=reverse(conj(v[2:end]))
-    real(generic_ifft(r))
+    real(generic_ifft(r, region))
 end
-
-generic_bfft(x::Vector{T}) where {T <: AbstractFloats} = conj!(generic_fft(conj(x)))
-function generic_bfft!(x::Vector{T}) where {T <: AbstractFloats}
-    x[:] = generic_bfft(x)
-    return x
-end
-
-generic_brfft(v::Vector, n::Integer) = generic_irfft(v, n)*n
-
-generic_ifft(x::Vector{T}) where {T<:AbstractFloats} = conj!(generic_fft(conj(x)))/length(x)
-function generic_ifft!(x::Vector{T}) where T<:AbstractFloats
-    x[:] = generic_ifft(x)
-    return x
-end
+generic_brfft(v::StridedArray, n::Integer, region) = generic_irfft(v, n, region)*n
 
 function conv(u::StridedVector{T}, v::StridedVector{T}) where T<:AbstractFloats
     nu,nv = length(u),length(v)
@@ -112,6 +132,46 @@ function generic_ifft_pow2(x::Vector{Complex{T}}) where T<:AbstractFloat
     return complex.(y[1:2:end],-y[2:2:end])/length(x)
 end
 
+function generic_dct(x::StridedVector{T}, region::Integer) where T<:AbstractFloats
+    region == 1 && (ret = generic_dct(x))
+    ret
+end
+
+function generic_dct!(x::StridedVector{T}, region::Integer) where T<:AbstractFloats
+    region == 1 && (x[:] .= generic_dct(x))
+    x
+end
+
+function generic_idct(x::StridedVector{T}, region::Integer) where T<:AbstractFloats
+    region == 1 && (ret = generic_idct(x))
+    ret
+end
+
+function generic_idct!(x::StridedVector{T}, region::Integer) where T<:AbstractFloats
+    region == 1 && (x[:] .= generic_idct(x))
+    x
+end
+
+function generic_dct(x::StridedVector{T}, region::UnitRange{I}) where {T<:AbstractFloats, I<:Integer}
+    region == 1:1 && (ret = generic_dct(x))
+    ret
+end
+
+function generic_dct!(x::StridedVector{T}, region::UnitRange{I}) where {T<:AbstractFloats, I<:Integer}
+    region == 1:1 && (x[:] .= generic_dct(x))
+    x
+end
+
+function generic_idct(x::StridedVector{T}, region::UnitRange{I}) where {T<:AbstractFloats, I<:Integer}
+    region == 1:1 && (ret = generic_idct(x))
+    ret
+end
+
+function generic_idct!(x::StridedVector{T}, region::UnitRange{I}) where {T<:AbstractFloats, I<:Integer}
+    region == 1:1 && (x[:] .= generic_idct(x))
+    x
+end
+
 function generic_dct(a::AbstractVector{Complex{T}}) where {T <: AbstractFloat}
     T <: FFTW.fftwNumber && (@warn("Using generic dct for FFTW number type."))
     N = length(a)
@@ -139,8 +199,6 @@ end
 
 generic_idct(a::AbstractArray{T}) where {T <: AbstractFloat} = real(generic_idct(complex(a)))
 
-generic_dct!(a::AbstractArray{T}) where {T<:AbstractFloats} = (b = generic_dct(a); a[:] = b)
-generic_idct!(a::AbstractArray{T}) where {T<:AbstractFloats} = (b = generic_idct(a); a[:] = b)
 
 # These lines mimick the corresponding ones in FFTW/src/dct.jl, but with
 # AbstractFloat rather than fftwNumber.
@@ -157,18 +215,20 @@ abstract type DummyPlan{T} <: Plan{T} end
 for P in (:DummyFFTPlan, :DummyiFFTPlan, :DummybFFTPlan, :DummyDCTPlan, :DummyiDCTPlan)
     # All plans need an initially undefined pinv field
     @eval begin
-        mutable struct $P{T,inplace} <: DummyPlan{T}
+        mutable struct $P{T,inplace,G} <: DummyPlan{T}
+            region::G # region (iterable) of dims that are transformed
             pinv::DummyPlan{T}
-            $P{T,inplace}() where {T<:AbstractFloats, inplace} = new()
+            $P{T,inplace,G}(region::G) where {T<:AbstractFloats, inplace, G} = new(region)
         end
     end
 end
 for P in (:DummyrFFTPlan, :DummyirFFTPlan, :DummybrFFTPlan)
     @eval begin
-        mutable struct $P{T,inplace} <: DummyPlan{T}
+        mutable struct $P{T,inplace,G} <: DummyPlan{T}
             n::Integer
+            region::G # region (iterable) of dims that are transformed
             pinv::DummyPlan{T}
-            $P{T,inplace}(n::Integer) where {T<:AbstractFloats, inplace} = new(n)
+            $P{T,inplace,G}(n::Integer, region::G) where {T<:AbstractFloats, inplace, G} = new(n, region)
         end
     end
 end
@@ -176,14 +236,14 @@ end
 for (Plan,iPlan) in ((:DummyFFTPlan,:DummyiFFTPlan),
                      (:DummyDCTPlan,:DummyiDCTPlan))
    @eval begin
-       plan_inv(::$Plan{T,inplace}) where {T,inplace} = $iPlan{T,inplace}()
-       plan_inv(::$iPlan{T,inplace}) where {T,inplace} = $Plan{T,inplace}()
+       plan_inv(p::$Plan{T,inplace,G}) where {T,inplace,G} = $iPlan{T,inplace,G}(p.region)
+       plan_inv(p::$iPlan{T,inplace,G}) where {T,inplace,G} = $Plan{T,inplace,G}(p.region)
     end
 end
 
 # Specific for rfft, irfft and brfft:
-plan_inv(p::DummyirFFTPlan{T,inplace}) where {T,inplace} = DummyrFFTPlan{T,Inplace}(p.n)
-plan_inv(p::DummyrFFTPlan{T,inplace}) where {T,inplace} = DummyirFFTPlan{T,Inplace}(p.n)
+plan_inv(p::DummyirFFTPlan{T,inplace,G}) where {T,inplace,G} = DummyrFFTPlan{T,Inplace,G}(p.n, p.region)
+plan_inv(p::DummyrFFTPlan{T,inplace,G}) where {T,inplace,G} = DummyirFFTPlan{T,Inplace,G}(p.n, p.region)
 
 
 
@@ -194,26 +254,26 @@ for (Plan,ff,ff!) in ((:DummyFFTPlan,:generic_fft,:generic_fft!),
                       (:DummyDCTPlan,:generic_dct,:generic_dct!),
                       (:DummyiDCTPlan,:generic_idct,:generic_idct!))
     @eval begin
-        *(p::$Plan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = $ff!(x)
-        *(p::$Plan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = $ff(x)
+        *(p::$Plan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = $ff!(x, p.region)
+        *(p::$Plan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = $ff(x, p.region)
         function mul!(C::StridedVector, p::$Plan, x::StridedVector)
-            C[:] = $ff(x)
+            C[:] = $ff(x, p.region)
             C
         end
     end
 end
 
 # Specific for irfft and brfft:
-*(p::DummyirFFTPlan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_irfft!(x, p.n)
-*(p::DummyirFFTPlan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_irfft(x, p.n)
+*(p::DummyirFFTPlan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_irfft!(x, p.n, p.region)
+*(p::DummyirFFTPlan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_irfft(x, p.n, p.region)
 function mul!(C::StridedVector, p::DummyirFFTPlan, x::StridedVector)
-    C[:] = generic_irfft(x, p.n)
+    C[:] = generic_irfft(x, p.n, p.region)
     C
 end
-*(p::DummybrFFTPlan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_brfft!(x, p.n)
-*(p::DummybrFFTPlan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_brfft(x, p.n)
+*(p::DummybrFFTPlan{T,true}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_brfft!(x, p.n, p.region)
+*(p::DummybrFFTPlan{T,false}, x::StridedArray{T,N}) where {T<:AbstractFloats,N} = generic_brfft(x, p.n, p.region)
 function mul!(C::StridedVector, p::DummybrFFTPlan, x::StridedVector)
-    C[:] = generic_brfft(x, p.n)
+    C[:] = generic_brfft(x, p.n, p.region)
     C
 end
 
@@ -233,27 +293,27 @@ AbstractFFTs._fftfloat(::Type{T}) where {T <: AbstractFloat} = T
 # This is the reason for using StridedArray below. We also have to carefully
 # distinguish between real and complex arguments.
 
-plan_fft(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummyFFTPlan{Complex{real(T)},false}()
-plan_fft!(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummyFFTPlan{Complex{real(T)},true}()
+plan_fft(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummyFFTPlan{Complex{real(T)},false,typeof(region)}(region)
+plan_fft!(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummyFFTPlan{Complex{real(T)},true,typeof(region)}(region)
 
-plan_bfft(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummybFFTPlan{Complex{real(T)},false}()
-plan_bfft!(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummybFFTPlan{Complex{real(T)},true}()
+plan_bfft(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummybFFTPlan{Complex{real(T)},false,typeof(region)}(region)
+plan_bfft!(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummybFFTPlan{Complex{real(T)},true,typeof(region)}(region)
 
 # The ifft plans are automatically provided in terms of the bfft plans above.
-# plan_ifft(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummyiFFTPlan{Complex{real(T)},false}()
-# plan_ifft!(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummyiFFTPlan{Complex{real(T)},true}()
+# plan_ifft(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummyiFFTPlan{Complex{real(T)},false,typeof(region)}(region)
+# plan_ifft!(x::StridedArray{T}, region) where {T <: ComplexFloats} = DummyiFFTPlan{Complex{real(T)},true,typeof(region)}(region)
 
-plan_dct(x::StridedArray{T}, region) where {T <: AbstractFloats} = DummyDCTPlan{T,false}()
-plan_dct!(x::StridedArray{T}, region) where {T <: AbstractFloats} = DummyDCTPlan{T,true}()
+plan_dct(x::StridedArray{T}, region) where {T <: AbstractFloats} = DummyDCTPlan{T,false,typeof(region)}(region)
+plan_dct!(x::StridedArray{T}, region) where {T <: AbstractFloats} = DummyDCTPlan{T,true,typeof(region)}(region)
 
-plan_idct(x::StridedArray{T}, region) where {T <: AbstractFloats} = DummyiDCTPlan{T,false}()
-plan_idct!(x::StridedArray{T}, region) where {T <: AbstractFloats} = DummyiDCTPlan{T,true}()
+plan_idct(x::StridedArray{T}, region) where {T <: AbstractFloats} = DummyiDCTPlan{T,false,typeof(region)}(region)
+plan_idct!(x::StridedArray{T}, region) where {T <: AbstractFloats} = DummyiDCTPlan{T,true,typeof(region)}(region)
 
-plan_rfft(x::StridedArray{T}, region) where {T <: RealFloats} = DummyrFFTPlan{Complex{real(T)},false}(length(x))
-plan_brfft(x::StridedArray{T}, n::Integer, region) where {T <: ComplexFloats} = DummybrFFTPlan{Complex{real(T)},false}(n)
+plan_rfft(x::StridedArray{T}, region) where {T <: RealFloats} = DummyrFFTPlan{Complex{real(T)},false,typeof(region)}(length(x), region)
+plan_brfft(x::StridedArray{T}, n::Integer, region) where {T <: ComplexFloats} = DummybrFFTPlan{Complex{real(T)},false,typeof(region)}(n, region)
 
 # A plan for irfft is created in terms of a plan for brfft.
-# plan_irfft(x::StridedArray{T}, n::Integer, region) where {T <: ComplexFloats} = DummyirFFTPlan{Complex{real(T)},false}(n)
+# plan_irfft(x::StridedArray{T}, n::Integer, region) where {T <: ComplexFloats} = DummyirFFTPlan{Complex{real(T)},false,typeof(region)}(n, region)
 
 # These don't exist for now:
 # plan_rfft!(x::StridedArray{T}) where {T <: RealFloats} = DummyrFFTPlan{Complex{real(T)},true}()
