@@ -1,24 +1,23 @@
 module FastTransforms
 
-using FastGaussQuadrature, LinearAlgebra
-using Reexport, SpecialFunctions, ToeplitzMatrices, FillArrays, ArrayLayouts
+using ArrayLayouts, FastGaussQuadrature, FillArrays, LinearAlgebra,
+      Reexport, SpecialFunctions, ToeplitzMatrices
 
 import DSP
 
 @reexport using AbstractFFTs
 @reexport using FFTW
 
-import Base: unsafe_convert, eltype, ndims, adjoint, transpose, show, *, \,
-             inv, length, size, view, getindex, convert
+import Base: convert, unsafe_convert, eltype, ndims, adjoint, transpose, show,
+             *, \, inv, length, size, view, getindex
 
 import Base.GMP: Limb
 
 import AbstractFFTs: Plan, ScaledPlan,
-                     fft, ifft, bfft, fft!, ifft!, bfft!,
-                     plan_fft, plan_ifft, plan_bfft, plan_fft!, plan_ifft!, plan_bfft!,
-                     rfft, irfft, brfft, plan_rfft, plan_irfft, plan_brfft,
-                     fftshift, ifftshift,
-                     rfft_output_size, brfft_output_size,
+                     fft, ifft, bfft, fft!, ifft!, bfft!, rfft, irfft, brfft,
+                     plan_fft, plan_ifft, plan_bfft, plan_fft!, plan_ifft!,
+                     plan_bfft!, plan_rfft, plan_irfft, plan_brfft,
+                     fftshift, ifftshift, rfft_output_size, brfft_output_size,
                      plan_inv, normalization
 
 import DSP: conv
@@ -53,28 +52,37 @@ include("clenshaw.jl")
 
 include("libfasttransforms.jl")
 
-export plan_nufft, plan_nufft1, plan_nufft2, plan_nufft3, plan_inufft1, plan_inufft2
 export nufft, nufft1, nufft2, nufft3, inufft1, inufft2
+
+export plan_nufft, plan_nufft1, plan_nufft2, plan_nufft3,
+       plan_inufft1, plan_inufft2
 
 include("nufft.jl")
 include("inufft.jl")
 
 export paduatransform, ipaduatransform, paduatransform!, ipaduatransform!,
-       paduapoints, plan_paduatransform!, plan_ipaduatransform!
+       paduapoints
+
+export plan_paduatransform!, plan_ipaduatransform!
 
 include("PaduaTransform.jl")
 
-export plan_chebyshevtransform, plan_ichebyshevtransform, plan_chebyshevtransform!, plan_ichebyshevtransform!,
-            chebyshevtransform, ichebyshevtransform, chebyshevpoints,
-            plan_chebyshevutransform, plan_ichebyshevutransform, plan_chebyshevutransform!, plan_ichebyshevutransform!,
-            chebyshevutransform, ichebyshevutransform,
-            chebyshevtransform!, ichebyshevtransform!, chebyshevutransform!, ichebyshevutransform!
+export chebyshevtransform, ichebyshevtransform,
+       chebyshevtransform!, ichebyshevtransform!,
+       chebyshevutransform, ichebyshevutransform,
+       chebyshevutransform!, ichebyshevutransform!, chebyshevpoints
+
+export plan_chebyshevtransform, plan_ichebyshevtransform,
+       plan_chebyshevtransform!, plan_ichebyshevtransform!,
+       plan_chebyshevutransform, plan_ichebyshevutransform,
+       plan_chebyshevutransform!, plan_ichebyshevutransform!
 
 include("chebyshevtransform.jl")
 
-export plan_clenshawcurtis, clenshawcurtisnodes, clenshawcurtisweights
-export plan_fejer1, fejernodes1, fejerweights1,
-       plan_fejer2, fejernodes2, fejerweights2
+export clenshawcurtisnodes, clenshawcurtisweights, fejernodes1, fejerweights1,
+       fejernodes2, fejerweights2
+
+export plan_clenshawcurtis, plan_fejer1, plan_fejer2
 
 include("clenshawcurtis.jl")
 include("fejer.jl")
@@ -97,10 +105,6 @@ export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
        tetones, tetzeros, tetrand, tetrandn,
        spinsphones, spinsphzeros, spinsphrand, spinsphrandn
 
-lgamma(x) = logabsgamma(x)[1]
-
 include("specialfunctions.jl")
-
-
 
 end # module

@@ -1,4 +1,4 @@
-using FastTransforms, Test
+using FastTransforms, LinearAlgebra, Test
 
 import FastTransforms: chebyshevmoments1, chebyshevmoments2,
                        chebyshevjacobimoments1, chebyshevjacobimoments2,

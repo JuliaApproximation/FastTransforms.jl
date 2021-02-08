@@ -1,4 +1,4 @@
-using FastTransforms, FFTW, Test
+using DSP, FFTW, FastTransforms, LinearAlgebra, Test
 
 @testset "BigFloat FFT and DCT" begin
 
@@ -8,6 +8,12 @@ using FastTransforms, FFTW, Test
 
     c = collect(range(-big(1.0),stop=1.0,length=201))
     @test norm(ifft(fft(c))-c) < 200norm(c)eps(BigFloat)
+
+    s = big(1) ./ (1:10)
+    s64 = Float64.(s)
+    @test Float64.(conv(s, s)) ≈ conv(s64, s64)
+    @test s == big(1) ./ (1:10) #67, ensure conv doesn't overwrite input
+    @test all(s64 .=== Float64.(big(1) ./ (1:10)))
 
     p = plan_dct(c)
     @test norm(FastTransforms.generic_dct(c) - p*c) == 0

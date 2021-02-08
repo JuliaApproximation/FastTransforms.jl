@@ -1,4 +1,4 @@
-using FastTransforms, Test
+using FastTransforms, LinearAlgebra, Test
 
 import FastTransforms: δ
 

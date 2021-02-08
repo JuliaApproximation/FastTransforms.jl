@@ -56,6 +56,8 @@ function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
     ret
 end
 
+lgamma(x) = logabsgamma(x)[1]
+
 ogamma(x::Number) = (isinteger(x) && x<0) ? zero(float(x)) : inv(gamma(x))
 
 """

@@ -1,4 +1,4 @@
-using FastTransforms, Test
+using FastTransforms, LinearAlgebra, Test
 
 import FastTransforms: pochhammer, sqrtpi, SpecialFunctions.gamma
 import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ

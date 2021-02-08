@@ -51,7 +51,7 @@ function generic_fft(x::Vector{T}) where T<:AbstractFloats
     ks = range(zero(real(T)),stop=n-one(real(T)),length=n)
     Wks = exp.((-im).*convert(T,π).*ks.^2 ./ n)
     xq, wq = x.*Wks, conj([exp(-im*convert(T,π)*n);reverse(Wks);Wks[2:end]])
-    return Wks.*conv(xq,wq)[n+1:2n]
+    return Wks.*_conv!(xq,wq)[n+1:2n]
 end
 
 generic_bfft(x::StridedArray{T, N}, region) where {T <: AbstractFloats, N} = conj!(generic_fft(conj(x), region))
@@ -69,15 +69,22 @@ function generic_irfft(v::Vector{T}, n::Integer, region) where T<:ComplexFloats
 end
 generic_brfft(v::StridedArray, n::Integer, region) = generic_irfft(v, n, region)*n
 
-function conv(u::StridedVector{T}, v::StridedVector{T}) where T<:AbstractFloats
-    nu,nv = length(u),length(v)
+function _conv!(u::StridedVector{T}, v::StridedVector{T}) where T<:AbstractFloats
+    nu = length(u)
+    nv = length(v)
     n = nu + nv - 1
-    np2 = nextpow(2,n)
-    append!(u,zeros(T,np2-nu)),append!(v,zeros(T,np2-nv))
+    np2 = nextpow(2, n)
+    append!(u, zeros(T, np2-nu))
+    append!(v, zeros(T, np2-nv))
     y = generic_ifft_pow2(generic_fft_pow2(u).*generic_fft_pow2(v))
     #TODO This would not handle Dual/ComplexDual numbers correctly
     y = T<:Real ? real(y[1:n]) : y[1:n]
 end
+
+conv(u::AbstractArray{T, N}, v::AbstractArray{T, N}) where {T<:AbstractFloat, N} = _conv!(deepcopy(u), deepcopy(v))
+conv(u::AbstractArray{T, N}, v::AbstractArray{Complex{T}, N}) where {T<:AbstractFloat, N} = _conv!(complex(deepcopy(u)), deepcopy(v))
+conv(u::AbstractArray{Complex{T}, N}, v::AbstractArray{T, N}) where {T<:AbstractFloat, N} = _conv!(deepcopy(u), complex(deepcopy(v)))
+conv(u::AbstractArray{Complex{T}, N}, v::AbstractArray{Complex{T}, N}) where {T<:AbstractFloat, N} = _conv!(deepcopy(u), deepcopy(v))
 
 # This is a Cooley-Tukey FFT algorithm inspired by many widely available algorithms including:
 # c_radix2.c in the GNU Scientific Library and four1 in the Numerical Recipes in C.
@@ -120,16 +127,16 @@ function generic_fft_pow2!(x::Vector{T}) where T<:AbstractFloat
 end
 
 function generic_fft_pow2(x::Vector{Complex{T}}) where T<:AbstractFloat
-    y = interlace(real(x),imag(x))
+    y = interlace(real(x), imag(x))
     generic_fft_pow2!(y)
-    return complex.(y[1:2:end],y[2:2:end])
+    return complex.(y[1:2:end], y[2:2:end])
 end
-generic_fft_pow2(x::Vector{T}) where {T<:AbstractFloat} = generic_fft_pow2(complex(x))
+generic_fft_pow2(x::Vector{T}) where T<:AbstractFloat = generic_fft_pow2(complex(x))
 
 function generic_ifft_pow2(x::Vector{Complex{T}}) where T<:AbstractFloat
-    y = interlace(real(x),-imag(x))
+    y = interlace(real(x), -imag(x))
     generic_fft_pow2!(y)
-    return complex.(y[1:2:end],-y[2:2:end])/length(x)
+    return ldiv!(length(x), conj!(complex.(y[1:2:end], y[2:2:end])))
 end
 
 function generic_dct(x::StridedVector{T}, region::Integer) where T<:AbstractFloats
