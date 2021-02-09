@@ -248,8 +248,7 @@ destroy_plan(p::FTPlan{Float64, 1}) = ccall((:ft_destroy_tb_eigen_FMM, libfasttr
 destroy_plan(p::FTPlan{BigFloat, 1}) = ccall((:ft_mpfr_destroy_plan, libfasttransforms), Cvoid, (Ptr{mpfr_t}, Cint), p, p.n)
 destroy_plan(p::FTPlan{Float32, 1, ASSOCIATEDJAC2JAC}) = ccall((:ft_destroy_btb_eigen_FMMf, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 1, ASSOCIATEDJAC2JAC}) = ccall((:ft_destroy_btb_eigen_FMM, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
-destroy_plan(p::FTPlan{Float64, 2}) = ccall((:ft_destroy_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
-destroy_plan(p::FTPlan{Float64, 3}) = ccall((:ft_destroy_tetrahedral_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64}) = ccall((:ft_destroy_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHERE}) = ccall((:ft_destroy_spin_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHERESYNTHESIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHEREANALYSIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
@@ -267,47 +266,63 @@ destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHERESYNTHESIS}) = ccall((:ft_d
 destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHEREANALYSIS}) = ccall((:ft_destroy_spinsphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHERICALISOMETRY}) = ccall((:ft_destroy_sph_isometry_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 
-struct AdjointFTPlan{T, S}
+struct AdjointFTPlan{T, S, R}
     parent::S
+    adjoint::R
+    function AdjointFTPlan{T, S, R}(parent::S) where {T, S, R}
+        new(parent)
+    end
+    function AdjointFTPlan{T, S, R}(parent::S, adjoint::R) where {T, S, R}
+        new(parent, adjoint)
+    end
 end
 
-AdjointFTPlan(p::FTPlan) = AdjointFTPlan{eltype(p), typeof(p)}(p)
+AdjointFTPlan(p::FTPlan) = AdjointFTPlan{eltype(p), typeof(p), typeof(p)}(p)
+AdjointFTPlan(p::FTPlan, q::FTPlan) = AdjointFTPlan{eltype(q), typeof(p), typeof(q)}(p, q)
 
 adjoint(p::FTPlan) = AdjointFTPlan(p)
 adjoint(p::AdjointFTPlan) = p.parent
 
-eltype(p::AdjointFTPlan{T, S}) where {T, S} = T
-ndims(p::AdjointFTPlan{T, S}) where {T, S} = ndims(p.parent)
-function show(io::IO, p::AdjointFTPlan{T, S}) where {T, S}
+eltype(p::AdjointFTPlan{T}) where T = T
+ndims(p::AdjointFTPlan) = ndims(p.parent)
+function show(io::IO, p::AdjointFTPlan)
     print(io, "Adjoint ")
     show(io, p.parent)
 end
 
 checksize(p::AdjointFTPlan, x) = checksize(p.parent, x)
 
-unsafe_convert(::Type{Ptr{ft_plan_struct}}, p::AdjointFTPlan{T, FTPlan{T, N, K}}) where {T, N, K} = unsafe_convert(Ptr{ft_plan_struct}, p.parent)
-unsafe_convert(::Type{Ptr{mpfr_t}}, p::AdjointFTPlan{T, FTPlan{T, N, K}}) where {T, N, K} = unsafe_convert(Ptr{mpfr_t}, p.parent)
+unsafe_convert(::Type{Ptr{ft_plan_struct}}, p::AdjointFTPlan) = unsafe_convert(Ptr{ft_plan_struct}, p.parent)
+unsafe_convert(::Type{Ptr{mpfr_t}}, p::AdjointFTPlan) = unsafe_convert(Ptr{mpfr_t}, p.parent)
 
-struct TransposeFTPlan{T, S}
+struct TransposeFTPlan{T, S, R}
     parent::S
+    transpose::R
+    function TransposeFTPlan{T, S, R}(parent::S) where {T, S, R}
+        new(parent)
+    end
+    function TransposeFTPlan{T, S, R}(parent::S, transpose::R) where {T, S, R}
+        new(parent, transpose)
+    end
 end
 
-TransposeFTPlan(p::FTPlan) = TransposeFTPlan{eltype(p), typeof(p)}(p)
+TransposeFTPlan(p::FTPlan) = TransposeFTPlan{eltype(p), typeof(p), typeof(p)}(p)
+TransposeFTPlan(p::FTPlan, q::FTPlan) = TransposeFTPlan{eltype(q), typeof(p), typeof(q)}(p, q)
 
 transpose(p::FTPlan) = TransposeFTPlan(p)
 transpose(p::TransposeFTPlan) = p.parent
 
-eltype(p::TransposeFTPlan{T, S}) where {T, S} = T
-ndims(p::TransposeFTPlan{T, S}) where {T, S} = ndims(p.parent)
-function show(io::IO, p::TransposeFTPlan{T, S}) where {T, S}
+eltype(p::TransposeFTPlan{T}) where T = T
+ndims(p::TransposeFTPlan) = ndims(p.parent)
+function show(io::IO, p::TransposeFTPlan)
     print(io, "Transpose ")
     show(io, p.parent)
 end
 
 checksize(p::TransposeFTPlan, x) = checksize(p.parent, x)
 
-unsafe_convert(::Type{Ptr{ft_plan_struct}}, p::TransposeFTPlan{T, FTPlan{T, N, K}}) where {T, N, K} = unsafe_convert(Ptr{ft_plan_struct}, p.parent)
-unsafe_convert(::Type{Ptr{mpfr_t}}, p::TransposeFTPlan{T, FTPlan{T, N, K}}) where {T, N, K} = unsafe_convert(Ptr{mpfr_t}, p.parent)
+unsafe_convert(::Type{Ptr{ft_plan_struct}}, p::TransposeFTPlan) = unsafe_convert(Ptr{ft_plan_struct}, p.parent)
+unsafe_convert(::Type{Ptr{mpfr_t}}, p::TransposeFTPlan) = unsafe_convert(Ptr{mpfr_t}, p.parent)
 
 for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
           :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
@@ -547,11 +562,44 @@ function plan_spinsph2fourier(::Type{Complex{Float64}}, n::Integer, s::Integer)
     return FTPlan{Complex{Float64}, 2, SPINSPHERE}(plan, n)
 end
 
-for (fJ, fC, fE, K) in ((:plan_sph_synthesis, :ft_plan_sph_synthesis, :ft_execute_sph_synthesis, SPHERESYNTHESIS),
-                    (:plan_sph_analysis, :ft_plan_sph_analysis, :ft_execute_sph_analysis, SPHEREANALYSIS),
-                    (:plan_sphv_synthesis, :ft_plan_sphv_synthesis, :ft_execute_sphv_synthesis, SPHEREVSYNTHESIS),
-                    (:plan_sphv_analysis, :ft_plan_sphv_analysis, :ft_execute_sphv_analysis, SPHEREVANALYSIS),
-                    (:plan_disk_synthesis, :ft_plan_disk_synthesis, :ft_execute_disk_synthesis, DISKSYNTHESIS),
+for (fJ, fadJ, fC, fE, K) in ((:plan_sph_synthesis, :plan_sph_analysis, :ft_plan_sph_synthesis, :ft_execute_sph_synthesis, SPHERESYNTHESIS),
+                    (:plan_sph_analysis, :plan_sph_synthesis, :ft_plan_sph_analysis, :ft_execute_sph_analysis, SPHEREANALYSIS),
+                    (:plan_sphv_synthesis, :plan_sphv_analysis, :ft_plan_sphv_synthesis, :ft_execute_sphv_synthesis, SPHEREVSYNTHESIS),
+                    (:plan_sphv_analysis, :plan_sphv_synthesis, :ft_plan_sphv_analysis, :ft_execute_sphv_analysis, SPHEREVANALYSIS))
+    @eval begin
+        $fJ(x::Matrix{T}) where T = $fJ(T, size(x, 1), size(x, 2))
+        $fJ(::Type{Complex{T}}, x...) where T <: Real = $fJ(T, x...)
+        function $fJ(::Type{Float64}, n::Integer, m::Integer)
+            plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint), n, m)
+            return FTPlan{Float64, 2, $K}(plan, n, m)
+        end
+        adjoint(p::FTPlan{T, 2, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.m))
+        transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m))
+        function lmul!(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
+            if p.n != size(x, 1) || p.m != size(x, 2)
+                throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.m), x has dimensions $(size(x, 1)) × $(size(x, 2))"))
+            end
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+        function lmul!(p::AdjointFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
+            if p.adjoint.n != size(x, 1) || p.adjoint.m != size(x, 2)
+                throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.m), x has dimensions $(size(x, 1)) × $(size(x, 2))"))
+            end
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p.adjoint, x, size(x, 1), size(x, 2))
+            return x
+        end
+        function lmul!(p::TransposeFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
+            if p.transpose.n != size(x, 1) || p.transpose.m != size(x, 2)
+                throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.m), x has dimensions $(size(x, 1)) × $(size(x, 2))"))
+            end
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p.transpose, x, size(x, 1), size(x, 2))
+            return x
+        end
+    end
+end
+
+for (fJ, fC, fE, K) in ((:plan_disk_synthesis, :ft_plan_disk_synthesis, :ft_execute_disk_synthesis, DISKSYNTHESIS),
                     (:plan_disk_analysis, :ft_plan_disk_analysis, :ft_execute_disk_analysis, DISKANALYSIS),
                     (:plan_rectdisk_synthesis, :ft_plan_rectdisk_synthesis, :ft_execute_rectdisk_synthesis, RECTDISKSYNTHESIS),
                     (:plan_rectdisk_analysis, :ft_plan_rectdisk_analysis, :ft_execute_rectdisk_analysis, RECTDISKANALYSIS),
@@ -788,8 +836,27 @@ end
 for (fJ, fC, K) in ((:lmul!, :ft_execute_sph2fourier, SPHERE),
                     (:ldiv!, :ft_execute_fourier2sph, SPHERE),
                     (:lmul!, :ft_execute_sphv2fourier, SPHEREV),
-                    (:ldiv!, :ft_execute_fourier2sphv, SPHEREV),
-                    (:lmul!, :ft_execute_disk2cxf, DISK),
+                    (:ldiv!, :ft_execute_fourier2sphv, SPHEREV))
+    @eval begin
+        function $fJ(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+        function $fJ(p::AdjointFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+        function $fJ(p::TransposeFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+    end
+end
+
+for (fJ, fC, K) in ((:lmul!, :ft_execute_disk2cxf, DISK),
                     (:ldiv!, :ft_execute_cxf2disk, DISK),
                     (:lmul!, :ft_execute_rectdisk2cheb, RECTDISK),
                     (:ldiv!, :ft_execute_cheb2rectdisk, RECTDISK),
@@ -896,11 +963,11 @@ for fJ in (:lmul!, :ldiv!)
             x .= complex.($fJ(p, real(x)), $fJ(p, imag(x)))
             return x
         end
-        function $fJ(p::AdjointFTPlan{T, FTPlan{T, N, K}}, x::AbstractArray{Complex{T}}) where {T, N, K}
+        function $fJ(p::AdjointFTPlan{T}, x::AbstractArray{Complex{T}}) where T
             x .= complex.($fJ(p, real(x)), $fJ(p, imag(x)))
             return x
         end
-        function $fJ(p::TransposeFTPlan{T, FTPlan{T, N, K}}, x::AbstractArray{Complex{T}}) where {T, N, K}
+        function $fJ(p::TransposeFTPlan{T}, x::AbstractArray{Complex{T}}) where T
             x .= complex.($fJ(p, real(x)), $fJ(p, imag(x)))
             return x
         end
