@@ -833,66 +833,56 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm_ptr),
     end
 end
 
-for (fJ, fC, K) in ((:lmul!, :ft_execute_sph2fourier, SPHERE),
-                    (:ldiv!, :ft_execute_fourier2sph, SPHERE),
-                    (:lmul!, :ft_execute_sphv2fourier, SPHEREV),
-                    (:ldiv!, :ft_execute_fourier2sphv, SPHEREV))
+for (fJ, fC, T, N, K) in ((:lmul!, :ft_execute_sph2fourier, Float64, 2, SPHERE),
+                    (:ldiv!, :ft_execute_fourier2sph, Float64, 2, SPHERE),
+                    (:lmul!, :ft_execute_sphv2fourier, Float64, 2, SPHEREV),
+                    (:ldiv!, :ft_execute_fourier2sphv, Float64, 2, SPHEREV),
+                    (:lmul!, :ft_execute_spinsph2fourier, Complex{Float64}, 2, SPINSPHERE),
+                    (:ldiv!, :ft_execute_fourier2spinsph, Complex{Float64}, 2, SPINSPHERE),
+                    (:lmul!, :ft_execute_disk2cxf, Float64, 2, DISK),
+                    (:ldiv!, :ft_execute_cxf2disk, Float64, 2, DISK),
+                    (:lmul!, :ft_execute_rectdisk2cheb, Float64, 2, RECTDISK),
+                    (:ldiv!, :ft_execute_cheb2rectdisk, Float64, 2, RECTDISK),
+                    (:lmul!, :ft_execute_tri2cheb, Float64, 2, TRIANGLE),
+                    (:ldiv!, :ft_execute_cheb2tri, Float64, 2, TRIANGLE))
     @eval begin
-        function $fJ(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
+        function $fJ(p::FTPlan{$T, $N, $K}, x::Array{$T, $N})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'N', p, x, size(x)...)
             return x
         end
-        function $fJ(p::AdjointFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
+        function $fJ(p::AdjointFTPlan{$T, FTPlan{$T, $N, $K}}, x::Array{$T, $N})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'T', p, x, size(x)...)
             return x
         end
-        function $fJ(p::TransposeFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
+        function $fJ(p::TransposeFTPlan{$T, FTPlan{$T, $N, $K}}, x::Array{$T, $N})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'T', p, x, size(x)...)
             return x
         end
     end
 end
 
-for (fJ, fC, K) in ((:lmul!, :ft_execute_disk2cxf, DISK),
-                    (:ldiv!, :ft_execute_cxf2disk, DISK),
-                    (:lmul!, :ft_execute_rectdisk2cheb, RECTDISK),
-                    (:ldiv!, :ft_execute_cheb2rectdisk, RECTDISK),
-                    (:lmul!, :ft_execute_tri2cheb, TRIANGLE),
-                    (:ldiv!, :ft_execute_cheb2tri, TRIANGLE))
+for (fJ, fC) in ((:lmul!, :ft_execute_tet2cheb),
+                 (:ldiv!, :ft_execute_cheb2tet))
     @eval begin
-        function $fJ(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
+        function $fJ(p::FTPlan{Float64, 3, TETRAHEDRON}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'N', p, x, size(x)...)
+            return x
+        end
+        function $fJ(p::AdjointFTPlan{Float64, FTPlan{Float64, 3, TETRAHEDRON}}, x::Array{Float64, 3})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x)...)
+            return x
+        end
+        function $fJ(p::TransposeFTPlan{Float64, FTPlan{Float64, 3, TETRAHEDRON}}, x::Array{Float64, 3})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x)...)
             return x
         end
     end
-end
-
-function lmul!(p::FTPlan{Float64, 3, TETRAHEDRON}, x::Array{Float64, 3})
-    checksize(p, x)
-    ccall((:ft_execute_tet2cheb, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), p, x, size(x, 1), size(x, 2), size(x, 3))
-    return x
-end
-
-function ldiv!(p::FTPlan{Float64, 3, TETRAHEDRON}, x::Array{Float64, 3})
-    checksize(p, x)
-    ccall((:ft_execute_cheb2tet, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), p, x, size(x, 1), size(x, 2), size(x, 3))
-    return x
-end
-
-function lmul!(p::FTPlan{Complex{Float64}, 2, SPINSPHERE}, x::Matrix{Complex{Float64}})
-    checksize(p, x)
-    ccall((:ft_execute_spinsph2fourier, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Complex{Float64}}, Cint, Cint), p, x, size(x, 1), size(x, 2))
-    return x
-end
-
-function ldiv!(p::FTPlan{Complex{Float64}, 2, SPINSPHERE}, x::Matrix{Complex{Float64}})
-    checksize(p, x)
-    ccall((:ft_execute_fourier2spinsph, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Complex{Float64}}, Cint, Cint), p, x, size(x, 1), size(x, 2))
-    return x
 end
 
 function execute_sph_polar_rotation!(x::Matrix{Float64}, α)
