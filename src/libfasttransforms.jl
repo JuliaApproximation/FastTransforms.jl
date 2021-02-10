@@ -848,17 +848,17 @@ for (fJ, fC, T, N, K) in ((:lmul!, :ft_execute_sph2fourier, Float64, 2, SPHERE),
     @eval begin
         function $fJ(p::FTPlan{$T, $N, $K}, x::Array{$T, $N})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'N', p, x, size(x)...)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
             return x
         end
         function $fJ(p::AdjointFTPlan{$T, FTPlan{$T, $N, $K}}, x::Array{$T, $N})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'T', p, x, size(x)...)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
         function $fJ(p::TransposeFTPlan{$T, FTPlan{$T, $N, $K}}, x::Array{$T, $N})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'T', p, x, size(x)...)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$T}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
     end
@@ -869,17 +869,17 @@ for (fJ, fC) in ((:lmul!, :ft_execute_tet2cheb),
     @eval begin
         function $fJ(p::FTPlan{Float64, 3, TETRAHEDRON}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'N', p, x, size(x)...)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
         function $fJ(p::AdjointFTPlan{Float64, FTPlan{Float64, 3, TETRAHEDRON}}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x)...)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
         function $fJ(p::TransposeFTPlan{Float64, FTPlan{Float64, 3, TETRAHEDRON}}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x)...)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
     end
