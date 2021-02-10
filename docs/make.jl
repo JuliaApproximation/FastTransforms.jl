@@ -36,6 +36,7 @@ makedocs(
             authors = "Richard Mikael Slevinsky",
             pages = Any[
                     "Home" => "index.md",
+                    "Development" => "dev.md",
                     "Examples" => [
                         "generated/automaticdifferentiation.md",
                         "generated/chebyshev.md",
