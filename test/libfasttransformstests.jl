@@ -90,6 +90,12 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         C = ps*(p*A)
         A = p\(pa*C)
         @test A ≈ B
+        C = ps'*(p'A)
+        A = p'\(pa'C)
+        @test A ≈ B
+        C = transpose(ps)*(transpose(p)*A)
+        A = transpose(p)\(transpose(pa)*C)
+        @test A ≈ B
     end
 
     A = sphones(Float64, n, 2n-1)
@@ -147,6 +153,7 @@ FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     pa = plan_tri_analysis(A)
     test_nd_plans(p, ps, pa, A)
 
+    α, β, γ, δ = -0.1, -0.2, -0.3, -0.4
     A = tetones(Float64, n, n, n)
     p = plan_tet2cheb(A, α, β, γ, δ)
     ps = plan_tet_synthesis(A)
