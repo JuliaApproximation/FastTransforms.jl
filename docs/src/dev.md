@@ -12,7 +12,8 @@ C libraries are easier to call from any other language, partly explaining why th
 
 In Julia, a parametric composite type with unrestricted type parameters is just about as big as `Any`. Such a type allows the Julia API to far exceed the C API in its ability to unify all of the orthogonal polynomial transforms and present them as linear operators. The `mutable struct FTPlan{T, N, K}`, together with `AdjointFTPlan` and `TransposeFTPlan`, are the core Julia types in this repository. Whereas `T` is understood to represent element type of the plan and `N` represents the number of leading dimensions of the array on which it operates, `K` is a mere integer which serves to distinguish the orthogonal polynomials at play. For example, `FTPlan{Float64, 1, LEG2CHEB}` represents the necessary pre-computations to convert 64-bit Legendre series to Chebyshev series (of the first kind). `N == 1` because Chebyshev and Legendre series are naturally represented with vectors of coefficients. However, this particular plan may operate not only on vectors but also on matrices, column-by-column.
 
-!!! note When working with specialized `FTPlan`s, it is prudent to use the named constants for `K`, such as `FastTransforms.LEG2CHEB`, rather than their literal integer values as these may change when future plans become operational.
+!!! note
+    When working with specialized `FTPlan`s, it is prudent to use the named constants for `K`, such as `FastTransforms.LEG2CHEB`, rather than their literal integer values as these may change when future plans become operational.
 
 ## The developer's right to build from source
 
