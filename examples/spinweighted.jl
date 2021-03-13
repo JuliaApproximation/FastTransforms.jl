@@ -44,7 +44,7 @@ norm(U⁰) ≈ sqrt(4π)
 # Spin can be incremented by applying ð, either on the spin-$0$ coefficients:
 U¹c = zero(U⁰)
 for n in 1:N-1
-    U¹c[n, 1] = sqrt(n*(n+1))*U⁰[n+1, 1]
+    U¹c[n+1, 1] = sqrt(n*(n+1))*U⁰[n+1, 1]
 end
 for m in 1:M÷2
     for n in 0:N-1
