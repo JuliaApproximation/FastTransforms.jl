@@ -10,13 +10,14 @@ else
     using FastTransforms_jll
 end
 
-function ft_fftw_plan_with_nthreads(n::Integer)
-    ccall((:ft_fftw_plan_with_nthreads, libfasttransforms), Cvoid, (Cint, ), n)
-end
+ft_set_num_threads(n::Integer) = ccall((:ft_set_num_threads, libfasttransforms), Cvoid, (Cint, ), n)
+ft_fftw_plan_with_nthreads(n::Integer) = ccall((:ft_fftw_plan_with_nthreads, libfasttransforms), Cvoid, (Cint, ), n)
 
 function __init__()
+    n = ceil(Int, Sys.CPU_THREADS/2)
+    ft_set_num_threads(n)
     ccall((:ft_fftw_init_threads, libfasttransforms), Cint, ())
-    ft_fftw_plan_with_nthreads(ceil(Int, Sys.CPU_THREADS/2))
+    ft_fftw_plan_with_nthreads(n)
 end
 
 
@@ -48,8 +49,6 @@ function renew!(x::Array{BigFloat})
     end
     return x
 end
-
-set_num_threads(n::Integer) = ccall((:ft_set_num_threads, libfasttransforms), Cvoid, (Cint, ), n)
 
 function horner!(c::Vector{Float64}, x::Vector{Float64}, f::Vector{Float64})
     @assert length(x) == length(f)

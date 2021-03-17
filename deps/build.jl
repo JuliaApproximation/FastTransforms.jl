@@ -42,4 +42,6 @@ if ft_build_from_source == "true"
         print_error()
     end
     println("FastTransforms built from source.")
+else
+    println("FastTransforms using precompiled binaries.")
 end
