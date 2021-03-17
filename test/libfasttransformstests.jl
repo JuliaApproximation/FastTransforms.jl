@@ -1,6 +1,6 @@
 using FastTransforms, Test
 
-FastTransforms.set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
+FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
 
 @testset "libfasttransforms" begin
     n = 64
