@@ -1,6 +1,6 @@
 name = "FastTransforms"
 uuid = "057dd010-8810-581a-b7be-e3fc3b93f78c"
-version = "0.12.3"
+version = "0.12.4"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -20,7 +20,7 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [compat]
 AbstractFFTs = "0.5, 1.0"
-ArrayLayouts = "0.4, 0.5, 0.6"
+ArrayLayouts = "0.4, 0.5, 0.6, 0.7"
 BinaryProvider = "0.5"
 DSP = "0.6"
 FFTW = "1"
