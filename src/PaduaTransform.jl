@@ -1,5 +1,10 @@
 
 # lex indicates if its lexigraphical (i.e., x, y) or reverse (y, x)
+# If in lexigraphical order the coefficient vector's entries
+# corrrespond to the following basis polynomials:
+# [T0(x) * T0(y), T1(x) * T0(y), T0(x) * T1(y), T2(x) * T0(y), T1(x) * T1(y), T0(x) * T2(y), ...]
+# else, if not in lexigraphical order:
+# [T0(x) * T0(y), T0(x) * T1(y), T1(x) * T0(y), T0(x) * T2(y), T1(x) * T1(y), T2(x) * T0(y), ...]
 """
 Pre-plan an Inverse Padua Transform.
 """
