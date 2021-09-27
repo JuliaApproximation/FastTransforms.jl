@@ -73,7 +73,7 @@ function *(P::ChebyshevTransformPlan{T,2,true}, x::AbstractVector{T}) where T
 end
 
 *(P::ChebyshevTransformPlan{T,k,false}, x::AbstractVector{T}) where {T,k} = 
-    ChebyshevTransformPlan{T,k,true}(P)*copy(x)
+    ChebyshevTransformPlan{T,k,true}(P)*Array(x)
 
 chebyshevtransform!(x::AbstractVector{T}, kind=Val(1)) where T =
     plan_chebyshevtransform!(x, kind)*x
@@ -85,7 +85,7 @@ chebyshevtransform!(x::AbstractVector{T}, kind=Val(1)) where T =
 transforms from values on a Chebyshev grid of the first or second kind to Chebyshev
 coefficients.
 """
-chebyshevtransform(x, kind=Val(1)) = chebyshevtransform!(copy(x), kind)
+chebyshevtransform(x, kind=Val(1)) = chebyshevtransform!(Array(x), kind)
 
 
 ## Inverse transforms take Chebyshev coefficients and produce values at Chebyshev points of the first and second kinds
@@ -165,12 +165,12 @@ function *(P::IChebyshevTransformPlan{T,2, true}, x::AbstractVector{T}) where T<
 end
 
 *(P::IChebyshevTransformPlan{T,k,false},x::AbstractVector{T}) where {T,k} = 
-    IChebyshevTransformPlan{T,k,true}(P)*copy(x)
+    IChebyshevTransformPlan{T,k,true}(P)*Array(x)
 
 ichebyshevtransform!(x::AbstractVector{T}, kind=Val(1)) where T =
     plan_ichebyshevtransform!(x, kind)*x
 
-ichebyshevtransform(x, kind=Val(1)) = ichebyshevtransform!(copy(x), kind)
+ichebyshevtransform(x, kind=Val(1)) = ichebyshevtransform!(Array(x), kind)
 
 # Matrix inputs
 #
@@ -296,9 +296,9 @@ chebyshevutransform!(x::AbstractVector{T}, kind=Val(1)) where {T<:fftwNumber} =
 transforms from values on a Chebyshev grid of the first or second kind to Chebyshev
 coefficients of the 2nd kind (Chebyshev U expansion).
 """
-chebyshevutransform(x, kind=Val(1)) = chebyshevutransform!(copy(x), kind)
+chebyshevutransform(x, kind=Val(1)) = chebyshevutransform!(Array(x), kind)
 
-*(P::ChebyshevUTransformPlan{T,k,false}, x::AbstractVector{T}) where {T,k} = ChebyshevUTransformPlan{T,k,true}(P)*copy(x)
+*(P::ChebyshevUTransformPlan{T,k,false}, x::AbstractVector{T}) where {T,k} = ChebyshevUTransformPlan{T,k,true}(P)*Array(x)
 
 ## Inverse transforms take ChebyshevU coefficients and produce values at ChebyshevU points of the first and second kinds
 
@@ -374,10 +374,10 @@ end
 ichebyshevutransform!(x::AbstractVector{T}, kind=Val(1)) where {T<:fftwNumber} =
     plan_ichebyshevutransform!(x, kind)*x
 
-ichebyshevutransform(x, kind=Val(1)) = ichebyshevutransform!(copy(x), kind)
+ichebyshevutransform(x, kind=Val(1)) = ichebyshevutransform!(Array(x), kind)
 
 *(P::IChebyshevUTransformPlan{T,k,false},x::AbstractVector{T}) where {T,k} = 
-    IChebyshevUTransformPlan{T,k,true}(P)*copy(x)
+    IChebyshevUTransformPlan{T,k,true}(P)*Array(x)
 
 
 ## Code generation for integer inputs

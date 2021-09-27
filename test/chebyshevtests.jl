@@ -224,4 +224,9 @@ using FastTransforms, Test
         @test plan_chebyshevtransform!(x)copy(x) ≈ chebyshevtransform(x)
         @test plan_ichebyshevtransform!(x)copy(x) ≈ ichebyshevtransform(x)
     end
+
+    @testset "immutable vectors" begin
+        F = plan_chebyshevtransform([1.,2,3])
+        @test chebyshevtransform(1.0:3) == F * (1:3)
+    end
 end
