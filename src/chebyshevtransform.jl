@@ -51,12 +51,12 @@ plan_chebyshevtransform(x::AbstractArray, dims...; kws...) = plan_chebyshevtrans
 
 
 # convert x if necessary
-_plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::StridedArray{T}) where T = mul!(y, P, x)
-_plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::AbstractArray) where T = mul!(y, P, convert(Array{T}, x))
+@inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::StridedArray{T}) where T = mul!(y, P, x)
+@inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::AbstractArray) where T = mul!(y, P, convert(Array{T}, x))
 
-_cheb1_rescale!(_, y::AbstractVector) = (y[1] /= 2; ldiv!(length(y), y))
+@inline _cheb1_rescale!(_, y::AbstractVector) = (y[1] /= 2; ldiv!(length(y), y))
 
-function _cheb1_rescale!(d::Number, y::AbstractMatrix{T}) where T
+@inline function _cheb1_rescale!(d::Number, y::AbstractMatrix{T}) where T
     if isone(d)
         ldiv!(2, view(y,1,:))
     else
@@ -66,14 +66,14 @@ function _cheb1_rescale!(d::Number, y::AbstractMatrix{T}) where T
 end
 
 # TODO: higher dimensional arrays
-function _cheb1_rescale!(d::UnitRange, y::AbstractMatrix{T}) where T
+@inline function _cheb1_rescale!(d::UnitRange, y::AbstractMatrix{T}) where T
     @assert d == 1:2
     ldiv!(2, view(y,1,:))
     ldiv!(2, view(y,:,1))
     ldiv!(prod(size(y)), y)
 end
 
-function *(P::ChebyshevTransformPlan{T,1,K,true}, x::AbstractArray{T}) where {T,K}
+function *(P::ChebyshevTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
     n = length(x)
     n == 0 && return x
 
@@ -81,7 +81,7 @@ function *(P::ChebyshevTransformPlan{T,1,K,true}, x::AbstractArray{T}) where {T,
     _cheb1_rescale!(P.plan.region, y)
 end
 
-function mul!(y::AbstractArray{T}, P::ChebyshevTransformPlan{T,1,K,false}, x::AbstractArray) where {T,K}
+function mul!(y::AbstractArray{T,N}, P::ChebyshevTransformPlan{T,1,K,false,N}, x::AbstractArray{<:Any,N}) where {T,K,N}
     n = length(x)
     length(y) == n || throw(DimensionMismatch("output must match dimension"))
     n == 0 && return y
@@ -113,20 +113,20 @@ function _cheb2_rescale!(d::UnitRange, y::AbstractMatrix{T}) where T
     ldiv!(prod(size(y) .- 1), y)
 end
 
-function *(P::ChebyshevTransformPlan{T,2,K,true}, x::AbstractArray{T}) where {T,K}
+function *(P::ChebyshevTransformPlan{T,2,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
     n = length(x)
     y = P.plan*x # will be  === x if in-place
     _cheb2_rescale!(P.plan.region, y)
 end
 
-function mul!(y::AbstractArray{T}, P::ChebyshevTransformPlan{T,2,K,false}, x::AbstractArray) where {T,K}
+function mul!(y::AbstractArray{T,N}, P::ChebyshevTransformPlan{T,2,K,false,N}, x::AbstractArray{<:Any,N}) where {T,K,N}
     n = length(x)
     length(y) == n || throw(DimensionMismatch("output must match dimension"))
     _plan_mul!(y, P.plan, x)
     _cheb2_rescale!(P.plan.region, y)
 end
 
-*(P::ChebyshevTransformPlan{T,kind,K,false}, x::AbstractArray{T}) where {T,kind,K} =
+*(P::ChebyshevTransformPlan{T,kind,K,false,N}, x::AbstractArray{T,N}) where {T,kind,K,N} =
     mul!(similar(x), P, x)
 
 """
@@ -202,18 +202,37 @@ end
 plan_ichebyshevtransform!(x::AbstractArray, dims...; kws...) = plan_ichebyshevtransform!(x, Val(1), dims...; kws...)
 plan_ichebyshevtransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevtransform(x, Val(1), dims...; kws...)
 
-_icheb1_prerescale!(_, x::AbstractVector) = (x[1] *= 2)
-_icheb1_postrescale!(_, x::AbstractVector) = (x[1] /= 2)
-function _icheb1_prerescale!(d::Number, x::AbstractVector)
-    lmul!(2, isone(d) ? view(x,:,1) : view(x,1,:))
+@inline _icheb1_prerescale!(_, x::AbstractVector) = (x[1] *= 2)
+@inline function _icheb1_prerescale!(d::Number, x::AbstractMatrix)
+    if isone(d)
+        lmul!(2, view(x,1,:))
+    else
+        lmul!(2, view(x,:,1))
+    end
     x
 end
-function _icheb1_postrescale!(_, x::AbstractVector)
-    ldiv(2, isone(d) ? view(x,:,1) : view(x,1,:))
+@inline function _icheb1_prerescale!(d::UnitRange, x::AbstractMatrix)
+    lmul!(2, view(x,:,1))
+    lmul!(2, view(x,1,:))
+    x
+end
+@inline _icheb1_postrescale!(_, x::AbstractVector) = (x[1] /= 2)
+@inline function _icheb1_postrescale!(d::Number, x::AbstractMatrix)
+    if isone(d)
+        ldiv!(2, view(x,1,:))
+    else
+        ldiv!(2, view(x,:,1))
+    end
     x
 end
 
-function *(P::IChebyshevTransformPlan{T,1,K,true}, x::AbstractVector{T}) where {T<:fftwNumber,K}
+@inline function _icheb1_postrescale!(d::UnitRange, x::AbstractMatrix)
+    ldiv!(2, view(x,1,:))
+    ldiv!(2, view(x,:,1))
+    x
+end
+
+function *(P::IChebyshevTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T<:fftwNumber,K,N}
     n = length(x)
     n == 0 && return x
 
@@ -222,7 +241,7 @@ function *(P::IChebyshevTransformPlan{T,1,K,true}, x::AbstractVector{T}) where {
     x
 end
 
-function mul!(y::AbstractVector{T}, P::IChebyshevTransformPlan{T,1,K,false}, x::AbstractVector{T}) where {T<:fftwNumber,K}
+function mul!(y::AbstractArray{T,N}, P::IChebyshevTransformPlan{T,1,K,false,N}, x::AbstractArray{T,N}) where {T<:fftwNumber,K,N}
     n = length(x)
     length(y) == n || throw(DimensionMismatch("output must match dimension"))
     n == 0 && return y
@@ -233,23 +252,54 @@ function mul!(y::AbstractVector{T}, P::IChebyshevTransformPlan{T,1,K,false}, x::
     ldiv!(2^length(P.plan.region), y)
 end
 
-_icheb2_prerescale!(_, x::AbstractVector) = (x[1] *= 2; x[end] *= 2)
-_icheb2_postrescale!(_, x::AbstractVector) = (x[1] /= 2; x[end] /= 2)
-function _icheb2_rescale!(d, y::AbstractVector)
+@inline _icheb2_prerescale!(_, x::AbstractVector) = (x[1] *= 2; x[end] *= 2)
+@inline function _icheb2_prerescale!(d::Number, x::AbstractMatrix)
+    if isone(d)
+        lmul!(2, @view(x[1,:]))
+        lmul!(2, @view(x[end,:]))
+    else
+        lmul!(2, @view(x[:,1]))
+        lmul!(2, @view(x[:,end]))
+    end
+    x
+end
+@inline function _icheb2_prerescale!(d::UnitRange, x::AbstractMatrix)
+    lmul!(2, @view(x[1,:]))
+    lmul!(2, @view(x[end,:]))
+    lmul!(2, @view(x[:,1]))
+    lmul!(2, @view(x[:,end]))
+    x
+end
+@inline _icheb2_postrescale!(_, x::AbstractVector) = (x[1] /= 2; x[end] /= 2)
+@inline function _icheb2_postrescale!(d::Number, x::AbstractMatrix)
+    if isone(d)
+        ldiv!(2, @view(x[1,:]))
+        ldiv!(2, @view(x[end,:]))
+    else
+        ldiv!(2, @view(x[:,1]))
+        ldiv!(2, @view(x[:,end]))
+    end
+    x
+end
+@inline function _icheb2_postrescale!(d::UnitRange, x::AbstractMatrix)
+    ldiv!(2, @view(x[1,:]))
+    ldiv!(2, @view(x[end,:]))
+    ldiv!(2, @view(x[:,1]))
+    ldiv!(2, @view(x[:,end]))
+    x
+end
+@inline function _icheb2_rescale!(d::Number, y::AbstractArray{T}) where T
     _icheb2_prerescale!(d, y)
-    lmul!(convert(T, prod(size(y) .- 1))/2, y)
+    lmul!(convert(T, size(y,d) - 1)/2, y)
     y
 end
-function _icheb2_prerescale!(d::Number, x::AbstractVector)
-    lmul!(2, isone(d) ? view(x,:,1) : view(x,1,:))
-    x
-end
-function _icheb2_postrescale!(_, x::AbstractVector)
-    ldiv(2, isone(d) ? view(x,:,1) : view(x,1,:))
-    x
+@inline function _icheb2_rescale!(d::UnitRange, y::AbstractArray{T}) where T
+    _icheb2_prerescale!(d, y)
+    lmul!(prod(convert.(T, size(y) .- 1)./2), y)
+    y
 end
 
-function *(P::IChebyshevTransformPlan{T,2,K, true}, x::AbstractVector{T}) where {T<:fftwNumber,K}
+function *(P::IChebyshevTransformPlan{T,2,K,true,N}, x::AbstractArray{T,N}) where {T<:fftwNumber,K,N}
     n = length(x)
 
     _icheb2_prerescale!(P.plan.region, x)
@@ -257,7 +307,7 @@ function *(P::IChebyshevTransformPlan{T,2,K, true}, x::AbstractVector{T}) where 
     _icheb2_rescale!(P.plan.region, x)
 end
 
-function mul!(y::AbstractVector{T}, P::IChebyshevTransformPlan{T,2,K,false}, x::AbstractVector{T}) where {T<:fftwNumber,K}
+function mul!(y::AbstractArray{T,N}, P::IChebyshevTransformPlan{T,2,K,false,N}, x::AbstractArray{<:Any,N}) where {T<:fftwNumber,K,N}
     n = length(x)
     length(y) == n || throw(DimensionMismatch("output must match dimension"))
 
@@ -267,7 +317,7 @@ function mul!(y::AbstractVector{T}, P::IChebyshevTransformPlan{T,2,K,false}, x::
     _icheb2_rescale!(P.plan.region, y)
 end
 
-*(P::IChebyshevTransformPlan{T,kind,K,false},x::AbstractVector{T}) where {T,kind,K} = mul!(similar(x), P, convert(Array,x))
+*(P::IChebyshevTransformPlan{T,kind,K,false,N}, x::AbstractArray{T,N}) where {T,kind,K,N} = mul!(similar(x), P, x)
 ichebyshevtransform!(x::AbstractArray, dims...; kwds...) = plan_ichebyshevtransform!(x, dims...; kwds...)*x
 ichebyshevtransform(x, dims...; kwds...) = plan_ichebyshevtransform(x, dims...; kwds...)*x
 

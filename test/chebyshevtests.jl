@@ -174,43 +174,33 @@ using FastTransforms, Test
 
     @testset "matrix" begin
         X = randn(4,5)
-        @test @inferred(chebyshevtransform(X,1)) ≈ @inferred(chebyshevtransform!(copy(X),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)])...)
-        @test chebyshevtransform(X,2) ≈ chebyshevtransform!(copy(X),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)])...)'
-        @test @inferred(chebyshevtransform(X,Val(2),1)) ≈ @inferred(chebyshevtransform!(copy(X),Val(2),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)],Val(2))...)
-        @test chebyshevtransform(X,Val(2),2) ≈ chebyshevtransform!(copy(X),Val(2),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
+        @testset "chebyshevtransform" begin
+            @test @inferred(chebyshevtransform(X,1)) ≈ @inferred(chebyshevtransform!(copy(X),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)])...)
+            @test chebyshevtransform(X,2) ≈ chebyshevtransform!(copy(X),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)])...)'
+            @test @inferred(chebyshevtransform(X,Val(2),1)) ≈ @inferred(chebyshevtransform!(copy(X),Val(2),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)],Val(2))...)
+            @test chebyshevtransform(X,Val(2),2) ≈ chebyshevtransform!(copy(X),Val(2),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
 
-        @test @inferred(chebyshevtransform(X)) ≈ @inferred(chebyshevtransform!(copy(X))) ≈ chebyshevtransform(chebyshevtransform(X,1),2)
-        @test @inferred(chebyshevtransform(X,Val(2))) ≈ @inferred(chebyshevtransform!(copy(X),Val(2))) ≈ chebyshevtransform(chebyshevtransform(X,Val(2),1),Val(2),2)
+            @test @inferred(chebyshevtransform(X)) ≈ @inferred(chebyshevtransform!(copy(X))) ≈ chebyshevtransform(chebyshevtransform(X,1),2)
+            @test @inferred(chebyshevtransform(X,Val(2))) ≈ @inferred(chebyshevtransform!(copy(X),Val(2))) ≈ chebyshevtransform(chebyshevtransform(X,Val(2),1),Val(2),2)
+        end
 
+        @testset "ichebyshevtransform" begin
+            @test @inferred(ichebyshevtransform(X,1)) ≈ @inferred(ichebyshevtransform!(copy(X),1)) ≈ hcat(ichebyshevtransform.([X[:,k] for k=axes(X,2)])...)
+            @test ichebyshevtransform(X,2) ≈ ichebyshevtransform!(copy(X),2) ≈ hcat(ichebyshevtransform.([X[k,:] for k=axes(X,1)])...)'
+            @test @inferred(ichebyshevtransform(X,Val(2),1)) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2),1)) ≈ hcat(ichebyshevtransform.([X[:,k] for k=axes(X,2)],Val(2))...)
+            @test ichebyshevtransform(X,Val(2),2) ≈ ichebyshevtransform!(copy(X),Val(2),2) ≈ hcat(ichebyshevtransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
+
+            @test @inferred(ichebyshevtransform(X)) ≈ @inferred(ichebyshevtransform!(copy(X))) ≈ ichebyshevtransform(ichebyshevtransform(X,1),2)
+            @test @inferred(ichebyshevtransform(X,Val(2))) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2))) ≈ ichebyshevtransform(ichebyshevtransform(X,Val(2),1),Val(2),2)            
+
+            @test ichebyshevtransform(chebyshevtransform(X)) ≈ X
+            @test chebyshevtransform(ichebyshevtransform(X)) ≈ X
+        end
 
         X = randn(1,1)
         @test chebyshevtransform!(copy(X), Val(1)) == ichebyshevtransform!(copy(X), Val(1)) == X
         @test_throws ArgumentError chebyshevtransform!(copy(X), Val(2))
         @test_throws ArgumentError ichebyshevtransform!(copy(X), Val(2))
-
-        X = randn(10,11)
-        
-        # manual 2D Chebyshev
-        X̌ = copy(X)
-        for j in axes(X̌,2)
-            chebyshevtransform!(view(X̌,:,j))
-        end
-        for k in axes(X̌,1)
-            chebyshevtransform!(view(X̌,k,:))
-        end
-        @test chebyshevtransform!(copy(X), Val(1)) ≈ X̌
-        @test ichebyshevtransform!(copy(X̌), Val(1)) ≈ X
-
-        # manual 2D Chebyshev
-        X̌ = copy(X)
-        for j in axes(X̌,2)
-            chebyshevtransform!(view(X̌,:,j), Val(2))
-        end
-        for k in axes(X̌,1)
-            chebyshevtransform!(view(X̌,k,:), Val(2))
-        end
-        @test chebyshevtransform!(copy(X), Val(2)) ≈ X̌
-        @test ichebyshevtransform!(copy(X̌), Val(2)) ≈ X
     end
 
     @testset "Integer" begin
