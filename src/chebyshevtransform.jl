@@ -539,22 +539,20 @@ chebyshevpoints(n::Integer, kind=Val(1)) = chebyshevpoints(Float64, n, kind)
 # Use `Nothing` and fall back to FFT
 ###
 
-for (kind,KIND,IKIND) in ((1,FIRSTKIND,IFIRSTKIND),(2,SECONDKIND,SECONDKIND))
-    @eval begin
-        plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{$kind}, dims...; kws...) where {T,N} =
-            ChebyshevTransformPlan{T,$KIND,false,N,Nothing}()
-        plan_ichebyshevtransform(x::AbstractArray{T,N}, ::Val{$kind}, dims...; kws...) where {T,N} =
-            IChebyshevTransformPlan{T,$IKIND,false,N,Nothing}()
 
-        plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{$kind}, dims...; kws...) where {T,N} =
-            ChebyshevTransformPlan{T,$KIND,true,N,Nothing}()
-        plan_ichebyshevtransform!(x::AbstractArray{T,N}, ::Val{$kind}, dims...; kws...) where {T,N} =
-            IChebyshevTransformPlan{T,$IKIND,true,N,Nothing}()
-    end
-end
+plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{kind}, dims...; kws...) where {T,N,kind} =
+    ChebyshevTransformPlan{T,kind,Nothing,false,N,UnitRange{Int}}()
+plan_ichebyshevtransform(x::AbstractArray{T,N}, ::Val{kind}, dims...; kws...) where {T,N,kind} =
+    IChebyshevTransformPlan{T,kind,Nothing,false,N,UnitRange{Int}}()
+
+plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{kind}, dims...; kws...) where {T,N,kind} =
+    ChebyshevTransformPlan{T,kind,Nothing,true,N,UnitRange{Int}}()
+plan_ichebyshevtransform!(x::AbstractArray{T,N}, ::Val{kind}, dims...; kws...) where {T,N,kind} =
+    IChebyshevTransformPlan{T,kind,Nothing,true,N,UnitRange{Int}}()
+
 
 #following Chebfun's @Chebtech1/vals2coeffs.m and @Chebtech2/vals2coeffs.m
-function *(P::ChebyshevTransformPlan{T,FIRSTKIND,false,1,Nothing}, x::AbstractVector{T}) where T
+function *(P::ChebyshevTransformPlan{T,1,Nothing,false}, x::AbstractVector{T}) where T
     n = length(x)
     if n == 1
         x
@@ -568,7 +566,7 @@ function *(P::ChebyshevTransformPlan{T,FIRSTKIND,false,1,Nothing}, x::AbstractVe
 end
 
 
-# function *(P::ChebyshevTransformPlan{T,SECONDKIND,false,Nothing}, x::AbstractVector{T}) where T
+# function *(P::ChebyshevTransformPlan{T,1,K,Nothing,false}, x::AbstractVector{T}) where {T,K}
 #     n = length(x)
 #     if n == 1
 #         x
@@ -581,14 +579,14 @@ end
 # end
 
 
-*(P::ChebyshevTransformPlan{T,FIRSTKIND,true,Nothing}, x::AbstractVector{T}) where T =
-    copyto!(x, ChebyshevTransformPlan{T,FIRSTKIND,false,Nothing}() * x)
+*(P::ChebyshevTransformPlan{T,1,Nothing,true,N,R}, x::AbstractVector{T}) where {T,N,R} =
+    copyto!(x, ChebyshevTransformPlan{T,1,Nothing,false,N,R}() * x)
 # *(P::ChebyshevTransformPlan{T,2,true,Nothing}, x::AbstractVector{T}) where T =
 #     copyto!(x, ChebyshevTransformPlan{T,2,false,Nothing}() * x)
 
 
 #following Chebfun's @Chebtech1/vals2coeffs.m and @Chebtech2/vals2coeffs.m
-function *(P::IChebyshevTransformPlan{T,IFIRSTKIND,false,Nothing}, x::AbstractVector{T}) where T
+function *(P::IChebyshevTransformPlan{T,1,Nothing,false}, x::AbstractVector{T}) where T
     n = length(x)
     if n == 1
         x
@@ -601,7 +599,7 @@ function *(P::IChebyshevTransformPlan{T,IFIRSTKIND,false,Nothing}, x::AbstractVe
     end
 end
 
-# function *(P::IChebyshevTransformPlan{T,SECONDKIND,true,Nothing}, x::AbstractVector{T}) where T
+# function *(P::IChebyshevTransformPlan{T,2,K,Nothing,true}, x::AbstractVector{T}) where {T,K}
 #     n = length(x)
 #     if n == 1
 #         x
@@ -614,7 +612,7 @@ end
 #     end
 # end
 
-*(P::IChebyshevTransformPlan{T,IFIRSTKIND,true,Nothing}, x::AbstractVector{T}) where T =
-    copyto!(x, IChebyshevTransformPlan{T,IFIRSTKIND,false,Nothing}() * x)
+*(P::IChebyshevTransformPlan{T,1,Nothing,true,N,R}, x::AbstractVector{T}) where {T,N,R} =
+    copyto!(x, IChebyshevTransformPlan{T,1,Nothing,false,N,R}() * x)
 # *(P::IChebyshevTransformPlan{T,SECONDKIND,false,Nothing}, x::AbstractVector{T}) where T =
 #     IChebyshevTransformPlan{T,SECONDKIND,true,Nothing}() * copy(x)
