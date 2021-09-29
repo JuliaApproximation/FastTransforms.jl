@@ -113,12 +113,12 @@ using FastTransforms, Test
             f̃ = copy(f)
             f̄ = copy(f̌)
             P = @inferred(plan_chebyshevutransform(f))
-            @test P*f == f̌
+            @test P*f ≈ f̌
             @test f == f̃
             @test_throws ArgumentError P * T[1,2]
             P = @inferred(plan_chebyshevutransform!(f))
-            @test P*f == f̌
-            @test f == f̌
+            @test P*f ≈ f̌
+            @test f ≈ f̌
             @test_throws ArgumentError P * T[1,2]
             Pi = @inferred(plan_ichebyshevutransform(f̌))
             @test Pi*f̌ ≈ f̃
@@ -149,16 +149,16 @@ using FastTransforms, Test
             f̃ = copy(f)
             f̄ = copy(f̌)
             P = @inferred(plan_chebyshevutransform(f, Val(2)))
-            @test @inferred(P*f) == f̌
-            @test f == f̃
+            @test @inferred(P*f) ≈ f̌
+            @test f ≈ f̃
             @test_throws ArgumentError P * T[1,2]
             P = @inferred(plan_chebyshevutransform!(f, Val(2)))
-            @test @inferred(P*f) == f̌
-            @test f == f̌
+            @test @inferred(P*f) ≈ f̌
+            @test f ≈ f̌
             @test_throws ArgumentError P * T[1,2]
             Pi = @inferred(plan_ichebyshevutransform(f̌, Val(2)))
             @test @inferred(Pi*f̌) ≈ f̃
-            @test f̌ == f̄
+            @test f̌ ≈ f̄
             @test_throws ArgumentError Pi * T[1,2]
             Pi = @inferred(plan_ichebyshevutransform!(f̌, Val(2)))
             @test @inferred(Pi*f̌) ≈ f̃

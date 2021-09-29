@@ -29,7 +29,7 @@ function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws.
     end
 end
 function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
-    length(x) ≤ 1 && throw(ArgumentError("Array must contain at least 2 entries"))
+    any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
     ChebyshevTransformPlan{T,2,kindtuple(SECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, FFTW.REDFT00, dims...; kws...))
 end
 
@@ -42,7 +42,7 @@ function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws..
     end
 end
 function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
-    length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
+    any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
     ChebyshevTransformPlan{T,2,kindtuple(SECONDKIND,N,dims...)}(FFTW.plan_r2r(x, FFTW.REDFT00, dims...; kws...))
 end
 
@@ -202,8 +202,8 @@ end
 plan_ichebyshevtransform!(x::AbstractArray, dims...; kws...) = plan_ichebyshevtransform!(x, Val(1), dims...; kws...)
 plan_ichebyshevtransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevtransform(x, Val(1), dims...; kws...)
 
-@inline _icheb1_prerescale!(_, x::AbstractVector) = (x[1] *= 2)
-@inline function _icheb1_prerescale!(d::Number, x::AbstractMatrix)
+@inline _icheb1_prescale!(_, x::AbstractVector) = (x[1] *= 2)
+@inline function _icheb1_prescale!(d::Number, x::AbstractMatrix)
     if isone(d)
         lmul!(2, view(x,1,:))
     else
@@ -211,13 +211,13 @@ plan_ichebyshevtransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevtra
     end
     x
 end
-@inline function _icheb1_prerescale!(d::UnitRange, x::AbstractMatrix)
+@inline function _icheb1_prescale!(d::UnitRange, x::AbstractMatrix)
     lmul!(2, view(x,:,1))
     lmul!(2, view(x,1,:))
     x
 end
-@inline _icheb1_postrescale!(_, x::AbstractVector) = (x[1] /= 2)
-@inline function _icheb1_postrescale!(d::Number, x::AbstractMatrix)
+@inline _icheb1_postscale!(_, x::AbstractVector) = (x[1] /= 2)
+@inline function _icheb1_postscale!(d::Number, x::AbstractMatrix)
     if isone(d)
         ldiv!(2, view(x,1,:))
     else
@@ -226,7 +226,7 @@ end
     x
 end
 
-@inline function _icheb1_postrescale!(d::UnitRange, x::AbstractMatrix)
+@inline function _icheb1_postscale!(d::UnitRange, x::AbstractMatrix)
     ldiv!(2, view(x,1,:))
     ldiv!(2, view(x,:,1))
     x
@@ -236,7 +236,7 @@ function *(P::IChebyshevTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) wher
     n = length(x)
     n == 0 && return x
 
-    _icheb1_prerescale!(P.plan.region, x)
+    _icheb1_prescale!(P.plan.region, x)
     x = ldiv!(2^length(P.plan.region), P.plan*x)
     x
 end
@@ -246,14 +246,14 @@ function mul!(y::AbstractArray{T,N}, P::IChebyshevTransformPlan{T,1,K,false,N}, 
     length(y) == n || throw(DimensionMismatch("output must match dimension"))
     n == 0 && return y
 
-    _icheb1_prerescale!(P.plan.region, x) # Todo: don't mutate x
+    _icheb1_prescale!(P.plan.region, x) # Todo: don't mutate x
     _plan_mul!(y, P.plan, x)
-    _icheb1_postrescale!(P.plan.region, x)
+    _icheb1_postscale!(P.plan.region, x)
     ldiv!(2^length(P.plan.region), y)
 end
 
-@inline _icheb2_prerescale!(_, x::AbstractVector) = (x[1] *= 2; x[end] *= 2)
-@inline function _icheb2_prerescale!(d::Number, x::AbstractMatrix)
+@inline _icheb2_prescale!(_, x::AbstractVector) = (x[1] *= 2; x[end] *= 2)
+@inline function _icheb2_prescale!(d::Number, x::AbstractMatrix)
     if isone(d)
         lmul!(2, @view(x[1,:]))
         lmul!(2, @view(x[end,:]))
@@ -263,7 +263,7 @@ end
     end
     x
 end
-@inline function _icheb2_prerescale!(d::UnitRange, x::AbstractMatrix)
+@inline function _icheb2_prescale!(d::UnitRange, x::AbstractMatrix)
     lmul!(2, @view(x[1,:]))
     lmul!(2, @view(x[end,:]))
     lmul!(2, @view(x[:,1]))
@@ -289,12 +289,12 @@ end
     x
 end
 @inline function _icheb2_rescale!(d::Number, y::AbstractArray{T}) where T
-    _icheb2_prerescale!(d, y)
+    _icheb2_prescale!(d, y)
     lmul!(convert(T, size(y,d) - 1)/2, y)
     y
 end
 @inline function _icheb2_rescale!(d::UnitRange, y::AbstractArray{T}) where T
-    _icheb2_prerescale!(d, y)
+    _icheb2_prescale!(d, y)
     lmul!(prod(convert.(T, size(y) .- 1)./2), y)
     y
 end
@@ -302,7 +302,7 @@ end
 function *(P::IChebyshevTransformPlan{T,2,K,true,N}, x::AbstractArray{T,N}) where {T<:fftwNumber,K,N}
     n = length(x)
 
-    _icheb2_prerescale!(P.plan.region, x)
+    _icheb2_prescale!(P.plan.region, x)
     x = inv(P)*x
     _icheb2_rescale!(P.plan.region, x)
 end
@@ -311,7 +311,7 @@ function mul!(y::AbstractArray{T,N}, P::IChebyshevTransformPlan{T,2,K,false,N}, 
     n = length(x)
     length(y) == n || throw(DimensionMismatch("output must match dimension"))
 
-    _icheb2_prerescale!(P.plan.region, x)
+    _icheb2_prescale!(P.plan.region, x)
     _plan_mul!(y, inv(P), x)
     _icheb2_postrescale!(P.plan.region, x)
     _icheb2_rescale!(P.plan.region, y)
@@ -324,71 +324,117 @@ ichebyshevtransform(x, dims...; kwds...) = plan_ichebyshevtransform(x, dims...; 
 
 ## Chebyshev U
 
-struct ChebyshevUTransformPlan{T,kind,inplace,P} <: ChebyshevPlan{T}
-    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
-    ChebyshevUTransformPlan{T,kind,inplace,P}(plan) where {T,kind,inplace,P} = new{T,kind,inplace,P}(plan)
-    ChebyshevUTransformPlan{T,kind,inplace,P}() where {T,kind,inplace,P} = new{T,kind,inplace,P}()
+const UFIRSTKIND = 9
+const USECONDKIND = 7
+
+struct ChebyshevUTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
+    plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}
+    ChebyshevUTransformPlan{T,kind,K,inplace,N,R}(plan) where {T,kind,K,inplace,N,R} = new{T,kind,K,inplace,N,R}(plan)
+    ChebyshevUTransformPlan{T,kind,K,inplace,N,R}() where {T,kind,K,inplace,N,R} = new{T,kind,K,inplace,N,R}()
 end
 
-ChebyshevUTransformPlan{T,kind,inplace}(plan::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} =
-    ChebyshevUTransformPlan{T,kind,inplace,P}(plan)
-
-ChebyshevUTransformPlan{T,kind,inplace}(plan::ChebyshevUTransformPlan{T,kind,inp,P}) where {T,kind,inplace,inp,P} =
-    ChebyshevUTransformPlan{T,kind,inplace,P}(plan.plan)
+ChebyshevUTransformPlan{T,kind,K}(plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
+    ChebyshevUTransformPlan{T,kind,K,inplace,N,R}(plan)
 
 
-
-function plan_chebyshevutransform!(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
+function plan_chebyshevutransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        ChebyshevUTransformPlan{T,1,true,(9,)}()
+        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        ChebyshevUTransformPlan{T,1,true,(9,)}(FFTW.plan_r2r!(x, FFTW.RODFT10))
+        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, FFTW.RODFT10, dims...; kws...))
     end
 end
-function plan_chebyshevutransform!(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
-    length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
-    ChebyshevUTransformPlan{T,2,true,(7,)}(FFTW.plan_r2r!(x, FFTW.RODFT00))
+function plan_chebyshevutransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
+    any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
+    ChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, FFTW.RODFT00, dims...; kws...))
 end
 
-function plan_chebyshevutransform(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
+function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        ChebyshevUTransformPlan{T,1,false,(9,)}()
+        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        ChebyshevUTransformPlan{T,1,false,(9,)}(FFTW.plan_r2r!(x, FFTW.RODFT10))
+        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, FFTW.RODFT10, dims...; kws...))
     end
 end
-function plan_chebyshevutransform(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
-    length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
-    ChebyshevUTransformPlan{T,2,false,(7,)}(FFTW.plan_r2r!(x, FFTW.RODFT00))
+function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
+    any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
+    ChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, FFTW.RODFT00, dims...; kws...))
 end
 
-plan_chebyshevutransform!(x::AbstractVector) = plan_chebyshevutransform!(x, Val(1))
-plan_chebyshevutransform(x::AbstractVector) = plan_chebyshevutransform(x, Val(1))
+plan_chebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform!(x, Val(1), dims...; kws...)
+plan_chebyshevutransform(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform(x, Val(1), dims...; kws...)
 
 
-function *(P::ChebyshevUTransformPlan{T,1,true},x::AbstractVector{T}) where T
+@inline function _chebu1_prescale!(_, x::AbstractVector{T}) where T
     n = length(x)
-    n ≤ 1 && return x
-
     for k=1:n # sqrt(1-x_j^2) weight
         x[k] *= sinpi(one(T)/(2n) + (k-one(T))/n)/n
     end
+    x
+end
+
+@inline function _chebu1_postscale!(_, x::AbstractVector{T}) where T
+    n = length(x)
+    for k=1:n # sqrt(1-x_j^2) weight
+        x[k] /= sinpi(one(T)/(2n) + (k-one(T))/n)/n
+    end
+    x
+end
+
+function *(P::ChebyshevUTransformPlan{T,1,K,true}, x::AbstractVector{T}) where {T,K}
+    length(x) ≤ 1 && return x
+    _chebu1_prescale!(P.plan.region, x)
     P.plan * x
 end
 
-function *(P::ChebyshevUTransformPlan{T,2,true}, x::AbstractVector{T}) where T
+function mul!(y::AbstractVector{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::AbstractVector{T}) where {T,K}
     n = length(x)
-    n ≤ 1 && return x
+    length(x) ≤ 1 && return copyto!(y, x)
+    _chebu1_prescale!(P.plan.region, x)
+    _plan_mul!(y, P.plan, x)
+    _chebu1_postscale!(P.plan.region, x)
+    y
+end
 
+@inline function _chebu2_prescale!(_, x::AbstractVector{T}) where T
+    n = length(x)
     c = one(T)/ (n+1)
     for k=1:n # sqrt(1-x_j^2) weight
         x[k] *= sinpi(k*c)
     end
-    lmul!(c, P.plan * x)
+    x
 end
 
-chebyshevutransform!(x::AbstractVector{T}, kind=Val(1)) where {T<:fftwNumber} =
-    plan_chebyshevutransform!(x, kind)*x
+@inline function _chebu2_postscale!(_, x::AbstractVector{T}) where T
+    n = length(x)
+    c = one(T)/ (n+1)
+    for k=1:n # sqrt(1-x_j^2) weight
+        x[k] /= sinpi(k*c)
+    end
+    x
+end
+
+function *(P::ChebyshevUTransformPlan{T,2,K,true}, x::AbstractVector{T}) where {T,K}
+    n = length(x)
+    n ≤ 1 && return x
+    _chebu2_prescale!(P.plan.region, x)
+    lmul!(one(T)/ (n+1), P.plan * x)
+end
+
+function mul!(y::AbstractVector{T}, P::ChebyshevUTransformPlan{T,2,K,false}, x::AbstractVector{T}) where {T,K}
+    n = length(x)
+    n ≤ 1 && return copyto!(y, x)
+    _chebu2_prescale!(P.plan.region, x)
+    _plan_mul!(y, P.plan, x)
+    _chebu2_postscale!(P.plan.region, x)
+    lmul!(one(T)/ (n+1), y)
+end
+
+*(P::ChebyshevUTransformPlan{T,kind,K,false,N}, x::AbstractArray{T,N}) where {T,kind,K,N} =
+    mul!(similar(x), P, x)
+
+chebyshevutransform!(x::AbstractVector{T}, dims...; kws...) where {T<:fftwNumber} =
+    plan_chebyshevutransform!(x, dims...; kws...)*x
 
 
 """
@@ -397,9 +443,8 @@ chebyshevutransform!(x::AbstractVector{T}, kind=Val(1)) where {T<:fftwNumber} =
 transforms from values on a Chebyshev grid of the first or second kind to Chebyshev
 coefficients of the 2nd kind (Chebyshev U expansion).
 """
-chebyshevutransform(x, kind=Val(1)) = chebyshevutransform!(Array(x), kind)
+chebyshevutransform(x, dims...; kws...) = plan_chebyshevutransform(x, dims...; kws...)*x
 
-*(P::ChebyshevUTransformPlan{T,k,false}, x::AbstractVector{T}) where {T,k} = ChebyshevUTransformPlan{T,k,true}(P)*Array(x)
 
 ## Inverse transforms take ChebyshevU coefficients and produce values at ChebyshevU points of the first and second kinds
 
