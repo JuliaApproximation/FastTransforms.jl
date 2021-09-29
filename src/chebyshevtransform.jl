@@ -161,8 +161,6 @@ end
 IChebyshevTransformPlan{T,kind,K}(F::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
     IChebyshevTransformPlan{T,kind,K,inplace,N,R}(F)
 
-size(P::IChebyshevTransformPlan) = isdefined(P, :plan) ? size(P.plan) : (0,)
-length(P::IChebyshevTransformPlan) = isdefined(P, :plan) ? length(P.plan) : 0
 
 
 # second kind Chebyshev transforms share a plan with their inverse
@@ -242,9 +240,8 @@ function *(P::IChebyshevTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) wher
 end
 
 function mul!(y::AbstractArray{T,N}, P::IChebyshevTransformPlan{T,1,K,false,N}, x::AbstractArray{T,N}) where {T<:fftwNumber,K,N}
-    n = length(x)
-    length(y) == n || throw(DimensionMismatch("output must match dimension"))
-    n == 0 && return y
+    size(y) == size(x) || throw(DimensionMismatch("output must match dimension"))
+    isempty(x) && return y
 
     _icheb1_prescale!(P.plan.region, x) # Todo: don't mutate x
     _plan_mul!(y, P.plan, x)
@@ -408,7 +405,7 @@ end
 @inline function _chebu2_postscale!(_, x::AbstractVector{T}) where T
     n = length(x)
     c = one(T)/ (n+1)
-    for k=1:n # sqrt(1-x_j^2) weight
+    @inbounds for k=1:n # sqrt(1-x_j^2) weight
         x[k] /= sinpi(k*c)
     end
     x
@@ -447,87 +444,109 @@ chebyshevutransform(x, dims...; kws...) = plan_chebyshevutransform(x, dims...; k
 
 
 ## Inverse transforms take ChebyshevU coefficients and produce values at ChebyshevU points of the first and second kinds
+const IUFIRSTKIND = FFTW.RODFT01
 
-
-struct IChebyshevUTransformPlan{T,kind,inplace,P} <: ChebyshevPlan{T}
-    plan::FFTW.r2rFFTWPlan{T,P,true,1,UnitRange{Int}}
-    IChebyshevUTransformPlan{T,kind,inplace,P}(plan) where {T,kind,inplace,P} = new{T,kind,inplace,P}(plan)
-    IChebyshevUTransformPlan{T,kind,inplace,P}() where {T,kind,inplace,P} = new{T,kind,inplace,P}()
+struct IChebyshevUTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
+    plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}
+    IChebyshevUTransformPlan{T,kind,K,inplace,N,R}(plan) where {T,kind,K,inplace,N,R} = new{T,kind,K,inplace,N,R}(plan)
+    IChebyshevUTransformPlan{T,kind,K,inplace,N,R}() where {T,kind,K,inplace,N,R} = new{T,kind,K,inplace,N,R}()
 end
 
-IChebyshevUTransformPlan{T,kind,inplace}(F::FFTW.r2rFFTWPlan{T,P}) where {T,kind,inplace,P} =
-    IChebyshevUTransformPlan{T,kind,inplace,P}(F)
+IChebyshevUTransformPlan{T,kind,K}(F::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
+    IChebyshevUTransformPlan{T,kind,K,inplace,N,R}(F)
 
-IChebyshevUTransformPlan{T,kind,true}(F::IChebyshevUTransformPlan{T,kind,false,P}) where {T,kind,P} =
-    IChebyshevUTransformPlan{T,kind,true,P}(F.plan)
-
-function plan_ichebyshevutransform!(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
+function plan_ichebyshevutransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        IChebyshevUTransformPlan{T,1,true,(8,)}()
+        IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        IChebyshevUTransformPlan{T,1,true,(8,)}(FFTW.plan_r2r!(x, FFTW.RODFT01))
+        IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, IUFIRSTKIND, dims...; kws...))
     end
 end
-function plan_ichebyshevutransform!(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
-    length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
-    IChebyshevUTransformPlan{T,2,true,(7,)}(FFTW.plan_r2r!(x, FFTW.RODFT00))
+function plan_ichebyshevutransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
+    any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
+    IChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, USECONDKIND))
 end
 
-function plan_ichebyshevutransform(x::AbstractVector{T}, ::Val{1}) where T<:fftwNumber
+function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        IChebyshevUTransformPlan{T,1,false,(8,)}()
+        IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        IChebyshevUTransformPlan{T,1,false,(8,)}(FFTW.plan_r2r!(x, FFTW.RODFT01))
+        IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, IUFIRSTKIND, dims...; kws...))
     end
 end
-function plan_ichebyshevutransform(x::AbstractVector{T}, ::Val{2}) where T<:fftwNumber
-    length(x) ≤ 1 && throw(ArgumentError("Vector must contain at least 2 entries"))
-    IChebyshevUTransformPlan{T,2,false,(7,)}(FFTW.plan_r2r!(x, FFTW.RODFT00))
+function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
+    any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
+    IChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, USECONDKIND))
 end
 
-plan_ichebyshevutransform!(x::AbstractVector) = plan_ichebyshevutransform!(x, Val(1))
-plan_ichebyshevutransform(x::AbstractVector) = plan_ichebyshevutransform(x, Val(1))
 
+plan_ichebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_ichebyshevutransform!(x, Val(1), dims...; kws...)
+plan_ichebyshevutransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevutransform(x, Val(1), dims...; kws...)
 
-function *(P::IChebyshevUTransformPlan{T,1,true}, x::AbstractVector{T}) where T<:fftwNumber
+function _ichebyu1_postscale!(_, x::AbstractVector{T}) where T
     n = length(x)
-    n ≤ 1 && return x
-
-    x = P.plan * x
-    for k=1:n # sqrt(1-x_j^2) weight
+    @inbounds for k=1:n # sqrt(1-x_j^2) weight
         x[k] /= 2sinpi(one(T)/(2n) + (k-one(T))/n)
     end
     x
 end
-
-
-
-function *(P::IChebyshevUTransformPlan{T,2,true}, x::AbstractVector{T}) where T<:fftwNumber
+function *(P::IChebyshevUTransformPlan{T,1,K,true}, x::AbstractVector{T}) where {T<:fftwNumber,K}
     n = length(x)
     n ≤ 1 && return x
 
-    c = one(T)/ (n+1)
-    lmul!((n+1)/(2n+2*one(T)), x)
     x = P.plan * x
+    _ichebyu1_postscale!(P.plan.region, x)
+end
+
+function mul!(y::AbstractVector{T}, P::IChebyshevUTransformPlan{T,1,K,false}, x::AbstractVector{T}) where {T<:fftwNumber,K}
+    n = length(x)
+    length(y) == n || throw(DimensionMismatch("output must match dimension"))
+    n ≤ 1 && return x
+
+    _plan_mul!(y, P.plan, x)
+    _ichebyu1_postscale!(P.plan.region, y)
+end
+
+function _ichebu2_rescale!(_, x::AbstractVector{T}) where T
+    n = length(x)
+    c = one(T)/ (n+1)
     for k=1:n # sqrt(1-x_j^2) weight
         x[k] /= sinpi(k*c)
     end
+    ldiv!(2, x)
     x
 end
 
-ichebyshevutransform!(x::AbstractVector{T}, kind=Val(1)) where {T<:fftwNumber} =
-    plan_ichebyshevutransform!(x, kind)*x
+function *(P::IChebyshevUTransformPlan{T,2,K,true}, x::AbstractVector{T}) where {T<:fftwNumber,K}
+    n = length(x)
+    n ≤ 1 && return x
 
-ichebyshevutransform(x, kind=Val(1)) = ichebyshevutransform!(Array(x), kind)
+    x = P.plan * x
+    _ichebu2_rescale!(P.plan.region, x)
+end
 
-*(P::IChebyshevUTransformPlan{T,k,false},x::AbstractVector{T}) where {T,k} =
-    IChebyshevUTransformPlan{T,k,true}(P)*Array(x)
+function mul!(y::AbstractVector{T}, P::IChebyshevUTransformPlan{T,2,K,false}, x::AbstractVector{T}) where {T<:fftwNumber,K}
+    n = length(x)
+    length(y) == n || throw(DimensionMismatch("output must match dimension"))
+    n ≤ 1 && return x
+
+    _plan_mul!(y, P.plan, x)
+    _ichebu2_rescale!(P.plan.region, y)
+end
+
+ichebyshevutransform!(x::AbstractVector{T}, dims...; kwds...) where {T<:fftwNumber} =
+    plan_ichebyshevutransform!(x, dims...; kwds...)*x
+
+ichebyshevutransform(x, dims...; kwds...) = plan_ichebyshevutransform(x, dims...; kwds...)*x
+
+*(P::IChebyshevUTransformPlan{T,k,K,false,N}, x::AbstractArray{T,N}) where {T,k,K,N} =
+    mul!(similar(x), P, x)
 
 
 ## Code generation for integer inputs
 
 for func in (:chebyshevtransform,:ichebyshevtransform,:chebyshevutransform,:ichebyshevutransform)
-    @eval $func(x::AbstractVector{T}, kind=Val(1)) where {T<:Integer} = $func(convert(AbstractVector{Float64},x), kind)
+    @eval $func(x::AbstractVector{T}, dims...; kwds...) where {T<:Integer} = $func(convert(AbstractVector{Float64},x), dims...; kwds...)
 end
 
 
