@@ -176,8 +176,11 @@ using FastTransforms, Test
         X = randn(4,5)
         @test @inferred(chebyshevtransform(X,1)) ≈ @inferred(chebyshevtransform!(copy(X),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)])...)
         @test chebyshevtransform(X,2) ≈ chebyshevtransform!(copy(X),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)])...)'
+        @test @inferred(chebyshevtransform(X,Val(2),1)) ≈ @inferred(chebyshevtransform!(copy(X),Val(2),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)],Val(2))...)
+        @test chebyshevtransform(X,Val(2),2) ≈ chebyshevtransform!(copy(X),Val(2),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
 
-        @test @inferred(chebyshevtransform(X)) == @inferred(chebyshevtransform!(copy(X))) == chebyshevtransform(chebyshevtransform(X,1),2)
+        @test @inferred(chebyshevtransform(X)) ≈ @inferred(chebyshevtransform!(copy(X))) ≈ chebyshevtransform(chebyshevtransform(X,1),2)
+        @test @inferred(chebyshevtransform(X,Val(2))) ≈ @inferred(chebyshevtransform!(copy(X),Val(2))) ≈ chebyshevtransform(chebyshevtransform(X,Val(2),1),Val(2),2)
 
 
         X = randn(1,1)

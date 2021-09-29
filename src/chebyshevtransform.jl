@@ -89,19 +89,41 @@ function mul!(y::AbstractArray{T}, P::ChebyshevTransformPlan{T,1,K,false}, x::Ab
     _cheb1_rescale!(P.plan.region, y)
 end
 
-function *(P::ChebyshevTransformPlan{T,2,K,true}, x::AbstractVector{T}) where {T,K}
-    n = length(x)
-    y = P.plan*x # will be  === x if in-place
-    y[1] /= 2; y[end] /= 2
-    lmul!(inv(convert(T,n-1)),y)
+
+_cheb2_rescale!(_, y::AbstractVector) = (y[1] /= 2; y[end] /= 2; ldiv!(length(y)-1, y))
+
+function _cheb2_rescale!(d::Number, y::AbstractMatrix{T}) where T
+    if isone(d)
+        ldiv!(2, @view(y[1,:]))
+        ldiv!(2, @view(y[end,:]))
+    else
+        ldiv!(2, @view(y[:,1]))
+        ldiv!(2, @view(y[:,end]))
+    end
+    ldiv!(size(y,d)-1, y)
 end
 
-function mul!(y::AbstractVector{T}, P::ChebyshevTransformPlan{T,2,K,false}, x::AbstractVector) where {T,K}
+# TODO: higher dimensional arrays
+function _cheb2_rescale!(d::UnitRange, y::AbstractMatrix{T}) where T
+    @assert d == 1:2
+    ldiv!(2, @view(y[1,:]))
+    ldiv!(2, @view(y[end,:]))
+    ldiv!(2, @view(y[:,1]))
+    ldiv!(2, @view(y[:,end]))
+    ldiv!(prod(size(y) .- 1), y)
+end
+
+function *(P::ChebyshevTransformPlan{T,2,K,true}, x::AbstractArray{T}) where {T,K}
+    n = length(x)
+    y = P.plan*x # will be  === x if in-place
+    _cheb2_rescale!(P.plan.region, y)
+end
+
+function mul!(y::AbstractArray{T}, P::ChebyshevTransformPlan{T,2,K,false}, x::AbstractArray) where {T,K}
     n = length(x)
     length(y) == n || throw(DimensionMismatch("output must match dimension"))
     _plan_mul!(y, P.plan, x)
-    y[1] /= 2; y[end] /= 2
-    lmul!(inv(convert(T,n-1)),y)
+    _cheb2_rescale!(P.plan.region, y)
 end
 
 *(P::ChebyshevTransformPlan{T,kind,K,false}, x::AbstractArray{T}) where {T,kind,K} =
