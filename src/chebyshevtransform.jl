@@ -6,8 +6,8 @@ size(P::ChebyshevPlan) = isdefined(P, :plan) ? size(P.plan) : (0,)
 length(P::ChebyshevPlan) = isdefined(P, :plan) ? length(P.plan) : 0
 
 
-const FIRSTKIND = 5
-const SECONDKIND = 3
+const FIRSTKIND = FFTW.REDFT10
+const SECONDKIND = FFTW.REDFT00
 
 struct ChebyshevTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
     plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}
@@ -25,12 +25,12 @@ function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws.
     if isempty(x)
         ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, FFTW.REDFT10, dims...; kws...))
+        ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, FIRSTKIND, dims...; kws...))
     end
 end
 function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    ChebyshevTransformPlan{T,2,kindtuple(SECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, FFTW.REDFT00, dims...; kws...))
+    ChebyshevTransformPlan{T,2,kindtuple(SECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, SECONDKIND, dims...; kws...))
 end
 
 
@@ -38,12 +38,12 @@ function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws..
     if isempty(x)
         ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, FFTW.REDFT10, dims...; kws...))
+        ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, FIRSTKIND, dims...; kws...))
     end
 end
 function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    ChebyshevTransformPlan{T,2,kindtuple(SECONDKIND,N,dims...)}(FFTW.plan_r2r(x, FFTW.REDFT00, dims...; kws...))
+    ChebyshevTransformPlan{T,2,kindtuple(SECONDKIND,N,dims...)}(FFTW.plan_r2r(x, SECONDKIND, dims...; kws...))
 end
 
 plan_chebyshevtransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevtransform!(x, Val(1), dims...; kws...)
@@ -150,7 +150,7 @@ chebyshevtransform(x, dims...; kws...) = plan_chebyshevtransform(x, dims...; kws
 ## Inverse transforms take Chebyshev coefficients and produce values at Chebyshev points of the first and second kinds
 
 
-const IFIRSTKIND = 4
+const IFIRSTKIND = FFTW.REDFT01
 
 struct IChebyshevTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
     plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}
@@ -179,7 +179,7 @@ function plan_ichebyshevtransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws
     if isempty(x)
         IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, FFTW.REDFT01, dims...; kws...))
+        IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, IFIRSTKIND, dims...; kws...))
     end
 end
 
@@ -191,7 +191,7 @@ function plan_ichebyshevtransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws.
     if isempty(x)
         IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, FFTW.REDFT01, dims...; kws...))
+        IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, IFIRSTKIND, dims...; kws...))
     end
 end
 
@@ -324,8 +324,8 @@ ichebyshevtransform(x, dims...; kwds...) = plan_ichebyshevtransform(x, dims...; 
 
 ## Chebyshev U
 
-const UFIRSTKIND = 9
-const USECONDKIND = 7
+const UFIRSTKIND = FFTW.RODFT10
+const USECONDKIND = FFTW.RODFT00
 
 struct ChebyshevUTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
     plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}
@@ -341,24 +341,24 @@ function plan_chebyshevutransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws
     if isempty(x)
         ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, FFTW.RODFT10, dims...; kws...))
+        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, UFIRSTKIND, dims...; kws...))
     end
 end
 function plan_chebyshevutransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    ChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, FFTW.RODFT00, dims...; kws...))
+    ChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, USECONDKIND, dims...; kws...))
 end
 
 function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
         ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
     else
-        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, FFTW.RODFT10, dims...; kws...))
+        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, UFIRSTKIND, dims...; kws...))
     end
 end
 function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    ChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, FFTW.RODFT00, dims...; kws...))
+    ChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
 plan_chebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform!(x, Val(1), dims...; kws...)
