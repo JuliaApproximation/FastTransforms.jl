@@ -135,7 +135,6 @@ using FastTransforms, Test
             @test ichebyshevutransform(T[]) == T[]
         end
     end
-
     @testset "Chebyshev second kind points <-> second kind coefficients" begin
         for T in (Float32, Float64, ComplexF32, ComplexF64)
             n = 20
@@ -175,11 +174,10 @@ using FastTransforms, Test
 
     @testset "matrix" begin
         X = randn(4,5)
-        P = plan_chebyshevtransform(X, 1)
-        P * X
-        
+        @test @inferred(chebyshevtransform(X,1)) ≈ @inferred(chebyshevtransform!(copy(X),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)])...)
+        @test chebyshevtransform(X,2) ≈ chebyshevtransform!(copy(X),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)])...)'
 
-        chebyshevtransform(X[:,1])
+        @test @inferred(chebyshevtransform(X)) == @inferred(chebyshevtransform!(copy(X))) == chebyshevtransform(chebyshevtransform(X,1),2)
 
 
         X = randn(1,1)
