@@ -174,6 +174,14 @@ using FastTransforms, Test
     end
 
     @testset "matrix" begin
+        X = randn(4,5)
+        P = plan_chebyshevtransform(X, 1)
+        P * X
+        
+
+        chebyshevtransform(X[:,1])
+
+
         X = randn(1,1)
         @test chebyshevtransform!(copy(X), Val(1)) == ichebyshevtransform!(copy(X), Val(1)) == X
         @test_throws ArgumentError chebyshevtransform!(copy(X), Val(2))
