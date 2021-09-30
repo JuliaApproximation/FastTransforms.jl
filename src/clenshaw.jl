@@ -53,6 +53,13 @@ overwriting `x` with the results.
 clenshaw!(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector) =
     clenshaw!(c, A, B, C, x, Ones{eltype(x)}(length(x)), x)
 
+clenshaw!(c::AbstractMatrix, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::Number, f::AbstractVector) =
+    clenshaw!(c, A, B, C, x, one(eltype(x)), f)
+
+
+clenshaw!(c::AbstractMatrix, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector, f::AbstractMatrix) =
+    clenshaw!(c, A, B, C, x, Ones{eltype(x)}(length(x)), f)
+
 
 """
 clenshaw!(c, A, B, C, x, ϕ₀, f)
@@ -66,6 +73,22 @@ function clenshaw!(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::A
     f .= ϕ₀ .* clenshaw.(Ref(c), Ref(A), Ref(B), Ref(C), x)
 end
 
+
+function clenshaw!(c::AbstractMatrix, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::Number, ϕ₀::Number, f::AbstractVector)
+    size(c,2) == length(f) || throw(DimensionMismatch("coeffients size and output length must match"))
+    for j in axes(c,2)
+        f[j] = ϕ₀ * clenshaw(view(c,:,j), A, B, C, x)
+    end
+    f
+end
+
+function clenshaw!(c::AbstractMatrix, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector, ϕ₀::AbstractVector, f::AbstractMatrix)
+    (size(x,1),size(c,2)) == size(f) || throw(DimensionMismatch("coeffients size and output length must match"))
+    for j in axes(c,2)
+        clenshaw!(view(c,:,j), A, B, C, x, ϕ₀, view(f,:,j))
+    end
+    f
+end
 
 Base.@propagate_inbounds _clenshaw_next(n, A, B, C, x, c, bn1, bn2) = muladd(muladd(A[n],x,B[n]), bn1, muladd(-C[n+1],bn2,c[n]))
 Base.@propagate_inbounds _clenshaw_next(n, A, ::Zeros, C, x, c, bn1, bn2) = muladd(A[n]*x, bn1, muladd(-C[n+1],bn2,c[n]))
@@ -105,6 +128,16 @@ end
 
 clenshaw(c::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector) =
     clenshaw!(c, A, B, C, copy(x))
+
+function clenshaw(c::AbstractMatrix, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::Number)
+    T = promote_type(eltype(c),eltype(A),eltype(B),eltype(C),typeof(x))
+    clenshaw!(c, A, B, C, x, Vector{T}(undef, size(c,2)))
+end
+
+function clenshaw(c::AbstractMatrix, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector)
+    T = promote_type(eltype(c),eltype(A),eltype(B),eltype(C),typeof(x))
+    clenshaw!(c, A, B, C, x, Matrix{T}(undef, size(x,1), size(c,2)))
+end
 
 ###
 # Chebyshev T special cases
