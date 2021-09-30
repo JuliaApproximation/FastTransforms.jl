@@ -76,7 +76,7 @@ end
 
 function clenshaw!(c::AbstractMatrix, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::Number, ϕ₀::Number, f::AbstractVector)
     size(c,2) == length(f) || throw(DimensionMismatch("coeffients size and output length must match"))
-    for j in axes(c,2)
+    @inbounds for j in axes(c,2)
         f[j] = ϕ₀ * clenshaw(view(c,:,j), A, B, C, x)
     end
     f
@@ -84,7 +84,7 @@ end
 
 function clenshaw!(c::AbstractMatrix, A::AbstractVector, B::AbstractVector, C::AbstractVector, x::AbstractVector, ϕ₀::AbstractVector, f::AbstractMatrix)
     (size(x,1),size(c,2)) == size(f) || throw(DimensionMismatch("coeffients size and output length must match"))
-    for j in axes(c,2)
+    @inbounds for j in axes(c,2)
         clenshaw!(view(c,:,j), A, B, C, x, ϕ₀, view(f,:,j))
     end
     f
@@ -188,4 +188,22 @@ function clenshaw(c::AbstractVector, x::Number)
     end
 end
 
+function clenshaw!(c::AbstractMatrix, x::Number, f::AbstractVector)
+    size(c,2) == length(f) || throw(DimensionMismatch("coeffients size and output length must match"))
+    @inbounds for j in axes(c,2)
+        f[j] = clenshaw(view(c,:,j), x)
+    end
+    f
+end
+
+function clenshaw!(c::AbstractMatrix, x::AbstractVector, f::AbstractMatrix)
+    (size(x,1),size(c,2)) == size(f) || throw(DimensionMismatch("coeffients size and output length must match"))
+    @inbounds for j in axes(c,2)
+        clenshaw!(view(c,:,j), x, view(f,:,j))
+    end
+    f
+end
+
 clenshaw(c::AbstractVector, x::AbstractVector) = clenshaw!(c, copy(x))
+clenshaw(c::AbstractMatrix, x::Number) = clenshaw!(c, x, Vector{promote_type(eltype(c),typeof(x))}(undef, size(c,2)))
+clenshaw(c::AbstractMatrix, x::AbstractVector) = clenshaw!(c, x, Matrix{promote_type(eltype(c),eltype(x))}(undef, size(x,1), size(c,2)))

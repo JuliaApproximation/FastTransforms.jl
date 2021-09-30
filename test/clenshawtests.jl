@@ -30,6 +30,12 @@ import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrenc
                 # modifies x and xv
                 @test clenshaw!(cv2, xv) == xv == x == clenshaw([1,3], elty[1,0,0.1])
             end
+
+            @testset "matrix coefficients" begin
+                c = [1 2; 3 4; 5 6]
+                @test clenshaw(c,0.1) ≈ [clenshaw(c[:,1],0.1), clenshaw(c[:,2],0.1)]
+                @test clenshaw(c,[0.1,0.2]) ≈ [clenshaw(c[:,1], 0.1) clenshaw(c[:,2], 0.1); clenshaw(c[:,1], 0.2) clenshaw(c[:,2], 0.2)] 
+            end
         end
     end
 
@@ -46,6 +52,12 @@ import FastTransforms: clenshaw, clenshaw!, forwardrecurrence!, forwardrecurrenc
         c = [1,2,3]
         @test c'forwardrecurrence(3, A, B, C, 0.1) ≈ clenshaw([1,2,3], A, B, C, 0.1) ≈ 
             1 + (2sin(2acos(0.1)) + 3sin(3acos(0.1)))/sqrt(1-0.1^2)
+
+        @testset "matrix coefficients" begin
+            c = [1 2; 3 4; 5 6]
+            @test clenshaw(c,A,B,C,0.1) ≈ [clenshaw(c[:,1],A,B,C,0.1), clenshaw(c[:,2],A,B,C,0.1)]
+            @test clenshaw(c,A,B,C,[0.1,0.2]) ≈ [clenshaw(c[:,1], A,B,C,0.1) clenshaw(c[:,2], A,B,C,0.1); clenshaw(c[:,1], A,B,C,0.2) clenshaw(c[:,2], A,B,C,0.2)] 
+        end            
     end
 
     @testset "Chebyshev-as-general" begin
