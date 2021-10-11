@@ -113,12 +113,12 @@ using FastTransforms, Test
             f̃ = copy(f)
             f̄ = copy(f̌)
             P = @inferred(plan_chebyshevutransform(f))
-            @test P*f == f̌
+            @test P*f ≈ f̌
             @test f == f̃
             @test_throws ArgumentError P * T[1,2]
             P = @inferred(plan_chebyshevutransform!(f))
-            @test P*f == f̌
-            @test f == f̌
+            @test P*f ≈ f̌
+            @test f ≈ f̌
             @test_throws ArgumentError P * T[1,2]
             Pi = @inferred(plan_ichebyshevutransform(f̌))
             @test Pi*f̌ ≈ f̃
@@ -135,7 +135,6 @@ using FastTransforms, Test
             @test ichebyshevutransform(T[]) == T[]
         end
     end
-
     @testset "Chebyshev second kind points <-> second kind coefficients" begin
         for T in (Float32, Float64, ComplexF32, ComplexF64)
             n = 20
@@ -150,16 +149,16 @@ using FastTransforms, Test
             f̃ = copy(f)
             f̄ = copy(f̌)
             P = @inferred(plan_chebyshevutransform(f, Val(2)))
-            @test @inferred(P*f) == f̌
-            @test f == f̃
+            @test @inferred(P*f) ≈ f̌
+            @test f ≈ f̃
             @test_throws ArgumentError P * T[1,2]
             P = @inferred(plan_chebyshevutransform!(f, Val(2)))
-            @test @inferred(P*f) == f̌
-            @test f == f̌
+            @test @inferred(P*f) ≈ f̌
+            @test f ≈ f̌
             @test_throws ArgumentError P * T[1,2]
             Pi = @inferred(plan_ichebyshevutransform(f̌, Val(2)))
             @test @inferred(Pi*f̌) ≈ f̃
-            @test f̌ == f̄
+            @test f̌ ≈ f̄
             @test_throws ArgumentError Pi * T[1,2]
             Pi = @inferred(plan_ichebyshevutransform!(f̌, Val(2)))
             @test @inferred(Pi*f̌) ≈ f̃
@@ -174,34 +173,34 @@ using FastTransforms, Test
     end
 
     @testset "matrix" begin
+        X = randn(4,5)
+        @testset "chebyshevtransform" begin
+            @test @inferred(chebyshevtransform(X,1)) ≈ @inferred(chebyshevtransform!(copy(X),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)])...)
+            @test chebyshevtransform(X,2) ≈ chebyshevtransform!(copy(X),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)])...)'
+            @test @inferred(chebyshevtransform(X,Val(2),1)) ≈ @inferred(chebyshevtransform!(copy(X),Val(2),1)) ≈ hcat(chebyshevtransform.([X[:,k] for k=axes(X,2)],Val(2))...)
+            @test chebyshevtransform(X,Val(2),2) ≈ chebyshevtransform!(copy(X),Val(2),2) ≈ hcat(chebyshevtransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
+
+            @test @inferred(chebyshevtransform(X)) ≈ @inferred(chebyshevtransform!(copy(X))) ≈ chebyshevtransform(chebyshevtransform(X,1),2)
+            @test @inferred(chebyshevtransform(X,Val(2))) ≈ @inferred(chebyshevtransform!(copy(X),Val(2))) ≈ chebyshevtransform(chebyshevtransform(X,Val(2),1),Val(2),2)
+        end
+
+        @testset "ichebyshevtransform" begin
+            @test @inferred(ichebyshevtransform(X,1)) ≈ @inferred(ichebyshevtransform!(copy(X),1)) ≈ hcat(ichebyshevtransform.([X[:,k] for k=axes(X,2)])...)
+            @test ichebyshevtransform(X,2) ≈ ichebyshevtransform!(copy(X),2) ≈ hcat(ichebyshevtransform.([X[k,:] for k=axes(X,1)])...)'
+            @test @inferred(ichebyshevtransform(X,Val(2),1)) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2),1)) ≈ hcat(ichebyshevtransform.([X[:,k] for k=axes(X,2)],Val(2))...)
+            @test ichebyshevtransform(X,Val(2),2) ≈ ichebyshevtransform!(copy(X),Val(2),2) ≈ hcat(ichebyshevtransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
+
+            @test @inferred(ichebyshevtransform(X)) ≈ @inferred(ichebyshevtransform!(copy(X))) ≈ ichebyshevtransform(ichebyshevtransform(X,1),2)
+            @test @inferred(ichebyshevtransform(X,Val(2))) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2))) ≈ ichebyshevtransform(ichebyshevtransform(X,Val(2),1),Val(2),2)            
+
+            @test ichebyshevtransform(chebyshevtransform(X)) ≈ X
+            @test chebyshevtransform(ichebyshevtransform(X)) ≈ X
+        end
+
         X = randn(1,1)
         @test chebyshevtransform!(copy(X), Val(1)) == ichebyshevtransform!(copy(X), Val(1)) == X
         @test_throws ArgumentError chebyshevtransform!(copy(X), Val(2))
         @test_throws ArgumentError ichebyshevtransform!(copy(X), Val(2))
-
-        X = randn(10,11)
-        
-        # manual 2D Chebyshev
-        X̌ = copy(X)
-        for j in axes(X̌,2)
-            chebyshevtransform!(view(X̌,:,j))
-        end
-        for k in axes(X̌,1)
-            chebyshevtransform!(view(X̌,k,:))
-        end
-        @test chebyshevtransform!(copy(X), Val(1)) ≈ X̌
-        @test ichebyshevtransform!(copy(X̌), Val(1)) ≈ X
-
-        # manual 2D Chebyshev
-        X̌ = copy(X)
-        for j in axes(X̌,2)
-            chebyshevtransform!(view(X̌,:,j), Val(2))
-        end
-        for k in axes(X̌,1)
-            chebyshevtransform!(view(X̌,k,:), Val(2))
-        end
-        @test chebyshevtransform!(copy(X), Val(2)) ≈ X̌
-        @test ichebyshevtransform!(copy(X̌), Val(2)) ≈ X
     end
 
     @testset "Integer" begin
