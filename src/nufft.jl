@@ -187,6 +187,9 @@ mul_for_col_J!(y::AbstractVecOrMat{T}, A::AbstractMatrix{T}, x::AbstractVecOrMat
 function mul_for_col_J!(y::AbstractVecOrMat{T}, A::AbstractMatrix{T}, x::AbstractVecOrMat{T}, istart::Int, jstart::Int, INCX::Int, INCY::Int) where T
     m, n = size(A)
     ishift, jshift = istart-INCY, jstart-INCX
+    @inbounds for i = 1:m
+        y[ishift+i*INCY] = zero(T)
+    end
     @inbounds for j = 1:n
         xj = x[jshift+j*INCX]
         for i = 1:m
