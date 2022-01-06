@@ -9,7 +9,7 @@ const GENFIGS = joinpath(dirname(dirname(pathof(FastTransforms))), &quot;docs/sr
 plotlyjs()</code></pre><pre><code class="language-none">Plots.PlotlyJSBackend()</code></pre><p>Our function <span>$f$</span> and the Cartesian components of its gradient:</p><pre><code class="language-julia">f = (x,y) -&gt; 1/(1+x^2+y^2)
 fx = (x,y) -&gt; -2x/(1+x^2+y^2)^2
 fy = (x,y) -&gt; -2y/(1+x^2+y^2)^2</code></pre><pre><code class="language-none">#5 (generic function with 1 method)</code></pre><p>The polynomial degree:</p><pre><code class="language-julia">N = 15
-M = N</code></pre><pre><code class="language-none">15</code></pre><p>The parameters of the Proriol series:</p><pre><code class="language-julia">α, β, γ = 0, 0, 0</code></pre><pre><code class="language-none">(0, 0, 0)</code></pre><p>The <span>$u$</span> grid:</p><pre><code class="language-julia">u = [sinpi((N-2n-1)/(2N)) for n in 0:N-1]</code></pre><pre><code class="language-none">15-element Array{Float64,1}:
+M = N</code></pre><pre><code class="language-none">15</code></pre><p>The parameters of the Proriol series:</p><pre><code class="language-julia">α, β, γ = 0, 0, 0</code></pre><pre><code class="language-none">(0, 0, 0)</code></pre><p>The <span>$u$</span> grid:</p><pre><code class="language-julia">u = [sinpi((N-2n-1)/(2N)) for n in 0:N-1]</code></pre><pre><code class="language-none">15-element Vector{Float64}:
   0.9945218953682733
   0.9510565162951536
   0.8660254037844386
@@ -24,7 +24,7 @@ M = N</code></pre><pre><code class="language-none">15</code></pre><p>The paramet
  -0.7431448254773942
  -0.8660254037844386
  -0.9510565162951536
- -0.9945218953682733</code></pre><p>And the <span>$v$</span> grid:</p><pre><code class="language-julia">v = [sinpi((M-2m-1)/(2M)) for m in 0:M-1]</code></pre><pre><code class="language-none">15-element Array{Float64,1}:
+ -0.9945218953682733</code></pre><p>And the <span>$v$</span> grid:</p><pre><code class="language-julia">v = [sinpi((M-2m-1)/(2M)) for m in 0:M-1]</code></pre><pre><code class="language-none">15-element Vector{Float64}:
   0.9945218953682733
   0.9510565162951536
   0.8660254037844386
@@ -39,7 +39,7 @@ M = N</code></pre><pre><code class="language-none">15</code></pre><p>The paramet
  -0.7431448254773942
  -0.8660254037844386
  -0.9510565162951536
- -0.9945218953682733</code></pre><p>Instead of using the <span>$u\times v$</span> grid, we use one with more accuracy near the origin. Defining <span>$x$</span> by:</p><pre><code class="language-julia">x = [sinpi((2N-2n-1)/(4N))^2 for n in 0:N-1]</code></pre><pre><code class="language-none">15-element Array{Float64,1}:
+ -0.9945218953682733</code></pre><p>Instead of using the <span>$u\times v$</span> grid, we use one with more accuracy near the origin. Defining <span>$x$</span> by:</p><pre><code class="language-julia">x = [sinpi((2N-2n-1)/(4N))^2 for n in 0:N-1]</code></pre><pre><code class="language-none">15-element Vector{Float64}:
  0.9972609476841365
  0.9755282581475768
  0.9330127018922194
@@ -54,7 +54,7 @@ M = N</code></pre><pre><code class="language-none">15</code></pre><p>The paramet
  0.12842758726130288
  0.06698729810778066
  0.024471741852423214
- 0.0027390523158633317</code></pre><p>And <span>$w$</span> by:</p><pre><code class="language-julia">w = [sinpi((2M-2m-1)/(4M))^2 for m in 0:M-1]</code></pre><pre><code class="language-none">15-element Array{Float64,1}:
+ 0.0027390523158633317</code></pre><p>And <span>$w$</span> by:</p><pre><code class="language-julia">w = [sinpi((2M-2m-1)/(4M))^2 for m in 0:M-1]</code></pre><pre><code class="language-none">15-element Vector{Float64}:
  0.9972609476841365
  0.9755282581475768
  0.9330127018922194
@@ -69,7 +69,7 @@ M = N</code></pre><pre><code class="language-none">15</code></pre><p>The paramet
  0.12842758726130288
  0.06698729810778066
  0.024471741852423214
- 0.0027390523158633317</code></pre><p>We see how the two grids are related:</p><pre><code class="language-julia">((1 .+ u)./2 ≈ x) * ((1 .- u).*(1 .+ v&#39;)/4 ≈ reverse(x).*w&#39;)</code></pre><pre><code class="language-none">true</code></pre><p>On the mapped tensor product grid, our function samples are:</p><pre><code class="language-julia">F = [f(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">15×15 Array{Float64,2}:
+ 0.0027390523158633317</code></pre><p>We see how the two grids are related:</p><pre><code class="language-julia">((1 .+ u)./2 ≈ x) * ((1 .- u).*(1 .+ v&#39;)/4 ≈ reverse(x).*w&#39;)</code></pre><pre><code class="language-none">true</code></pre><p>On the mapped tensor product grid, our function samples are:</p><pre><code class="language-julia">F = [f(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">15×15 Matrix{Float64}:
  0.50137   0.50137   0.50137   0.50137   0.50137   0.50137   0.501371  0.501371  0.501371  0.501371  0.501371  0.501371  0.501371  0.501371  0.501371
  0.512229  0.512236  0.512249  0.512266  0.512286  0.512308  0.512328  0.512346  0.512361  0.512372  0.512379  0.512383  0.512385  0.512385  0.512386
  0.53334   0.533395  0.533499  0.53364   0.533806  0.533979  0.534145  0.534292  0.534412  0.5345    0.534558  0.534592  0.534607  0.534612  0.534613
@@ -88,11 +88,7 @@ M = N</code></pre><pre><code class="language-none">15</code></pre><p>The paramet
 Y = [x[N-n]*w[m+1] for n in 0:N-1, m in 0:M-1]
 scatter3d(vec(X), vec(Y), vec(0F); markersize=0.75, markercolor=:blue)
 surface!(X, Y, F; legend=false, xlabel=&quot;x&quot;, ylabel=&quot;y&quot;, zlabel=&quot;f&quot;)
-savefig(joinpath(GENFIGS, &quot;proriol.html&quot;))
-```
-
-```@raw html
-&lt;object type=&quot;text/html&quot; data=&quot;../proriol.html&quot; style=&quot;width:100%;height:400px;&quot;&gt;&lt;/object&gt;</code></pre><p>We precompute a Proriol–Chebyshev² plan:</p><pre><code class="language-julia">P = plan_tri2cheb(F, α, β, γ)</code></pre><pre><code class="language-none">FastTransforms Proriol--Chebyshev² plan for 15×15-element array of Float64</code></pre><p>And an FFTW Chebyshev² plan on the triangle:</p><pre><code class="language-julia">PA = plan_tri_analysis(F)</code></pre><pre><code class="language-none">FastTransforms plan for FFTW Chebyshev analysis on the triangle for 15×15-element array of Float64</code></pre><p>Its Proriol-<span>$(α,β,γ)$</span> coefficients are:</p><pre><code class="language-julia">U = P\(PA*F)</code></pre><pre><code class="language-none">15×15 Array{Float64,2}:
+savefig(joinpath(GENFIGS, &quot;proriol.html&quot;))</code></pre><object type="text/html" data="../proriol.html" style="width:100%;height:400px;"></object><p>We precompute a Proriol–Chebyshev² plan:</p><pre><code class="language-julia">P = plan_tri2cheb(F, α, β, γ)</code></pre><pre><code class="language-none">FastTransforms Proriol--Chebyshev² plan for 15×15-element array of Float64</code></pre><p>And an FFTW Chebyshev² plan on the triangle:</p><pre><code class="language-julia">PA = plan_tri_analysis(F)</code></pre><pre><code class="language-none">FastTransforms plan for FFTW Chebyshev analysis on the triangle for 15×15-element array of Float64</code></pre><p>Its Proriol-<span>$(α,β,γ)$</span> coefficients are:</p><pre><code class="language-julia">U = P\(PA*F)</code></pre><pre><code class="language-none">15×15 Matrix{Float64}:
   1.53694      -0.193325     -0.0251445     0.0109626    -0.000813095  -0.000299751   8.30397e-5   -1.59722e-6   -3.2141e-6     6.1667e-7     3.19775e-8   -3.21495e-8    4.17144e-9    6.97174e-10  -3.06613e-10
  -0.111616      0.0391775    -0.00636098   -0.000168172   0.000311296  -5.50434e-5   -2.99195e-6    2.97964e-6   -4.20688e-7   -5.4534e-8     2.85785e-8   -2.74994e-9   -7.77992e-10   2.56775e-10  -1.20763e-11
  -0.0620411     0.00717668    0.00153132   -0.000551474   4.1134e-5     1.40597e-5   -4.21186e-6    2.00844e-7    1.36869e-7   -3.34625e-8    3.38022e-10   1.36685e-9   -2.6459e-10   -1.30929e-11   1.45495e-11
@@ -107,7 +103,7 @@ savefig(joinpath(GENFIGS, &quot;proriol.html&quot;))
   4.44232e-8   -2.74042e-8   -3.41194e-9    3.7536e-9    -3.47875e-10  -3.34332e-10  -7.92618e-11   2.84843e-11   1.87606e-11   8.64622e-13  -1.73542e-12  -2.98547e-13   1.16631e-13   2.95637e-14  -7.54383e-15
   1.13247e-8    6.98157e-9   -3.2324e-9    -1.06114e-10   1.55319e-10   1.35282e-10   2.8768e-11   -1.28905e-11  -7.59283e-12  -1.99177e-13   7.32667e-13   1.12735e-13  -5.05704e-14  -1.16743e-14   3.30983e-15
  -2.57523e-9    1.14806e-9    1.12793e-10   2.51422e-11  -4.12541e-11  -3.49672e-11  -7.18293e-12   3.43673e-12   1.96276e-12   3.986e-14    -1.91745e-13  -2.85197e-14   1.33334e-14   2.99891e-15  -8.7656e-16
- -7.03699e-10  -8.33285e-12  -8.53391e-12  -1.88826e-12   3.13558e-12   2.65053e-12   5.42528e-13  -2.61311e-13  -1.4878e-13   -2.93168e-15   1.45531e-14   2.15642e-15  -1.01318e-15  -2.26875e-16   6.66619e-17</code></pre><p>Similarly, our function&#39;s gradient samples are:</p><pre><code class="language-julia">Fx = [fx(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">15×15 Array{Float64,2}:
+ -7.03699e-10  -8.33285e-12  -8.53391e-12  -1.88826e-12   3.13558e-12   2.65053e-12   5.42528e-13  -2.61311e-13  -1.4878e-13   -2.93168e-15   1.45531e-14   2.15642e-15  -1.01318e-15  -2.26875e-16   6.66619e-17</code></pre><p>Similarly, our function&#39;s gradient samples are:</p><pre><code class="language-julia">Fx = [fx(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">15×15 Matrix{Float64}:
  -0.501366    -0.501366    -0.501366    -0.501367   -0.501367   -0.501368   -0.501368    -0.501369    -0.501369    -0.501369    -0.501369    -0.501369    -0.501369    -0.50137    -0.50137
  -0.511916    -0.511929    -0.511955    -0.51199    -0.51203    -0.512073   -0.512114    -0.51215     -0.512179    -0.512201    -0.512215    -0.512223    -0.512227    -0.512228   -0.512228
  -0.530794    -0.530903    -0.53111     -0.531392   -0.531721   -0.532067   -0.532398    -0.532691    -0.532929    -0.533105    -0.533222    -0.533288    -0.533319    -0.533329   -0.53333
@@ -122,7 +118,7 @@ savefig(joinpath(GENFIGS, &quot;proriol.html&quot;))
  -0.0818036   -0.0848957   -0.0912482   -0.101149   -0.114882   -0.132501   -0.153497    -0.176483    -0.199161    -0.218858    -0.233525    -0.242571    -0.246928    -0.248365   -0.248585
  -0.0383026   -0.0398784   -0.0431393   -0.0482832  -0.0555393  -0.0650468  -0.0766563   -0.0897011   -0.102903    -0.114631    -0.123518    -0.129064    -0.131754    -0.132643   -0.132779
  -0.0129105   -0.013469    -0.0146303   -0.0164765  -0.0191091  -0.0226062  -0.0269458   -0.0319076   -0.0370169   -0.0416263   -0.0451619   -0.0473866   -0.0484703   -0.0488293  -0.0488842
- -0.00138458  -0.00144591  -0.00157369  -0.0017776  -0.0020699  -0.0024608  -0.00294973  -0.00351363  -0.00409934  -0.00463189  -0.00504292  -0.00530263  -0.00542945  -0.0054715  -0.00547794</code></pre><p>and:</p><pre><code class="language-julia">Fy = [fy(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">15×15 Array{Float64,2}:
+ -0.00138458  -0.00144591  -0.00157369  -0.0017776  -0.0020699  -0.0024608  -0.00294973  -0.00351363  -0.00409934  -0.00463189  -0.00504292  -0.00530263  -0.00542945  -0.0054715  -0.00547794</code></pre><p>and:</p><pre><code class="language-julia">Fy = [fy(x[n+1], x[N-n]*w[m+1]) for n in 0:N-1, m in 0:M-1]</code></pre><pre><code class="language-none">15×15 Matrix{Float64}:
  -0.00137327  -0.00134334  -0.0012848  -0.00120019  -0.00109322  -0.000968569  -0.000831675  -0.000688523  -0.000545372  -0.000408476  -0.00028382  -0.000176851  -9.22448e-5   -3.36988e-5   -3.77181e-6
  -0.0128066   -0.0125278   -0.0119824  -0.0111941   -0.0101972   -0.00903524   -0.00775884   -0.0064238    -0.00508851   -0.00381138   -0.00264832  -0.00165022   -0.000860756  -0.000314451  -3.51956e-5
  -0.0380049   -0.0371844   -0.0355776  -0.0332524   -0.0303075   -0.0268691    -0.0230859    -0.0191228    -0.0151537    -0.0113536    -0.00789053  -0.00491728   -0.00256498   -0.000937054  -0.000104882
@@ -146,7 +142,7 @@ for m = 0:M-2
     end
 end
 Px = plan_tri2cheb(Fx, α+1, β, γ+1)
-Ux = Px\(PA*Fx)</code></pre><pre><code class="language-none">15×15 Array{Float64,2}:
+Ux = Px\(PA*Fx)</code></pre><pre><code class="language-none">15×15 Matrix{Float64}:
  -0.773299      0.0719368     0.0119032    -0.00401514    0.00019856    0.000113662  -2.54579e-5   -2.37734e-7    1.03154e-6   -1.60364e-7   -1.48715e-8    9.00448e-9   -8.97984e-10  -2.25712e-10   7.08345e-11
  -0.223004      0.012725      0.00860848   -0.00187243   -6.32049e-5    8.83801e-5   -1.1938e-5    -1.70295e-6    7.84936e-7   -6.04351e-8   -2.29491e-8    6.45891e-9   -1.23274e-10  -2.55873e-10   5.02863e-11
   0.11832      -0.0184961    -0.000231272   0.000708416  -0.000135183  -8.87531e-7    5.70658e-6   -1.08175e-6   -3.24208e-8    5.24395e-8   -8.50439e-9   -6.81366e-10   4.94759e-10  -5.56212e-11  -1.16264e-11
@@ -168,7 +164,7 @@ for m = 0:M-2
     end
 end
 Py = plan_tri2cheb(Fy, α, β+1, γ+1)
-Uy = Py\(PA*Fy)</code></pre><pre><code class="language-none">15×15 Array{Float64,2}:
+Uy = Py\(PA*Fy)</code></pre><pre><code class="language-none">15×15 Matrix{Float64}:
  -1.09361      -0.246364      0.151902     -0.0145451    -0.00656722    0.00215264   -4.78099e-5   -0.00010909    2.3401e-5     1.34141e-6   -1.47744e-6    2.0787e-7     3.67354e-8   -1.65807e-8    1.30376e-9
   0.221621     -0.0623246    -0.00233026    0.00556863   -0.00120594   -7.75602e-5    8.91904e-5   -1.42786e-5   -2.06939e-6    1.19894e-6   -1.26335e-7   -3.89258e-8    1.42118e-8   -5.60413e-10  -5.94789e-10
   0.0405975     0.0150038    -0.00764145    0.000735827   0.000308032  -0.000109184   6.01193e-6    4.6455e-6    -1.26982e-6    1.41852e-8    6.28061e-8   -1.31763e-8   -5.9232e-10    7.38193e-10  -7.35368e-11
@@ -183,4 +179,4 @@ Uy = Py\(PA*Fy)</code></pre><pre><code class="language-none">15×15 Array{Float6
  -1.56131e-7   -3.60972e-8    5.21717e-8   -9.4804e-9    -1.42828e-9    2.71687e-10   4.84151e-10   1.24081e-10  -3.76632e-11  -2.38535e-11   1.85871e-13   2.38967e-12   2.02456e-13  -1.7174e-13   -2.30959e-14
   4.09267e-8   -3.39594e-8   -3.06743e-9    7.64151e-10   3.1345e-10   -7.59843e-11  -1.14715e-10  -2.73663e-11   9.55255e-12   5.56757e-12  -1.22703e-13  -5.69904e-13  -4.1879e-14    4.1357e-14    5.08049e-15
   8.57039e-9    6.52951e-9   -7.39973e-11  -9.29778e-11  -3.74097e-11   9.74901e-12   1.40429e-11   3.27131e-12  -1.19385e-12  -6.78321e-13   1.80885e-14   6.99172e-14   4.88938e-15  -5.08948e-15  -6.06714e-16
- -2.86296e-9    1.21911e-13   2.03235e-12   2.54849e-12   1.02299e-12  -2.68873e-13  -3.8519e-13   -8.94733e-14   3.28267e-14   1.85955e-14  -5.06208e-16  -1.91829e-15  -1.33321e-16   1.39689e-16   1.65848e-17</code></pre><p>The <span>$2$</span>-norm relative error in differentiating the Proriol series for <span>$f(x,y)$</span> term-by-term and its sampled gradient is:</p><pre><code class="language-julia">hypot(norm(Ux-Gx), norm(Uy-Gy))/hypot(norm(Ux), norm(Uy))</code></pre><pre><code class="language-none">1.87699008758009e-8</code></pre><p>This error can be improved upon by increasing <span>$N$</span> and <span>$M$</span>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../subspaceangles/">« Subspace angles</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 6 December 2021 03:31">Monday 6 December 2021</span>. Using Julia version 1.5.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ -2.86296e-9    1.21911e-13   2.03235e-12   2.54849e-12   1.02299e-12  -2.68873e-13  -3.8519e-13   -8.94733e-14   3.28267e-14   1.85955e-14  -5.06208e-16  -1.91829e-15  -1.33321e-16   1.39689e-16   1.65848e-17</code></pre><p>The <span>$2$</span>-norm relative error in differentiating the Proriol series for <span>$f(x,y)$</span> term-by-term and its sampled gradient is:</p><pre><code class="language-julia">hypot(norm(Ux-Gx), norm(Uy-Gy))/hypot(norm(Ux), norm(Uy))</code></pre><pre><code class="language-none">1.87699008758009e-8</code></pre><p>This error can be improved upon by increasing <span>$N$</span> and <span>$M$</span>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../subspaceangles/">« Subspace angles</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 6 January 2022 14:06">Thursday 6 January 2022</span>. Using Julia version 1.7.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
