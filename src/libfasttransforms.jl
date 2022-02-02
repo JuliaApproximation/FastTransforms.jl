@@ -619,6 +619,17 @@ function plan_spinsph2fourier(::Type{Complex{Float64}}, n::Integer, s::Integer)
     return FTPlan{Complex{Float64}, 2, SPINSPHERE}(plan, n)
 end
 
+plan_disk2cxf(::Type{Float64}, n::Integer, α) = plan_disk2cxf(Float64, n, α, 0)
+plan_disk2cxf(::Type{Float64}, n::Integer) = plan_disk2cxf(Float64, n, 0)
+plan_rectdisk2cheb(::Type{Float64}, n::Integer) = plan_rectdisk2cheb(Float64, n, 0)
+plan_tri2cheb(::Type{Float64}, n::Integer, α, β) = plan_tri2cheb(Float64, n, α, β, 0)
+plan_tri2cheb(::Type{Float64}, n::Integer, α) = plan_tri2cheb(Float64, n, α, 0)
+plan_tri2cheb(::Type{Float64}, n::Integer) = plan_tri2cheb(Float64, n, 0)
+plan_tet2cheb(::Type{Float64}, n::Integer, α, β, γ) = plan_tet2cheb(Float64, n, α, β, γ, 0)
+plan_tet2cheb(::Type{Float64}, n::Integer, α, β) = plan_tet2cheb(Float64, n, α, β, 0)
+plan_tet2cheb(::Type{Float64}, n::Integer, α) = plan_tet2cheb(Float64, n, α, 0)
+plan_tet2cheb(::Type{Float64}, n::Integer) = plan_tet2cheb(Float64, n, 0)
+
 for (fJ, fadJ, fC, fE, K) in ((:plan_sph_synthesis, :plan_sph_analysis, :ft_plan_sph_synthesis, :ft_execute_sph_synthesis, SPHERESYNTHESIS),
                               (:plan_sph_analysis, :plan_sph_synthesis, :ft_plan_sph_analysis, :ft_execute_sph_analysis, SPHEREANALYSIS),
                               (:plan_sphv_synthesis, :plan_sphv_analysis, :ft_plan_sphv_synthesis, :ft_execute_sphv_synthesis, SPHEREVSYNTHESIS),
@@ -630,10 +641,10 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_sph_synthesis, :plan_sph_analysis, :ft_plan
                               (:plan_tri_synthesis, :plan_tri_analysis, :ft_plan_tri_synthesis, :ft_execute_tri_synthesis, TRIANGLESYNTHESIS),
                               (:plan_tri_analysis, :plan_tri_synthesis, :ft_plan_tri_analysis, :ft_execute_tri_analysis, TRIANGLEANALYSIS))
     @eval begin
-        $fJ(x::Matrix{T}) where T = $fJ(T, size(x, 1), size(x, 2))
-        $fJ(::Type{Complex{T}}, x...) where T <: Real = $fJ(T, x...)
-        function $fJ(::Type{Float64}, n::Integer, m::Integer)
-            plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint), n, m)
+        $fJ(x::Matrix{T}; y...) where T = $fJ(T, size(x, 1), size(x, 2); y...)
+        $fJ(::Type{Complex{T}}, x...; y...) where T <: Real = $fJ(T, x...; y...)
+        function $fJ(::Type{Float64}, n::Integer, m::Integer; flags::Integer=FFTW.ESTIMATE)
+            plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cuint), n, m, flags)
             return FTPlan{Float64, 2, $K}(plan, n, m)
         end
         adjoint(p::FTPlan{T, 2, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.m))
@@ -659,10 +670,10 @@ end
 for (fJ, fadJ, fC, fE, K) in ((:plan_tet_synthesis, :plan_tet_analysis, :ft_plan_tet_synthesis, :ft_execute_tet_synthesis, TETRAHEDRONSYNTHESIS),
                               (:plan_tet_analysis, :plan_tet_synthesis, :ft_plan_tet_analysis, :ft_execute_tet_analysis, TETRAHEDRONANALYSIS))
     @eval begin
-        $fJ(x::Array{T, 3}) where T = $fJ(T, size(x, 1), size(x, 2), size(x, 3))
-        $fJ(::Type{Complex{T}}, x...) where T <: Real = $fJ(T, x...)
-        function $fJ(::Type{Float64}, n::Integer, l::Integer, m::Integer)
-            plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, l, m)
+        $fJ(x::Array{T, 3}; y...) where T = $fJ(T, size(x, 1), size(x, 2), size(x, 3); y...)
+        $fJ(::Type{Complex{T}}, x...; y...) where T <: Real = $fJ(T, x...; y...)
+        function $fJ(::Type{Float64}, n::Integer, l::Integer, m::Integer; flags::Integer=FFTW.ESTIMATE)
+            plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Cuint), n, l, m, flags)
             return FTPlan{Float64, 3, $K}(plan, n, l, m)
         end
         adjoint(p::FTPlan{T, 3, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.l, p.m))
@@ -688,9 +699,9 @@ end
 for (fJ, fadJ, fC, fE, K) in ((:plan_spinsph_synthesis, :plan_spinsph_analysis, :ft_plan_spinsph_synthesis, :ft_execute_spinsph_synthesis, SPINSPHERESYNTHESIS),
                               (:plan_spinsph_analysis, :plan_spinsph_synthesis, :ft_plan_spinsph_analysis, :ft_execute_spinsph_analysis, SPINSPHEREANALYSIS))
     @eval begin
-        $fJ(x::Matrix{T}, s::Integer) where T = $fJ(T, size(x, 1), size(x, 2), s)
-        function $fJ(::Type{Complex{Float64}}, n::Integer, m::Integer, s::Integer)
-            plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint), n, m, s)
+        $fJ(x::Matrix{T}, s::Integer; y...) where T = $fJ(T, size(x, 1), size(x, 2), s; y...)
+        function $fJ(::Type{Complex{Float64}}, n::Integer, m::Integer, s::Integer; flags::Integer=FFTW.ESTIMATE)
+            plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Cuint), n, m, s, flags)
             return FTPlan{Complex{Float64}, 2, $K}(plan, n, m)
         end
         get_spin(p::FTPlan{T, 2, $K}) where T = ccall((:ft_get_spin_spinsphere_fftw_plan, libfasttransforms), Cint, (Ptr{ft_plan_struct},), p)
