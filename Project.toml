@@ -1,6 +1,6 @@
 name = "FastTransforms"
 uuid = "057dd010-8810-581a-b7be-e3fc3b93f78c"
-version = "0.13.5"
+version = "0.13.6"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
