@@ -33,7 +33,7 @@ function threshold!(A::AbstractArray, ϵ)
 end
 
 using FastTransforms, LinearAlgebra, Plots
-const GENFIGS = joinpath(dirname(dirname(pathof(FastTransforms))), "docs/src/generated")
+const GENFIGS = joinpath(pkgdir(FastTransforms), "docs/src/generated")
 !isdir(GENFIGS) && mkdir(GENFIGS)
 plotlyjs()
 
