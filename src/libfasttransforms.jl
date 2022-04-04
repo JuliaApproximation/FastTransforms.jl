@@ -1,5 +1,4 @@
-ft_build_from_source = get(ENV, "FT_BUILD_FROM_SOURCE", "false")
-if ft_build_from_source == "true"
+if get(ENV, "FT_BUILD_FROM_SOURCE", "false") == "true"
     using Libdl
     const libfasttransforms = find_library("libfasttransforms", [joinpath(dirname(@__DIR__), "deps")])
     if libfasttransforms ≡ nothing || length(libfasttransforms) == 0
