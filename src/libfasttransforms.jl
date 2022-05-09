@@ -553,7 +553,7 @@ function plan_modifiedlag2lag(::Type{Float64}, n::Integer, α, w::Vector{Float64
 end
 
 function plan_modifiedlag2lag(::Type{Float64}, n::Integer, α, u::Vector{Float64}, v::Vector{Float64}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, length(u), u, length(v), v, verbose)
+    plan = ccall((:ft_plan_modified_laguerre_to_laguerre, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, length(u), u, length(v), v, verbose)
     return FTPlan{Float64, 1, MODIFIEDLAG2LAG}(plan, n)
 end
 
