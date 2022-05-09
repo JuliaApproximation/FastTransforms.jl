@@ -115,28 +115,31 @@ const CHEB2JAC              = 8
 const ULTRA2CHEB            = 9
 const CHEB2ULTRA           = 10
 const ASSOCIATEDJAC2JAC    = 11
-const SPHERE               = 12
-const SPHEREV              = 13
-const DISK                 = 14
-const RECTDISK             = 15
-const TRIANGLE             = 16
-const TETRAHEDRON          = 17
-const SPINSPHERE           = 18
-const SPHERESYNTHESIS      = 19
-const SPHEREANALYSIS       = 20
-const SPHEREVSYNTHESIS     = 21
-const SPHEREVANALYSIS      = 22
-const DISKSYNTHESIS        = 23
-const DISKANALYSIS         = 24
-const RECTDISKSYNTHESIS    = 25
-const RECTDISKANALYSIS     = 26
-const TRIANGLESYNTHESIS    = 27
-const TRIANGLEANALYSIS     = 28
-const TETRAHEDRONSYNTHESIS = 29
-const TETRAHEDRONANALYSIS  = 30
-const SPINSPHERESYNTHESIS  = 31
-const SPINSPHEREANALYSIS   = 32
-const SPHERICALISOMETRY    = 33
+const MODIFIEDJAC2JAC      = 12
+const MODIFIEDLAG2LAG      = 13
+const MODIFIEDHERM2HERM    = 14
+const SPHERE               = 15
+const SPHEREV              = 16
+const DISK                 = 17
+const RECTDISK             = 18
+const TRIANGLE             = 19
+const TETRAHEDRON          = 20
+const SPINSPHERE           = 21
+const SPHERESYNTHESIS      = 22
+const SPHEREANALYSIS       = 23
+const SPHEREVSYNTHESIS     = 24
+const SPHEREVANALYSIS      = 25
+const DISKSYNTHESIS        = 26
+const DISKANALYSIS         = 27
+const RECTDISKSYNTHESIS    = 28
+const RECTDISKANALYSIS     = 29
+const TRIANGLESYNTHESIS    = 30
+const TRIANGLEANALYSIS     = 31
+const TETRAHEDRONSYNTHESIS = 32
+const TETRAHEDRONANALYSIS  = 33
+const SPINSPHERESYNTHESIS  = 34
+const SPINSPHEREANALYSIS   = 35
+const SPHERICALISOMETRY    = 36
 
 
 let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
@@ -151,6 +154,9 @@ let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                ULTRA2CHEB           => "ultraspherical--Chebyshev",
                CHEB2ULTRA           => "Chebyshev--ultraspherical",
                ASSOCIATEDJAC2JAC    => "Associated Jacobi--Jacobi",
+               MODIFIEDJAC2JAC      => "Modified Jacobi--Jacobi",
+               MODIFIEDLAG2LAG      => "Modified Laguerre--Laguerre",
+               MODIFIEDHERM2HERM    => "Modified Hermite--Hermite",
                SPHERE               => "Spherical harmonic--Fourier",
                SPHEREV              => "Spherical vector field--Fourier",
                DISK                 => "Zernike--Chebyshev×Fourier",
@@ -266,6 +272,9 @@ destroy_plan(p::FTPlan{Float64, 1}) = ccall((:ft_destroy_tb_eigen_FMM, libfasttr
 destroy_plan(p::FTPlan{BigFloat, 1}) = ccall((:ft_mpfr_destroy_plan, libfasttransforms), Cvoid, (Ptr{mpfr_t}, Cint), p, p.n)
 destroy_plan(p::FTPlan{Float32, 1, ASSOCIATEDJAC2JAC}) = ccall((:ft_destroy_btb_eigen_FMMf, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 1, ASSOCIATEDJAC2JAC}) = ccall((:ft_destroy_btb_eigen_FMM, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 1, MODIFIEDJAC2JAC}) = ccall((:ft_destroy_modified_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 1, MODIFIEDLAG2LAG}) = ccall((:ft_destroy_modified_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 1, MODIFIEDHERM2HERM}) = ccall((:ft_destroy_modified_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64}) = ccall((:ft_destroy_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHERE}) = ccall((:ft_destroy_spin_harmonic_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHERESYNTHESIS}) = ccall((:ft_destroy_sphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
@@ -383,6 +392,7 @@ end
 for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
           :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
           :cheb2jac, :ultra2cheb, :cheb2ultra, :associatedjac2jac,
+          :modifiedjac2jac, :modifiedlag2lag, :modifiedherm2herm,
           :sph2fourier, :sphv2fourier, :disk2cxf,
           :rectdisk2cheb, :tri2cheb, :tet2cheb)
     plan_f = Symbol("plan_", f)
@@ -526,6 +536,36 @@ function plan_associatedjac2jac(::Type{Float64}, n::Integer, c::Integer, α, β,
     return FTPlan{Float64, 1, ASSOCIATEDJAC2JAC}(plan, n)
 end
 
+function plan_modifiedjac2jac(::Type{Float64}, n::Integer, α, β, w::Vector{Float64}; verbose::Bool=false)
+    #plan_modifiedjac2jac(Float64, n, α, β, w, Vector{Float64}(undef, 0); verbose=verbose)
+    plan = ccall((:ft_plan_modified_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, β, length(w), w, 0, C_NULL, verbose)
+    return FTPlan{Float64, 1, MODIFIEDJAC2JAC}(plan, n)
+end
+
+function plan_modifiedjac2jac(::Type{Float64}, n::Integer, α, β, u::Vector{Float64}, v::Vector{Float64}; verbose::Bool=false)
+    plan = ccall((:ft_plan_modified_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, β, length(u), u, length(v), v, verbose)
+    return FTPlan{Float64, 1, MODIFIEDJAC2JAC}(plan, n)
+end
+
+function plan_modifiedlag2lag(::Type{Float64}, n::Integer, α, w::Vector{Float64}; verbose::Bool=false)
+    plan = ccall((:ft_plan_modified_laguerre_to_laguerre, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, length(w), w, 0, C_NULL, verbose)
+    return FTPlan{Float64, 1, MODIFIEDLAG2LAG}(plan, n)
+end
+
+function plan_modifiedlag2lag(::Type{Float64}, n::Integer, α, u::Vector{Float64}, v::Vector{Float64}; verbose::Bool=false)
+    plan = ccall((:ft_plan_modified_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, length(u), u, length(v), v, verbose)
+    return FTPlan{Float64, 1, MODIFIEDLAG2LAG}(plan, n)
+end
+
+function plan_modifiedherm2herm(::Type{Float64}, n::Integer, w::Vector{Float64}; verbose::Bool=false)
+    plan = ccall((:ft_plan_modified_hermite_to_hermite, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, length(w), w, 0, C_NULL, verbose)
+    return FTPlan{Float64, 1, MODIFIEDHERM2HERM}(plan, n)
+end
+
+function plan_modifiedherm2herm(::Type{Float64}, n::Integer, u::Vector{Float64}, v::Vector{Float64}; verbose::Bool=false)
+    plan = ccall((:ft_plan_modified_hermite_to_hermite, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, length(u), u, length(v), v, verbose)
+    return FTPlan{Float64, 1, MODIFIEDHERM2HERM}(plan, n)
+end
 
 function plan_leg2cheb(::Type{BigFloat}, n::Integer; normleg::Bool=false, normcheb::Bool=false)
     plan = ccall((:ft_mpfr_plan_legendre_to_chebyshev, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Clong, Int32), normleg, normcheb, n, precision(BigFloat), Base.MPFR.ROUNDING_MODE[])
@@ -789,6 +829,28 @@ for (fJ, fC, elty) in ((:lmul!, :ft_bbbfmvf, :Float32),
     end
 end
 
+for (fJ, fC, elty) in ((:lmul!, :ft_mpmv, :Float64),
+                       (:ldiv!, :ft_mpsv, :Float64))
+    @eval begin
+        ModifiedFTPlan = Union{FTPlan{$elty, 1, MODIFIEDJAC2JAC}, FTPlan{$elty, 1, MODIFIEDLAG2LAG}, FTPlan{$elty, 1, MODIFIEDHERM2HERM}}
+        function $fJ(p::ModifiedFTPlan, x::Vector{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'N', p, x)
+            return x
+        end
+        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan}, x::Vector{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', p, x)
+            return x
+        end
+        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan}, x::Vector{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', p, x)
+            return x
+        end
+    end
+end
+
 for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
                  (:ldiv!, :ft_mpfr_trsv_ptr))
     @eval begin
@@ -849,6 +911,28 @@ for (fJ, fC, elty) in ((:lmul!, :ft_bbbfmmf, :Float32),
         function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Matrix{$elty})
             checksize(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', '1', '2', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+    end
+end
+
+for (fJ, fC, elty) in ((:lmul!, :ft_mpmm, :Float64),
+                       (:ldiv!, :ft_mpsm, :Float64))
+    @eval begin
+        ModifiedFTPlan = Union{FTPlan{$elty, 1, MODIFIEDJAC2JAC}, FTPlan{$elty, 1, MODIFIEDLAG2LAG}, FTPlan{$elty, 1, MODIFIEDHERM2HERM}}
+        function $fJ(p::ModifiedFTPlan, x::Matrix{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan}, x::Matrix{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            return x
+        end
+        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan}, x::Matrix{$elty})
+            checksize(p, x)
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
     end

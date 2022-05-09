@@ -40,34 +40,34 @@ This lets the developer experiment with new features through `ccall`ing into ble
 To get from a C library release to a Julia package release, the developer needs to update Yggdrasil's [build_tarballs.jl](https://github.com/JuliaPackaging/Yggdrasil/blob/master/F/FastTransforms/build_tarballs.jl) script for the new version and its 256-bit SHA. On macOS, the SHA can be found by:
 
 ```julia
-shell> curl https://codeload.github.com/MikaelSlevinsky/FastTransforms/tar.gz/v0.5.0 --output FastTransforms-0.5.0.tar.gz
+shell> curl https://codeload.github.com/MikaelSlevinsky/FastTransforms/tar.gz/v0.6.0 --output FastTransforms.tar.gz
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  156k  100  156k    0     0   349k      0 --:--:-- --:--:-- --:--:--  348k
+100  162k    0  162k    0     0   252k      0 --:--:-- --:--:-- --:--:--  252k
 
-shell> shasum -a 256 FastTransforms-0.5.0.tar.gz
-9556d0037bd5348a33f15ad6100e32053b6e22cab16a97c504f30d6c52fd0efd  FastTransforms-0.5.0.tar.gz
+shell> shasum -a 256 FastTransforms.tar.gz
+ae2db2fa808ca17c5dc5ac25b079eba2dbe598d061b9b4e14c948680870abc3c  FastTransforms.tar.gz
 
-shell> rm -f FastTransforms-0.5.0.tar.gz
+shell> rm -f FastTransforms.tar.gz
 
 ```
 
 Using [SHA.jl](https://github.com/JuliaCrypto/SHA.jl), the SHA can also be found by:
 
 ```julia
-shell> curl https://codeload.github.com/MikaelSlevinsky/FastTransforms/tar.gz/v0.5.0 --output FastTransforms-0.5.0.tar.gz
+shell> curl https://codeload.github.com/MikaelSlevinsky/FastTransforms/tar.gz/v0.6.0 --output FastTransforms.tar.gz
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  156k    0  156k    0     0   443k      0 --:--:-- --:--:-- --:--:--  443k
 
 julia> using SHA
 
-julia> open("FastTransforms-0.5.0.tar.gz") do f
+julia> open("FastTransforms.tar.gz") do f
            bytes2hex(sha256(f))
        end
-"9556d0037bd5348a33f15ad6100e32053b6e22cab16a97c504f30d6c52fd0efd"
+"ae2db2fa808ca17c5dc5ac25b079eba2dbe598d061b9b4e14c948680870abc3c"
 
-shell> rm -f FastTransforms-0.5.0.tar.gz
+shell> rm -f FastTransforms.tar.gz
 
 ```
 

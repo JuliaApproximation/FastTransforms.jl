@@ -34,12 +34,14 @@ import LinearAlgebra: mul!, lmul!, ldiv!
 export leg2cheb, cheb2leg, ultra2ultra, jac2jac,
        lag2lag, jac2ultra, ultra2jac, jac2cheb,
        cheb2jac, ultra2cheb, cheb2ultra, associatedjac2jac,
+       modifiedjac2jac, modifiedlag2lag, modifiedherm2herm,
        sph2fourier, sphv2fourier, disk2cxf, rectdisk2cheb, tri2cheb, tet2cheb,
        fourier2sph, fourier2sphv, cxf2disk, cheb2rectdisk, cheb2tri, cheb2tet
 
 export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
        plan_lag2lag, plan_jac2ultra, plan_ultra2jac, plan_jac2cheb,
        plan_cheb2jac, plan_ultra2cheb, plan_cheb2ultra, plan_associatedjac2jac,
+       plan_modifiedjac2jac, plan_modifiedlag2lag, plan_modifiedherm2herm,
        plan_sph2fourier, plan_sph_synthesis, plan_sph_analysis,
        plan_sphv2fourier, plan_sphv_synthesis, plan_sphv_analysis,
        plan_disk2cxf, plan_disk_synthesis, plan_disk_analysis,
