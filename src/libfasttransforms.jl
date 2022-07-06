@@ -389,6 +389,8 @@ function unsafe_convert(::Type{Ptr{mpfr_t}}, p::TransposeFTPlan)
     end
 end
 
+const ModifiedFTPlan{T} = Union{FTPlan{T, 1, MODIFIEDJAC2JAC}, FTPlan{T, 1, MODIFIEDLAG2LAG}, FTPlan{T, 1, MODIFIEDHERM2HERM}}
+
 for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
           :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
           :cheb2jac, :ultra2cheb, :cheb2ultra, :associatedjac2jac,
@@ -843,18 +845,17 @@ end
 for (fJ, fC, elty) in ((:lmul!, :ft_mpmv, :Float64),
                        (:ldiv!, :ft_mpsv, :Float64))
     @eval begin
-        ModifiedFTPlan = Union{FTPlan{$elty, 1, MODIFIEDJAC2JAC}, FTPlan{$elty, 1, MODIFIEDLAG2LAG}, FTPlan{$elty, 1, MODIFIEDHERM2HERM}}
-        function $fJ(p::ModifiedFTPlan, x::Vector{$elty})
+        function $fJ(p::ModifiedFTPlan{$elty}, x::Vector{$elty})
             checksize(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'N', p, x)
             return x
         end
-        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan}, x::Vector{$elty})
+        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan{$elty}}, x::Vector{$elty})
             checksize(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', p, x)
             return x
         end
-        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan}, x::Vector{$elty})
+        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan{$elty}}, x::Vector{$elty})
             checksize(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', p, x)
             return x
@@ -930,18 +931,17 @@ end
 for (fJ, fC, elty) in ((:lmul!, :ft_mpmm, :Float64),
                        (:ldiv!, :ft_mpsm, :Float64))
     @eval begin
-        ModifiedFTPlan = Union{FTPlan{$elty, 1, MODIFIEDJAC2JAC}, FTPlan{$elty, 1, MODIFIEDLAG2LAG}, FTPlan{$elty, 1, MODIFIEDHERM2HERM}}
-        function $fJ(p::ModifiedFTPlan, x::Matrix{$elty})
+        function $fJ(p::ModifiedFTPlan{$elty}, x::Matrix{$elty})
             checksize(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
             return x
         end
-        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan}, x::Matrix{$elty})
+        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan{$elty}}, x::Matrix{$elty})
             checksize(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
-        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan}, x::Matrix{$elty})
+        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan{$elty}}, x::Matrix{$elty})
             checksize(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x

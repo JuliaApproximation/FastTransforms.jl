@@ -22,7 +22,7 @@ k, N = 1, 11
 P = plan_lag2lag(Float64, N, α, β; norm2=true)
 
 # We apply the plan to the identity, followed by the adjoint plan:
-VtV = P*I
+VtV = parent(P*I)
 lmul!(P', VtV)
 
 # From this matrix, the angles are recovered from:
