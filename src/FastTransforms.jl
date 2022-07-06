@@ -53,6 +53,7 @@ export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
 include("clenshaw.jl")
 
 include("libfasttransforms.jl")
+include("elliptic.jl")
 
 export nufft, nufft1, nufft2, nufft3, inufft1, inufft2
 

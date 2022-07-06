@@ -567,6 +567,7 @@ function plan_modifiedherm2herm(::Type{Float64}, n::Integer, u::Vector{Float64},
     return FTPlan{Float64, 1, MODIFIEDHERM2HERM}(plan, n)
 end
 
+
 function plan_leg2cheb(::Type{BigFloat}, n::Integer; normleg::Bool=false, normcheb::Bool=false)
     plan = ccall((:ft_mpfr_plan_legendre_to_chebyshev, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Clong, Int32), normleg, normcheb, n, precision(BigFloat), Base.MPFR.ROUNDING_MODE[])
     return FTPlan{BigFloat, 1, LEG2CHEB}(plan, n)
@@ -778,12 +779,22 @@ end
 \(p::AdjointFTPlan{T}, x::AbstractArray{T}) where T = ldiv!(p, Array(x))
 \(p::TransposeFTPlan{T}, x::AbstractArray{T}) where T = ldiv!(p, Array(x))
 
-*(p::FTPlan{T, 1}, x::UniformScaling{S}) where {T, S} = lmul!(p, Matrix{promote_type(T, S)}(x, p.n, p.n))
-*(p::AdjointFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = lmul!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
-*(p::TransposeFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = lmul!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
-\(p::FTPlan{T, 1}, x::UniformScaling{S}) where {T, S} = ldiv!(p, Matrix{promote_type(T, S)}(x, p.n, p.n))
-\(p::AdjointFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = ldiv!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
-\(p::TransposeFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = ldiv!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n))
+*(p::FTPlan{T, 1}, x::UniformScaling{S}) where {T, S} = UpperTriangular(lmul!(p, Matrix{promote_type(T, S)}(x, p.n, p.n)))
+*(p::AdjointFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = LowerTriangular(lmul!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n)))
+*(p::TransposeFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = LowerTriangular(lmul!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n)))
+\(p::FTPlan{T, 1}, x::UniformScaling{S}) where {T, S} = UpperTriangular(ldiv!(p, Matrix{promote_type(T, S)}(x, p.n, p.n)))
+\(p::AdjointFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = LowerTriangular(ldiv!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n)))
+\(p::TransposeFTPlan{T, FTPlan{T, 1, K}}, x::UniformScaling{S}) where {T, S, K} = LowerTriangular(ldiv!(p, Matrix{promote_type(T, S)}(x, p.parent.n, p.parent.n)))
+
+const AbstractUpperTriangular{T, S <: AbstractMatrix} = Union{UpperTriangular{T, S}, UnitUpperTriangular{T, S}}
+const AbstractLowerTriangular{T, S <: AbstractMatrix} = Union{LowerTriangular{T, S}, UnitLowerTriangular{T, S}}
+
+*(p::FTPlan{T, 1}, x::AbstractUpperTriangular) where T = UpperTriangular(lmul!(p, Array(x)))
+*(p::AdjointFTPlan{T, 1}, x::AbstractLowerTriangular) where T = LowerTriangular(lmul!(p, Array(x)))
+*(p::TransposeFTPlan{T, 1}, x::AbstractLowerTriangular) where T = LowerTriangular(lmul!(p, Array(x)))
+\(p::FTPlan{T, 1}, x::AbstractUpperTriangular) where T = UpperTriangular(ldiv!(p, Array(x)))
+\(p::AdjointFTPlan{T, 1}, x::AbstractLowerTriangular) where T = LowerTriangular(ldiv!(p, Array(x)))
+\(p::TransposeFTPlan{T, 1}, x::AbstractLowerTriangular) where T = LowerTriangular(ldiv!(p, Array(x)))
 
 for (fJ, fC, elty) in ((:lmul!, :ft_bfmvf, :Float32),
                        (:ldiv!, :ft_bfsvf, :Float32),

@@ -135,3 +135,9 @@ FastTransforms.chebyshevjacobimoments2
 ```@docs
 FastTransforms.chebyshevlogmoments2
 ```
+
+### Elliptic
+
+```@docs
+FastTransforms.Elliptic
+```
