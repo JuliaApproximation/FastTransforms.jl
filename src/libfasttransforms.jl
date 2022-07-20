@@ -49,15 +49,15 @@ function renew!(x::Array{BigFloat})
     return x
 end
 
-function horner!(c::Vector{Float64}, x::Vector{Float64}, f::Vector{Float64})
+function horner!(c::StridedVector{Float64}, x::Vector{Float64}, f::Vector{Float64})
     @assert length(x) == length(f)
-    ccall((:ft_horner, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, 1, length(x), x, f)
+    ccall((:ft_horner, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
-function horner!(c::Vector{Float32}, x::Vector{Float32}, f::Vector{Float32})
+function horner!(c::StridedVector{Float32}, x::Vector{Float32}, f::Vector{Float32})
     @assert length(x) == length(f)
-    ccall((:ft_hornerf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, 1, length(x), x, f)
+    ccall((:ft_hornerf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
@@ -75,31 +75,31 @@ function check_clenshaw_points(x, f)
     length(x) == length(f) || throw(ArgumentError("Dimensions must match"))
 end
 
-function _clenshaw!(::AbstractStridedLayout, ::AbstractColumnMajor, ::AbstractColumnMajor, c::AbstractVector{Float64}, x::AbstractVector{Float64}, f::AbstractVector{Float64})
+function clenshaw!(c::StridedVector{Float64}, x::Vector{Float64}, f::Vector{Float64})
     @boundscheck check_clenshaw_points(x, f)
-    ccall((:ft_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c,1), length(x), x, f)
+    ccall((:ft_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
-function _clenshaw!(::AbstractStridedLayout, ::AbstractColumnMajor, ::AbstractColumnMajor, c::AbstractVector{Float32}, x::AbstractVector{Float32}, f::AbstractVector{Float32})
+function clenshaw!(c::StridedVector{Float32}, x::Vector{Float32}, f::Vector{Float32})
     @boundscheck check_clenshaw_points(x, f)
-    ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c,1), length(x), x, f)
+    ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
-function clenshaw!(c::Vector{Float64}, A::Vector{Float64}, B::Vector{Float64}, C::Vector{Float64}, x::Vector{Float64}, ϕ₀::Vector{Float64}, f::Vector{Float64})
+function clenshaw!(c::StridedVector{Float64}, A::Vector{Float64}, B::Vector{Float64}, C::Vector{Float64}, x::Vector{Float64}, ϕ₀::Vector{Float64}, f::Vector{Float64})
     N = length(c)
     @boundscheck check_clenshaw_recurrences(N, A, B, C)
     @boundscheck check_clenshaw_points(x, ϕ₀, f)
-    ccall((:ft_orthogonal_polynomial_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}), N, c, 1, A, B, C, length(x), x, ϕ₀, f)
+    ccall((:ft_orthogonal_polynomial_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}), N, c, stride(c, 1), A, B, C, length(x), x, ϕ₀, f)
     f
 end
 
-function clenshaw!(c::Vector{Float32}, A::Vector{Float32}, B::Vector{Float32}, C::Vector{Float32}, x::Vector{Float32}, ϕ₀::Vector{Float32}, f::Vector{Float32})
+function clenshaw!(c::StridedVector{Float32}, A::Vector{Float32}, B::Vector{Float32}, C::Vector{Float32}, x::Vector{Float32}, ϕ₀::Vector{Float32}, f::Vector{Float32})
     N = length(c)
     @boundscheck check_clenshaw_recurrences(N, A, B, C)
     @boundscheck check_clenshaw_points(x, ϕ₀, f)
-    ccall((:ft_orthogonal_polynomial_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}), N, c, 1, A, B, C, length(x), x, ϕ₀, f)
+    ccall((:ft_orthogonal_polynomial_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}), N, c, stride(c, 1), A, B, C, length(x), x, ϕ₀, f)
     f
 end
 
