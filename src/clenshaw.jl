@@ -164,9 +164,7 @@ clenshaw!(c::AbstractVector, x::AbstractVector) = clenshaw!(c, x, x)
 evaluates the first-kind Chebyshev (T) expansion with coefficients `c` at points `x`,
 overwriting `f` with the results.
 """
-clenshaw!(c::AbstractVector, x::AbstractVector, f::AbstractVector) = _clenshaw!(MemoryLayout(c), MemoryLayout(x), MemoryLayout(f), c, x, f)
-
-function _clenshaw!(_, _, _, c::AbstractVector, x::AbstractVector, f::AbstractVector)
+function clenshaw!(c::AbstractVector, x::AbstractVector, f::AbstractVector)
     f .= clenshaw.(Ref(c), x)
 end
 

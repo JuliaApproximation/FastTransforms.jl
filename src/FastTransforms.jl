@@ -1,6 +1,6 @@
 module FastTransforms
 
-using ArrayLayouts, FastGaussQuadrature, FillArrays, LinearAlgebra,
+using FastGaussQuadrature, FillArrays, LinearAlgebra,
       Reexport, SpecialFunctions, ToeplitzMatrices
 
 import DSP
