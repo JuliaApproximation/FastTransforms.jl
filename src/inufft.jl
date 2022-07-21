@@ -3,9 +3,9 @@ Pre-computes an inverse nonuniform fast Fourier transform of type `N`.
 
 For best performance, choose the right number of threads by `FFTW.set_num_threads(4)`, for example.
 """
-struct iNUFFTPlan{N,T,S,PT} <: Plan{T}
+struct iNUFFTPlan{N,T,S,PT,TF} <: Plan{T}
     pt::PT
-    TP::Toeplitz{T}
+    TP::TF
     r::Vector{T}
     p::Vector{T}
     Ap::Vector{T}
@@ -24,12 +24,12 @@ function plan_inufft1(ω::AbstractVector{T}, ϵ::T) where T<:AbstractFloat
     avg = (r[1]+c[1])/2
     r[1] = avg
     c[1] = avg
-    TP = Toeplitz(c, r)
+    TP = factorize(Toeplitz(c, r))
     r = zero(c)
     p = zero(c)
     Ap = zero(c)
 
-    iNUFFTPlan{1, eltype(TP), typeof(ϵ), typeof(pt)}(pt, TP, r, p, Ap, ϵ)
+    iNUFFTPlan{1, eltype(TP), typeof(ϵ), typeof(pt), typeof(TP)}(pt, TP, r, p, Ap, ϵ)
 end
 
 """
@@ -43,12 +43,12 @@ function plan_inufft2(x::AbstractVector{T}, ϵ::T) where T<:AbstractFloat
     avg = (r[1]+c[1])/2
     r[1] = avg
     c[1] = avg
-    TP = Toeplitz(c, r)
+    TP = factorize(Toeplitz(c, r))
     r = zero(c)
     p = zero(c)
     Ap = zero(c)
 
-    iNUFFTPlan{2, eltype(TP), typeof(ϵ), typeof(pt)}(pt, TP, r, p, Ap, ϵ)
+    iNUFFTPlan{2, eltype(TP), typeof(ϵ), typeof(pt), typeof(TP)}(pt, TP, r, p, Ap, ϵ)
 end
 
 
@@ -80,10 +80,8 @@ Computes an inverse nonuniform fast Fourier transform of type II.
 """
 inufft2(c::AbstractVector, x::AbstractVector{T}, ϵ::T) where {T<:AbstractFloat} = plan_inufft2(x, ϵ)*c
 
-function cg_for_inufft(A::ToeplitzMatrices.AbstractToeplitz{T}, x::AbstractVector{T}, b::AbstractVector{T}, r::AbstractVector{T}, p::AbstractVector{T}, Ap::AbstractVector{T}, max_it::Integer, tol::Real) where T
+function cg_for_inufft(A::ToeplitzMatrices.ToeplitzFactorization{T}, x::AbstractVector{T}, b::AbstractVector{T}, r::AbstractVector{T}, p::AbstractVector{T}, Ap::AbstractVector{T}, max_it::Integer, tol::Real) where T
 	n = length(b)
-	n1, n2 = size(A)
-	n == n1 == n2 || throw(DimensionMismatch(""))
     nrmb = norm(b)
     if nrmb == 0 nrmb = one(typeof(nrmb)) end
 	copyto!(x, b)
