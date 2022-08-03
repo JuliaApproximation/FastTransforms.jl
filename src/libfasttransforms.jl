@@ -103,44 +103,47 @@ function clenshaw!(c::StridedVector{Float32}, A::Vector{Float32}, B::Vector{Floa
     f
 end
 
-const LEG2CHEB              = 0
-const CHEB2LEG              = 1
-const ULTRA2ULTRA           = 2
-const JAC2JAC               = 3
-const LAG2LAG               = 4
-const JAC2ULTRA             = 5
-const ULTRA2JAC             = 6
-const JAC2CHEB              = 7
-const CHEB2JAC              = 8
-const ULTRA2CHEB            = 9
-const CHEB2ULTRA           = 10
-const ASSOCIATEDJAC2JAC    = 11
-const MODIFIEDJAC2JAC      = 12
-const MODIFIEDLAG2LAG      = 13
-const MODIFIEDHERM2HERM    = 14
-const SPHERE               = 15
-const SPHEREV              = 16
-const DISK                 = 17
-const RECTDISK             = 18
-const TRIANGLE             = 19
-const TETRAHEDRON          = 20
-const SPINSPHERE           = 21
-const SPHERESYNTHESIS      = 22
-const SPHEREANALYSIS       = 23
-const SPHEREVSYNTHESIS     = 24
-const SPHEREVANALYSIS      = 25
-const DISKSYNTHESIS        = 26
-const DISKANALYSIS         = 27
-const RECTDISKSYNTHESIS    = 28
-const RECTDISKANALYSIS     = 29
-const TRIANGLESYNTHESIS    = 30
-const TRIANGLEANALYSIS     = 31
-const TETRAHEDRONSYNTHESIS = 32
-const TETRAHEDRONANALYSIS  = 33
-const SPINSPHERESYNTHESIS  = 34
-const SPINSPHEREANALYSIS   = 35
-const SPHERICALISOMETRY    = 36
+@enum Transforms::Cint begin
+    LEG2CHEB=0
+    CHEB2LEG
+    ULTRA2ULTRA
+    JAC2JAC
+    LAG2LAG
+    JAC2ULTRA
+    ULTRA2JAC
+    JAC2CHEB
+    CHEB2JAC
+    ULTRA2CHEB
+    CHEB2ULTRA
+    ASSOCIATEDJAC2JAC
+    MODIFIEDJAC2JAC
+    MODIFIEDLAG2LAG
+    MODIFIEDHERM2HERM
+    SPHERE
+    SPHEREV
+    DISK
+    RECTDISK
+    TRIANGLE
+    TETRAHEDRON
+    SPINSPHERE
+    SPHERESYNTHESIS
+    SPHEREANALYSIS
+    SPHEREVSYNTHESIS
+    SPHEREVANALYSIS
+    DISKSYNTHESIS
+    DISKANALYSIS
+    RECTDISKSYNTHESIS
+    RECTDISKANALYSIS
+    TRIANGLESYNTHESIS
+    TRIANGLEANALYSIS
+    TETRAHEDRONSYNTHESIS
+    TETRAHEDRONANALYSIS
+    SPINSPHERESYNTHESIS
+    SPINSPHEREANALYSIS
+    SPHERICALISOMETRY
+end
 
+Transforms(t::Transforms) = t
 
 let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                CHEB2LEG             => "Chebyshev--Legendre",
@@ -180,7 +183,7 @@ let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                SPINSPHEREANALYSIS   => "FFTW Fourier analysis on the sphere (spin-weighted)",
                SPHERICALISOMETRY    => "Spherical isometry")
     global kind2string
-    kind2string(k::Integer) = k2s[Int(k)]
+    kind2string(k::Union{Integer, Transforms}) = k2s[Transforms(k)]
 end
 
 struct ft_plan_struct end
