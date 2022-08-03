@@ -1077,12 +1077,25 @@ function execute_sph_reflection!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, w, x:
 end
 execute_sph_reflection!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, w1, w2, w3, x::Matrix{Float64}) = execute_sph_reflection!(p, ft_reflection(w1, w2, w3), x)
 
-*(p::FTPlan{T}, x::Array{Complex{T}}) where T = lmul!(p, deepcopy(x))
-*(p::AdjointFTPlan{T}, x::Array{Complex{T}}) where T = lmul!(p, deepcopy(x))
-*(p::TransposeFTPlan{T}, x::Array{Complex{T}}) where T = lmul!(p, deepcopy(x))
-\(p::FTPlan{T}, x::Array{Complex{T}}) where T = ldiv!(p, deepcopy(x))
-\(p::AdjointFTPlan{T}, x::Array{Complex{T}}) where T = ldiv!(p, deepcopy(x))
-\(p::TransposeFTPlan{T}, x::Array{Complex{T}}) where T = ldiv!(p, deepcopy(x))
+assertcontiguous(x) = iscontiguous(x) || throw(ArgumentError("array must be contiguous"))
+iscontiguous(array::Union{Array,StridedArray{<:Any,0}}) = true
+function iscontiguous(array)
+    strd = strides(array)
+    sz = size(array)
+    isone(strd[1]) && checkcontiguous(Base.tail(strd),sz[1],Base.tail(sz)...)
+end
+
+function checkcontiguous(strd,s,d,sz...)
+    strd[1] == s && checkcontiguous(Base.tail(strd),s*d,sz...)
+end
+checkcontiguous(::Tuple{},args...) = true
+
+*(p::FTPlan{T}, x::StridedArray{Complex{T}}) where T = (assertcontiguous(x); lmul!(p, deepcopy(x)))
+*(p::AdjointFTPlan{T}, x::StridedArray{Complex{T}}) where T = (assertcontiguous(x); lmul!(p, deepcopy(x)))
+*(p::TransposeFTPlan{T}, x::StridedArray{Complex{T}}) where T = (assertcontiguous(x); lmul!(p, deepcopy(x)))
+\(p::FTPlan{T}, x::StridedArray{Complex{T}}) where T = (assertcontiguous(x); ldiv!(p, deepcopy(x)))
+\(p::AdjointFTPlan{T}, x::StridedArray{Complex{T}}) where T = (assertcontiguous(x); ldiv!(p, deepcopy(x)))
+\(p::TransposeFTPlan{T}, x::StridedArray{Complex{T}}) where T = (assertcontiguous(x); ldiv!(p, deepcopy(x)))
 
 for fJ in (:lmul!, :ldiv!)
     @eval begin

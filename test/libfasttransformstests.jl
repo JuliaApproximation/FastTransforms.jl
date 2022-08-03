@@ -28,6 +28,9 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         y = p1*x
         z = p2*y
         @test z ≈ x
+        y = p1*view(x, :)
+        z = p2*view(y, :)
+        @test z ≈ x
         y = p1*x
         z = p1'y
         y = transpose(p1)*z
