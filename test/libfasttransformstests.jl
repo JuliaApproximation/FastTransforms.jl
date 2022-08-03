@@ -28,9 +28,11 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         y = p1*x
         z = p2*y
         @test z ≈ x
+
         y = p1*view(x, :)
         z = p2*view(y, :)
         @test z ≈ x
+
         y = p1*x
         z = p1'y
         y = transpose(p1)*z
@@ -38,6 +40,15 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         y = p1'\z
         z = p1\y
         @test z ≈ x
+
+        y = p1*view(x, :)
+        z = p1'view(y, :)
+        y = transpose(p1)*view(z, :)
+        z = transpose(p1)\view(y, :)
+        y = p1'\view(z, :)
+        z = p1\view(y, :)
+        @test z ≈ x
+
         y = p2*x
         z = p2'y
         y = transpose(p2)*z
@@ -45,9 +56,11 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         y = p2'\z
         z = p2\y
         @test z ≈ x
+
         P = p1*I
         Q = p2*P
         @test Q ≈ I
+
         P = p1*I
         Q = p1'P
         P = transpose(p1)*Q
@@ -55,6 +68,7 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         P = p1'\Q
         Q = p1\P
         @test Q ≈ I
+
         P = p2*I
         Q = p2'P
         P = transpose(p2)*Q
