@@ -70,7 +70,7 @@ function evaluate_lambda(n::Integer, alpha::T, delta::T) where T
 
     p = plan_jac2jac(T, n-1, zero(T), zero(T), alpha, zero(T))
 
-    lambda[2:end] .= p'lambda[2:end]
+    lmul!(p', view(lambda, 2:n))
 
     for i = 2:n-1
         lambda[i+1] = ((2i-1)*lambda[i+1] + (i-1)*lambda[i])/i

@@ -33,8 +33,8 @@ struct mpfr_t <: AbstractFloat
 end
 
 """
-`BigFloat` is a mutable struct and there is no guarantee that each entry in
-an `Array{BigFloat}` has unique pointers. For example, looking at the `Limb`s,
+`BigFloat` is a mutable struct and there is no guarantee that each entry in an
+`AbstractArray{BigFloat}` is unique. For example, looking at the `Limb`s,
 
     Id = Matrix{BigFloat}(I, 3, 3)
     map(x->x.d, Id)
@@ -42,7 +42,7 @@ an `Array{BigFloat}` has unique pointers. For example, looking at the `Limb`s,
 shows that the ones and the zeros all share the same pointers. If a C function
 assumes unicity of each datum, then the array must be renewed with a `deepcopy`.
 """
-function renew!(x::Array{BigFloat})
+function renew!(x::AbstractArray{BigFloat})
     for i in eachindex(x)
         @inbounds x[i] = deepcopy(x[i])
     end
@@ -221,9 +221,17 @@ show(io::IO, p::FTPlan{T, 2, K}) where {T, K} = print(io, "FastTransforms plan f
 show(io::IO, p::FTPlan{T, 3, K}) where {T, K} = print(io, "FastTransforms plan for ", kind2string(K), " for $(p.n)×$(p.l)×$(p.m)-element array of ", T)
 show(io::IO, p::FTPlan{T, 2, SPHERICALISOMETRY}) where T = print(io, "FastTransforms ", kind2string(SPHERICALISOMETRY), " plan for $(p.n)×$(2p.n-1)-element array of ", T)
 
-function checksize(p::FTPlan{T, 1}, x::Array{T}) where T
+function checksize(p::FTPlan{T, 1}, x::StridedArray{T}) where T
     if p.n != size(x, 1)
         throw(DimensionMismatch("FTPlan has dimensions $(p.n) × $(p.n), x has leading dimension $(size(x, 1))"))
+    end
+end
+
+function checkstrides(p::FTPlan{T, 1}, x::StridedArray{T}) where T
+    sz = size(x)
+    st = strides(x)
+    if (1, cumprod(sz)...) != (st..., length(x))
+        error("FTPlan requires unit strides, x has strides $(strides(x))")
     end
 end
 
@@ -325,6 +333,14 @@ function checksize(p::AdjointFTPlan, x)
     end
 end
 
+function checkstrides(p::AdjointFTPlan, x)
+    try
+        checkstrides(p.adjoint, x)
+    catch
+        checkstrides(p.parent, x)
+    end
+end
+
 function unsafe_convert(::Type{Ptr{ft_plan_struct}}, p::AdjointFTPlan)
     try
         unsafe_convert(Ptr{ft_plan_struct}, p.adjoint)
@@ -370,6 +386,14 @@ function checksize(p::TransposeFTPlan, x)
         checksize(p.transpose, x)
     catch
         checksize(p.parent, x)
+    end
+end
+
+function checkstrides(p::TransposeFTPlan, x)
+    try
+        checkstrides(p.transpose, x)
+    catch
+        checkstrides(p.parent, x)
     end
 end
 
@@ -803,18 +827,21 @@ for (fJ, fC, elty) in ((:lmul!, :ft_bfmvf, :Float32),
                        (:lmul!, :ft_bfmv , :Float64),
                        (:ldiv!, :ft_bfsv , :Float64))
     @eval begin
-        function $fJ(p::FTPlan{$elty, 1}, x::Vector{$elty})
+        function $fJ(p::FTPlan{$elty, 1}, x::StridedVector{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'N', p, x)
             return x
         end
-        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, K}}, x::Vector{$elty}) where K
+        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, K}}, x::StridedVector{$elty}) where K
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', p, x)
             return x
         end
-        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, K}}, x::Vector{$elty}) where K
+        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, K}}, x::StridedVector{$elty}) where K
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', p, x)
             return x
         end
@@ -824,18 +851,21 @@ end
 for (fJ, fC, elty) in ((:lmul!, :ft_bbbfmvf, :Float32),
                        (:lmul!, :ft_bbbfmv , :Float64))
     @eval begin
-        function $fJ(p::FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}, x::Vector{$elty})
+        function $fJ(p::FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}, x::StridedVector{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'N', '2', '1', p, x)
             return x
         end
-        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Vector{$elty})
+        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::StridedVector{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', '1', '2', p, x)
             return x
         end
-        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Vector{$elty})
+        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::StridedVector{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', '1', '2', p, x)
             return x
         end
@@ -845,18 +875,21 @@ end
 for (fJ, fC, elty) in ((:lmul!, :ft_mpmv, :Float64),
                        (:ldiv!, :ft_mpsv, :Float64))
     @eval begin
-        function $fJ(p::ModifiedFTPlan{$elty}, x::Vector{$elty})
+        function $fJ(p::ModifiedFTPlan{$elty}, x::StridedVector{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'N', p, x)
             return x
         end
-        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan{$elty}}, x::Vector{$elty})
+        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan{$elty}}, x::StridedVector{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', p, x)
             return x
         end
-        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan{$elty}}, x::Vector{$elty})
+        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan{$elty}}, x::StridedVector{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}), 'T', p, x)
             return x
         end
@@ -866,18 +899,21 @@ end
 for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
                  (:ldiv!, :ft_mpfr_trsv_ptr))
     @eval begin
-        function $fJ(p::FTPlan{BigFloat, 1}, x::Vector{BigFloat})
+        function $fJ(p::FTPlan{BigFloat, 1}, x::StridedVector{BigFloat})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'N', p.n, p, p.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
             return x
         end
-        function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::Vector{BigFloat}) where K
+        function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedVector{BigFloat}) where K
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
             return x
         end
-        function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::Vector{BigFloat}) where K
+        function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedVector{BigFloat}) where K
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
             return x
         end
@@ -889,18 +925,21 @@ for (fJ, fC, elty) in ((:lmul!, :ft_bfmmf, :Float32),
                        (:lmul!, :ft_bfmm , :Float64),
                        (:ldiv!, :ft_bfsm , :Float64))
     @eval begin
-        function $fJ(p::FTPlan{$elty, 1}, x::Matrix{$elty})
+        function $fJ(p::FTPlan{$elty, 1}, x::StridedMatrix{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
             return x
         end
-        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, K}}, x::Matrix{$elty}) where K
+        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, K}}, x::StridedMatrix{$elty}) where K
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
-        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, K}}, x::Matrix{$elty}) where K
+        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, K}}, x::StridedMatrix{$elty}) where K
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
@@ -910,18 +949,21 @@ end
 for (fJ, fC, elty) in ((:lmul!, :ft_bbbfmmf, :Float32),
                        (:lmul!, :ft_bbbfmm , :Float64))
     @eval begin
-        function $fJ(p::FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}, x::Matrix{$elty})
+        function $fJ(p::FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}, x::StridedMatrix{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'N', '2', '1', p, x, size(x, 1), size(x, 2))
             return x
         end
-        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Matrix{$elty})
+        function $fJ(p::AdjointFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::StridedMatrix{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', '1', '2', p, x, size(x, 1), size(x, 2))
             return x
         end
-        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::Matrix{$elty})
+        function $fJ(p::TransposeFTPlan{$elty, FTPlan{$elty, 1, ASSOCIATEDJAC2JAC}}, x::StridedMatrix{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', '1', '2', p, x, size(x, 1), size(x, 2))
             return x
         end
@@ -931,18 +973,21 @@ end
 for (fJ, fC, elty) in ((:lmul!, :ft_mpmm, :Float64),
                        (:ldiv!, :ft_mpsm, :Float64))
     @eval begin
-        function $fJ(p::ModifiedFTPlan{$elty}, x::Matrix{$elty})
+        function $fJ(p::ModifiedFTPlan{$elty}, x::StridedMatrix{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
             return x
         end
-        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan{$elty}}, x::Matrix{$elty})
+        function $fJ(p::AdjointFTPlan{$elty, ModifiedFTPlan{$elty}}, x::StridedMatrix{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
-        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan{$elty}}, x::Matrix{$elty})
+        function $fJ(p::TransposeFTPlan{$elty, ModifiedFTPlan{$elty}}, x::StridedMatrix{$elty})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{$elty}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
@@ -952,18 +997,21 @@ end
 for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm_ptr),
                  (:ldiv!, :ft_mpfr_trsm_ptr))
     @eval begin
-        function $fJ(p::FTPlan{BigFloat, 1}, x::Matrix{BigFloat})
+        function $fJ(p::FTPlan{BigFloat, 1}, x::StridedMatrix{BigFloat})
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'N', p.n, p, p.n, renew!(x), size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             return x
         end
-        function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::Matrix{BigFloat}) where K
+        function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedMatrix{BigFloat}) where K
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             return x
         end
-        function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::Matrix{BigFloat}) where K
+        function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedMatrix{BigFloat}) where K
             checksize(p, x)
+            checkstrides(p, x)
             ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), size(x, 1), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             return x
         end
@@ -1077,12 +1125,12 @@ function execute_sph_reflection!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, w, x:
 end
 execute_sph_reflection!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, w1, w2, w3, x::Matrix{Float64}) = execute_sph_reflection!(p, ft_reflection(w1, w2, w3), x)
 
-*(p::FTPlan{T}, x::Array{Complex{T}}) where T = lmul!(p, deepcopy(x))
-*(p::AdjointFTPlan{T}, x::Array{Complex{T}}) where T = lmul!(p, deepcopy(x))
-*(p::TransposeFTPlan{T}, x::Array{Complex{T}}) where T = lmul!(p, deepcopy(x))
-\(p::FTPlan{T}, x::Array{Complex{T}}) where T = ldiv!(p, deepcopy(x))
-\(p::AdjointFTPlan{T}, x::Array{Complex{T}}) where T = ldiv!(p, deepcopy(x))
-\(p::TransposeFTPlan{T}, x::Array{Complex{T}}) where T = ldiv!(p, deepcopy(x))
+*(p::FTPlan{T}, x::AbstractArray{Complex{T}}) where T = lmul!(p, Array(x))
+*(p::AdjointFTPlan{T}, x::AbstractArray{Complex{T}}) where T = lmul!(p, Array(x))
+*(p::TransposeFTPlan{T}, x::AbstractArray{Complex{T}}) where T = lmul!(p, Array(x))
+\(p::FTPlan{T}, x::AbstractArray{Complex{T}}) where T = ldiv!(p, Array(x))
+\(p::AdjointFTPlan{T}, x::AbstractArray{Complex{T}}) where T = ldiv!(p, Array(x))
+\(p::TransposeFTPlan{T}, x::AbstractArray{Complex{T}}) where T = ldiv!(p, Array(x))
 
 for fJ in (:lmul!, :ldiv!)
     @eval begin
