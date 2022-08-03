@@ -123,7 +123,7 @@ Pre-plan a Padua Transform.
 """
 function plan_paduatransform!(::Type{T},N::Integer,lex) where T
     n=Int(cld(-3+sqrt(1+8N),2))
-    if N ≠ ((n+1)*(n+2))÷2
+    if N ≠ ((n+1)*(n+2))÷2
         error("Padua transforms can only be applied to vectors of length (n+1)*(n+2)/2.")
     end
     PaduaTransformPlan(Array{T}(undef,n+2,n+1),FFTW.plan_r2r!(Array{T}(undef,n+2,n+1),FFTW.REDFT00),lex)

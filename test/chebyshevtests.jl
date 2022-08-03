@@ -191,7 +191,7 @@ using FastTransforms, Test
             @test ichebyshevtransform(X,Val(2),2) ≈ ichebyshevtransform!(copy(X),Val(2),2) ≈ hcat(ichebyshevtransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
 
             @test @inferred(ichebyshevtransform(X)) ≈ @inferred(ichebyshevtransform!(copy(X))) ≈ ichebyshevtransform(ichebyshevtransform(X,1),2)
-            @test @inferred(ichebyshevtransform(X,Val(2))) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2))) ≈ ichebyshevtransform(ichebyshevtransform(X,Val(2),1),Val(2),2)            
+            @test @inferred(ichebyshevtransform(X,Val(2))) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2))) ≈ ichebyshevtransform(ichebyshevtransform(X,Val(2),1),Val(2),2)
 
             @test ichebyshevtransform(chebyshevtransform(X)) ≈ X
             @test chebyshevtransform(ichebyshevtransform(X)) ≈ X
@@ -208,7 +208,7 @@ using FastTransforms, Test
         @test chebyshevtransform([1,2,3], Val(2)) == chebyshevtransform([1.,2,3], Val(2))
         @test ichebyshevtransform([1,2,3]) == ichebyshevtransform([1.,2,3])
         @test ichebyshevtransform([1,2,3], Val(2)) == ichebyshevtransform([1.,2,3], Val(2))
-        
+
         @test chebyshevutransform([1,2,3]) == chebyshevutransform([1.,2,3])
         @test chebyshevutransform([1,2,3], Val(2)) == chebyshevutransform([1.,2,3], Val(2))
         @test ichebyshevutransform([1,2,3]) == ichebyshevutransform([1.,2,3])
