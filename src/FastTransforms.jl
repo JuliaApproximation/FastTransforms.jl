@@ -7,6 +7,7 @@ import DSP
 
 @reexport using AbstractFFTs
 @reexport using FFTW
+@reexport using GenericFFT
 
 import Base: convert, unsafe_convert, eltype, ndims, adjoint, transpose, show,
              *, \, inv, length, size, view, getindex
