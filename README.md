@@ -19,7 +19,7 @@ julia> using FastTransforms, LinearAlgebra
 
 ## Fast orthogonal polynomial transforms
 
-The 34 orthogonal polynomial transforms are listed in `FastTransforms.kind2string.(0:33)`. Univariate transforms may be planned with the standard normalization or with orthonormalization. For multivariate transforms, the standard normalization may be too severe for floating-point computations, so it is omitted. Here are two examples:
+The orthogonal polynomial transforms are listed in `FastTransforms.Transforms` or `FastTransforms.kind2string.(instances(FastTransforms.Transforms))`. Univariate transforms may be planned with the standard normalization or with orthonormalization. For multivariate transforms, the standard normalization may be too severe for floating-point computations, so it is omitted. Here are two examples:
 
 ### The Chebyshev--Legendre transform
 
