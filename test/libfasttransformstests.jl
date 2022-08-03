@@ -23,6 +23,14 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         @test f ≈ fd
     end
 
+    @testset "contiguity sanity checks" begin
+        for v in Any[rand(2), rand(2,2)], s in Any[v, view(v, CartesianIndices(v)), reshape(v, Val(3))]
+            @test FastTransforms.iscontiguous(rand(2))
+            @test FastTransforms.iscontiguous(rand(2,2))
+        end
+        @test !FastTransforms.iscontiguous(transpose(rand(2,2)))
+    end
+
     α, β, γ, δ, λ, μ = 0.1, 0.2, 0.3, 0.4, 0.5, 0.6
     function test_1d_plans(p1, p2, x)
         y = p1*x
