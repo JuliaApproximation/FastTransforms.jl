@@ -95,6 +95,8 @@ julia> norm(F-H)/norm(F)
 
 Due to the structure of the spherical harmonic connection problem, these transforms may also be performed in-place with `lmul!` and `ldiv!`.
 
+See also [FastSphericalHarmonics.jl](https://github.com/eschnett/FastSphericalHarmonics.jl) for a simpler interface to the spherical harmonic transforms defined in this package.
+
 ## Nonuniform fast Fourier transforms
 
 The NUFFTs are implemented thanks to [Alex Townsend](https://github.com/ajt60gaibb):
