@@ -65,6 +65,17 @@ plan_chebyshevtransform(x::AbstractArray, dims...; kws...) = plan_chebyshevtrans
     ldiv!(size(y,d), y)
 end
 
+@inline function _cheb1_rescale!(d::Number, y::AbstractArray{T,3}) where T
+    if isone(d)
+        ldiv!(2, view(y,1,:,:))
+    elseif d == 2
+        ldiv!(2, view(y,:,1,:))
+    else # d == 3
+        ldiv!(2, view(y,:,:,1))
+    end
+    ldiv!(size(y,d), y)
+end
+
 # TODO: higher dimensional arrays
 @inline function _cheb1_rescale!(d::UnitRange, y::AbstractMatrix{T}) where T
     @assert d == 1:2
@@ -99,6 +110,20 @@ function _cheb2_rescale!(d::Number, y::AbstractMatrix{T}) where T
     else
         ldiv!(2, @view(y[:,1]))
         ldiv!(2, @view(y[:,end]))
+    end
+    ldiv!(size(y,d)-1, y)
+end
+
+function _cheb2_rescale!(d::Number, y::AbstractArray{T,3}) where T
+    if isone(d)
+        ldiv!(2, @view(y[1,:,:]))
+        ldiv!(2, @view(y[end,:,:]))
+    elseif d == 2
+        ldiv!(2, @view(y[:,1,:]))
+        ldiv!(2, @view(y[:,end,:]))
+    else
+        ldiv!(2, @view(y[:,:,1]))
+        ldiv!(2, @view(y[:,:,end]))        
     end
     ldiv!(size(y,d)-1, y)
 end
