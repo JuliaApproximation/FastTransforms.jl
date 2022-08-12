@@ -92,6 +92,42 @@ function ldiv_dim_end!(α, d::Number, y::AbstractArray{<:Any,3})
     end
 end
 
+lmul_dim_begin!(α, d::Number, y::AbstractVector) = y[1] *= α
+function lmul_dim_begin!(α, d::Number, y::AbstractMatrix)
+    if isone(d)
+        lmul!(α, @view(y[1,:]))
+    else
+        lmul!(α, @view(y[:,1]))
+    end
+end
+function lmul_dim_begin!(α, d::Number, y::AbstractArray{<:Any,3})
+    if isone(d)
+        lmul!(α, @view(y[1,:,:]))
+    elseif d == 2
+        lmul!(α, @view(y[:,1,:]))
+    else # d == 3
+        lmul!(α, @view(y[:,:,1]))
+    end
+end
+
+lmul_dim_end!(α, d::Number, y::AbstractVector) = y[end] *= α
+function lmul_dim_end!(α, d::Number, y::AbstractMatrix)
+    if isone(d)
+        lmul!(α, @view(y[end,:]))
+    else
+        lmul!(α, @view(y[:,end]))
+    end
+end
+function lmul_dim_end!(α, d::Number, y::AbstractArray{<:Any,3})
+    if isone(d)
+        lmul!(α, @view(y[end,:,:]))
+    elseif d == 2
+        lmul!(α, @view(y[:,end,:]))
+    else # d == 3
+        lmul!(α, @view(y[:,:,end]))
+    end
+end
+
 
 @inline function _cheb1_rescale!(d::Number, y::AbstractArray)
     ldiv_dim_begin!(2, d, y)
@@ -235,33 +271,25 @@ end
 plan_ichebyshevtransform!(x::AbstractArray, dims...; kws...) = plan_ichebyshevtransform!(x, Val(1), dims...; kws...)
 plan_ichebyshevtransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevtransform(x, Val(1), dims...; kws...)
 
-@inline _icheb1_prescale!(_, x::AbstractVector) = (x[1] *= 2)
-@inline function _icheb1_prescale!(d::Number, x::AbstractMatrix)
-    if isone(d)
-        lmul!(2, view(x,1,:))
-    else
-        lmul!(2, view(x,:,1))
+@inline function _icheb1_prescale!(d::Number, x::AbstractArray)
+    lmul_dim_begin!(2, d, x)
+    x
+end
+@inline function _icheb1_prescale!(d::UnitRange, x::AbstractArray)
+    for k in d
+        _icheb1_prescale!(k, x)
     end
     x
 end
-@inline function _icheb1_prescale!(d::UnitRange, x::AbstractMatrix)
-    lmul!(2, view(x,:,1))
-    lmul!(2, view(x,1,:))
-    x
-end
-@inline _icheb1_postscale!(_, x::AbstractVector) = (x[1] /= 2)
-@inline function _icheb1_postscale!(d::Number, x::AbstractMatrix)
-    if isone(d)
-        ldiv!(2, view(x,1,:))
-    else
-        ldiv!(2, view(x,:,1))
-    end
+@inline function _icheb1_postscale!(d::Number, x::AbstractArray)
+    ldiv_dim_begin!(2, d, x)
     x
 end
 
-@inline function _icheb1_postscale!(d::UnitRange, x::AbstractMatrix)
-    ldiv!(2, view(x,1,:))
-    ldiv!(2, view(x,:,1))
+@inline function _icheb1_postscale!(d::UnitRange, x::AbstractArray)
+    for k in d
+        _icheb1_postscale!(k, x)
+    end
     x
 end
 
@@ -284,40 +312,27 @@ function mul!(y::AbstractArray{T,N}, P::IChebyshevTransformPlan{T,1,K,false,N}, 
     ldiv!(2^length(P.plan.region), y)
 end
 
-@inline _icheb2_prescale!(_, x::AbstractVector) = (x[1] *= 2; x[end] *= 2)
-@inline function _icheb2_prescale!(d::Number, x::AbstractMatrix)
-    if isone(d)
-        lmul!(2, @view(x[1,:]))
-        lmul!(2, @view(x[end,:]))
-    else
-        lmul!(2, @view(x[:,1]))
-        lmul!(2, @view(x[:,end]))
+@inline function _icheb2_prescale!(d::Number, x::AbstractArray)
+    lmul_dim_begin!(2, d, x)
+    lmul_dim_end!(2, d, x)
+    x
+end
+@inline function _icheb2_prescale!(d::UnitRange, x::AbstractArray)
+    for k in d
+        _icheb2_prescale!(k, x)
     end
     x
 end
-@inline function _icheb2_prescale!(d::UnitRange, x::AbstractMatrix)
-    lmul!(2, @view(x[1,:]))
-    lmul!(2, @view(x[end,:]))
-    lmul!(2, @view(x[:,1]))
-    lmul!(2, @view(x[:,end]))
+
+@inline function _icheb2_postrescale!(d::Number, x::AbstractArray)
+    ldiv_dim_begin!(2, d, x)
+    ldiv_dim_end!(2, d, x)
     x
 end
-@inline _icheb2_postrescale!(_, x::AbstractVector) = (x[1] /= 2; x[end] /= 2)
-@inline function _icheb2_postrescale!(d::Number, x::AbstractMatrix)
-    if isone(d)
-        ldiv!(2, @view(x[1,:]))
-        ldiv!(2, @view(x[end,:]))
-    else
-        ldiv!(2, @view(x[:,1]))
-        ldiv!(2, @view(x[:,end]))
+@inline function _icheb2_postrescale!(d::UnitRange, x::AbstractArray)
+    for k in d
+        _icheb2_postrescale!(k, x)
     end
-    x
-end
-@inline function _icheb2_postrescale!(d::UnitRange, x::AbstractMatrix)
-    ldiv!(2, @view(x[1,:]))
-    ldiv!(2, @view(x[end,:]))
-    ldiv!(2, @view(x[:,1]))
-    ldiv!(2, @view(x[:,end]))
     x
 end
 @inline function _icheb2_rescale!(d::Number, y::AbstractArray{T}) where T
@@ -327,7 +342,7 @@ end
 end
 @inline function _icheb2_rescale!(d::UnitRange, y::AbstractArray{T}) where T
     _icheb2_prescale!(d, y)
-    lmul!(prod(convert.(T, size(y) .- 1)./2), y)
+    lmul!(_prod_size(convert.(T, size(y) .- 1)./2, d), y)
     y
 end
 

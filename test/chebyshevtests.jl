@@ -226,19 +226,28 @@ using FastTransforms, Test
         end
 
         @testset "ichebyshevtransform" begin
-            @test @inferred(ichebyshevtransform(X,1)) ≈ @inferred(ichebyshevtransform!(copy(X),1)) ≈ hcat(ichebyshevtransform.([X[:,k] for k=axes(X,2)])...)
-            @test ichebyshevtransform(X,2) ≈ ichebyshevtransform!(copy(X),2) ≈ hcat(ichebyshevtransform.([X[k,:] for k=axes(X,1)])...)'
-            @test @inferred(ichebyshevtransform(X,Val(2),1)) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2),1)) ≈ hcat(ichebyshevtransform.([X[:,k] for k=axes(X,2)],Val(2))...)
-            @test ichebyshevtransform(X,Val(2),2) ≈ ichebyshevtransform!(copy(X),Val(2),2) ≈ hcat(ichebyshevtransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
+            for k = axes(X,2), j = axes(X,3) X̃[:,k,j] = ichebyshevtransform(X[:,k,j]) end
+            @test @inferred(ichebyshevtransform(X,1)) ≈ @inferred(ichebyshevtransform!(copy(X),1)) ≈ X̃
+            for k = axes(X,1), j = axes(X,3) X̃[k,:,j] = ichebyshevtransform(X[k,:,j]) end
+            @test ichebyshevtransform(X,2) ≈ ichebyshevtransform!(copy(X),2) ≈ X̃
+            for k = axes(X,1), j = axes(X,2) X̃[k,j,:] = ichebyshevtransform(X[k,j,:]) end
+            @test ichebyshevtransform(X,3) ≈ ichebyshevtransform!(copy(X),3) ≈ X̃
 
-            @test @inferred(ichebyshevtransform(X)) ≈ @inferred(ichebyshevtransform!(copy(X))) ≈ ichebyshevtransform(ichebyshevtransform(X,1),2)
-            @test @inferred(ichebyshevtransform(X,Val(2))) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2))) ≈ ichebyshevtransform(ichebyshevtransform(X,Val(2),1),Val(2),2)
+            for k = axes(X,2), j = axes(X,3) X̃[:,k,j] = ichebyshevtransform(X[:,k,j],Val(2)) end
+            @test @inferred(ichebyshevtransform(X,Val(2),1)) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2),1)) ≈ X̃
+            for k = axes(X,1), j = axes(X,3) X̃[k,:,j] = ichebyshevtransform(X[k,:,j],Val(2)) end
+            @test ichebyshevtransform(X,Val(2),2) ≈ ichebyshevtransform!(copy(X),Val(2),2) ≈ X̃
+            for k = axes(X,1), j = axes(X,2) X̃[k,j,:] = ichebyshevtransform(X[k,j,:],Val(2)) end
+            @test ichebyshevtransform(X,Val(2),3) ≈ ichebyshevtransform!(copy(X),Val(2),3) ≈ X̃
+
+            @test @inferred(ichebyshevtransform(X)) ≈ @inferred(ichebyshevtransform!(copy(X))) ≈ ichebyshevtransform(ichebyshevtransform(ichebyshevtransform(X,1),2),3)
+            @test @inferred(ichebyshevtransform(X,Val(2))) ≈ @inferred(ichebyshevtransform!(copy(X),Val(2))) ≈ ichebyshevtransform(ichebyshevtransform(ichebyshevtransform(X,Val(2),1),Val(2),2),Val(2),3)
 
             @test ichebyshevtransform(chebyshevtransform(X)) ≈ X
             @test chebyshevtransform(ichebyshevtransform(X)) ≈ X
         end
 
-        X = randn(1,1)
+        X = randn(1,1,1)
         @test chebyshevtransform!(copy(X), Val(1)) == ichebyshevtransform!(copy(X), Val(1)) == X
         @test_throws ArgumentError chebyshevtransform!(copy(X), Val(2))
         @test_throws ArgumentError ichebyshevtransform!(copy(X), Val(2))
