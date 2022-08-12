@@ -54,34 +54,64 @@ plan_chebyshevtransform(x::AbstractArray, dims...; kws...) = plan_chebyshevtrans
 @inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::StridedArray{T}) where T = mul!(y, P, x)
 @inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::AbstractArray) where T = mul!(y, P, convert(Array{T}, x))
 
-@inline _cheb1_rescale!(_, y::AbstractVector) = (y[1] /= 2; ldiv!(length(y), y))
 
-@inline function _cheb1_rescale!(d::Number, y::AbstractMatrix{T}) where T
+
+ldiv_dim_begin!(α, d::Number, y::AbstractVector) = y[1] /= α
+function ldiv_dim_begin!(α, d::Number, y::AbstractMatrix)
     if isone(d)
-        ldiv!(2, view(y,1,:))
+        ldiv!(α, @view(y[1,:]))
     else
-        ldiv!(2, view(y,:,1))
+        ldiv!(α, @view(y[:,1]))
     end
-    ldiv!(size(y,d), y)
 end
-
-@inline function _cheb1_rescale!(d::Number, y::AbstractArray{T,3}) where T
+function ldiv_dim_begin!(α, d::Number, y::AbstractArray{<:Any,3})
     if isone(d)
-        ldiv!(2, view(y,1,:,:))
+        ldiv!(α, @view(y[1,:,:]))
     elseif d == 2
-        ldiv!(2, view(y,:,1,:))
+        ldiv!(α, @view(y[:,1,:]))
     else # d == 3
-        ldiv!(2, view(y,:,:,1))
+        ldiv!(α, @view(y[:,:,1]))
     end
+end
+
+ldiv_dim_end!(α, d::Number, y::AbstractVector) = y[end] /= α
+function ldiv_dim_end!(α, d::Number, y::AbstractMatrix)
+    if isone(d)
+        ldiv!(α, @view(y[end,:]))
+    else
+        ldiv!(α, @view(y[:,end]))
+    end
+end
+function ldiv_dim_end!(α, d::Number, y::AbstractArray{<:Any,3})
+    if isone(d)
+        ldiv!(α, @view(y[end,:,:]))
+    elseif d == 2
+        ldiv!(α, @view(y[:,end,:]))
+    else # d == 3
+        ldiv!(α, @view(y[:,:,end]))
+    end
+end
+
+
+@inline function _cheb1_rescale!(d::Number, y::AbstractArray)
+    ldiv_dim_begin!(2, d, y)
     ldiv!(size(y,d), y)
 end
 
-# TODO: higher dimensional arrays
-@inline function _cheb1_rescale!(d::UnitRange, y::AbstractMatrix{T}) where T
-    @assert d == 1:2
-    ldiv!(2, view(y,1,:))
-    ldiv!(2, view(y,:,1))
-    ldiv!(prod(size(y)), y)
+function _prod_size(sz, d)
+    ret = 1
+    for k in d
+        ret *= sz[k]
+    end
+    ret
+end
+
+
+@inline function _cheb1_rescale!(d::UnitRange, y::AbstractArray)
+    for k in d
+        ldiv_dim_begin!(2, k, y)
+    end
+    ldiv!(_prod_size(size(y), d), y)
 end
 
 function *(P::ChebyshevTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
@@ -101,41 +131,21 @@ function mul!(y::AbstractArray{T,N}, P::ChebyshevTransformPlan{T,1,K,false,N}, x
 end
 
 
-_cheb2_rescale!(_, y::AbstractVector) = (y[1] /= 2; y[end] /= 2; ldiv!(length(y)-1, y))
 
-function _cheb2_rescale!(d::Number, y::AbstractMatrix{T}) where T
-    if isone(d)
-        ldiv!(2, @view(y[1,:]))
-        ldiv!(2, @view(y[end,:]))
-    else
-        ldiv!(2, @view(y[:,1]))
-        ldiv!(2, @view(y[:,end]))
-    end
-    ldiv!(size(y,d)-1, y)
-end
-
-function _cheb2_rescale!(d::Number, y::AbstractArray{T,3}) where T
-    if isone(d)
-        ldiv!(2, @view(y[1,:,:]))
-        ldiv!(2, @view(y[end,:,:]))
-    elseif d == 2
-        ldiv!(2, @view(y[:,1,:]))
-        ldiv!(2, @view(y[:,end,:]))
-    else
-        ldiv!(2, @view(y[:,:,1]))
-        ldiv!(2, @view(y[:,:,end]))        
-    end
+function _cheb2_rescale!(d::Number, y::AbstractArray)
+    ldiv_dim_begin!(2, d, y)
+    ldiv_dim_end!(2, d, y)
     ldiv!(size(y,d)-1, y)
 end
 
 # TODO: higher dimensional arrays
-function _cheb2_rescale!(d::UnitRange, y::AbstractMatrix{T}) where T
-    @assert d == 1:2
-    ldiv!(2, @view(y[1,:]))
-    ldiv!(2, @view(y[end,:]))
-    ldiv!(2, @view(y[:,1]))
-    ldiv!(2, @view(y[:,end]))
-    ldiv!(prod(size(y) .- 1), y)
+function _cheb2_rescale!(d::UnitRange, y::AbstractArray)
+    for k in d
+        ldiv_dim_begin!(2, k, y)
+        ldiv_dim_end!(2, k, y)
+    end
+
+    ldiv!(_prod_size(size(y) .- 1, d), y)
 end
 
 function *(P::ChebyshevTransformPlan{T,2,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}

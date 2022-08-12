@@ -221,8 +221,8 @@ using FastTransforms, Test
             for k = axes(X,1), j = axes(X,2) X̃[k,j,:] = chebyshevtransform(X[k,j,:],Val(2)) end
             @test chebyshevtransform(X,Val(2),3) ≈ chebyshevtransform!(copy(X),Val(2),3) ≈ X̃
 
-            @test @inferred(chebyshevtransform(X)) ≈ @inferred(chebyshevtransform!(copy(X))) ≈ chebyshevtransform(chebyshevtransform(X,1),2)
-            @test @inferred(chebyshevtransform(X,Val(2))) ≈ @inferred(chebyshevtransform!(copy(X),Val(2))) ≈ chebyshevtransform(chebyshevtransform(X,Val(2),1),Val(2),2)
+            @test @inferred(chebyshevtransform(X)) ≈ @inferred(chebyshevtransform!(copy(X))) ≈ chebyshevtransform(chebyshevtransform(chebyshevtransform(X,1),2),3)
+            @test @inferred(chebyshevtransform(X,Val(2))) ≈ @inferred(chebyshevtransform!(copy(X),Val(2))) ≈ chebyshevtransform(chebyshevtransform(chebyshevtransform(X,Val(2),1),Val(2),2),Val(2),3)
         end
 
         @testset "ichebyshevtransform" begin
