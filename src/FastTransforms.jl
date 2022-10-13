@@ -28,6 +28,8 @@ import FillArrays: AbstractFill, getindex_value
 
 import LinearAlgebra: mul!, lmul!, ldiv!
 
+import GenericFFT: interlace # imported in downstream packages
+
 export leg2cheb, cheb2leg, ultra2ultra, jac2jac,
        lag2lag, jac2ultra, ultra2jac, jac2cheb,
        cheb2jac, ultra2cheb, cheb2ultra, associatedjac2jac,
