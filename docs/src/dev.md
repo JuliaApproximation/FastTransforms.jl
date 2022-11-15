@@ -37,13 +37,13 @@ This lets the developer experiment with new features through `ccall`ing into ble
 To get from a C library release to a Julia package release, the developer needs to update Yggdrasil's [build_tarballs.jl](https://github.com/JuliaPackaging/Yggdrasil/blob/master/F/FastTransforms/build_tarballs.jl) script for the new version and its 256-bit SHA. On macOS, the SHA can be found by:
 
 ```julia
-shell> curl https://codeload.github.com/MikaelSlevinsky/FastTransforms/tar.gz/v0.6.1 --output FastTransforms.tar.gz
+shell> curl https://codeload.github.com/MikaelSlevinsky/FastTransforms/tar.gz/v0.6.2 --output FastTransforms.tar.gz
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  168k    0  168k    0     0   429k      0 --:--:-- --:--:-- --:--:--  429k
 
 shell> shasum -a 256 FastTransforms.tar.gz
-4ee42f264626b335e3f8bed7a10935d54393589813d8558802f0eae9ca46d36e  FastTransforms.tar.gz
+fd00befcb0c20ba962a8744a7b9139355071ee95be70420de005b7c0f6e023aa  FastTransforms.tar.gz
 
 shell> rm -f FastTransforms.tar.gz
 
@@ -52,7 +52,7 @@ shell> rm -f FastTransforms.tar.gz
 Using [SHA.jl](https://github.com/JuliaCrypto/SHA.jl), the SHA can also be found by:
 
 ```julia
-shell> curl https://codeload.github.com/MikaelSlevinsky/FastTransforms/tar.gz/v0.6.1 --output FastTransforms.tar.gz
+shell> curl https://codeload.github.com/MikaelSlevinsky/FastTransforms/tar.gz/v0.6.2 --output FastTransforms.tar.gz
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  168k    0  168k    0     0   442k      0 --:--:-- --:--:-- --:--:--  443k
@@ -62,7 +62,7 @@ julia> using SHA
 julia> open("FastTransforms.tar.gz") do f
            bytes2hex(sha256(f))
        end
-"4ee42f264626b335e3f8bed7a10935d54393589813d8558802f0eae9ca46d36e"
+"fd00befcb0c20ba962a8744a7b9139355071ee95be70420de005b7c0f6e023aa"
 
 shell> rm -f FastTransforms.tar.gz
 

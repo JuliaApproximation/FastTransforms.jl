@@ -785,6 +785,9 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_sph_synthesis, :plan_sph_analysis, :ft_plan
     end
 end
 
+ft_get_rho_annulus_fftw_plan(p::FTPlan{Float64, 2, ANNULUSSYNTHESIS}) = ccall((:ft_get_rho_annulus_fftw_plan, libfasttransforms), Float64, (Ptr{ft_plan_struct}, ), p)
+ft_get_rho_annulus_fftw_plan(p::FTPlan{Float64, 2, ANNULUSANALYSIS}) = ccall((:ft_get_rho_annulus_fftw_plan, libfasttransforms), Float64, (Ptr{ft_plan_struct}, ), p)
+
 for (fJ, fadJ, fC, fE, K) in ((:plan_annulus_synthesis, :plan_annulus_analysis, :ft_plan_annulus_synthesis, :ft_execute_annulus_synthesis, ANNULUSSYNTHESIS),
                               (:plan_annulus_analysis, :plan_annulus_synthesis, :ft_plan_annulus_analysis, :ft_execute_annulus_analysis, ANNULUSANALYSIS))
     @eval begin
@@ -794,8 +797,8 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_annulus_synthesis, :plan_annulus_analysis, 
             plan = ccall(($(string(fC)), libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Float64, Cuint), n, m, ρ, flags)
             return FTPlan{Float64, 2, $K}(plan, n, m)
         end
-        adjoint(p::FTPlan{T, 2, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.m, ρ))
-        transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m, ρ))
+        adjoint(p::FTPlan{T, 2, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.m, ft_get_rho_annulus_fftw_plan(p)))
+        transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m, ft_get_rho_annulus_fftw_plan(p)))
         function lmul!(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
             checksize(p, x)
             ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))

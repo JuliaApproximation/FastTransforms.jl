@@ -23,7 +23,7 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         @test f ≈ fd
     end
 
-    α, β, γ, δ, λ, μ = 0.1, 0.2, 0.3, 0.4, 0.5, 0.6
+    α, β, γ, δ, λ, μ, ρ = 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7
     function test_1d_plans(p1, p2, x)
         y = p1*x
         z = p2*y
@@ -104,29 +104,31 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
 
     @testset "Modified classical orthonormal polynomial transforms" begin
         (n, α, β) = (16, 0, 0)
-        P1 = plan_modifiedjac2jac(Float64, n, α, β, [0.9428090415820636, -0.32659863237109055, -0.42163702135578396, 0.2138089935299396]) # u1(x) = (1-x)^2*(1+x)
-        P2 = plan_modifiedjac2jac(Float64, n, α, β, [0.9428090415820636, -0.32659863237109055, -0.42163702135578396, 0.2138089935299396], [1.4142135623730951]) # u2(x) = (1-x)^2*(1+x)
-        P3 = plan_modifiedjac2jac(Float64, n, α, β, [-0.9428090415820636, 0.32659863237109055, 0.42163702135578396, -0.2138089935299396], [-5.185449728701348, 0.0, 0.42163702135578374]) # u3(x) = -(1-x)^2*(1+x), v3(x) = -(2-x)*(2+x)
-        P4 = plan_modifiedjac2jac(Float64, n, α+2, β+1, [1.1547005383792517], [4.387862045841156, 0.1319657758147716, -0.20865621238292037]) # v4(x) = (2-x)*(2+x)
+        for T in (Float32, Float64)
+            P1 = plan_modifiedjac2jac(T, n, α, β, T[0.9428090415820636, -0.32659863237109055, -0.42163702135578396, 0.2138089935299396]) # u1(x) = (1-x)^2*(1+x)
+            P2 = plan_modifiedjac2jac(T, n, α, β, T[0.9428090415820636, -0.32659863237109055, -0.42163702135578396, 0.2138089935299396], T[1.4142135623730951]) # u2(x) = (1-x)^2*(1+x)
+            P3 = plan_modifiedjac2jac(T, n, α, β, T[-0.9428090415820636, 0.32659863237109055, 0.42163702135578396, -0.2138089935299396], T[-5.185449728701348, 0.0, 0.42163702135578374]) # u3(x) = -(1-x)^2*(1+x), v3(x) = -(2-x)*(2+x)
+            P4 = plan_modifiedjac2jac(T, n, α+2, β+1, T[1.1547005383792517], T[4.387862045841156, 0.1319657758147716, -0.20865621238292037]) # v4(x) = (2-x)*(2+x)
 
-        @test P1*I ≈ P2*I
-        @test P1\I ≈ P2\I
-        @test P3*I ≈ P2*(P4*I)
-        @test P3\I ≈ P4\(P2\I)
+            @test P1*I ≈ P2*I
+            @test P1\I ≈ P2\I
+            @test P3*I ≈ P2*(P4*I)
+            @test P3\I ≈ P4\(P2\I)
 
-        P5 = plan_modifiedlag2lag(Float64, n, α, [2.0, -4.0, 2.0]) # u5(x) = x^2
-        P6 = plan_modifiedlag2lag(Float64, n, α, [2.0, -4.0, 2.0], [1.0]) # u6(x) = x^2
-        P7 = plan_modifiedlag2lag(Float64, n, α, [2.0, -4.0, 2.0], [7.0, -7.0, 2.0]) # u7(x) = x^2, v7(x) = (1+x)*(2+x)
-        P8 = plan_modifiedlag2lag(Float64, n, α+2, [sqrt(2.0)], [sqrt(1058.0), -sqrt(726.0), sqrt(48.0)]) # v8(x) = (1+x)*(2+x)
+            P5 = plan_modifiedlag2lag(T, n, α, T[2.0, -4.0, 2.0]) # u5(x) = x^2
+            P6 = plan_modifiedlag2lag(T, n, α, T[2.0, -4.0, 2.0], T[1.0]) # u6(x) = x^2
+            P7 = plan_modifiedlag2lag(T, n, α, T[2.0, -4.0, 2.0], T[7.0, -7.0, 2.0]) # u7(x) = x^2, v7(x) = (1+x)*(2+x)
+            P8 = plan_modifiedlag2lag(T, n, α+2, T[sqrt(2.0)], T[sqrt(1058.0), -sqrt(726.0), sqrt(48.0)]) # v8(x) = (1+x)*(2+x)
 
-        @test P5*I ≈ P6*I
-        @test P5\I ≈ P6\I
-        @test P7*I ≈ P6*(P8*I)
-        @test P7\I ≈ P8\(P6\I)
+            @test P5*I ≈ P6*I
+            @test P5\I ≈ P6\I
+            @test isapprox(P7*I, P6*(P8*I); rtol = eps(T)^(1/4))
+            @test isapprox(P7\I, P8\(P6\I); rtol = eps(T)^(1/4))
 
-        P9 = plan_modifiedherm2herm(Float64, n, [2.995504568550877, 0.0, 3.7655850551068593, 0.0, 1.6305461589167827], [2.995504568550877, 0.0, 3.7655850551068593, 0.0, 1.6305461589167827]) # u9(x) = 1+x^2+x^4, v9(x) = 1+x^2+x^4
+            P9 = plan_modifiedherm2herm(T, n, T[2.995504568550877, 0.0, 3.7655850551068593, 0.0, 1.6305461589167827], T[2.995504568550877, 0.0, 3.7655850551068593, 0.0, 1.6305461589167827]) # u9(x) = 1+x^2+x^4, v9(x) = 1+x^2+x^4
 
-        @test P9*I ≈ P9\I
+            @test P9*I ≈ P9\I
+        end
     end
 
     function test_nd_plans(p, ps, pa, A)
@@ -173,6 +175,17 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     p = plan_disk2cxf(A, α, β)
     ps = plan_disk_synthesis(A)
     pa = plan_disk_analysis(A)
+    test_nd_plans(p, ps, pa, A)
+
+    A = diskones(Float64, n, 4n-3)
+    p = plan_ann2cxf(A, α, β, 0, ρ)
+    ps = plan_annulus_synthesis(A, ρ)
+    pa = plan_annulus_analysis(A, ρ)
+    test_nd_plans(p, ps, pa, A)
+    A = diskones(Float64, n, 4n-3) + im*diskones(Float64, n, 4n-3)
+    p = plan_ann2cxf(A, α, β, 0, ρ)
+    ps = plan_annulus_synthesis(A, ρ)
+    pa = plan_annulus_analysis(A, ρ)
     test_nd_plans(p, ps, pa, A)
 
     A = rectdiskones(Float64, n, n)
