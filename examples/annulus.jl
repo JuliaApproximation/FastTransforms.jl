@@ -3,8 +3,8 @@
 # ```math
 #   f(x,y) = \frac{x^3}{x^2+y^2-\frac{1}{4}},
 # ```
-# over the annulus defined by $\{(r,\theta) : \frac{2}{3} < r < 1, 0 < \theta < 2\pi\}$.
-# We will calculate the integral:
+# over the annulus defined by $\{(r,\theta) : \rho < r < 1, 0 < \theta < 2\pi\}$
+# with parameter $\rho = \frac{2}{3}$. We will calculate the integral:
 # ```math
 #   \int_0^{2\pi}\int_{\frac{2}{3}}^1 f(r\cos\theta,r\sin\theta)^2r{\rm\,d}r{\rm\,d}\theta,
 # ```
