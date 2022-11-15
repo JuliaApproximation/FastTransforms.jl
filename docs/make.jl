@@ -6,6 +6,7 @@ const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
 const OUTPUT_DIR   = joinpath(@__DIR__, "src/generated")
 
 examples = [
+    "annulus.jl",
     "automaticdifferentiation.jl",
     "chebyshev.jl",
     "disk.jl",
@@ -38,6 +39,7 @@ makedocs(
                     "Home" => "index.md",
                     "Development" => "dev.md",
                     "Examples" => [
+                        "generated/annulus.md",
                         "generated/automaticdifferentiation.md",
                         "generated/chebyshev.md",
                         "generated/disk.md",
