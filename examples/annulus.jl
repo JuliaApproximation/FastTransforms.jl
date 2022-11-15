@@ -39,7 +39,7 @@ M = 4N-3
 ρ = 2/3
 
 # The radial grid:
-r = [begin t = (N-n-0.5)/(2N); ct2 = sinpi(t); st2 = cospi(t); sqrt(ct2^2+ρ^2*st2^2) end; for n in 0:N-1]
+r = [begin t = (N-n-0.5)/(2N); ct = sinpi(t); st = cospi(t); sqrt(ct^2+ρ^2*st^2) end; for n in 0:N-1]
 
 # The angular grid (mod $\pi$):
 θ = (0:M-1)*2/M
