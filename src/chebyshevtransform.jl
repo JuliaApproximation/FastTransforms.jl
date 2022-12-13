@@ -537,6 +537,15 @@ end
 plan_ichebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_ichebyshevutransform!(x, Val(1), dims...; kws...)
 plan_ichebyshevutransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevutransform(x, Val(1), dims...; kws...)
 
+# second kind Chebyshev transforms share a plan with their inverse
+# so we support this via inv
+inv(P::ChebyshevUTransformPlan{T,2,K}) where {T,K} = IChebyshevUTransformPlan{T,2,K}(P.plan)
+inv(P::IChebyshevUTransformPlan{T,2,K}) where {T,K} = ChebyshevUTransformPlan{T,2,K}(P.plan)
+
+inv(P::ChebyshevUTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+inv(P::IChebyshevUTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+
+
 function _ichebyu1_postscale!(_, x::AbstractVector{T}) where T
     n = length(x)
     @inbounds for k=1:n # sqrt(1-x_j^2) weight
