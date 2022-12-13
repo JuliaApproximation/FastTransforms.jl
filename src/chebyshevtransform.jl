@@ -239,6 +239,10 @@ IChebyshevTransformPlan{T,kind,K}(F::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T
 inv(P::ChebyshevTransformPlan{T,2,K}) where {T,K} = IChebyshevTransformPlan{T,2,K}(P.plan)
 inv(P::IChebyshevTransformPlan{T,2,K}) where {T,K} = ChebyshevTransformPlan{T,2,K}(P.plan)
 
+inv(P::ChebyshevTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+inv(P::IChebyshevTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+
+
 
 \(P::ChebyshevTransformPlan, x::AbstractArray) = inv(P) * x
 \(P::IChebyshevTransformPlan, x::AbstractArray) = inv(P) * x

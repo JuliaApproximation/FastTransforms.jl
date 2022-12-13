@@ -17,7 +17,7 @@ import AbstractFFTs: Plan, ScaledPlan,
                      plan_fft, plan_ifft, plan_bfft, plan_fft!, plan_ifft!,
                      plan_bfft!, plan_rfft, plan_irfft, plan_brfft,
                      fftshift, ifftshift, rfft_output_size, brfft_output_size,
-                     plan_inv, normalization
+                     normalization
 
 import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
              plan_dct, plan_idct, fftwNumber
