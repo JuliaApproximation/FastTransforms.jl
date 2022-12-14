@@ -239,6 +239,10 @@ IChebyshevTransformPlan{T,kind,K}(F::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T
 inv(P::ChebyshevTransformPlan{T,2,K}) where {T,K} = IChebyshevTransformPlan{T,2,K}(P.plan)
 inv(P::IChebyshevTransformPlan{T,2,K}) where {T,K} = ChebyshevTransformPlan{T,2,K}(P.plan)
 
+inv(P::ChebyshevTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+inv(P::IChebyshevTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+
+
 
 \(P::ChebyshevTransformPlan, x::AbstractArray) = inv(P) * x
 \(P::IChebyshevTransformPlan, x::AbstractArray) = inv(P) * x
@@ -526,12 +530,21 @@ function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws
 end
 function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    IChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, USECONDKIND))
+    IChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
 
 plan_ichebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_ichebyshevutransform!(x, Val(1), dims...; kws...)
 plan_ichebyshevutransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevutransform(x, Val(1), dims...; kws...)
+
+# second kind Chebyshev transforms share a plan with their inverse
+# so we support this via inv
+inv(P::ChebyshevUTransformPlan{T,2,K}) where {T,K} = IChebyshevUTransformPlan{T,2,K}(P.plan)
+inv(P::IChebyshevUTransformPlan{T,2,K}) where {T,K} = ChebyshevUTransformPlan{T,2,K}(P.plan)
+
+inv(P::ChebyshevUTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+inv(P::IChebyshevUTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+
 
 function _ichebyu1_postscale!(_, x::AbstractVector{T}) where T
     n = length(x)
