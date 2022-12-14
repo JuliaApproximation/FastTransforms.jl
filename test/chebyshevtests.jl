@@ -282,18 +282,24 @@ using FastTransforms, Test
     @testset "inv" begin
         x = randn(5)
         for F in (plan_chebyshevtransform(x), plan_chebyshevtransform(x, Val(2)),
-                  plan_chebyshevutransform(x), plan_chebyshevutransform(x, Val(2)))
+                  plan_chebyshevutransform(x), plan_chebyshevutransform(x, Val(2)),
+                  plan_ichebyshevtransform(x), plan_ichebyshevtransform(x, Val(2)),
+                  plan_ichebyshevutransform(x), plan_ichebyshevutransform(x, Val(2)))
             @test F \ (F*x) ≈ F * (F\x) ≈ x
         end
 
         X = randn(5,4)
         for F in (plan_chebyshevtransform(X,Val(1),1), plan_chebyshevtransform(X, Val(2),1),
-            plan_chebyshevtransform(X,Val(1),2), plan_chebyshevtransform(X, Val(2),2))
+            plan_chebyshevtransform(X,Val(1),2), plan_chebyshevtransform(X, Val(2),2),
+            plan_ichebyshevtransform(X,Val(1),1), plan_ichebyshevtransform(X, Val(2),1),
+            plan_ichebyshevtransform(X,Val(1),2), plan_ichebyshevtransform(X, Val(2),2))
             @test F \ (F*X) ≈ F * (F\X) ≈ X
         end
         # Matrix isn't implemented for chebyshevu
         for F in (plan_chebyshevutransform(X,Val(1),1), plan_chebyshevutransform(X, Val(2),1),
-            plan_chebyshevutransform(X,Val(1),2), plan_chebyshevutransform(X, Val(2),2))
+            plan_chebyshevutransform(X,Val(1),2), plan_chebyshevutransform(X, Val(2),2),
+            plan_ichebyshevutransform(X,Val(1),1), plan_ichebyshevutransform(X, Val(2),1),
+            plan_ichebyshevutransform(X,Val(1),2), plan_ichebyshevutransform(X, Val(2),2))
             @test_broken F \ (F*X) ≈ F * (F\X) ≈ X
         end
     end

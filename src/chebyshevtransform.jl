@@ -530,7 +530,7 @@ function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws
 end
 function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    IChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, USECONDKIND))
+    IChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
 
