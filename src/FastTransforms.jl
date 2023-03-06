@@ -110,3 +110,4 @@ export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
 include("specialfunctions.jl")
 
 end # module
+
