@@ -19,7 +19,7 @@ ChebyshevTransformPlan{T,kind}(plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T
     ChebyshevTransformPlan{T,kind,K,inplace,N,R}(plan)
 
 # jump through some hoops to make inferrable
-@inline kindtuple(N) = typeof(ntuple(Int32,N))
+@inline kindtuple(N) = NTuple{N,Int32}
 @inline kindtuple(N,region...) = Vector{Int32}
 function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
