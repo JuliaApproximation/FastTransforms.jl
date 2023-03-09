@@ -15,35 +15,35 @@ struct ChebyshevTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
     ChebyshevTransformPlan{T,kind,K,inplace,N,R}() where {T,kind,K,inplace,N,R} = new{T,kind,K,inplace,N,R}()
 end
 
-ChebyshevTransformPlan{T,kind,K}(plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
+ChebyshevTransformPlan{T,kind}(plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
     ChebyshevTransformPlan{T,kind,K,inplace,N,R}(plan)
 
 # jump through some hoops to make inferrable
-@inline kindtuple(KIND,N) = ntuple(_ -> KIND,N)
-@inline kindtuple(KIND,N,::Integer) = (KIND,)
+@inline kindtuple(N) = NTuple{N,Int32}
+@inline kindtuple(N,region...) = Vector{Int32}
 function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
+        ChebyshevTransformPlan{T,1,kindtuple(N,dims...),true,N,isempty(dims) ? NTuple{N,Int} : typeof(dims[1])}()
     else
-        ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, FIRSTKIND, dims...; kws...))
+        ChebyshevTransformPlan{T,1}(FFTW.plan_r2r!(x, FIRSTKIND, dims...; kws...))
     end
 end
 function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    ChebyshevTransformPlan{T,2,kindtuple(SECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, SECONDKIND, dims...; kws...))
+    ChebyshevTransformPlan{T,2}(FFTW.plan_r2r!(x, SECONDKIND, dims...; kws...))
 end
 
 
 function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
+        ChebyshevTransformPlan{T,1,kindtuple(N,dims...),false,N,isempty(dims) ? NTuple{N,Int} : typeof(dims[1])}()
     else
-        ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, FIRSTKIND, dims...; kws...))
+        ChebyshevTransformPlan{T,1}(FFTW.plan_r2r(x, FIRSTKIND, dims...; kws...))
     end
 end
 function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    ChebyshevTransformPlan{T,2,kindtuple(SECONDKIND,N,dims...)}(FFTW.plan_r2r(x, SECONDKIND, dims...; kws...))
+    ChebyshevTransformPlan{T,2}(FFTW.plan_r2r(x, SECONDKIND, dims...; kws...))
 end
 
 plan_chebyshevtransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevtransform!(x, Val(1), dims...; kws...)
@@ -143,7 +143,7 @@ function _prod_size(sz, d)
 end
 
 
-@inline function _cheb1_rescale!(d::UnitRange, y::AbstractArray)
+@inline function _cheb1_rescale!(d, y::AbstractArray)
     for k in d
         ldiv_dim_begin!(2, k, y)
     end
@@ -175,7 +175,7 @@ function _cheb2_rescale!(d::Number, y::AbstractArray)
 end
 
 # TODO: higher dimensional arrays
-function _cheb2_rescale!(d::UnitRange, y::AbstractArray)
+function _cheb2_rescale!(d, y::AbstractArray)
     for k in d
         ldiv_dim_begin!(2, k, y)
         ldiv_dim_end!(2, k, y)
@@ -229,18 +229,18 @@ struct IChebyshevTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
     IChebyshevTransformPlan{T,kind,K,inplace,N,R}() where {T,kind,K,inplace,N,R} = new{T,kind,K,inplace,N,R}()
 end
 
-IChebyshevTransformPlan{T,kind,K}(F::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
+IChebyshevTransformPlan{T,kind}(F::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
     IChebyshevTransformPlan{T,kind,K,inplace,N,R}(F)
 
 
 
 # second kind Chebyshev transforms share a plan with their inverse
 # so we support this via inv
-inv(P::ChebyshevTransformPlan{T,2,K}) where {T,K} = IChebyshevTransformPlan{T,2,K}(P.plan)
-inv(P::IChebyshevTransformPlan{T,2,K}) where {T,K} = ChebyshevTransformPlan{T,2,K}(P.plan)
+inv(P::ChebyshevTransformPlan{T,2}) where {T} = IChebyshevTransformPlan{T,2}(P.plan)
+inv(P::IChebyshevTransformPlan{T,2}) where {T} = ChebyshevTransformPlan{T,2}(P.plan)
 
-inv(P::ChebyshevTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
-inv(P::IChebyshevTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = ChebyshevTransformPlan{T,1,kindtuple(FIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+inv(P::ChebyshevTransformPlan{T,1}) where {T} = IChebyshevTransformPlan{T,1}(inv(P.plan).p)
+inv(P::IChebyshevTransformPlan{T,1}) where {T} = ChebyshevTransformPlan{T,1}(inv(P.plan).p)
 
 
 
@@ -250,9 +250,9 @@ inv(P::IChebyshevTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = Chebysh
 
 function plan_ichebyshevtransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
+        IChebyshevTransformPlan{T,1,kindtuple(N,dims...),true,N,isempty(dims) ? NTuple{N,Int} : typeof(dims[1])}()
     else
-        IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, IFIRSTKIND, dims...; kws...))
+        IChebyshevTransformPlan{T,1}(FFTW.plan_r2r!(x, IFIRSTKIND, dims...; kws...))
     end
 end
 
@@ -262,9 +262,9 @@ end
 
 function plan_ichebyshevtransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
+        IChebyshevTransformPlan{T,1,kindtuple(N,dims...),false,N,isempty(dims) ? NTuple{N,Int} : typeof(dims[1])}()
     else
-        IChebyshevTransformPlan{T,1,kindtuple(IFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, IFIRSTKIND, dims...; kws...))
+        IChebyshevTransformPlan{T,1}(FFTW.plan_r2r(x, IFIRSTKIND, dims...; kws...))
     end
 end
 
@@ -279,7 +279,7 @@ plan_ichebyshevtransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevtra
     lmul_dim_begin!(2, d, x)
     x
 end
-@inline function _icheb1_prescale!(d::UnitRange, x::AbstractArray)
+@inline function _icheb1_prescale!(d, x::AbstractArray)
     for k in d
         _icheb1_prescale!(k, x)
     end
@@ -290,7 +290,7 @@ end
     x
 end
 
-@inline function _icheb1_postscale!(d::UnitRange, x::AbstractArray)
+@inline function _icheb1_postscale!(d, x::AbstractArray)
     for k in d
         _icheb1_postscale!(k, x)
     end
@@ -321,7 +321,7 @@ end
     lmul_dim_end!(2, d, x)
     x
 end
-@inline function _icheb2_prescale!(d::UnitRange, x::AbstractArray)
+@inline function _icheb2_prescale!(d, x::AbstractArray)
     for k in d
         _icheb2_prescale!(k, x)
     end
@@ -333,7 +333,7 @@ end
     ldiv_dim_end!(2, d, x)
     x
 end
-@inline function _icheb2_postrescale!(d::UnitRange, x::AbstractArray)
+@inline function _icheb2_postrescale!(d, x::AbstractArray)
     for k in d
         _icheb2_postrescale!(k, x)
     end
@@ -344,7 +344,7 @@ end
     lmul!(convert(T, size(y,d) - 1)/2, y)
     y
 end
-@inline function _icheb2_rescale!(d::UnitRange, y::AbstractArray{T}) where T
+@inline function _icheb2_rescale!(d, y::AbstractArray{T}) where T
     _icheb2_prescale!(d, y)
     lmul!(_prod_size(convert.(T, size(y) .- 1)./2, d), y)
     y
@@ -384,32 +384,32 @@ struct ChebyshevUTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
     ChebyshevUTransformPlan{T,kind,K,inplace,N,R}() where {T,kind,K,inplace,N,R} = new{T,kind,K,inplace,N,R}()
 end
 
-ChebyshevUTransformPlan{T,kind,K}(plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
+ChebyshevUTransformPlan{T,kind}(plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
     ChebyshevUTransformPlan{T,kind,K,inplace,N,R}(plan)
 
 
 function plan_chebyshevutransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
+        ChebyshevUTransformPlan{T,1,kindtuple(N,dims...),true,N,isempty(dims) ? NTuple{N,Int} : typeof(dims[1])}()
     else
-        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, UFIRSTKIND, dims...; kws...))
+        ChebyshevUTransformPlan{T,1}(FFTW.plan_r2r!(x, UFIRSTKIND, dims...; kws...))
     end
 end
 function plan_chebyshevutransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    ChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, USECONDKIND, dims...; kws...))
+    ChebyshevUTransformPlan{T,2}(FFTW.plan_r2r!(x, USECONDKIND, dims...; kws...))
 end
 
 function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
+        ChebyshevUTransformPlan{T,1,kindtuple(N,dims...),false,N,isempty(dims) ? NTuple{N,Int} : typeof(dims[1])}()
     else
-        ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, UFIRSTKIND, dims...; kws...))
+        ChebyshevUTransformPlan{T,1}(FFTW.plan_r2r(x, UFIRSTKIND, dims...; kws...))
     end
 end
 function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    ChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
+    ChebyshevUTransformPlan{T,2}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
 plan_chebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform!(x, Val(1), dims...; kws...)
@@ -506,31 +506,31 @@ struct IChebyshevUTransformPlan{T,kind,K,inplace,N,R} <: ChebyshevPlan{T}
     IChebyshevUTransformPlan{T,kind,K,inplace,N,R}() where {T,kind,K,inplace,N,R} = new{T,kind,K,inplace,N,R}()
 end
 
-IChebyshevUTransformPlan{T,kind,K}(F::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
+IChebyshevUTransformPlan{T,kind}(F::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T,kind,K,inplace,N,R} =
     IChebyshevUTransformPlan{T,kind,K,inplace,N,R}(F)
 
 function plan_ichebyshevutransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,dims...),true,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
+        IChebyshevUTransformPlan{T,1,kindtuple(N,dims...),true,N,isempty(dims) ? NTuple{N,Int} : typeof(dims[1])}()
     else
-        IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,dims...)}(FFTW.plan_r2r!(x, IUFIRSTKIND, dims...; kws...))
+        IChebyshevUTransformPlan{T,1}(FFTW.plan_r2r!(x, IUFIRSTKIND, dims...; kws...))
     end
 end
 function plan_ichebyshevutransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    IChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r!(x, USECONDKIND))
+    IChebyshevUTransformPlan{T,2}(FFTW.plan_r2r!(x, USECONDKIND))
 end
 
 function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
-        IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,dims...),false,N,isempty(dims) ? UnitRange{Int} : typeof(dims)}()
+        IChebyshevUTransformPlan{T,1,kindtuple(N,dims...),false,N,isempty(dims) ? NTuple{N,Int} : typeof(dims[1])}()
     else
-        IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,dims...)}(FFTW.plan_r2r(x, IUFIRSTKIND, dims...; kws...))
+        IChebyshevUTransformPlan{T,1}(FFTW.plan_r2r(x, IUFIRSTKIND, dims...; kws...))
     end
 end
 function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    IChebyshevUTransformPlan{T,2,kindtuple(USECONDKIND,N,dims...)}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
+    IChebyshevUTransformPlan{T,2}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
 
@@ -539,11 +539,11 @@ plan_ichebyshevutransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevut
 
 # second kind Chebyshev transforms share a plan with their inverse
 # so we support this via inv
-inv(P::ChebyshevUTransformPlan{T,2,K}) where {T,K} = IChebyshevUTransformPlan{T,2,K}(P.plan)
-inv(P::IChebyshevUTransformPlan{T,2,K}) where {T,K} = ChebyshevUTransformPlan{T,2,K}(P.plan)
+inv(P::ChebyshevUTransformPlan{T,2}) where {T} = IChebyshevUTransformPlan{T,2}(P.plan)
+inv(P::IChebyshevUTransformPlan{T,2}) where {T} = ChebyshevUTransformPlan{T,2}(P.plan)
 
-inv(P::ChebyshevUTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = IChebyshevUTransformPlan{T,1,kindtuple(IUFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
-inv(P::IChebyshevUTransformPlan{T,1,K,inplace,N}) where {T,K,inplace,N} = ChebyshevUTransformPlan{T,1,kindtuple(UFIRSTKIND,N,P.plan.region...)}(inv(P.plan).p)
+inv(P::ChebyshevUTransformPlan{T,1}) where {T} = IChebyshevUTransformPlan{T,1}(inv(P.plan).p)
+inv(P::IChebyshevUTransformPlan{T,1}) where {T} = ChebyshevUTransformPlan{T,1}(inv(P.plan).p)
 
 
 function _ichebyu1_postscale!(_, x::AbstractVector{T}) where T

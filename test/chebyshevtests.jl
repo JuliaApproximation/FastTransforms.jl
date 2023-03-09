@@ -23,30 +23,50 @@ using FastTransforms, Test
             n = 20
             p_1 = chebyshevpoints(T, n)
             f = exp.(p_1)
-            f̌ = @inferred(chebyshevtransform(f))
-            @test f̌ == chebyshevtransform!(copy(f))
+            g = @inferred(chebyshevtransform(f))
+            @test g == chebyshevtransform!(copy(f))
 
-            f̃ = x -> [cos(k*acos(x)) for k=0:n-1]' * f̌
+            f̃ = x -> [cos(k*acos(x)) for k=0:n-1]' * g
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test @inferred(ichebyshevtransform(f̌)) ≈ ichebyshevtransform!(copy(f̌)) ≈ exp.(p_1)
+            @test @inferred(ichebyshevtransform(g)) ≈ ichebyshevtransform!(copy(g)) ≈ exp.(p_1)
 
-            f̃ = copy(f)
-            f̄ = copy(f̌)
+            fcopy = copy(f)
+            gcopy = copy(g)
             P = @inferred(plan_chebyshevtransform(f))
-            @test @inferred(P*f) == f̌
-            @test f == f̃
+            @test @inferred(P*f) == g
+            @test f == fcopy
             @test_throws ArgumentError P * T[1,2]
+            P2 = @inferred(plan_chebyshevtransform(f, Val(1), 1:1))
+            @test @inferred(P2*f) == g
+            @test_throws ArgumentError P * T[1,2]
+
             P = @inferred(plan_chebyshevtransform!(f))
-            @test @inferred(P*f) == f̌
-            @test f == f̌
+            @test @inferred(P*f) == g
+            @test f == g
             @test_throws ArgumentError P * T[1,2]
-            Pi = @inferred(plan_ichebyshevtransform(f̌))
-            @test @inferred(Pi*f̌) ≈ f̃
-            @test f̌ == f̄
+            f .= fcopy
+            P2 = @inferred(plan_chebyshevtransform!(f, 1:1))
+            @test @inferred(P2*f) == g
+            @test f == g
+            @test_throws ArgumentError P * T[1,2]
+
+            Pi = @inferred(plan_ichebyshevtransform(g))
+            @test @inferred(Pi*g) ≈ fcopy
+            @test g == gcopy
             @test_throws ArgumentError Pi * T[1,2]
-            Pi = @inferred(plan_ichebyshevtransform!(f̌))
-            @test @inferred(Pi*f̌) ≈ f̃
-            @test f̌ ≈ f̃
+            Pi2 = @inferred(plan_ichebyshevtransform(g, 1:1))
+            @test @inferred(Pi2*g) ≈ fcopy
+            @test g == gcopy
+            @test_throws ArgumentError Pi * T[1,2]
+
+            Pi = @inferred(plan_ichebyshevtransform!(g))
+            @test @inferred(Pi*g) ≈ fcopy
+            @test g ≈ fcopy
+            g .= gcopy
+            @test_throws ArgumentError Pi * T[1,2]
+            Pi2 = @inferred(plan_ichebyshevtransform!(g, 1:1))
+            @test @inferred(Pi2*g) ≈ fcopy
+            @test g ≈ fcopy
             @test_throws ArgumentError Pi * T[1,2]
 
             @test chebyshevtransform(T[1]) == T[1]
@@ -60,36 +80,58 @@ using FastTransforms, Test
             n = 20
             p_2 = chebyshevpoints(T, n, Val(2))
             f = exp.(p_2)
-            f̌ = @inferred(chebyshevtransform(f, Val(2)))
-            @test f̌ == chebyshevtransform!(copy(f), Val(2))
+            g = @inferred(chebyshevtransform(f, Val(2)))
+            @test g == chebyshevtransform!(copy(f), Val(2))
 
-            f̃ = x -> [cos(k*acos(x)) for k=0:n-1]' * f̌
+            f̃ = x -> [cos(k*acos(x)) for k=0:n-1]' * g
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test @inferred(ichebyshevtransform(f̌, Val(2))) ≈ ichebyshevtransform!(copy(f̌), Val(2)) ≈ exp.(p_2)
+            @test @inferred(ichebyshevtransform(g, Val(2))) ≈ ichebyshevtransform!(copy(g), Val(2)) ≈ exp.(p_2)
 
             P = @inferred(plan_chebyshevtransform!(f, Val(2)))
             Pi = @inferred(plan_ichebyshevtransform!(f, Val(2)))
             @test all(@inferred(P \ copy(f)) .=== Pi * copy(f))
-            @test all(@inferred(Pi \ copy(f̌)) .=== P * copy(f̌))
+            @test all(@inferred(Pi \ copy(g)) .=== P * copy(g))
             @test f ≈ P \ (P*copy(f)) ≈ P * (P\copy(f)) ≈ Pi \ (Pi*copy(f)) ≈ Pi * (Pi \ copy(f))
 
-            f̃ = copy(f)
-            f̄ = copy(f̌)
+            fcopy = copy(f)
+            gcopy = copy(g)
+
             P = @inferred(plan_chebyshevtransform(f, Val(2)))
+            @test P*f == g
+            @test f == fcopy
             @test_throws ArgumentError P * T[1,2]
-            @test P*f == f̌
-            @test f == f̃
+            P = @inferred(plan_chebyshevtransform(f, Val(2), 1:1))
+            @test P*f == g
+            @test f == fcopy
+            @test_throws ArgumentError P * T[1,2]
+
             P = @inferred(plan_chebyshevtransform!(f, Val(2)))
-            @test P*f == f̌
-            @test f == f̌
+            @test P*f == g
+            @test f == g
             @test_throws ArgumentError P * T[1,2]
-            Pi = @inferred(plan_ichebyshevtransform(f̌, Val(2)))
-            @test Pi*f̌ ≈ f̃
-            @test f̌ == f̄
+            f .= fcopy
+            P = @inferred(plan_chebyshevtransform!(f, Val(2), 1:1))
+            @test P*f == g
+            @test f == g
+            @test_throws ArgumentError P * T[1,2]
+
+            Pi = @inferred(plan_ichebyshevtransform(g, Val(2)))
+            @test Pi*g ≈ fcopy
+            @test g == gcopy
             @test_throws ArgumentError Pi * T[1,2]
-            Pi = @inferred(plan_ichebyshevtransform!(f̌, Val(2)))
-            @test Pi*f̌ ≈ f̃
-            @test f̌ ≈ f̃
+            Pi = @inferred(plan_ichebyshevtransform(g, Val(2), 1:1))
+            @test Pi*g ≈ fcopy
+            @test g == gcopy
+            @test_throws ArgumentError Pi * T[1,2]
+
+            Pi = @inferred(plan_ichebyshevtransform!(g, Val(2)))
+            @test Pi*g ≈ fcopy
+            @test g ≈ fcopy
+            @test_throws ArgumentError Pi * T[1,2]
+            g .= gcopy
+            Pi = @inferred(plan_ichebyshevtransform!(g, Val(2), 1:1))
+            @test Pi*g ≈ fcopy
+            @test g ≈ fcopy
             @test_throws ArgumentError Pi * T[1,2]
 
             @test_throws ArgumentError chebyshevtransform(T[1], Val(2))
@@ -104,29 +146,50 @@ using FastTransforms, Test
             n = 20
             p_1 = chebyshevpoints(T, n)
             f = exp.(p_1)
-            f̌ = @inferred(chebyshevutransform(f))
+            g = @inferred(chebyshevutransform(f))
 
-            f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-1]' * f̌
+            f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-1]' * g
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test ichebyshevutransform(f̌) ≈ exp.(p_1)
+            @test ichebyshevutransform(g) ≈ exp.(p_1)
 
-            f̃ = copy(f)
-            f̄ = copy(f̌)
+            fcopy = copy(f)
+            gcopy = copy(g)
             P = @inferred(plan_chebyshevutransform(f))
-            @test P*f ≈ f̌
-            @test f == f̃
+            @test P*f ≈ g
+            @test f == fcopy
             @test_throws ArgumentError P * T[1,2]
+            P = @inferred(plan_chebyshevutransform(f, 1:1))
+            @test P*f ≈ g
+            @test f == fcopy
+            @test_throws ArgumentError P * T[1,2]
+
             P = @inferred(plan_chebyshevutransform!(f))
-            @test P*f ≈ f̌
-            @test f ≈ f̌
+            @test P*f ≈ g
+            @test f ≈ g
             @test_throws ArgumentError P * T[1,2]
-            Pi = @inferred(plan_ichebyshevutransform(f̌))
-            @test Pi*f̌ ≈ f̃
-            @test f̌ == f̄
+            f .= fcopy
+            P = @inferred(plan_chebyshevutransform!(f))
+            @test P*f ≈ g
+            @test f ≈ g
+            @test_throws ArgumentError P * T[1,2]
+
+            Pi = @inferred(plan_ichebyshevutransform(g))
+            @test Pi*g ≈ fcopy
+            @test g == gcopy
             @test_throws ArgumentError Pi * T[1,2]
-            Pi = @inferred(plan_ichebyshevutransform!(f̌))
-            @test Pi*f̌ ≈ f̃
-            @test f̌ ≈ f̃
+            Pi = @inferred(plan_ichebyshevutransform(g, 1:1))
+            @test Pi*g ≈ fcopy
+            @test g == gcopy
+            @test_throws ArgumentError Pi * T[1,2]
+
+            Pi = @inferred(plan_ichebyshevutransform!(g))
+            @test Pi*g ≈ fcopy
+            @test g ≈ fcopy
+            @test_throws ArgumentError Pi * T[1,2]
+            g .= gcopy
+            Pi = @inferred(plan_ichebyshevutransform!(g))
+            @test Pi*g ≈ fcopy
+            @test g ≈ fcopy
             @test_throws ArgumentError Pi * T[1,2]
 
             @test chebyshevutransform(T[1]) == T[1]
@@ -140,29 +203,46 @@ using FastTransforms, Test
             n = 20
             p_2 = chebyshevpoints(T, n, Val(2))[2:end-1]
             f = exp.(p_2)
-            f̌ = @inferred(chebyshevutransform(f, Val(2)))
+            g = @inferred(chebyshevutransform(f, Val(2)))
 
-            f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-3]' * f̌
+            f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-3]' * g
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test @inferred(ichebyshevutransform(f̌, Val(2))) ≈ exp.(p_2)
+            @test @inferred(ichebyshevutransform(g, Val(2))) ≈ exp.(p_2)
 
-            f̃ = copy(f)
-            f̄ = copy(f̌)
+            fcopy = copy(f)
+            gcopy = copy(g)
             P = @inferred(plan_chebyshevutransform(f, Val(2)))
-            @test @inferred(P*f) ≈ f̌
-            @test f ≈ f̃
+            @test @inferred(P*f) ≈ g
+            @test f ≈ fcopy
             @test_throws ArgumentError P * T[1,2]
+            P = @inferred(plan_chebyshevutransform(f, Val(2), 1:1))
+            @test @inferred(P*f) ≈ g
+            @test f ≈ fcopy
+            @test_throws ArgumentError P * T[1,2]
+
             P = @inferred(plan_chebyshevutransform!(f, Val(2)))
-            @test @inferred(P*f) ≈ f̌
-            @test f ≈ f̌
+            @test @inferred(P*f) ≈ g
+            @test f ≈ g
             @test_throws ArgumentError P * T[1,2]
-            Pi = @inferred(plan_ichebyshevutransform(f̌, Val(2)))
-            @test @inferred(Pi*f̌) ≈ f̃
-            @test f̌ ≈ f̄
+            f .= fcopy
+            P = @inferred(plan_chebyshevutransform!(f, Val(2), 1:1))
+            @test @inferred(P*f) ≈ g
+            @test f ≈ g
+            @test_throws ArgumentError P * T[1,2]
+
+            Pi = @inferred(plan_ichebyshevutransform(g, Val(2)))
+            @test @inferred(Pi*g) ≈ fcopy
+            @test g ≈ gcopy
             @test_throws ArgumentError Pi * T[1,2]
-            Pi = @inferred(plan_ichebyshevutransform!(f̌, Val(2)))
-            @test @inferred(Pi*f̌) ≈ f̃
-            @test f̌ ≈ f̃
+
+            Pi = @inferred(plan_ichebyshevutransform!(g, Val(2)))
+            @test @inferred(Pi*g) ≈ fcopy
+            @test g ≈ fcopy
+            @test_throws ArgumentError Pi * T[1,2]
+            g .= gcopy
+            Pi = @inferred(plan_ichebyshevutransform!(g, Val(2)))
+            @test @inferred(Pi*g) ≈ fcopy
+            @test g ≈ fcopy
             @test_throws ArgumentError Pi * T[1,2]
 
             @test_throws ArgumentError chebyshevutransform(T[1], Val(2))
