@@ -1,0 +1,6 @@
+
+@testset "ToeplitzHankel" begin
+    @test FastTransforms.th_cheb2leg([1.0,2,3,4,5]) ≈ cheb2leg([1.0,2,3,4,5])
+    @test FastTransforms.th_leg2cheb([1.0,2,3,4,5]) ≈ leg2cheb([1.0,2,3,4,5])
+end
+
