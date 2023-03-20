@@ -8,7 +8,9 @@ struct ToeplitzHankelPlan{S, TP<:ToeplitzPlan} <: Plan{S}
     C::Vector{Vector{S}}
     DL::Vector{S}
     DR::Vector{S}
-    ToeplitzHankelPlan{S,TP}(T::TP, C, DL, DR) where {S,TP} = new{S,TP}(T, C, DL, DR)
+    tmp1::Vector{S}
+    tmp2::Vector{S}
+    ToeplitzHankelPlan{S,TP}(T::TP, C, DL, DR) where {S,TP} = new{S,TP}(T, C, DL, DR, similar(DL), similar(DL))
 end
 
 function ToeplitzHankelPlan(T::ToeplitzPlan, C::Vector, DL::AbstractVector, DR::AbstractVector)
@@ -22,7 +24,11 @@ ToeplitzHankelPlan(T::ToeplitzPlan, H::Hankel, DL::AbstractVector, DR::AbstractV
 ToeplitzHankelPlan(T::ToeplitzPlan, H::Hankel, D::AbstractVector, DL::AbstractVector, DR::AbstractVector) =
     ToeplitzHankelPlan(T, partialchol(H,D), DL, DR)
 
-*(P::ToeplitzHankelPlan, v::AbstractVector) = P.DL .* toeplitzcholmult(P.T, P.C, P.DR.*v)
+function *(P::ToeplitzHankelPlan, v::AbstractVector)
+    v .= P.DR .* v
+    toeplitzcholmult!(P.T, P.C, v, P.tmp1, P.tmp2)
+    v .= P.DL .* v
+end
 
 function partialchol(H::Hankel)
     # Assumes positive definite
@@ -77,19 +83,18 @@ function partialchol(H::Hankel, D::AbstractVector)
     C
 end
 
-function toeplitzcholmult(T, C, v)
+function toeplitzcholmult!(T, C, v, tmp, ret)
     n,K = length(v),length(C)
-    ret,temp1 = zero(v),zero(v)
-    temp1 .= C[K] .* v
-    T * temp1
-    ret .= C[K] .* temp1
+    tmp .= C[K] .* v
+    T * tmp
+    ret .= C[K] .* tmp
     for k = K-1:-1:1
-        temp1 .= C[k] .* v
-        T * temp1
-        temp1 .= C[k] .* temp1
-        ret .= ret .+ temp1
+        tmp .= C[k] .* v
+        T * tmp
+        tmp .= C[k] .* tmp
+        ret .= ret .+ tmp
     end
-    ret
+    copyto!(v, ret)
 end
 
 
@@ -176,15 +181,15 @@ function *(P::ChebyshevToLegendrePlanTH, v::AbstractVector)
     [dot(w,v); P.toeplitzhankel*view(v,2:n)]
 end
 
-plan_th_leg2cheb(::Type{S}, n) where {S} = ToeplitzHankelPlan(leg2chebTH(S, n)..., ones(S, n))
-plan_th_cheb2leg(::Type{S}, n) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S, n)...))
-plan_th_leg2chebu(::Type{S}, n) where {S} = ToeplitzHankelPlan(leg2chebuTH(S, n)..., 1:n, ones(S, n))
-plan_th_ultra2ultra(::Type{S}, n, λ₁, λ₂) where {S} = ToeplitzHankelPlan(ultra2ultraTH(S, n, λ₁, λ₂)...)
-plan_th_jac2jac(::Type{S},n, α, β, γ, δ) where {S} = ToeplitzHankelPlan(jac2jacTH(S, n, α, β, γ, δ)...)
+plan_th_leg2cheb!(::Type{S}, n) where {S} = ToeplitzHankelPlan(leg2chebTH(S, n)..., ones(S, n))
+plan_th_cheb2leg!(::Type{S}, n) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S, n)...))
+plan_th_leg2chebu!(::Type{S}, n) where {S} = ToeplitzHankelPlan(leg2chebuTH(S, n)..., 1:n, ones(S, n))
+plan_th_ultra2ultra!(::Type{S}, n, λ₁, λ₂) where {S} = ToeplitzHankelPlan(ultra2ultraTH(S, n, λ₁, λ₂)...)
+plan_th_jac2jac!(::Type{S},n, α, β, γ, δ) where {S} = ToeplitzHankelPlan(jac2jacTH(S, n, α, β, γ, δ)...)
 
 
-th_leg2cheb(v) = plan_th_leg2cheb(eltype(v),length(v))*v
-th_cheb2leg(v) = plan_th_cheb2leg(eltype(v),length(v))*v
-th_leg2chebu(v) = plan_th_leg2chebu(eltype(v),length(v))*v
-th_ultra2ultra(v,λ₁,λ₂) = plan_th_ultra2ultra(eltype(v),length(v),λ₁,λ₂)*v
-th_jac2jac(v,α,β,γ,δ) = plan_th_jac2jac(eltype(v),length(v),α,β,γ,δ)*v
+th_leg2cheb(v) = plan_th_leg2cheb!(eltype(v),length(v))*copy(v)
+th_cheb2leg(v) = plan_th_cheb2leg!(eltype(v),length(v))*copy(v)
+th_leg2chebu(v) = plan_th_leg2chebu!(eltype(v),length(v))*copy(v)
+th_ultra2ultra(v,λ₁,λ₂) = plan_th_ultra2ultra!(eltype(v),length(v),λ₁,λ₂)*copy(v)
+th_jac2jac(v,α,β,γ,δ) = plan_th_jac2jac!(eltype(v),length(v),α,β,γ,δ)*copy(v)

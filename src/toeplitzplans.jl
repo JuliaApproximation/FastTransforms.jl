@@ -1,15 +1,16 @@
 using FFTW
 import FFTW: plan_r2r!
 
-struct ToeplitzPlan{T, N, S, VECS<:Tuple{Vararg{Vector{S}}}, P<:Plan{S}, DIMS} <: Plan{T}
+struct ToeplitzPlan{T, N, S, VECS<:Tuple{Vararg{Vector{S}}}, P<:Plan{S}, Pi<:Plan{S}, DIMS} <: Plan{T}
     vectors::VECS
     tmp::Array{S,N}
     dft::P
+    idft::Pi
     dims::DIMS
 end
 
-ToeplitzPlan{T}(v::AbstractVector, tmp, dft, dims) where T = ToeplitzPlan{T}((v,), tmp, dft, dims)
-ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, dims) where {T,S,N} = ToeplitzPlan{T,N,S,typeof(v),typeof(dft), typeof(dims)}(v, tmp, dft, dims)
+ToeplitzPlan{T}(v::AbstractVector, tmp, dft, idft, dims) where T = ToeplitzPlan{T}((v,), tmp, dft, idft, dims)
+ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims) where {T,S,N} = ToeplitzPlan{T,N,S,typeof(v),typeof(dft), typeof(idft), typeof(dims)}(v, tmp, dft, idft, dims)
 
 # based on ToeplitzMatrices.jl
 """
@@ -21,7 +22,7 @@ maybereal(::Type, x) = x
 maybereal(::Type{<:Real}, x) = real(x)
 
 function *(A::ToeplitzPlan{T,1}, x::AbstractVector{T}) where T
-    vc,tmp,dft = A.vectors[1],A.tmp, A.dft
+    vc,tmp,dft,idft = A.vectors[1],A.tmp, A.dft,A.idft
     S = eltype(tmp)
     N = length(tmp)
     n = length(x)
@@ -32,7 +33,7 @@ function *(A::ToeplitzPlan{T,1}, x::AbstractVector{T}) where T
     fill!(view(tmp, n+1:N), zero(S))
     dft * tmp
     tmp .*= vc
-    dft \ tmp
+    idft * tmp
     @inbounds for k = 1:n
         x[k] = maybereal(T, tmp[k])
     end
@@ -93,7 +94,8 @@ end
 function plan_uppertoeplitz!(v::AbstractVector{T}) where T
     tmp = uppertoeplitz_padvec(v)
     dft = plan_fft!(tmp)
-    return ToeplitzPlan{float(T)}(dft * tmp, similar(tmp), dft, (1,))
+    idft = plan_ifft!(similar(tmp))
+    return ToeplitzPlan{float(T)}(dft * tmp, similar(tmp), dft, idft, (1,))
 end
 
 # TODO: support different transforms
@@ -118,7 +120,8 @@ function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim::Int)
         pv = uppertoeplitz_padvec(v[1:n])
     end
     dft = plan_fft!(tmp, dim)
-    return ToeplitzPlan{float(T)}(fft!(pv), tmp, dft, dim)
+    idft = plan_ifft!(similar(tmp), dim)
+    return ToeplitzPlan{float(T)}(fft!(pv), tmp, dft, idft, dim)
 end
 
 function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim=(1,2)) where T
@@ -129,5 +132,6 @@ function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim=(1,2)
     pv1 = uppertoeplitz_padvec(v[1:m])
     pv2 = uppertoeplitz_padvec(v[1:n])
     dft = plan_fft!(tmp, dim)
-    return ToeplitzPlan{float(T)}((fft!(pv1), fft!(pv2)), tmp, dft, dim)
+    idft = plan_ifft!(similar(tmp), dim)
+    return ToeplitzPlan{float(T)}((fft!(pv1), fft!(pv2)), tmp, dft, idft, dim)
 end
