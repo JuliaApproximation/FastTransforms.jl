@@ -62,27 +62,28 @@ function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any}}, x::AbstractMatrix{T}) where {T
     x
 end
 
-function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any,Any}}, x::AbstractMatrix{T}) where {T,S}
+function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any,Any}}, X::AbstractMatrix{T}) where {T,S}
     vcs,tmp,dft = A.vectors,A.tmp, A.dft
     vc1,vc2 = vcs
     M,N = size(tmp)
-    m,n = size(x)
+    m,n = size(X)
 
     @assert A.dims == (1,2)
-    copyto!(view(tmp, 1:m, 1:n), x)
+    copyto!(view(tmp, 1:m, 1:n), X)
     fill!(view(tmp, m+1:M, :), zero(S))
     fill!(view(tmp, 1:m, n+1:N), zero(S))
     dft * tmp
     tmp .= vc1 .* tmp .* transpose(vc2)
     dft \ tmp
     @inbounds for k = 1:m, j = 1:n
-        x[k,j] = maybereal(T, tmp[k,j])
+        X[k,j] = maybereal(T, tmp[k,j])
     end
-    x
+    X
 end
 
 
-function uppertoeplitz_padvec(v::AbstractVector{T}, n) where T
+function uppertoeplitz_padvec(v::AbstractVector{T}) where T
+    n = length(v)
     S = complex(float(T))
     tmp = zeros(S, 2n-1)
     tmp[1] = v[1]
@@ -90,7 +91,7 @@ function uppertoeplitz_padvec(v::AbstractVector{T}, n) where T
 end
 
 function plan_uppertoeplitz!(v::AbstractVector{T}) where T
-    tmp = uppertoeplitz_padvec(v, length(v))
+    tmp = uppertoeplitz_padvec(v)
     dft = plan_fft!(tmp)
     return ToeplitzPlan{float(T)}(dft * tmp, similar(tmp), dft, (1,))
 end
@@ -111,10 +112,10 @@ function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim::Int)
     m,n = szs
     if isone(dim)
         tmp = zeros(S, 2m-1, n)
-        pv = uppertoeplitz_padvec(v, m)
+        pv = uppertoeplitz_padvec(v[1:m])
     else # dim == 2
         tmp = zeros(S, m, 2n-1)
-        pv = uppertoeplitz_padvec(v, n)
+        pv = uppertoeplitz_padvec(v[1:n])
     end
     dft = plan_fft!(tmp, dim)
     return ToeplitzPlan{float(T)}(fft!(pv), tmp, dft, dim)
@@ -125,8 +126,8 @@ function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim=(1,2)
     S = complex(float(T))
     m,n = szs
     tmp = zeros(S, 2m-1, 2n-1)
-    pv1 = uppertoeplitz_padvec(v, m)
-    pv2 = uppertoeplitz_padvec(v, n)
+    pv1 = uppertoeplitz_padvec(v[1:m])
+    pv2 = uppertoeplitz_padvec(v[1:n])
     dft = plan_fft!(tmp, dim)
     return ToeplitzPlan{float(T)}((fft!(pv1), fft!(pv2)), tmp, dft, dim)
 end

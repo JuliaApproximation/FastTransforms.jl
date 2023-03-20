@@ -3,23 +3,23 @@ Store a diagonally-scaled Toeplitz∘Hankel matrix:
     DL(T∘H)DR
 where the Hankel matrix `H` is non-negative definite. This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
 """
-struct ToeplitzHankelPlan{S}
-    T::TriangularToeplitz{S}
+struct ToeplitzHankelPlan{S, TP<:ToeplitzPlan} <: Plan{S}
+    T::TP
     C::Vector{Vector{S}}
     DL::Vector{S}
     DR::Vector{S}
-    ToeplitzHankelPlan{S}(T, C, DL, DR) where {S} = new{S}(T, C, DL, DR)
+    ToeplitzHankelPlan{S,TP}(T::TP, C, DL, DR) where {S,TP} = new{S,TP}(T, C, DL, DR)
 end
 
-function ToeplitzHankelPlan(T::TriangularToeplitz, C::Vector, DL::AbstractVector, DR::AbstractVector)
+function ToeplitzHankelPlan(T::ToeplitzPlan, C::Vector, DL::AbstractVector, DR::AbstractVector)
     S = promote_type(eltype(T), eltype(C[1]), eltype(DL), eltype(DR))
-    ToeplitzHankelPlan{S}(T, C, collect(S,DL), collect(S,DR))
+    ToeplitzHankelPlan{S, typeof(T)}(T, C, collect(S,DL), collect(S,DR))
 end
-ToeplitzHankelPlan(T::TriangularToeplitz, C::Matrix) =
+ToeplitzHankelPlan(T::ToeplitzPlan, C::Matrix) =
     ToeplitzHankelPlan(T, C, ones(size(T, 1)),ones(size(T,2)))
-ToeplitzHankelPlan(T::TriangularToeplitz, H::Hankel, DL::AbstractVector, DR::AbstractVector) =
+ToeplitzHankelPlan(T::ToeplitzPlan, H::Hankel, DL::AbstractVector, DR::AbstractVector) =
     ToeplitzHankelPlan(T, partialchol(H), DL, DR)
-ToeplitzHankelPlan(T::TriangularToeplitz, H::Hankel, D::AbstractVector, DL::AbstractVector, DR::AbstractVector) =
+ToeplitzHankelPlan(T::ToeplitzPlan, H::Hankel, D::AbstractVector, DL::AbstractVector, DR::AbstractVector) =
     ToeplitzHankelPlan(T, partialchol(H,D), DL, DR)
 
 *(P::ToeplitzHankelPlan, v::AbstractVector) = P.DL .* toeplitzcholmult(P.T, P.C, P.DR.*v)
@@ -79,15 +79,14 @@ end
 
 function toeplitzcholmult(T, C, v)
     n,K = length(v),length(C)
-    ret,temp1,temp2 = zero(v),zero(v),zero(v)
-    un,ze = one(eltype(v)),zero(eltype(v))
+    ret,temp1 = zero(v),zero(v)
     temp1 .= C[K] .* v
-    mul!(temp2, T, temp1, un, ze)
-    ret .= C[K] .* temp2
-    for k=K-1:-1:1
+    T * temp1
+    ret .= C[K] .* temp1
+    for k = K-1:-1:1
         temp1 .= C[k] .* v
-        mul!(temp2, T, temp1, un, ze)
-        temp1 .= C[k] .* temp2
+        T * temp1
+        temp1 .= C[k] .* temp1
         ret .= ret .+ temp1
     end
     ret
@@ -100,7 +99,7 @@ function leg2chebTH(::Type{S}, n) where S
     λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]
-    T = TriangularToeplitz(2t/π,:U)
+    T = plan_uppertoeplitz!(2t/π)
     H = Hankel(λ[1:n], λ[n:end])
     DL = ones(S,n)
     DL[1] /= 2
@@ -110,7 +109,7 @@ end
 function cheb2legTH(::Type{S},n) where S
     t = zeros(S,n-1)
     t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
-    T = TriangularToeplitz(t,:U)
+    T = plan_uppertoeplitz!(t)
     h = Λ.(1:half(S):n-1, zero(S), 3half(S))
     H = Hankel(h[1:n-1],h[n-1:end])
     D = 1:one(S):n-1
@@ -123,7 +122,7 @@ function leg2chebuTH(::Type{S},n) where S
     λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
-    T = TriangularToeplitz(-2t/π,:U)
+    T = plan_uppertoeplitz!(-2t/π)
     H = Hankel(λ[1:n]./((1:n).+1),λ[n:end]./((n:2n-1).+1))
     T,H
 end
@@ -134,7 +133,7 @@ function ultra2ultraTH(::Type{S},n,λ₁,λ₂) where S
     jk = 0:half(S):n-1
     t = zeros(S,n)
     t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S))[1:2:n]
-    T = TriangularToeplitz(lmul!(inv(gamma(λ₁-λ₂)),t),:U)
+    T = plan_uppertoeplitz!(lmul!(inv(gamma(λ₁-λ₂)),t))
     h = Λ.(jk,λ₁,λ₂+one(S))
     lmul!(gamma(λ₂)/gamma(λ₁),h)
     H = Hankel(h[1:n],h[n:end])
@@ -148,7 +147,7 @@ function jac2jacTH(::Type{S},n,α,β,γ,δ) where S
         @assert α+β > -1
         jk = zero(S):n-one(S)
         DL = (2jk .+ γ .+ β .+ one(S)).*Λ.(jk,γ+β+one(S),β+one(S))
-        T = TriangularToeplitz(Λ.(jk,α-γ,one(S)),:U)
+        T = plan_uppertoeplitz!(Λ.(jk,α-γ,one(S)))
         H = Hankel(Λ.(jk,α+β+one(S),γ+β+two(S)),Λ.(jk.+n.-one(S),α+β+one(S),γ+β+two(S)))
         DR = Λ.(jk,β+one(S),α+β+one(S))./gamma(α-γ)
         T,H,DL,DR
@@ -158,7 +157,7 @@ function jac2jacTH(::Type{S},n,α,β,γ,δ) where S
         @inbounds for k = 2:2:length(ve)
             ve[k] *= -1
         end
-        TriangularToeplitz(ve, :U),H,DL,DR
+        plan_uppertoeplitz!(ve),H,DL,DR
     else
         throw(ArgumentError("Cannot create Toeplitz dot Hankel, use a sequence of plans."))
     end

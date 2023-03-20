@@ -15,4 +15,13 @@ import FastTransforms: plan_uppertoeplitz!
 
     P = plan_uppertoeplitz!([1,2,3], size(X))
     @test P * copy(X) ≈ T * X * T'
+
+    X = randn(3,4)
+    P1 = plan_uppertoeplitz!([1,2,3], size(X), 1)
+    @test P1 * copy(X) ≈ T * X
+    P2 = plan_uppertoeplitz!([1,2,3,4], size(X), 2)
+    T̃ = [1 2 3 4; 0 1 2 3; 0 0 1 2; 0 0 0 1]
+    @test P2 * copy(X) ≈ X * T̃'
+    P = plan_uppertoeplitz!([1,2,3,4], size(X))
+    @test P * copy(X) ≈ T * X * T̃'
 end
