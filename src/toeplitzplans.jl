@@ -1,15 +1,15 @@
 using FFTW
 import FFTW: plan_r2r!
 
-struct ToeplitzPlan{T, N, S, VECS<:Tuple{Vararg{Vector{S}}}, P<:Plan{S}} <: Plan{T}
+struct ToeplitzPlan{T, N, S, VECS<:Tuple{Vararg{Vector{S}}}, P<:Plan{S}, DIMS} <: Plan{T}
     vectors::VECS
     tmp::Array{S,N}
     dft::P
-    dims::
+    dims::DIMS
 end
 
-ToeplitzPlan{T}(v::AbstractVector, tmp, dft) where T = ToeplitzPlan{T}((v,), tmp, dft)
-ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}) where {T,S,B} = ToeplitzPlan{T,N,S,typeof(v),typeof(dft)}(v, tmp, dft)
+ToeplitzPlan{T}(v::AbstractVector, tmp, dft, dims) where T = ToeplitzPlan{T}((v,), tmp, dft, dims)
+ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, dims) where {T,S,N} = ToeplitzPlan{T,N,S,typeof(v),typeof(dft), typeof(dims)}(v, tmp, dft, dims)
 
 # based on ToeplitzMatrices.jl
 """
@@ -22,9 +22,10 @@ maybereal(::Type{<:Real}, x) = real(x)
 
 function *(A::ToeplitzPlan{T,1}, x::AbstractVector{T}) where T
     vc,tmp,dft = A.vectors[1],A.tmp, A.dft
+    S = eltype(tmp)
     N = length(tmp)
     n = length(x)
-    if 2n+1 ≠ N
+    if 2n-1 ≠ N
         throw(DimensionMismatch("Toeplitz plan does not match size of input"))
     end
     copyto!(view(tmp, 1:n), x)
@@ -40,12 +41,12 @@ end
 
 function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any}}, x::AbstractMatrix{T}) where {T,S}
     vc,tmp,dft = A.vectors[1],A.tmp, A.dft
-    N = length(tmp)
+    M,N = size(tmp)
     m,n = size(x)
 
     if A.dims == 1
         copyto!(view(tmp, 1:m, :), x)
-        fill!(view(tmp, m+1:N, :), zero(S))
+        fill!(view(tmp, m+1:M, :), zero(S))
         dft * tmp
         tmp .= vc .* tmp
     else
@@ -55,15 +56,34 @@ function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any}}, x::AbstractMatrix{T}) where {T
         tmp .= tmp .* transpose(vc)
     end
     dft \ tmp
-    @inbounds for k = 1:n, j = 1:m
-        x[k] = maybereal(T, tmp[k,j])
+    @inbounds for k = 1:m, j = 1:n
+        x[k,j] = maybereal(T, tmp[k,j])
+    end
+    x
+end
+
+function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any,Any}}, x::AbstractMatrix{T}) where {T,S}
+    vcs,tmp,dft = A.vectors,A.tmp, A.dft
+    vc1,vc2 = vcs
+    M,N = size(tmp)
+    m,n = size(x)
+
+    @assert A.dims == (1,2)
+    copyto!(view(tmp, 1:m, 1:n), x)
+    fill!(view(tmp, m+1:M, :), zero(S))
+    fill!(view(tmp, 1:m, n+1:N), zero(S))
+    dft * tmp
+    tmp .= vc1 .* tmp .* transpose(vc2)
+    dft \ tmp
+    @inbounds for k = 1:m, j = 1:n
+        x[k,j] = maybereal(T, tmp[k,j])
     end
     x
 end
 
 
-function uppertoeplitz_padvec(v, n)
-    S = float(T)
+function uppertoeplitz_padvec(v::AbstractVector{T}, n) where T
+    S = complex(float(T))
     tmp = zeros(S, 2n-1)
     tmp[1] = v[1]
     copyto!(tmp, n+1, Iterators.reverse(v), 1, n-1)
@@ -72,7 +92,7 @@ end
 function plan_uppertoeplitz!(v::AbstractVector{T}) where T
     tmp = uppertoeplitz_padvec(v, length(v))
     dft = plan_fft!(tmp)
-    return ToeplitzPlan(dft * tmp, similar(tmp), dft, (1,))
+    return ToeplitzPlan{float(T)}(dft * tmp, similar(tmp), dft, (1,))
 end
 
 # TODO: support different transforms

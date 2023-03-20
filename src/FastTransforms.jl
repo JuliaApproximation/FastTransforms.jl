@@ -109,6 +109,7 @@ export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
 
 include("specialfunctions.jl")
 
+include("toeplitzplans.jl")
 include("toeplitzhankel.jl")
 
 end # module
