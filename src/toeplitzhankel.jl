@@ -17,8 +17,8 @@ struct ToeplitzHankelPlan{S, N, M, N1, TP<:ToeplitzPlan{S,N1}} <: Plan{S}
         ToeplitzHankelPlan{S,N,M,N1,TP}(T, L, R, (dims,))
 end
 
-ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, L::Matrix, R::Matrix) where S =
-    ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}((T,), (L,), (R,), 1)
+ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, L::Matrix, R::Matrix, dims=1) where S =
+    ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}((T,), (L,), (R,), dims)
 
 ToeplitzHankelPlan(T::ToeplitzPlan{S,3}, L::Matrix, R::Matrix, dims) where S =
     ToeplitzHankelPlan{S, 2, 1,3, typeof(T)}((T,), (L,), (R,), dims)
@@ -157,43 +157,27 @@ function *(P::ChebyshevToLegendrePlanTH, v::AbstractVector)
     [dot(w,v); P.toeplitzhankel*view(v,2:n)]
 end
 
-function _leg2chebTH_λt(::Type{S}, n) where S
+function _leg2chebTH_λt(::Type{S}, nm, d) where S
+    n = nm[d]
     λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
     t[1:2:end] .= 2 .* view(λ, 1:2:n) ./ π
-    λ,t
-end
-
-
-function plan_th_leg2cheb!(::Type{S}, (n,)::Tuple{Int}, dims...) where {S}
-    λ,t = _leg2chebTH_λt(S, n)
     C = hankel_partialchol(λ)
-    T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
+    T = plan_uppertoeplitz!(t, (nm..., size(C,2)), d)
     L = copy(C)
     L[1,:] ./= 2
-    ToeplitzHankelPlan(T, L, C)
+    T,L,C
 end
 
-function plan_th_leg2cheb!(::Type{S}, mn::NTuple{2,Int}, dims::Int) where {S}
-    (m,n) = mn
-    λ,t = _leg2chebTH_λt(S, mn[dims])
-    C = hankel_partialchol(λ)
-    T = plan_uppertoeplitz!(t, (mn...,size(C,2)), dims)
-    L = copy(C)
-    L[1,:] ./= 2
-    ToeplitzHankelPlan(T, L, C, dims)
-end
 
-function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
+plan_th_leg2cheb!(::Type{S}, mn::Tuple, dims::Int) where {S} = ToeplitzHankelPlan(_leg2chebTH_λt(S, mn, dims)..., dims)
+plan_th_leg2cheb!(::Type{S}, mn::Tuple{Int}) where {S} = plan_th_leg2cheb!(S, mn, 1)
+
+
+function plan_th_leg2cheb!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
     @assert dims == (1,2)
-    λ1,t1 = _leg2chebTH_λt(S, m)
-    λ2,t2 = _leg2chebTH_λt(S, n)
-    C1 = hankel_partialchol(λ1)
-    C2 = hankel_partialchol(λ2)
-    T1 = plan_uppertoeplitz!(t1, (m,n,size(C1,2)), 1)
-    T2 = plan_uppertoeplitz!(t2, (m,n,size(C2,2)), 2)
-    L1 = copy(C1); L1[1,:] ./= 2
-    L2 = copy(C2); L2[1,:] ./= 2
+    T1,L1,C1 = _leg2chebTH_λt(S, mn, 1)
+    T2,L2,C2 = _leg2chebTH_λt(S, mn, 2)
     ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
 

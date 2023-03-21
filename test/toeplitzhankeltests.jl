@@ -1,5 +1,5 @@
 using FastTransforms, Test
-import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac
+import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_leg2chebu
 
 @testset "ToeplitzHankel" begin
     @test th_leg2cheb([1.0,2,3,4,5]) ≈ leg2cheb([1.0,2,3,4,5])
