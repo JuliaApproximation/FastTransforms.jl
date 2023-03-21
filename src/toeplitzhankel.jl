@@ -154,23 +154,14 @@ function plan_th_leg2cheb!(::Type{S}, (n,)::Tuple{Int}, dims...) where {S}
     ToeplitzHankelPlan(T, DL .* C, C)
 end
 
-function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::Int) where {S}
-    if dims == 1
-        λ,t = _leg2chebTH_λt(S, m)
-        C = hankel_partialchol(λ)
-        T = plan_uppertoeplitz!(t, (m,n,size(C,2)), dims)
-        DL = ones(S,m)
-        DL[1] /= 2
-        ToeplitzHankelPlan(T, DL .* C, C, dims)
-    else
-        @assert dims == 2
-        λ,t = _leg2chebTH_λt(S, n)
-        C = hankel_partialchol(λ)
-        T = plan_uppertoeplitz!(t, (m,n), dims)
-        DL = ones(S,n)
-        DL[1] /= 2
-        ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, n), dims)
-    end
+function plan_th_leg2cheb!(::Type{S}, mn::NTuple{2,Int}, dims::Int) where {S}
+    (m,n) = mn
+    λ,t = _leg2chebTH_λt(S, mn[dims])
+    C = hankel_partialchol(λ)
+    T = plan_uppertoeplitz!(t, (mn...,size(C,2)), dims)
+    DL = ones(S,length(t))
+    DL[1] /= 2
+    ToeplitzHankelPlan(T, DL .* C, C, dims)
 end
 
 function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::NTuple{2,Int}) where {S} 
