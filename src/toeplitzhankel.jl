@@ -5,33 +5,31 @@ where the Hankel matrix `H` is non-negative definite. This allows a Cholesky dec
 """
 struct ToeplitzHankelPlan{S, N, M, N1, TP<:ToeplitzPlan{S,N1}} <: Plan{S}
     T::TP
-    C::NTuple{M,Matrix{S}}
-    DL::NTuple{M,Vector{S}}
-    DR::NTuple{M,Vector{S}}
+    L::NTuple{M,Matrix{S}}
+    R::NTuple{M,Matrix{S}}
     tmp::Array{S,N1}
     dims::NTuple{M,Int}
-    function ToeplitzHankelPlan{S,N,M,N1,TP}(T::TP, C, DL, DR, dims) where {S,TP,N,N1,M}
+    function ToeplitzHankelPlan{S,N,M,N1,TP}(T::TP, L, R, dims) where {S,TP,N,N1,M}
         tmp = Array{S}(undef, size(T))
-        new{S,N,M,N1,TP}(T, C, DL, DR, tmp, dims)
+        new{S,N,M,N1,TP}(T, L, R, tmp, dims)
     end
-    ToeplitzHankelPlan{S,N,M,N1,TP}(T::TP, C, DL, DR, dims::Int) where {S,TP,N,N1,M} = 
-        ToeplitzHankelPlan{S,N,M,N1,TP}(T, C, DL, DR, (dims,))
+    ToeplitzHankelPlan{S,N,M,N1,TP}(T::TP, L, R, dims::Int) where {S,TP,N,N1,M} = 
+        ToeplitzHankelPlan{S,N,M,N1,TP}(T, L, R, (dims,))
 end
 
-ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, C::Matrix, DL::AbstractVector, DR::AbstractVector) where S =
-    ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), 1)
+ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, L::Matrix, R::Matrix) where S =
+    ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}(T, (L,), (R,), 1)
 
 ToeplitzHankelPlan(T::ToeplitzPlan{S,3}, C::Matrix, DL::AbstractVector, DR::AbstractVector, dims) where S =
     ToeplitzHankelPlan{S, 2, 1,3, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), dims)    
 
 
 function *(P::ToeplitzHankelPlan{<:Any,1}, v::AbstractVector)
-    (DR,),(DL,),tmp,(C,) = P.DR,P.DL,P.tmp,P.C
-    tmp .= C .* DR .* v
+    (R,),(L,),tmp = P.R,P.L,P.tmp
+    tmp .= R .* v
     P.T * tmp
-    tmp .= C .* tmp
+    tmp .= L .* tmp
     sum!(v, tmp)
-    v .= DL .* v
 end
 
 function *(P::ToeplitzHankelPlan{<:Any,2,1}, v::AbstractMatrix)
@@ -205,11 +203,6 @@ function _leg2chebTH_λt(::Type{S}, n) where S
     λ,t
 end
 
-function leg2chebTH(::Type{S}, (n,)) where S
-
-    
-end
-
 
 function plan_th_leg2cheb!(::Type{S}, (n,)::Tuple{Int}, dims...) where {S}
     λ,t = _leg2chebTH_λt(S, n)
@@ -217,7 +210,7 @@ function plan_th_leg2cheb!(::Type{S}, (n,)::Tuple{Int}, dims...) where {S}
     T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
     DL = ones(S,n)
     DL[1] /= 2
-    ToeplitzHankelPlan(T, C, DL, ones(S, n))
+    ToeplitzHankelPlan(T, DL .* C, C)
 end
 
 function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::Int) where {S}
