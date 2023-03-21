@@ -11,7 +11,10 @@ struct ToeplitzHankelPlan{S, N, M, TP<:ToeplitzPlan{S,N}} <: Plan{S}
     tmp1::Array{S,N}
     tmp2::Array{S,N}
     dims::NTuple{M,Int}
-    ToeplitzHankelPlan{S,N,M,TP}(T::TP, C, DL, DR, dims) where {S,TP,N,M} = new{S,N,M,TP}(T, C, DL, DR, similar(DL), similar(DL))
+    function ToeplitzHankelPlan{S,N,M,TP}(T::TP, C, DL, DR, dims) where {S,TP,N,M}
+        tmp1 = Array{S}(undef, map(length,DL))
+        new{S,N,M,TP}(T, C, DL, DR, tmp1, similar(tmp1))
+    end
 end
 
 function ToeplitzHankelPlan(T::ToeplitzPlan, C::Vector, DL::AbstractVector, DR::AbstractVector)
@@ -22,9 +25,9 @@ ToeplitzHankelPlan(T::ToeplitzPlan, C::Matrix) =
     ToeplitzHankelPlan(T, C, ones(size(T, 1)),ones(size(T,2)))
 
 function *(P::ToeplitzHankelPlan, v::AbstractVector)
-    v .= P.DR .* v
-    toeplitzcholmult!(P.T, P.C, v, P.tmp1, P.tmp2)
-    v .= P.DL .* v
+    v .= P.DR[1] .* v
+    toeplitzcholmult!(P.T, P.C[1], v, P.tmp1, P.tmp2)
+    v .= P.DL[1] .* v
 end
 
 function hankel_partialchol(v::Vector{T}) where T
@@ -80,7 +83,7 @@ end
 
 function toeplitzcholmult!(T, C, v, tmp, ret)
     K = length(C)
-    fill!(ret, zero(eltype(Ret)))
+    fill!(ret, zero(eltype(ret)))
     for k = K:-1:1
         tmp .= C[k] .* v
         T * tmp
@@ -108,7 +111,7 @@ function leg2chebTH(::Type{S}, (n,)) where S
     T, hankel_partialchol(λ), DL
 end
 
-function cheb2legTH(::Type{S},n) where S
+function cheb2legTH(::Type{S}, (n,)) where S
     t = zeros(S,n-1)
     t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
     T = plan_uppertoeplitz!(t)
@@ -119,7 +122,7 @@ function cheb2legTH(::Type{S},n) where S
     T, hankel_partialchol(h,D), DL,DR
 end
 
-function leg2chebuTH(::Type{S},n) where S
+function leg2chebuTH(::Type{S}, (n,)) where S
     λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
@@ -128,7 +131,7 @@ function leg2chebuTH(::Type{S},n) where S
     T,hankel_partialchol(h)
 end
 
-function ultra2ultraTH(::Type{S},n,λ₁,λ₂) where S
+function ultra2ultraTH(::Type{S}, (n,), λ₁, λ₂) where S
     @assert abs(λ₁-λ₂) < 1
     DL = (zero(S):n-one(S)) .+ λ₂
     jk = 0:half(S):n-1
@@ -141,7 +144,7 @@ function ultra2ultraTH(::Type{S},n,λ₁,λ₂) where S
     T,hankel_partialchol(h),DL,DR
 end
 
-function jac2jacTH(::Type{S},n,α,β,γ,δ) where S
+function jac2jacTH(::Type{S}, (n,), α, β, γ, δ) where S
     if β == δ
         @assert abs(α-γ) < 1
         @assert α+β > -1
@@ -178,7 +181,7 @@ end
 
 plan_th_leg2cheb!(::Type{S}, n) where {S} = ToeplitzHankelPlan(leg2chebTH(S, n)..., ones(S, n))
 plan_th_cheb2leg!(::Type{S}, n) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S, n)...))
-plan_th_leg2chebu!(::Type{S}, n) where {S} = ToeplitzHankelPlan(leg2chebuTH(S, n)..., 1:n, ones(S, n))
+plan_th_leg2chebu!(::Type{S}, (n,)) where {S} = ToeplitzHankelPlan(leg2chebuTH(S, (n,))..., 1:n, ones(S, n))
 plan_th_ultra2ultra!(::Type{S}, n, λ₁, λ₂) where {S} = ToeplitzHankelPlan(ultra2ultraTH(S, n, λ₁, λ₂)...)
 plan_th_jac2jac!(::Type{S},n, α, β, γ, δ) where {S} = ToeplitzHankelPlan(jac2jacTH(S, n, α, β, γ, δ)...)
 
