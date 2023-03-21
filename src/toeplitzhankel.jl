@@ -19,10 +19,6 @@ function ToeplitzHankelPlan(T::ToeplitzPlan, C::Vector, DL::AbstractVector, DR::
 end
 ToeplitzHankelPlan(T::ToeplitzPlan, C::Matrix) =
     ToeplitzHankelPlan(T, C, ones(size(T, 1)),ones(size(T,2)))
-ToeplitzHankelPlan(T::ToeplitzPlan, H::Hankel, DL::AbstractVector, DR::AbstractVector) =
-    ToeplitzHankelPlan(T, partialchol(H), DL, DR)
-ToeplitzHankelPlan(T::ToeplitzPlan, H::Hankel, D::AbstractVector, DL::AbstractVector, DR::AbstractVector) =
-    ToeplitzHankelPlan(T, partialchol(H,D), DL, DR)
 
 function *(P::ToeplitzHankelPlan, v::AbstractVector)
     v .= P.DR .* v
@@ -37,7 +33,7 @@ function hankel_partialchol(v::Vector{T}) where T
     C = Vector{T}[]
     d = v[1:2:end] # diag of H
     @assert length(v) ≥ 2n-1
-    reltol = maximum(abs,d)*eps(eltype(H))*log(n)
+    reltol = maximum(abs,d)*eps(T)*log(n)
     for k = 1:n
         mx,idx = findmax(d)
         if mx ≤ reltol break end
@@ -55,21 +51,20 @@ function hankel_partialchol(v::Vector{T}) where T
     C
 end
 
-function partialchol(H::Hankel, D::AbstractVector)
+function hankel_partialchol(v::AbstractVector, D::AbstractVector)
     # Assumes positive definite
-    T = promote_type(eltype(H),eltype(D))
+    T = promote_type(eltype(v),eltype(D))
     σ = T[]
-    n = size(H,1)
+    n = (length(v)+2) ÷ 2
     C = Vector{T}[]
-    v = [H[:,1];vec(H[end,2:end])]
-    d = diag(H).*D.^2
+    d = v[1:2:end].*D.^2
     @assert length(v) ≥ 2n-1
     reltol = maximum(abs,d)*eps(T)*log(n)
     for k = 1:n
         mx,idx = findmax(d)
         if mx ≤ reltol break end
         push!(σ,inv(mx))
-        push!(C,v[idx:n+idx-1].*D.*D[idx])
+        push!(C,v[idx:n+idx-1] .* D .* D[idx])
         for j = 1:k-1
             nCjidxσj = -C[j][idx]*σ[j]
             LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
@@ -106,7 +101,7 @@ function leg2chebTH(::Type{S}, n) where S
     T = plan_uppertoeplitz!(2t/π)
     DL = ones(S,n)
     DL[1] /= 2
-    T,λ,DL
+    T, hankel_partialchol(λ), DL
 end
 
 function cheb2legTH(::Type{S},n) where S
@@ -117,7 +112,7 @@ function cheb2legTH(::Type{S},n) where S
     D = 1:one(S):n-1
     DL = (3half(S):n-half(S))./D
     DR = -(one(S):n-one(S))./4D
-    T,h,D,DL,DR
+    T, hankel_partialchol(h,D), DL,DR
 end
 
 function leg2chebuTH(::Type{S},n) where S
@@ -126,7 +121,7 @@ function leg2chebuTH(::Type{S},n) where S
     t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
     T = plan_uppertoeplitz!(-2t/π)
     h = λ./((1:2n-1).+1)
-    T,h
+    T,hankel_partialchol(h)
 end
 
 function ultra2ultraTH(::Type{S},n,λ₁,λ₂) where S
@@ -139,7 +134,7 @@ function ultra2ultraTH(::Type{S},n,λ₁,λ₂) where S
     h = Λ.(jk,λ₁,λ₂+one(S))
     lmul!(gamma(λ₂)/gamma(λ₁),h)
     DR = ones(S,n)
-    T,h,DL,DR
+    T,hankel_partialchol(h),DL,DR
 end
 
 function jac2jacTH(::Type{S},n,α,β,γ,δ) where S
@@ -151,14 +146,14 @@ function jac2jacTH(::Type{S},n,α,β,γ,δ) where S
         T = plan_uppertoeplitz!(Λ.(jk,α-γ,1))
         h = Λ.(0:2n-2,α+β+1,γ+β+2)
         DR = Λ.(jk,β+1,α+β+1)./gamma(α-γ)
-        T,h,DL,DR
+        T,hankel_partialchol(h),DL,DR
     elseif α == γ
-        T,h,DL,DR = jac2jacTH(S,n,β,α,δ,γ)
+        T,H,DL,DR = jac2jacTH(S,n,β,α,δ,γ)
         ve = T.ve
         @inbounds for k = 2:2:length(ve)
             ve[k] *= -1
         end
-        plan_uppertoeplitz!(ve),h,DL,DR
+        plan_uppertoeplitz!(ve),H,DL,DR
     else
         throw(ArgumentError("Cannot create Toeplitz dot Hankel, use a sequence of plans."))
     end
