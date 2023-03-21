@@ -20,8 +20,8 @@ end
 ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, L::Matrix, R::Matrix) where S =
     ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}(T, (L,), (R,), 1)
 
-ToeplitzHankelPlan(T::ToeplitzPlan{S,3}, C::Matrix, DL::AbstractVector, DR::AbstractVector, dims) where S =
-    ToeplitzHankelPlan{S, 2, 1,3, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), dims)    
+ToeplitzHankelPlan(T::ToeplitzPlan{S,3}, L::Matrix, R::Matrix, dims) where S =
+    ToeplitzHankelPlan{S, 2, 1,3, typeof(T)}(T, (L,), (R,), dims)    
 
 
 function *(P::ToeplitzHankelPlan{<:Any,1}, v::AbstractVector)
@@ -33,17 +33,19 @@ function *(P::ToeplitzHankelPlan{<:Any,1}, v::AbstractVector)
 end
 
 function *(P::ToeplitzHankelPlan{<:Any,2,1}, v::AbstractMatrix)
-    DR, = P.DR
-    DL, = P.DL
+    (R,),(L,),tmp = P.R,P.L,P.tmp
     if P.dims == (1,)
-        v .= DR .* v
-        toeplitzcholmult!(P.T, P.C, v, P.tmp1, P.tmp2, Val(1))
-        v .= DL .* v
+        tmp .=  reshape(R,size(R,1),1,size(R,2)) .* v
+        P.T * tmp
+        tmp .=  reshape(L,size(L,1),1,size(L,2)) .* tmp
+        sum!(v, tmp)
     else
-        v .= v .* transpose(DR)
-        toeplitzcholmult!(P.T, P.C, v, P.tmp1, P.tmp2, Val(2))
-        v .= v .* transpose(DL)
+        tmp .=  reshape(R,1,size(R,1),size(R,2)) .* v
+        P.T * tmp
+        tmp .=  reshape(L,1,size(L,1),size(L,2)) .* tmp
+        sum!(v, tmp)
     end
+    v
 end
 
 _cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{1}) = broadcast!(*, tmp, view(C,:,k), v)
@@ -155,13 +157,15 @@ end
 function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::Int) where {S}
     if dims == 1
         λ,t = _leg2chebTH_λt(S, m)
-        T = plan_uppertoeplitz!(t, (m,n), dims)
+        C = hankel_partialchol(λ)
+        T = plan_uppertoeplitz!(t, (m,n,size(C,2)), dims)
         DL = ones(S,m)
         DL[1] /= 2
-        ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, m), dims)
+        ToeplitzHankelPlan(T, DL .* C, C, dims)
     else
         @assert dims == 2
         λ,t = _leg2chebTH_λt(S, n)
+        C = hankel_partialchol(λ)
         T = plan_uppertoeplitz!(t, (m,n), dims)
         DL = ones(S,n)
         DL[1] /= 2

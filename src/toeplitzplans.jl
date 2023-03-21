@@ -22,6 +22,17 @@ function size(A::ToeplitzPlan{<:Any,2,1})
     end
 end
 
+function size(A::ToeplitzPlan{<:Any,3,1})
+    if A.dims == (1,)
+        ((size(A.tmp,1)+1) ÷ 2, size(A.tmp,2), size(A.tmp,3))
+    elseif A.dims == (2,)
+        (size(A.tmp,1), (size(A.tmp,2)+1) ÷ 2, size(A.tmp,3))
+    else
+        (size(A.tmp,1), size(A.tmp,2), (size(A.tmp,3)+1) ÷ 2)
+    end
+end
+
+
 size(A::ToeplitzPlan{<:Any,2,2}) = ((size(A.tmp,1)+1) ÷ 2, (size(A.tmp,2)+1) ÷ 2)
 
 # based on ToeplitzMatrices.jl
@@ -76,6 +87,8 @@ function *(A::ToeplitzPlan{T,2,1, S}, x::AbstractMatrix{T}) where {T,S}
     x
 end
 
+
+
 function *(A::ToeplitzPlan{T,2,2, S}, X::AbstractMatrix{T}) where {T,S}
     vcs,tmp,dft = A.vectors,A.tmp, A.dft
     vc1,vc2 = vcs
@@ -94,6 +107,35 @@ function *(A::ToeplitzPlan{T,2,2, S}, X::AbstractMatrix{T}) where {T,S}
     end
     X
 end
+
+function *(A::ToeplitzPlan{T,3,1, S}, x::AbstractArray{T,3}) where {T,S}
+    vc,tmp,dft = A.vectors[1],A.tmp, A.dft
+    M,N,L = size(tmp)
+    m,n,l = size(x)
+
+    if A.dims == (1,)
+        copyto!(view(tmp, 1:m, :, :), x)
+        fill!(view(tmp, m+1:M, :, :), zero(S))
+        dft * tmp
+        tmp .= vc .* tmp
+    elseif A.dims == (2,)
+        copyto!(view(tmp, :, 1:n, :), x)
+        fill!(view(tmp, :, n+1:N, :), zero(S))
+        dft * tmp
+        tmp .= tmp .* transpose(vc)
+    else
+        copyto!(view(tmp, :, :, 1:l), x)
+        fill!(view(tmp, :, :, l+1:L), zero(S))
+        dft * tmp
+        tmp .= tmp .* reshape(vc, 1, 1, L)
+    end
+    dft \ tmp
+    @inbounds for k = 1:m, j = 1:n, ℓ = 1:l
+        x[k,j,ℓ] = maybereal(T, tmp[k,j,ℓ])
+    end
+    x
+end
+
 
 
 function uppertoeplitz_padvec(v::AbstractVector{T}) where T
@@ -131,6 +173,25 @@ function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim::Int)
     else # dim == 2
         tmp = zeros(S, m, 2n-1)
         pv = uppertoeplitz_padvec(v[1:n])
+    end
+    dft = plan_fft!(tmp, dim)
+    idft = plan_ifft!(similar(tmp), dim)
+    return ToeplitzPlan{float(T)}(fft!(pv), tmp, dft, idft, dim)
+end
+
+function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{3,Int}, dim::Int) where T
+    S = complex(float(T))
+    m,n,l = szs
+    if isone(dim)
+        tmp = zeros(S, 2m-1, n, l)
+        pv = uppertoeplitz_padvec(v[1:m])
+    elseif dim == 2
+        tmp = zeros(S, m, 2n-1, l)
+        pv = uppertoeplitz_padvec(v[1:n])
+    else
+        @assert dim == 3
+        tmp = zeros(S, m, n, 2l-1)
+        pv = uppertoeplitz_padvec(v[1:l])
     end
     dft = plan_fft!(tmp, dim)
     idft = plan_ifft!(similar(tmp), dim)
