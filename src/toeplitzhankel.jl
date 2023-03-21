@@ -122,67 +122,6 @@ end
 
 
 
-function cheb2legTH(::Type{S}, (n,)) where S
-    t = zeros(S,n-1)
-    t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
-    T = plan_uppertoeplitz!(t)
-    h = Λ.(1:half(S):n-1, zero(S), 3half(S))
-    D = 1:one(S):n-1
-    DL = (3half(S):n-half(S))./D
-    DR = -(one(S):n-one(S))./4D
-    T, hankel_partialchol(h,D), DL,DR
-end
-
-function leg2chebuTH(::Type{S}, (n,)) where S
-    λ = Λ.(0:half(S):n-1)
-    t = zeros(S,n)
-    t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
-    T = plan_uppertoeplitz!(-2t/π)
-    h = λ./((1:2n-1).+1)
-    T,hankel_partialchol(h)
-end
-
-function ultra2ultraTH(::Type{S}, (n,), λ₁, λ₂) where S
-    @assert abs(λ₁-λ₂) < 1
-    DL = (zero(S):n-one(S)) .+ λ₂
-    jk = 0:half(S):n-1
-    t = zeros(S,n)
-    t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S))[1:2:n]
-    T = plan_uppertoeplitz!(lmul!(inv(gamma(λ₁-λ₂)),t))
-    h = Λ.(jk,λ₁,λ₂+one(S))
-    lmul!(gamma(λ₂)/gamma(λ₁),h)
-    DR = ones(S,n)
-    T,hankel_partialchol(h),DL,DR
-end
-
-function alternatesign!(v)
-    @inbounds for k = 2:2:length(v)
-        v[k] = -v[k]
-    end
-    v
-end
-
-function jac2jacTH(::Type{S}, (n,), α, β, γ, δ) where S
-    if β == δ
-        @assert abs(α-γ) < 1
-        @assert α+β > -1
-        jk = 0:n-1
-        DL = (2jk .+ γ .+ β .+ 1).*Λ.(jk,γ+β+1,β+1)
-        T = plan_uppertoeplitz!(Λ.(jk,α-γ,1))
-        h = Λ.(0:2n-2,α+β+1,γ+β+2)
-        DR = Λ.(jk,β+1,α+β+1)./gamma(α-γ)
-    elseif α == γ
-        jk = 0:n-1
-        DL = (2jk .+ δ .+ α .+ 1).*Λ.(jk,δ+α+1,α+1)
-        T = plan_uppertoeplitz!(alternatesign!(Λ.(jk,β-δ,1)))
-        h = Λ.(0:2n-2,α+β+1,δ+α+2)
-        DR = Λ.(jk,α+1,α+β+1)./gamma(β-δ)
-    else
-        throw(ArgumentError("Cannot create Toeplitz dot Hankel, use a sequence of plans."))
-    end
-    T,hankel_partialchol(h),DL,DR
-end
-
 struct ChebyshevToLegendrePlanTH{TH}
     toeplitzhankel::TH
 end
@@ -241,14 +180,73 @@ function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::NTuple{2,Int})
 end
 
 plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_leg2cheb!(S, (m,n), (1,2))
-
 plan_th_leg2cheb!(arr::AbstractArray{T}, dims...) where T = plan_th_leg2cheb!(T, size(arr), dims...)
 
 
-plan_th_cheb2leg!(::Type{S}, n) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S, n)...))
-plan_th_leg2chebu!(::Type{S}, (n,)) where {S} = ToeplitzHankelPlan(leg2chebuTH(S, (n,))..., 1:n, ones(S, n))
-plan_th_ultra2ultra!(::Type{S}, n, λ₁, λ₂) where {S} = ToeplitzHankelPlan(ultra2ultraTH(S, n, λ₁, λ₂)...)
-plan_th_jac2jac!(::Type{S},n, α, β, γ, δ) where {S} = ToeplitzHankelPlan(jac2jacTH(S, n, α, β, γ, δ)...)
+function plan_th_cheb2leg!(::Type{S}, (n,)::Tuple{Int}) where {S}
+    t = zeros(S,n-1)
+    t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
+    h = Λ.(1:half(S):n-1, zero(S), 3half(S))
+    D = 1:one(S):n-1
+    DL = (3half(S):n-half(S))./D
+    DR = -(one(S):n-one(S))./4D
+    C = hankel_partialchol(h,D)
+    T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
+    ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(T, DL .* C, DR .* C))
+end
+function plan_th_leg2chebu!(::Type{S}, (n,)) where {S}
+    λ = Λ.(0:half(S):n-1)
+    t = zeros(S,n)
+    t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
+    h = λ./((1:2n-1).+1)
+    C = hankel_partialchol(h)
+    T = plan_uppertoeplitz!(-2t/π, (length(t), size(C,2)), 1) 
+    ToeplitzHankelPlan(T, (1:n) .* C, C)
+end
+function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {S}
+    @assert abs(λ₁-λ₂) < 1
+    DL = (zero(S):n-one(S)) .+ λ₂
+    jk = 0:half(S):n-1
+    t = zeros(S,n)
+    t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S))[1:2:n]
+    h = Λ.(jk,λ₁,λ₂+one(S))
+    lmul!(gamma(λ₂)/gamma(λ₁),h)
+    C = hankel_partialchol(h)
+    T = plan_uppertoeplitz!(lmul!(inv(gamma(λ₁-λ₂)),t), (length(t), size(C,2)), 1) 
+    ToeplitzHankelPlan(T, DL .* C, C)
+end
+
+function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
+    if β == δ
+        @assert abs(α-γ) < 1
+        @assert α+β > -1
+        jk = 0:n-1
+        DL = (2jk .+ γ .+ β .+ 1).*Λ.(jk,γ+β+1,β+1)
+        t = Λ.(jk,α-γ,1)
+        h = Λ.(0:2n-2,α+β+1,γ+β+2)
+        DR = Λ.(jk,β+1,α+β+1)./gamma(α-γ)
+        C = hankel_partialchol(h)
+        T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1) 
+    elseif α == γ
+        jk = 0:n-1
+        DL = (2jk .+ δ .+ α .+ 1).*Λ.(jk,δ+α+1,α+1)
+        h = Λ.(0:2n-2,α+β+1,δ+α+2)
+        DR = Λ.(jk,α+1,α+β+1)./gamma(β-δ)
+        t = alternatesign!(Λ.(jk,β-δ,1))
+        C = hankel_partialchol(h)
+        T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1) 
+    else
+        throw(ArgumentError("Cannot create Toeplitz dot Hankel, use a sequence of plans."))
+    end
+    
+    ToeplitzHankelPlan(T, DL .* C, DR .* C)
+end
+function alternatesign!(v)
+    @inbounds for k = 2:2:length(v)
+        v[k] = -v[k]
+    end
+    v
+end
 
 
 th_leg2cheb(v, dims...) = plan_th_leg2cheb!(eltype(v), size(v), dims...)*copy(v)
