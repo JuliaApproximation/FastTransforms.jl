@@ -3,19 +3,20 @@ Store a diagonally-scaled Toeplitz∘Hankel matrix:
     DL(T∘H)DR
 where the Hankel matrix `H` is non-negative definite. This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
 """
-struct ToeplitzHankelPlan{S, TP<:ToeplitzPlan} <: Plan{S}
+struct ToeplitzHankelPlan{S, N, M, TP<:ToeplitzPlan{S,N}} <: Plan{S}
     T::TP
-    C::Vector{Vector{S}}
-    DL::Vector{S}
-    DR::Vector{S}
-    tmp1::Vector{S}
-    tmp2::Vector{S}
-    ToeplitzHankelPlan{S,TP}(T::TP, C, DL, DR) where {S,TP} = new{S,TP}(T, C, DL, DR, similar(DL), similar(DL))
+    C::NTuple{M,Vector{Vector{S}}}
+    DL::NTuple{M,Vector{S}}
+    DR::NTuple{M,Vector{S}}
+    tmp1::Array{S,N}
+    tmp2::Array{S,N}
+    dims::NTuple{M,Int}
+    ToeplitzHankelPlan{S,N,M,TP}(T::TP, C, DL, DR, dims) where {S,TP,N,M} = new{S,N,M,TP}(T, C, DL, DR, similar(DL), similar(DL))
 end
 
 function ToeplitzHankelPlan(T::ToeplitzPlan, C::Vector, DL::AbstractVector, DR::AbstractVector)
     S = promote_type(eltype(T), eltype(C[1]), eltype(DL), eltype(DR))
-    ToeplitzHankelPlan{S, typeof(T)}(T, C, collect(S,DL), collect(S,DR))
+    ToeplitzHankelPlan{S, 1, 1, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), 1)
 end
 ToeplitzHankelPlan(T::ToeplitzPlan, C::Matrix) =
     ToeplitzHankelPlan(T, C, ones(size(T, 1)),ones(size(T,2)))
@@ -78,11 +79,9 @@ function hankel_partialchol(v::AbstractVector, D::AbstractVector)
 end
 
 function toeplitzcholmult!(T, C, v, tmp, ret)
-    n,K = length(v),length(C)
-    tmp .= C[K] .* v
-    T * tmp
-    ret .= C[K] .* tmp
-    for k = K-1:-1:1
+    K = length(C)
+    fill!(ret, zero(eltype(Ret)))
+    for k = K:-1:1
         tmp .= C[k] .* v
         T * tmp
         tmp .= C[k] .* tmp
@@ -94,11 +93,16 @@ end
 
 # Diagonally-scaled Toeplitz∘Hankel polynomial transforms
 
-function leg2chebTH(::Type{S}, n) where S
+function _leg2chebTH_λt(::Type{S}, n) where S
     λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
-    t[1:2:end] = λ[1:2:n]
-    T = plan_uppertoeplitz!(2t/π)
+    t[1:2:end] .= 2 .* view(λ, 1:2:n) ./ π
+    λ,t
+end
+
+function leg2chebTH(::Type{S}, (n,)) where S
+    λ,t = _leg2chebTH_λt(S, n)
+    T = plan_uppertoeplitz!(t)
     DL = ones(S,n)
     DL[1] /= 2
     T, hankel_partialchol(λ), DL
@@ -179,8 +183,8 @@ plan_th_ultra2ultra!(::Type{S}, n, λ₁, λ₂) where {S} = ToeplitzHankelPlan(
 plan_th_jac2jac!(::Type{S},n, α, β, γ, δ) where {S} = ToeplitzHankelPlan(jac2jacTH(S, n, α, β, γ, δ)...)
 
 
-th_leg2cheb(v) = plan_th_leg2cheb!(eltype(v),length(v))*copy(v)
-th_cheb2leg(v) = plan_th_cheb2leg!(eltype(v),length(v))*copy(v)
-th_leg2chebu(v) = plan_th_leg2chebu!(eltype(v),length(v))*copy(v)
-th_ultra2ultra(v,λ₁,λ₂) = plan_th_ultra2ultra!(eltype(v),length(v),λ₁,λ₂)*copy(v)
-th_jac2jac(v,α,β,γ,δ) = plan_th_jac2jac!(eltype(v),length(v),α,β,γ,δ)*copy(v)
+th_leg2cheb(v, dims...) = plan_th_leg2cheb!(eltype(v), size(v), dims...)*copy(v)
+th_cheb2leg(v, dims...) = plan_th_cheb2leg!(eltype(v), size(v), dims...)*copy(v)
+th_leg2chebu(v, dims...) = plan_th_leg2chebu!(eltype(v), size(v), dims...)*copy(v)
+th_ultra2ultra(v, λ₁, λ₂, dims...) = plan_th_ultra2ultra!(eltype(v),size(v),λ₁,λ₂, dims...)*copy(v)
+th_jac2jac(v, α, β, γ, δ, dims...) = plan_th_jac2jac!(eltype(v),size(v),α,β,γ,δ, dims...)*copy(v)

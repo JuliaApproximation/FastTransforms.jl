@@ -1,16 +1,17 @@
 using FFTW
 import FFTW: plan_r2r!
 
-struct ToeplitzPlan{T, N, S, VECS<:Tuple{Vararg{Vector{S}}}, P<:Plan{S}, Pi<:Plan{S}, DIMS} <: Plan{T}
+struct ToeplitzPlan{T, N, M, S, VECS<:Tuple{Vararg{Vector{S}}}, P<:Plan{S}, Pi<:Plan{S}} <: Plan{T}
     vectors::VECS
     tmp::Array{S,N}
     dft::P
     idft::Pi
-    dims::DIMS
+    dims::NTuple{M,Int}
 end
 
 ToeplitzPlan{T}(v::AbstractVector, tmp, dft, idft, dims) where T = ToeplitzPlan{T}((v,), tmp, dft, idft, dims)
-ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims) where {T,S,N} = ToeplitzPlan{T,N,S,typeof(v),typeof(dft), typeof(idft), typeof(dims)}(v, tmp, dft, idft, dims)
+ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims::NTuple{M,Int}) where {T,S,N,M} = ToeplitzPlan{T,N,M,S,typeof(v),typeof(dft), typeof(idft)}(v, tmp, dft, idft, dims)
+ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims::Int) where {T,S,N} = ToeplitzPlan{T}(v, tmp, dft, idft, (dims,))
 
 # based on ToeplitzMatrices.jl
 """
@@ -40,17 +41,18 @@ function *(A::ToeplitzPlan{T,1}, x::AbstractVector{T}) where T
     x
 end
 
-function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any}}, x::AbstractMatrix{T}) where {T,S}
+function *(A::ToeplitzPlan{T,2,1, S}, x::AbstractMatrix{T}) where {T,S}
     vc,tmp,dft = A.vectors[1],A.tmp, A.dft
     M,N = size(tmp)
     m,n = size(x)
 
-    if A.dims == 1
+    if A.dims == (1,)
         copyto!(view(tmp, 1:m, :), x)
         fill!(view(tmp, m+1:M, :), zero(S))
         dft * tmp
         tmp .= vc .* tmp
     else
+        @assert A.dims == (2,)
         copyto!(view(tmp, :, 1:n), x)
         fill!(view(tmp, :, n+1:N), zero(S))
         dft * tmp
@@ -63,7 +65,7 @@ function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any}}, x::AbstractMatrix{T}) where {T
     x
 end
 
-function *(A::ToeplitzPlan{T,2, S, <:Tuple{Any,Any}}, X::AbstractMatrix{T}) where {T,S}
+function *(A::ToeplitzPlan{T,2,2, S}, X::AbstractMatrix{T}) where {T,S}
     vcs,tmp,dft = A.vectors,A.tmp, A.dft
     vc1,vc2 = vcs
     M,N = size(tmp)
