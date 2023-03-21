@@ -13,6 +13,17 @@ ToeplitzPlan{T}(v::AbstractVector, tmp, dft, idft, dims) where T = ToeplitzPlan{
 ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims::NTuple{M,Int}) where {T,S,N,M} = ToeplitzPlan{T,N,M,S,typeof(v),typeof(dft), typeof(idft)}(v, tmp, dft, idft, dims)
 ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims::Int) where {T,S,N} = ToeplitzPlan{T}(v, tmp, dft, idft, (dims,))
 
+size(A::ToeplitzPlan{<:Any,1}) = ((length(A.tmp)+1) ÷ 2,)
+function size(A::ToeplitzPlan{<:Any,2,1})
+    if A.dims == (1,)
+        ((size(A.tmp,1)+1) ÷ 2, size(A.tmp,2))
+    else # A.dims == (2,)
+        (size(A.tmp,1), (size(A.tmp,2)+1) ÷ 2)
+    end
+end
+
+size(A::ToeplitzPlan{<:Any,2,2}) = ((size(A.tmp,1)+1) ÷ 2, (size(A.tmp,2)+1) ÷ 2)
+
 # based on ToeplitzMatrices.jl
 """
     maybereal(::Type{T}, x)

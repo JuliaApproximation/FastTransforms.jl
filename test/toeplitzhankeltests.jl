@@ -9,6 +9,8 @@ using FastTransforms, Test
     @test_broken FastTransforms.th_jac2jac([1.0,2,3,4,5],0.1, 0.2,0.3,0.2) ≈ jac2jac([1.0,2,3,4,5], 0.1, 0.2,0.3,0.2)
 
     X = randn(5,4)
-    FastTransforms.th_leg2cheb(X)
+    @test FastTransforms.th_leg2cheb(X, 1) ≈ hcat([leg2cheb(X[:,j]) for j=1:size(X,2)]...)
+    @test FastTransforms.th_leg2cheb(X, 2) ≈ vcat([leg2cheb(X[k,:])' for k=1:size(X,1)]...)
+    
 end
 
