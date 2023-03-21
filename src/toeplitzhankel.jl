@@ -221,29 +221,36 @@ function plan_th_leg2cheb!(::Type{S}, (n,)::Tuple{Int}, dims...) where {S}
     ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, n))
 end
 
-function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims=(1,2)) where {S}
+function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::Tuple{Int}) where {S}
     if tuple(dims...) == (1,)
         λ,t = _leg2chebTH_λt(S, m)
         T = plan_uppertoeplitz!(t, (m,n), dims)
         DL = ones(S,m)
         DL[1] /= 2
         ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, m), dims)
-    elseif tuple(dims...) == (2,)
+    else
+        @assert tuple(dims...) == (2,)
         λ,t = _leg2chebTH_λt(S, n)
         T = plan_uppertoeplitz!(t, (m,n), dims)
         DL = ones(S,n)
         DL[1] /= 2
         ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, n), dims)
-    else
-        @assert dims == (1,2)
-        λ1,t1 = _leg2chebTH_λt(S, m)
-        λ2,t2 = _leg2chebTH_λt(S, n)
-        T = plan_uppertoeplitz!(t, (m,n), dims)
-        DL1 = ones(S,m); DL1[1] /= 2
-        DL2 = ones(S,n); DL2[1] /= 2
-        ToeplitzHankelPlan(T, hankel_partialchol(λ), (DL1,DL2), (ones(S, m),ones(S, n)), dims)
     end
 end
+function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::NTuple{2,Int}) where {S} 
+    @assert dims == (1,2)
+    λ1,t1 = _leg2chebTH_λt(S, m)
+    λ2,t2 = _leg2chebTH_λt(S, n)
+    T = plan_uppertoeplitz!((t1,t2), (m,n), dims)
+    DL1 = ones(S,m); DL1[1] /= 2
+    DL2 = ones(S,n); DL2[1] /= 2
+    ToeplitzHankelPlan(T, hankel_partialchol(λ), (DL1,DL2), (ones(S, m),ones(S, n)), dims)
+end
+
+plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_leg2cheb!(S, (m,n), (1,2))
+
+plan_th_leg2cheb!(arr::AbstractArray{T}, dims...) where T = plan_th_leg2cheb!(T, size(arr), dims...)
+
 
 plan_th_cheb2leg!(::Type{S}, n) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(cheb2legTH(S, n)...))
 plan_th_leg2chebu!(::Type{S}, (n,)) where {S} = ToeplitzHankelPlan(leg2chebuTH(S, (n,))..., 1:n, ones(S, n))
