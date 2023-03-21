@@ -3,34 +3,34 @@ Store a diagonally-scaled Toeplitz∘Hankel matrix:
     DL(T∘H)DR
 where the Hankel matrix `H` is non-negative definite. This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
 """
-struct ToeplitzHankelPlan{S, N, M, TP<:ToeplitzPlan{S,N}} <: Plan{S}
+struct ToeplitzHankelPlan{S, N, M, N1, TP<:ToeplitzPlan{S,N1}} <: Plan{S}
     T::TP
     C::NTuple{M,Matrix{S}}
     DL::NTuple{M,Vector{S}}
     DR::NTuple{M,Vector{S}}
-    tmp1::Array{S,N}
-    tmp2::Array{S,N}
+    tmp::Array{S,N1}
     dims::NTuple{M,Int}
-    function ToeplitzHankelPlan{S,N,M,TP}(T::TP, C, DL, DR, dims) where {S,TP,N,M}
-        tmp1 = Array{S}(undef, size(T))
-        new{S,N,M,TP}(T, C, DL, DR, tmp1, similar(tmp1), dims)
+    function ToeplitzHankelPlan{S,N,M,N1,TP}(T::TP, C, DL, DR, dims) where {S,TP,N,N1,M}
+        tmp = Array{S}(undef, size(T))
+        new{S,N,M,N1,TP}(T, C, DL, DR, tmp, dims)
     end
-    ToeplitzHankelPlan{S,N,M,TP}(T::TP, C, DL, DR, dims::Int) where {S,TP,N,M} = 
-        ToeplitzHankelPlan{S,N,M,TP}(T, C, DL, DR, (dims,))
+    ToeplitzHankelPlan{S,N,M,N1,TP}(T::TP, C, DL, DR, dims::Int) where {S,TP,N,N1,M} = 
+        ToeplitzHankelPlan{S,N,M,N1,TP}(T, C, DL, DR, (dims,))
 end
 
-ToeplitzHankelPlan(T::ToeplitzPlan{S,1}, C::Matrix, DL::AbstractVector, DR::AbstractVector) where S =
-    ToeplitzHankelPlan{S, 1, 1, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), 1)
+ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, C::Matrix, DL::AbstractVector, DR::AbstractVector) where S =
+    ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), 1)
 
-ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, C::Matrix, DL::AbstractVector, DR::AbstractVector, dims) where S =
-    ToeplitzHankelPlan{S, 2, 1, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), dims)    
+ToeplitzHankelPlan(T::ToeplitzPlan{S,3}, C::Matrix, DL::AbstractVector, DR::AbstractVector, dims) where S =
+    ToeplitzHankelPlan{S, 2, 1,3, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), dims)    
 
 
 function *(P::ToeplitzHankelPlan{<:Any,1}, v::AbstractVector)
-    DR, = P.DR
-    DL, = P.DL
-    v .= DR .* v
-    toeplitzcholmult!(P.T, P.C, v, P.tmp1, P.tmp2, Val(1))
+    (DR,),(DL,),tmp,(C,) = P.DR,P.DL,P.tmp,P.C
+    tmp .= C .* DR .* v
+    P.T * tmp
+    tmp .= C .* tmp
+    sum!(v, tmp)
     v .= DL .* v
 end
 
@@ -48,10 +48,8 @@ function *(P::ToeplitzHankelPlan{<:Any,2,1}, v::AbstractMatrix)
     end
 end
 
-
-
 _cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{1}) = broadcast!(*, tmp, view(C,:,k), v)
-_cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{2}) = broadcast!(*, tmp, v, transpose(view(C,:,k)),v)
+_cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{2}) = broadcast!(*, tmp, v, transpose(view(C,:,k)))
 
 function toeplitzcholmult!(T, C, v, tmp, ret, dims)
     K = size(C[1],2)
@@ -215,10 +213,11 @@ end
 
 function plan_th_leg2cheb!(::Type{S}, (n,)::Tuple{Int}, dims...) where {S}
     λ,t = _leg2chebTH_λt(S, n)
-    T = plan_uppertoeplitz!(t)
+    C = hankel_partialchol(λ)
+    T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
     DL = ones(S,n)
     DL[1] /= 2
-    ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, n))
+    ToeplitzHankelPlan(T, C, DL, ones(S, n))
 end
 
 function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::Int) where {S}
