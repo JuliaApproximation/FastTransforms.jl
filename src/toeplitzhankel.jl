@@ -5,7 +5,7 @@ where the Hankel matrix `H` is non-negative definite. This allows a Cholesky dec
 """
 struct ToeplitzHankelPlan{S, N, M, TP<:ToeplitzPlan{S,N}} <: Plan{S}
     T::TP
-    C::NTuple{M,Vector{Vector{S}}}
+    C::NTuple{M,Matrix{S}}
     DL::NTuple{M,Vector{S}}
     DR::NTuple{M,Vector{S}}
     tmp1::Array{S,N}
@@ -19,14 +19,12 @@ struct ToeplitzHankelPlan{S, N, M, TP<:ToeplitzPlan{S,N}} <: Plan{S}
         ToeplitzHankelPlan{S,N,M,TP}(T, C, DL, DR, (dims,))
 end
 
-ToeplitzHankelPlan(T::ToeplitzPlan{S,1}, C::Vector, DL::AbstractVector, DR::AbstractVector) where S =
+ToeplitzHankelPlan(T::ToeplitzPlan{S,1}, C::Matrix, DL::AbstractVector, DR::AbstractVector) where S =
     ToeplitzHankelPlan{S, 1, 1, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), 1)
 
-ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, C::Vector, DL::AbstractVector, DR::AbstractVector, dims) where S =
+ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, C::Matrix, DL::AbstractVector, DR::AbstractVector, dims) where S =
     ToeplitzHankelPlan{S, 2, 1, typeof(T)}(T, (C,), (convert(Vector{S},DL),), (convert(Vector{S},DR),), dims)    
 
-ToeplitzHankelPlan(T::ToeplitzPlan, C::Matrix) =
-    ToeplitzHankelPlan(T, C, ones(size(T, 1)),ones(size(T,2)))
 
 function *(P::ToeplitzHankelPlan{<:Any,1}, v::AbstractVector)
     DR, = P.DR
@@ -52,11 +50,11 @@ end
 
 
 
-_cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{1}) = broadcast!(*, tmp, C[k], v)
-_cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{2}) = broadcast!(*, tmp, v, transpose(C[k]))
+_cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{1}) = broadcast!(*, tmp, view(C,:,k), v)
+_cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{2}) = broadcast!(*, tmp, v, transpose(view(C,:,k)),v)
 
 function toeplitzcholmult!(T, C, v, tmp, ret, dims)
-    K = length(C[1])
+    K = size(C[1],2)
     fill!(ret, zero(eltype(ret)))
     for k = K:-1:1
         _cholmul!(tmp, C, k, v, dims)
@@ -74,25 +72,27 @@ function hankel_partialchol(v::Vector{T}) where T
     # Assumes positive definite
     σ = T[]
     n = (length(v)+2) ÷ 2
-    C = Vector{T}[]
+    C = Matrix{T}(undef, n, n)
     d = v[1:2:end] # diag of H
     @assert length(v) ≥ 2n-1
     reltol = maximum(abs,d)*eps(T)*log(n)
+    r = 0
     for k = 1:n
         mx,idx = findmax(d)
         if mx ≤ reltol break end
         push!(σ, inv(mx))
-        push!(C, v[idx:n+idx-1])
+        C[:,k] .= view(v,idx:n+idx-1)
         for j = 1:k-1
-            nCjidxσj = -C[j][idx]*σ[j]
-            LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
+            nCjidxσj = -C[idx,j]*σ[j]
+            LinearAlgebra.axpy!(nCjidxσj, view(C,:,j), view(C,:,k))
         end
         @inbounds for p=1:n
-            d[p] -= C[k][p]^2/mx
+            d[p] -= C[p,k]^2/mx
         end
+        r += 1
     end
-    for k=1:length(σ) rmul!(C[k],sqrt(σ[k])) end
-    C
+    for k=1:length(σ) rmul!(view(C,:,k), sqrt(σ[k])) end
+    C[:,1:r]
 end
 
 function hankel_partialchol(v::AbstractVector, D::AbstractVector)
@@ -100,7 +100,7 @@ function hankel_partialchol(v::AbstractVector, D::AbstractVector)
     T = promote_type(eltype(v),eltype(D))
     σ = T[]
     n = (length(v)+2) ÷ 2
-    C = Vector{T}[]
+    C = Matrix{T}(undef, n, n)
     d = v[1:2:end].*D.^2
     @assert length(v) ≥ 2n-1
     reltol = maximum(abs,d)*eps(T)*log(n)
@@ -108,16 +108,16 @@ function hankel_partialchol(v::AbstractVector, D::AbstractVector)
         mx,idx = findmax(d)
         if mx ≤ reltol break end
         push!(σ,inv(mx))
-        push!(C,v[idx:n+idx-1] .* D .* D[idx])
+        C[:,k] .= v[idx:n+idx-1] .* D .* D[idx]
         for j = 1:k-1
-            nCjidxσj = -C[j][idx]*σ[j]
-            LinearAlgebra.axpy!(nCjidxσj, C[j], C[k])
+            nCjidxσj = -C[idx,j]*σ[j]
+            LinearAlgebra.axpy!(nCjidxσj, view(C,:,j), view(C,:,k))
         end
         @simd for p=1:n
-            @inbounds d[p]-=C[k][p]^2/mx
+            @inbounds d[p]-=C[p,k]^2/mx
         end
     end
-    for k = 1:length(σ) rmul!(C[k],sqrt(σ[k])) end
+    for k = 1:length(σ) rmul!(view(C,:,k),sqrt(σ[k])) end
     C
 end
 
@@ -221,15 +221,15 @@ function plan_th_leg2cheb!(::Type{S}, (n,)::Tuple{Int}, dims...) where {S}
     ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, n))
 end
 
-function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::Tuple{Int}) where {S}
-    if tuple(dims...) == (1,)
+function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::Int) where {S}
+    if dims == 1
         λ,t = _leg2chebTH_λt(S, m)
         T = plan_uppertoeplitz!(t, (m,n), dims)
         DL = ones(S,m)
         DL[1] /= 2
         ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, m), dims)
     else
-        @assert tuple(dims...) == (2,)
+        @assert dims == 2
         λ,t = _leg2chebTH_λt(S, n)
         T = plan_uppertoeplitz!(t, (m,n), dims)
         DL = ones(S,n)
@@ -237,6 +237,7 @@ function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::Tuple{Int}) wh
         ToeplitzHankelPlan(T, hankel_partialchol(λ), DL, ones(S, n), dims)
     end
 end
+
 function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::NTuple{2,Int}) where {S} 
     @assert dims == (1,2)
     λ1,t1 = _leg2chebTH_λt(S, m)
