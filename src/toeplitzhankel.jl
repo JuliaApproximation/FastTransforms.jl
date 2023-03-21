@@ -144,6 +144,13 @@ function ultra2ultraTH(::Type{S}, (n,), λ₁, λ₂) where S
     T,hankel_partialchol(h),DL,DR
 end
 
+function alternatesign!(v)
+    @inbounds for k = 2:2:length(v)
+        v[k] = -v[k]
+    end
+    v
+end
+
 function jac2jacTH(::Type{S}, (n,), α, β, γ, δ) where S
     if β == δ
         @assert abs(α-γ) < 1
@@ -153,17 +160,16 @@ function jac2jacTH(::Type{S}, (n,), α, β, γ, δ) where S
         T = plan_uppertoeplitz!(Λ.(jk,α-γ,1))
         h = Λ.(0:2n-2,α+β+1,γ+β+2)
         DR = Λ.(jk,β+1,α+β+1)./gamma(α-γ)
-        T,hankel_partialchol(h),DL,DR
     elseif α == γ
-        T,H,DL,DR = jac2jacTH(S,n,β,α,δ,γ)
-        ve = T.ve
-        @inbounds for k = 2:2:length(ve)
-            ve[k] *= -1
-        end
-        plan_uppertoeplitz!(ve),H,DL,DR
+        jk = 0:n-1
+        DL = (2jk .+ δ .+ α .+ 1).*Λ.(jk,δ+α+1,α+1)
+        T = plan_uppertoeplitz!(alternatesign!(Λ.(jk,β-δ,1)))
+        h = Λ.(0:2n-2,α+β+1,δ+α+2)
+        DR = Λ.(jk,α+1,α+β+1)./gamma(β-δ)
     else
         throw(ArgumentError("Cannot create Toeplitz dot Hankel, use a sequence of plans."))
     end
+    T,hankel_partialchol(h),DL,DR
 end
 
 struct ChebyshevToLegendrePlanTH{TH}
