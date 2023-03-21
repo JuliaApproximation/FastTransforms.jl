@@ -153,11 +153,13 @@ ChebyshevToLegendrePlanTH(::Type{S},n) where {S} = ChebyshevToLegendrePlanTH(pla
 function *(P::ChebyshevToLegendrePlanTH, v::AbstractVector)
     w = zero(v)
     S,n = eltype(v),length(v)
-    w[1:2:end] = -one(S)./(one(S):two(S):n)./(-one(S):two(S):n-two(S))
-    [dot(w,v); P.toeplitzhankel*view(v,2:n)]
+    w[1:2:end] .= -one(S) ./ (one(S):2:n) ./ (-one(S):2:n-2)
+    v[1] = dot(w,v)
+    P.toeplitzhankel*view(v,2:n)
+    v
 end
 
-function _leg2chebTH_λt(::Type{S}, nm, d) where S
+function _leg2chebTH_TLC(::Type{S}, nm, d) where S
     n = nm[d]
     λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
@@ -170,22 +172,20 @@ function _leg2chebTH_λt(::Type{S}, nm, d) where S
 end
 
 
-plan_th_leg2cheb!(::Type{S}, mn::Tuple, dims::Int) where {S} = ToeplitzHankelPlan(_leg2chebTH_λt(S, mn, dims)..., dims)
+plan_th_leg2cheb!(::Type{S}, mn::Tuple, dims::Int) where {S} = ToeplitzHankelPlan(_leg2chebTH_TLC(S, mn, dims)..., dims)
 plan_th_leg2cheb!(::Type{S}, mn::Tuple{Int}) where {S} = plan_th_leg2cheb!(S, mn, 1)
-
-
 function plan_th_leg2cheb!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
     @assert dims == (1,2)
-    T1,L1,C1 = _leg2chebTH_λt(S, mn, 1)
-    T2,L2,C2 = _leg2chebTH_λt(S, mn, 2)
+    T1,L1,C1 = _leg2chebTH_TLC(S, mn, 1)
+    T2,L2,C2 = _leg2chebTH_TLC(S, mn, 2)
     ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
 plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_leg2cheb!(S, (m,n), (1,2))
 plan_th_leg2cheb!(arr::AbstractArray{T}, dims...) where T = plan_th_leg2cheb!(T, size(arr), dims...)
 
-
-function plan_th_cheb2leg!(::Type{S}, (n,)::Tuple{Int}) where {S}
+function _cheb2legTH_TLC(::Type{S}, nm, d) where S
+    n = nm[d]
     t = zeros(S,n-1)
     t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
     h = Λ.(1:half(S):n-1, zero(S), 3half(S))
@@ -193,9 +193,13 @@ function plan_th_cheb2leg!(::Type{S}, (n,)::Tuple{Int}) where {S}
     DL = (3half(S):n-half(S))./D
     DR = -(one(S):n-one(S))./4D
     C = hankel_partialchol(h,D)
-    T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
-    ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(T, DL .* C, DR .* C))
+    T = plan_uppertoeplitz!(t, (n-1, size(C,2)), 1)
+    T, DL .* C, DR .* C
 end
+
+
+plan_th_cheb2leg!(::Type{S}, (n,)::Tuple{Int}) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(_cheb2legTH_TLC(S, (n,), 1)...))
+
 function plan_th_leg2chebu!(::Type{S}, (n,)) where {S}
     λ = Λ.(0:half(S):n-1)
     t = zeros(S,n)
