@@ -4,47 +4,67 @@ Store a diagonally-scaled Toeplitz∘Hankel matrix:
 where the Hankel matrix `H` is non-negative definite. This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
 """
 struct ToeplitzHankelPlan{S, N, M, N1, TP<:ToeplitzPlan{S,N1}} <: Plan{S}
-    T::TP
+    T::NTuple{M,TP}
     L::NTuple{M,Matrix{S}}
     R::NTuple{M,Matrix{S}}
     tmp::Array{S,N1}
     dims::NTuple{M,Int}
-    function ToeplitzHankelPlan{S,N,M,N1,TP}(T::TP, L, R, dims) where {S,TP,N,N1,M}
-        tmp = Array{S}(undef, size(T))
+    function ToeplitzHankelPlan{S,N,M,N1,TP}(T::NTuple{M,TP}, L, R, dims) where {S,TP,N,N1,M}
+        tmp = Array{S}(undef, max.(size.(T)...)...)
         new{S,N,M,N1,TP}(T, L, R, tmp, dims)
     end
-    ToeplitzHankelPlan{S,N,M,N1,TP}(T::TP, L, R, dims::Int) where {S,TP,N,N1,M} = 
+    ToeplitzHankelPlan{S,N,M,N1,TP}(T::NTuple{M,TP}, L, R, dims::Int) where {S,TP,N,N1,M} =
         ToeplitzHankelPlan{S,N,M,N1,TP}(T, L, R, (dims,))
 end
 
 ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, L::Matrix, R::Matrix) where S =
-    ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}(T, (L,), (R,), 1)
+    ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}((T,), (L,), (R,), 1)
 
 ToeplitzHankelPlan(T::ToeplitzPlan{S,3}, L::Matrix, R::Matrix, dims) where S =
-    ToeplitzHankelPlan{S, 2, 1,3, typeof(T)}(T, (L,), (R,), dims)    
+    ToeplitzHankelPlan{S, 2, 1,3, typeof(T)}((T,), (L,), (R,), dims)
+
+ToeplitzHankelPlan(T::NTuple{2,TP}, L::Tuple, R::Tuple, dims) where {S,TP<:ToeplitzPlan{S,3}} =
+    ToeplitzHankelPlan{S, 2,2,3, TP}(T, L, R, dims)
 
 
 function *(P::ToeplitzHankelPlan{<:Any,1}, v::AbstractVector)
-    (R,),(L,),tmp = P.R,P.L,P.tmp
+    (R,),(L,),(T,),tmp = P.R,P.L,P.T,P.tmp
     tmp .= R .* v
-    P.T * tmp
+    T * tmp
     tmp .= L .* tmp
     sum!(v, tmp)
 end
 
 function *(P::ToeplitzHankelPlan{<:Any,2,1}, v::AbstractMatrix)
-    (R,),(L,),tmp = P.R,P.L,P.tmp
+    (R,),(L,),(T,),tmp = P.R,P.L,P.T,P.tmp
     if P.dims == (1,)
         tmp .=  reshape(R,size(R,1),1,size(R,2)) .* v
-        P.T * tmp
+        T * tmp
         tmp .=  reshape(L,size(L,1),1,size(L,2)) .* tmp
         sum!(v, tmp)
     else
         tmp .=  reshape(R,1,size(R,1),size(R,2)) .* v
-        P.T * tmp
+        T * tmp
         tmp .=  reshape(L,1,size(L,1),size(L,2)) .* tmp
         sum!(v, tmp)
     end
+    v
+end
+
+function *(P::ToeplitzHankelPlan{<:Any,2,2}, v::AbstractMatrix)
+    (R1,R2),(L1,L2),(T1,T2),tmp = P.R,P.L,P.T,P.tmp
+    N1,N2 = size(R1,2),size(R2,2)
+
+    tmp[:,:,1:N1] .=  reshape(R1,size(R1,1),1,N1) .* v
+    T1 * view(tmp,:,:,1:N1)
+    view(tmp,:,:,1:N1) .*=  reshape(L1,size(L1,1),1,N1)
+    sum!(v, view(tmp,:,:,1:N1))
+
+    tmp[:,:,1:N2] .=  reshape(R2,1,size(R2,1),N2) .* v
+    T2 * view(tmp,:,:,1:N2)
+    view(tmp,:,:,1:N2) .*=  reshape(L2,1,size(L2,1),N2)
+    sum!(v, view(tmp,:,:,1:N2))
+
     v
 end
 
@@ -149,9 +169,9 @@ function plan_th_leg2cheb!(::Type{S}, (n,)::Tuple{Int}, dims...) where {S}
     λ,t = _leg2chebTH_λt(S, n)
     C = hankel_partialchol(λ)
     T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
-    DL = ones(S,n)
-    DL[1] /= 2
-    ToeplitzHankelPlan(T, DL .* C, C)
+    L = copy(C)
+    L[1,:] ./= 2
+    ToeplitzHankelPlan(T, L, C)
 end
 
 function plan_th_leg2cheb!(::Type{S}, mn::NTuple{2,Int}, dims::Int) where {S}
@@ -159,19 +179,22 @@ function plan_th_leg2cheb!(::Type{S}, mn::NTuple{2,Int}, dims::Int) where {S}
     λ,t = _leg2chebTH_λt(S, mn[dims])
     C = hankel_partialchol(λ)
     T = plan_uppertoeplitz!(t, (mn...,size(C,2)), dims)
-    DL = ones(S,length(t))
-    DL[1] /= 2
-    ToeplitzHankelPlan(T, DL .* C, C, dims)
+    L = copy(C)
+    L[1,:] ./= 2
+    ToeplitzHankelPlan(T, L, C, dims)
 end
 
-function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::NTuple{2,Int}) where {S} 
+function plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
     @assert dims == (1,2)
     λ1,t1 = _leg2chebTH_λt(S, m)
     λ2,t2 = _leg2chebTH_λt(S, n)
-    T = plan_uppertoeplitz!((t1,t2), (m,n), dims)
-    DL1 = ones(S,m); DL1[1] /= 2
-    DL2 = ones(S,n); DL2[1] /= 2
-    ToeplitzHankelPlan(T, hankel_partialchol(λ), (DL1,DL2), (ones(S, m),ones(S, n)), dims)
+    C1 = hankel_partialchol(λ1)
+    C2 = hankel_partialchol(λ2)
+    T1 = plan_uppertoeplitz!(t1, (m,n,size(C1,2)), 1)
+    T2 = plan_uppertoeplitz!(t2, (m,n,size(C2,2)), 2)
+    L1 = copy(C1); L1[1,:] ./= 2
+    L2 = copy(C2); L2[1,:] ./= 2
+    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
 plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_leg2cheb!(S, (m,n), (1,2))
@@ -195,7 +218,7 @@ function plan_th_leg2chebu!(::Type{S}, (n,)) where {S}
     t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
     h = λ./((1:2n-1).+1)
     C = hankel_partialchol(h)
-    T = plan_uppertoeplitz!(-2t/π, (length(t), size(C,2)), 1) 
+    T = plan_uppertoeplitz!(-2t/π, (length(t), size(C,2)), 1)
     ToeplitzHankelPlan(T, (1:n) .* C, C)
 end
 function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {S}
@@ -207,7 +230,7 @@ function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {
     h = Λ.(jk,λ₁,λ₂+one(S))
     lmul!(gamma(λ₂)/gamma(λ₁),h)
     C = hankel_partialchol(h)
-    T = plan_uppertoeplitz!(lmul!(inv(gamma(λ₁-λ₂)),t), (length(t), size(C,2)), 1) 
+    T = plan_uppertoeplitz!(lmul!(inv(gamma(λ₁-λ₂)),t), (length(t), size(C,2)), 1)
     ToeplitzHankelPlan(T, DL .* C, C)
 end
 
@@ -221,7 +244,7 @@ function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
         h = Λ.(0:2n-2,α+β+1,γ+β+2)
         DR = Λ.(jk,β+1,α+β+1)./gamma(α-γ)
         C = hankel_partialchol(h)
-        T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1) 
+        T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
     elseif α == γ
         jk = 0:n-1
         DL = (2jk .+ δ .+ α .+ 1).*Λ.(jk,δ+α+1,α+1)
@@ -229,11 +252,11 @@ function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
         DR = Λ.(jk,α+1,α+β+1)./gamma(β-δ)
         t = alternatesign!(Λ.(jk,β-δ,1))
         C = hankel_partialchol(h)
-        T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1) 
+        T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
     else
         throw(ArgumentError("Cannot create Toeplitz dot Hankel, use a sequence of plans."))
     end
-    
+
     ToeplitzHankelPlan(T, DL .* C, DR .* C)
 end
 function alternatesign!(v)
