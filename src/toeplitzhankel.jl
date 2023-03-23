@@ -35,35 +35,40 @@ function *(P::ToeplitzHankelPlan{<:Any,1}, v::AbstractVector)
     sum!(v, tmp)
 end
 
+function _th_applymul1!(v, T, L, R, tmp)
+    N = size(R,2)
+    m,n = size(v)
+    tmp[1:m,1:n,1:N] .=  reshape(R,size(R,1),1,N) .* v
+    T * view(tmp,1:m,1:n,1:N)
+    view(tmp,1:m,1:n,1:N) .*=  reshape(L,size(L,1),1,N)
+    sum!(v, view(tmp,1:m,1:n,1:N))
+end
+
+function _th_applymul2!(v, T, L, R, tmp)
+    N = size(R,2)
+    m,n = size(v)
+    tmp[1:m,1:n,1:N] .=  reshape(R,1,size(R,1),N) .* v
+    T * view(tmp,1:m,1:n,1:N)
+    view(tmp,1:m,1:n,1:N) .*=  reshape(L,1,size(L,1),N)
+    sum!(v, view(tmp,1:m,1:n,1:N))
+end
+
+
 function *(P::ToeplitzHankelPlan{<:Any,2,1}, v::AbstractMatrix)
     (R,),(L,),(T,),tmp = P.R,P.L,P.T,P.tmp
     if P.dims == (1,)
-        tmp .=  reshape(R,size(R,1),1,size(R,2)) .* v
-        T * tmp
-        tmp .=  reshape(L,size(L,1),1,size(L,2)) .* tmp
-        sum!(v, tmp)
+        _th_applymul1!(v, T, L, R, tmp)
     else
-        tmp .=  reshape(R,1,size(R,1),size(R,2)) .* v
-        T * tmp
-        tmp .=  reshape(L,1,size(L,1),size(L,2)) .* tmp
-        sum!(v, tmp)
+        _th_applymul2!(v, T, L, R, tmp)
     end
     v
 end
 
 function *(P::ToeplitzHankelPlan{<:Any,2,2}, v::AbstractMatrix)
     (R1,R2),(L1,L2),(T1,T2),tmp = P.R,P.L,P.T,P.tmp
-    N1,N2 = size(R1,2),size(R2,2)
 
-    tmp[:,:,1:N1] .=  reshape(R1,size(R1,1),1,N1) .* v
-    T1 * view(tmp,:,:,1:N1)
-    view(tmp,:,:,1:N1) .*=  reshape(L1,size(L1,1),1,N1)
-    sum!(v, view(tmp,:,:,1:N1))
-
-    tmp[:,:,1:N2] .=  reshape(R2,1,size(R2,1),N2) .* v
-    T2 * view(tmp,:,:,1:N2)
-    view(tmp,:,:,1:N2) .*=  reshape(L2,1,size(L2,1),N2)
-    sum!(v, view(tmp,:,:,1:N2))
+    _th_applymul1!(v, T1, L1, R1, tmp)
+    _th_applymul2!(v, T2, L2, R2, tmp)
 
     v
 end
@@ -159,29 +164,36 @@ function *(P::ChebyshevToLegendrePlanTH, v::AbstractVector{S}) where S
     v
 end
 
-function *(P::ChebyshevToLegendrePlanTH, V::AbstractMatrix{S}) where S
+function _cheb2leg_rescale1!(V::AbstractMatrix{S}) where S
+    m,n = size(V)
+    for j = 1:n
+        ret = zero(S)
+        @inbounds for k = 1:2:m
+            ret += -V[k,j]/(k*(k-2))
+        end
+        V[1,j] = ret
+    end
+    V
+end
+
+
+function *(P::ChebyshevToLegendrePlanTH, V::AbstractMatrix)
     m,n = size(V)
     dims = P.toeplitzhankel.dims
     if dims == (1,)
-        for j = 1:n
-            ret = zero(S)
-            @inbounds for k = 1:2:m
-                ret += -V[k,j]/(k*(k-2))
-            end
-            V[1,j] = ret
-        end
+        _cheb2leg_rescale1!(V)
         P.toeplitzhankel*view(V,2:m,:)
     elseif dims == (2,)
-        for k = 1:m
-            ret = zero(S)
-            @inbounds for j = 1:2:n
-                ret += -V[k,j]/(j*(j-2))
-            end
-            V[k,1] = ret
-        end
+        _cheb2leg_rescale1!(transpose(V))
         P.toeplitzhankel*view(V,:,2:n)
     else
-        error("no dims=$dims")
+        @assert dims == (1,2)
+        (R1,R2),(L1,L2),(T1,T2),tmp = P.toeplitzhankel.R,P.toeplitzhankel.L,P.toeplitzhankel.T,P.toeplitzhankel.tmp
+
+        _cheb2leg_rescale1!(V)
+        _th_applymul1!(view(V,2:m,:), T1, L1, R1, tmp)
+        _cheb2leg_rescale1!(transpose(V))
+        _th_applymul2!(view(V,:,2:n), T2, L2, R2, tmp)
     end
     V
 end
@@ -202,15 +214,13 @@ end
 
 
 plan_th_leg2cheb!(::Type{S}, mn::Tuple, dims::Int) where {S} = ToeplitzHankelPlan(_leg2chebTH_TLC(S, mn, dims)..., dims)
-plan_th_leg2cheb!(::Type{S}, mn::Tuple{Int}) where {S} = plan_th_leg2cheb!(S, mn, 1)
+
 function plan_th_leg2cheb!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
     @assert dims == (1,2)
     T1,L1,C1 = _leg2chebTH_TLC(S, mn, 1)
     T2,L2,C2 = _leg2chebTH_TLC(S, mn, 2)
     ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
-
-plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_leg2cheb!(S, (m,n), (1,2))
 
 _sub_dim_by_one(d) = ()
 _sub_dim_by_one(d, m, n...) = (isone(d) ? m-1 : m, _sub_dim_by_one(d-1, n...)...)
@@ -228,9 +238,15 @@ function _cheb2legTH_TLC(::Type{S}, mn, d) where S
     T, DL .* C, DR .* C
 end
 
-
-plan_th_cheb2leg!(::Type{S}, mn::Tuple{Int}) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(_cheb2legTH_TLC(S, mn, 1)...))
 plan_th_cheb2leg!(::Type{S}, mn::Tuple, dims::Int) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(_cheb2legTH_TLC(S, mn, dims)..., dims))
+
+function plan_th_cheb2leg!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
+    @assert dims == (1,2)
+    T1,L1,C1 = _cheb2legTH_TLC(S, mn, 1)
+    T2,L2,C2 = _cheb2legTH_TLC(S, mn, 2)
+    ChebyshevToLegendrePlanTH(ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims))
+end
+
 
 function plan_th_leg2chebu!(::Type{S}, (n,)) where {S}
     λ = Λ.(0:half(S):n-1)
@@ -285,6 +301,12 @@ function alternatesign!(v)
     end
     v
 end
+
+plan_th_leg2cheb!(::Type{S}, mn::Tuple{Int}) where {S} = plan_th_leg2cheb!(S, mn, 1)
+plan_th_cheb2leg!(::Type{S}, mn::Tuple{Int}) where {S} = plan_th_cheb2leg!(S, mn, 1)
+
+plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_leg2cheb!(S, (m,n), (1,2))
+plan_th_cheb2leg!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_cheb2leg!(S, (m,n), (1,2))
 
 plan_th_leg2cheb!(arr::AbstractArray{T}, dims...) where T = plan_th_leg2cheb!(T, size(arr), dims...)
 plan_th_cheb2leg!(arr::AbstractArray{T}, dims...) where T = plan_th_cheb2leg!(T, size(arr), dims...)
