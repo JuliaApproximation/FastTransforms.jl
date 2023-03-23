@@ -118,32 +118,6 @@ function hankel_partialchol(v::Vector{T}) where T
     C[:,1:r]
 end
 
-function hankel_partialchol(v::AbstractVector, D::AbstractVector)
-    # Assumes positive definite
-    T = promote_type(eltype(v),eltype(D))
-    σ = T[]
-    n = (length(v)+2) ÷ 2
-    C = Matrix{T}(undef, n, n)
-    d = v[1:2:end].*D.^2
-    @assert length(v) ≥ 2n-1
-    reltol = maximum(abs,d)*eps(T)*log(n)
-    for k = 1:n
-        mx,idx = findmax(d)
-        if mx ≤ reltol break end
-        push!(σ,inv(mx))
-        C[:,k] .= v[idx:n+idx-1] .* D .* D[idx]
-        for j = 1:k-1
-            nCjidxσj = -C[idx,j]*σ[j]
-            LinearAlgebra.axpy!(nCjidxσj, view(C,:,j), view(C,:,k))
-        end
-        @simd for p=1:n
-            @inbounds d[p]-=C[p,k]^2/mx
-        end
-    end
-    for k = 1:length(σ) rmul!(view(C,:,k),sqrt(σ[k])) end
-    C
-end
-
 
 # Diagonally-scaled Toeplitz∘Hankel polynomial transforms
 
@@ -230,10 +204,9 @@ function _cheb2legTH_TLC(::Type{S}, mn, d) where S
     t = zeros(S,n-1)
     t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
     h = Λ.(1:half(S):n-1, zero(S), 3half(S))
-    D = 1:one(S):n-1
-    DL = (3half(S):n-half(S))./D
-    DR = -(one(S):n-one(S))./4D
-    C = hankel_partialchol(h,D)
+    DL = (3half(S):n-half(S))
+    DR = -(one(S):n-one(S))./4
+    C = hankel_partialchol(h)
     T = plan_uppertoeplitz!(t, (_sub_dim_by_one(d, mn...)..., size(C,2)), d)
     T, DL .* C, DR .* C
 end
