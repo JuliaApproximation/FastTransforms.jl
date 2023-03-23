@@ -81,6 +81,10 @@ function *(A::ToeplitzPlan{T,2,1, S}, x::AbstractMatrix{T}) where {T,S}
         tmp .= tmp .* transpose(vc)
     end
     dft \ tmp
+    maybereal_copyto!(x, tmp)
+end
+
+function maybereal_copyto!(x::AbstractArray, tmp)
     @inbounds for k = 1:m, j = 1:n
         x[k,j] = maybereal(T, tmp[k,j])
     end
