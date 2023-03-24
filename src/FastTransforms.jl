@@ -112,4 +112,22 @@ include("specialfunctions.jl")
 include("toeplitzplans.jl")
 include("toeplitzhankel.jl")
 
+# following use libfasttransforms by default
+for f in (:jac2jac,
+    :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
+    :cheb2jac, :ultra2cheb, :cheb2ultra, :associatedjac2jac,
+    :modifiedjac2jac, :modifiedlag2lag, :modifiedherm2herm,
+    :sph2fourier, :sphv2fourier, :disk2cxf, :ann2cxf,
+    :rectdisk2cheb, :tri2cheb, :tet2cheb)
+    lib_f = Symbol("lib_", f)
+    @eval $f(x::AbstractArray, y...; z...) = $lib_f(x::AbstractArray, y...; z...)
+end
+
+# following use Toeplitz-Hankel to avoid expensive plans
+for f in (:leg2cheb, :cheb2leg, :ultra2ultra)
+    th_f = Symbol("lib_", f)
+    @eval $f(x::AbstractArray, y...; z...) = $th_f(x::AbstractArray, y...; z...)
+end
+
+
 end # module

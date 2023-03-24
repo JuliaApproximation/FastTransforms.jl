@@ -18,7 +18,7 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         B = T[zero(T) for k in 0:length(c)-1]
         C = T[k/(k+one(T)) for k in 0:length(c)]
         phi0 = ones(T, length(x))
-        c = cheb2leg(c)
+        c = FastTransforms.lib_cheb2leg(c)
         @test FastTransforms.clenshaw!(c, A, B, C, x, phi0, f) == f
         @test f ≈ fd
     end
