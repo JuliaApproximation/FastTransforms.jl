@@ -176,7 +176,7 @@ end
 
 function _leg2chebTH_TLC(::Type{S}, mn, d) where S
     n = mn[d]
-    λ = Λ.(0:half(S):n-1)
+    λ = Λ.(0:half(real(S)):n-1)
     t = zeros(S,n)
     t[1:2:end] .= 2 .* view(λ, 1:2:n) ./ π
     C = hankel_partialchol(λ)
@@ -202,10 +202,11 @@ _sub_dim_by_one(d, m, n...) = (isone(d) ? m-1 : m, _sub_dim_by_one(d-1, n...)...
 function _cheb2legTH_TLC(::Type{S}, mn, d) where S
     n = mn[d]
     t = zeros(S,n-1)
-    t[1:2:end] = Λ.(0:one(S):div(n-2,2), -half(S), one(S))
-    h = Λ.(1:half(S):n-1, zero(S), 3half(S))
-    DL = (3half(S):n-half(S))
-    DR = -(one(S):n-one(S))./4
+    S̃ = real(S)
+    t[1:2:end] = Λ.(0:one(S̃):div(n-2,2), -half(S̃), one(S̃))
+    h = Λ.(1:half(S̃):n-1, zero(S̃), 3half(S̃))
+    DL = (3half(S̃):n-half(S̃))
+    DR = -(one(S̃):n-one(S̃))./4
     C = hankel_partialchol(h)
     T = plan_uppertoeplitz!(t, (_sub_dim_by_one(d, mn...)..., size(C,2)), d)
     T, DL .* C, DR .* C
@@ -222,7 +223,8 @@ end
 
 
 function plan_th_leg2chebu!(::Type{S}, (n,)) where {S}
-    λ = Λ.(0:half(S):n-1)
+    S̃ = real(S)
+    λ = Λ.(0:half(S̃):n-1)
     t = zeros(S,n)
     t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
     h = λ./((1:2n-1).+1)
@@ -232,11 +234,12 @@ function plan_th_leg2chebu!(::Type{S}, (n,)) where {S}
 end
 function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {S}
     @assert abs(λ₁-λ₂) < 1
-    DL = (zero(S):n-one(S)) .+ λ₂
-    jk = 0:half(S):n-1
+    S̃ = real(S)
+    DL = (zero(S̃):n-one(S̃)) .+ λ₂
+    jk = 0:half(S̃):n-1
     t = zeros(S,n)
-    t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S))[1:2:n]
-    h = Λ.(jk,λ₁,λ₂+one(S))
+    t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S̃))[1:2:n]
+    h = Λ.(jk,λ₁,λ₂+one(S̃))
     lmul!(gamma(λ₂)/gamma(λ₁),h)
     C = hankel_partialchol(h)
     T = plan_uppertoeplitz!(lmul!(inv(gamma(λ₁-λ₂)),t), (length(t), size(C,2)), 1)
