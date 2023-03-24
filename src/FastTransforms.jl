@@ -125,7 +125,7 @@ end
 
 # following use Toeplitz-Hankel to avoid expensive plans
 for f in (:leg2cheb, :cheb2leg, :ultra2ultra)
-    th_f = Symbol("lib_", f)
+    th_f = Symbol("th_", f)
     @eval $f(x::AbstractArray, y...; z...) = $th_f(x::AbstractArray, y...; z...)
 end
 

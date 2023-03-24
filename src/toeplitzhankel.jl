@@ -262,8 +262,11 @@ function alternatesign!(v)
     v
 end
 
-plan_th_leg2cheb!(::Type{S}, mn::Tuple{Int}) where {S} = plan_th_leg2cheb!(S, mn, 1)
-plan_th_cheb2leg!(::Type{S}, mn::Tuple{Int}) where {S} = plan_th_cheb2leg!(S, mn, 1)
+plan_th_leg2cheb!(::Type{S}, mn::NTuple{N,Int}, dims::UnitRange) where {N,S} = plan_th_leg2cheb!(S, mn, tuple(dims...))
+plan_th_cheb2leg!(::Type{S}, mn::NTuple{N,Int}, dims::UnitRange) where {N,S} = plan_th_cheb2leg!(S, mn, tuple(dims...))
+
+plan_th_leg2cheb!(::Type{S}, mn::Tuple{Int}, dims::Tuple{Int}=(1,)) where {S} = plan_th_leg2cheb!(S, mn, dims...)
+plan_th_cheb2leg!(::Type{S}, mn::Tuple{Int}, dims::Tuple{Int}=(1,)) where {S} = plan_th_cheb2leg!(S, mn, dims...)
 
 plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_leg2cheb!(S, (m,n), (1,2))
 plan_th_cheb2leg!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_cheb2leg!(S, (m,n), (1,2))

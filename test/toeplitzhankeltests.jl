@@ -1,5 +1,7 @@
 using FastTransforms, Test
-import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_leg2chebu
+import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_leg2chebu,
+                        lib_leg2cheb, lib_cheb2leg, lib_ultra2ultra, lib_jac2jac,
+                        plan_th_cheb2leg!, plan_th_leg2cheb!
 
 @testset "ToeplitzHankel" begin
     for x in ([1.0,2,3,4,5], [1.0+im,2-3im,3+4im,4-5im,5+10im])
@@ -22,8 +24,11 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_l
         @test th_cheb2leg(X, 1) ≈ hcat([cheb2leg(X[:,j]) for j=1:size(X,2)]...)
         @test th_cheb2leg(X, 2) ≈ vcat([permutedims(cheb2leg(X[k,:])) for k=1:size(X,1)]...)
         @test th_cheb2leg(X) ≈ th_cheb2leg(th_cheb2leg(X, 1), 2)
-    end
 
-    
+        @test th_cheb2leg(X) == plan_th_cheb2leg!(X, 1:2)*copy(X)
+        @test th_leg2cheb(X) == plan_th_leg2cheb!(X, 1:2)*copy(X)
+
+        @test th_leg2cheb(th_cheb2leg(X)) ≈ X
+    end
 end
 
