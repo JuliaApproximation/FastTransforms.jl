@@ -170,14 +170,32 @@ function _leg2chebTH_TLC(::Type{S}, mn, d) where S
     T,L,C
 end
 
+function _leg2chebuTH_TLC(::Type{S}, mn, d) where {S}
+    n = mn[d]
+    S̃ = real(S)
+    λ = Λ.(0:half(S̃):n-1)
+    t = zeros(S,n)
+    t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
+    h = λ./((1:2n-1).+1)
+    C = hankel_partialchol(h)
+    T = plan_uppertoeplitz!(-2t/π, (length(t), size(C,2)), 1)
+    (T, (1:n) .* C, C)
+end
 
-plan_th_leg2cheb!(::Type{S}, mn::Tuple, dims::Int) where {S} = ToeplitzHankelPlan(_leg2chebTH_TLC(S, mn, dims)..., dims)
 
-function plan_th_leg2cheb!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
-    @assert dims == (1,2)
-    T1,L1,C1 = _leg2chebTH_TLC(S, mn, 1)
-    T2,L2,C2 = _leg2chebTH_TLC(S, mn, 2)
-    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+for f in (:leg2cheb, :leg2chebu)
+    plan = Symbol("plan_th_", f, "!")
+    TLC = Symbol("_", f, "TH_TLC")
+    @eval begin
+        $plan(::Type{S}, mn::Tuple, dims::Int) where {S} = ToeplitzHankelPlan($TLC(S, mn, dims)..., dims)
+
+        function $plan(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
+            @assert dims == (1,2)
+            T1,L1,C1 = $TLC(S, mn, 1)
+            T2,L2,C2 = $TLC(S, mn, 2)
+            ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+        end
+    end
 end
 
 _sub_dim_by_one(d) = ()
@@ -205,17 +223,6 @@ function plan_th_cheb2leg!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) wh
     ChebyshevToLegendrePlanTH(ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims))
 end
 
-
-function plan_th_leg2chebu!(::Type{S}, (n,)) where {S}
-    S̃ = real(S)
-    λ = Λ.(0:half(S̃):n-1)
-    t = zeros(S,n)
-    t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
-    h = λ./((1:2n-1).+1)
-    C = hankel_partialchol(h)
-    T = plan_uppertoeplitz!(-2t/π, (length(t), size(C,2)), 1)
-    ToeplitzHankelPlan(T, (1:n) .* C, C)
-end
 function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {S}
     @assert abs(λ₁-λ₂) < 1
     S̃ = real(S)
