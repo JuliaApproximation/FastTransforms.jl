@@ -230,6 +230,13 @@ function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {
     ToeplitzHankelPlan(T, DL .* C, C)
 end
 
+function alternatesign!(v)
+    @inbounds for k = 2:2:length(v)
+        v[k] = -v[k]
+    end
+    v
+end
+
 function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
     if β == δ
         @assert abs(α-γ) < 1
@@ -255,28 +262,17 @@ function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
 
     ToeplitzHankelPlan(T, DL .* C, DR .* C)
 end
-function alternatesign!(v)
-    @inbounds for k = 2:2:length(v)
-        v[k] = -v[k]
+
+for f in (:th_leg2cheb, :th_cheb2leg, :th_leg2chebu)
+    plan = Symbol("plan_", f, "!")
+    @eval begin
+        $plan(::Type{S}, mn::NTuple{N,Int}, dims::UnitRange) where {N,S} = $plan(S, mn, tuple(dims...))
+        $plan(::Type{S}, mn::Tuple{Int}, dims::Tuple{Int}=(1,)) where {S} = $plan(S, mn, dims...)
+        $plan(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = $plan(S, (m,n), (1,2))
+        $plan(arr::AbstractArray{T}, dims...) where T = $plan(T, size(arr), dims...)
+        $f(v, dims...) = $plan(eltype(v), size(v), dims...)*copy(v)
     end
-    v
 end
 
-plan_th_leg2cheb!(::Type{S}, mn::NTuple{N,Int}, dims::UnitRange) where {N,S} = plan_th_leg2cheb!(S, mn, tuple(dims...))
-plan_th_cheb2leg!(::Type{S}, mn::NTuple{N,Int}, dims::UnitRange) where {N,S} = plan_th_cheb2leg!(S, mn, tuple(dims...))
-
-plan_th_leg2cheb!(::Type{S}, mn::Tuple{Int}, dims::Tuple{Int}=(1,)) where {S} = plan_th_leg2cheb!(S, mn, dims...)
-plan_th_cheb2leg!(::Type{S}, mn::Tuple{Int}, dims::Tuple{Int}=(1,)) where {S} = plan_th_cheb2leg!(S, mn, dims...)
-
-plan_th_leg2cheb!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_leg2cheb!(S, (m,n), (1,2))
-plan_th_cheb2leg!(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = plan_th_cheb2leg!(S, (m,n), (1,2))
-
-plan_th_leg2cheb!(arr::AbstractArray{T}, dims...) where T = plan_th_leg2cheb!(T, size(arr), dims...)
-plan_th_cheb2leg!(arr::AbstractArray{T}, dims...) where T = plan_th_cheb2leg!(T, size(arr), dims...)
-
-
-th_leg2cheb(v, dims...) = plan_th_leg2cheb!(eltype(v), size(v), dims...)*copy(v)
-th_cheb2leg(v, dims...) = plan_th_cheb2leg!(eltype(v), size(v), dims...)*copy(v)
-th_leg2chebu(v, dims...) = plan_th_leg2chebu!(eltype(v), size(v), dims...)*copy(v)
 th_ultra2ultra(v, λ₁, λ₂, dims...) = plan_th_ultra2ultra!(eltype(v),size(v),λ₁,λ₂, dims...)*copy(v)
 th_jac2jac(v, α, β, γ, δ, dims...) = plan_th_jac2jac!(eltype(v),size(v),α,β,γ,δ, dims...)*copy(v)
