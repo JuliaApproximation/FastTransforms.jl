@@ -73,22 +73,6 @@ function *(P::ToeplitzHankelPlan{<:Any,2,2}, v::AbstractMatrix)
     v
 end
 
-_cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{1}) = broadcast!(*, tmp, view(C,:,k), v)
-_cholmul!(tmp, (C,)::Tuple{Any}, k, v, ::Val{2}) = broadcast!(*, tmp, v, transpose(view(C,:,k)))
-
-function toeplitzcholmult!(T, C, v, tmp, ret, dims)
-    K = size(C[1],2)
-    fill!(ret, zero(eltype(ret)))
-    for k = K:-1:1
-        _cholmul!(tmp, C, k, v, dims)
-        T * tmp
-        _cholmul!(tmp, C, k, tmp, dims)
-        ret .= ret .+ tmp
-    end
-    copyto!(v, ret)
-end
-
-
 # partial cholesky for a Hankel matrix
 
 function hankel_partialchol(v::Vector{T}) where T

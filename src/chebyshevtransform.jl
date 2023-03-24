@@ -210,7 +210,7 @@ chebyshevtransform!(x, dims...; kws...) = plan_chebyshevtransform!(x, dims...; k
 
 
 """
-    chebyshevtransform(x; kind=Val(1))
+    chebyshevtransform(x, kind=Val(1))
 
 transforms from values on a Chebyshev grid of the first or second kind to Chebyshev
 coefficients.
