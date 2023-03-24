@@ -2,10 +2,12 @@ using FastTransforms, Test
 import FastTransforms: plan_uppertoeplitz!
 
 @testset "ToeplitzPlan" begin
-    P = plan_uppertoeplitz!([1,2,3])
-    T = [1 2 3; 0 1 2; 0 0 1]
-    x = randn(3)
-    @test P * copy(x) ≈ T * x
+    @testset "Vector" begin
+        P = plan_uppertoeplitz!([1,2,3])
+        T = [1 2 3; 0 1 2; 0 0 1]
+        x = randn(3)
+        @test P * copy(x) ≈ T * x
+    end
 
     @testset "Matrix" begin
         X = randn(3,3)
@@ -46,5 +48,12 @@ import FastTransforms: plan_uppertoeplitz!
         for j = 1:size(X,2)
             @test PX[:,j,:] ≈ X[:,j,:]*T'
         end
+    end
+
+    @testset "BigFloat" begin
+        P = plan_uppertoeplitz!([big(π),2,3])
+        T = [big(π) 2 3; 0 big(π) 2; 0 0 big(π)]
+        x = randn(3)
+        @test P * copy(x) ≈ T * x
     end
 end

@@ -30,5 +30,11 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_l
 
         @test th_leg2cheb(th_cheb2leg(X)) ≈ X
     end
+
+    @testset "BigFloat" begin
+        n = 10
+        x = big.(randn(n))
+        @test cheb2leg(x) ≈ lib_cheb2leg(x)
+    end
 end
 
