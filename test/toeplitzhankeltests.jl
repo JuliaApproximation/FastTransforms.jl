@@ -4,7 +4,7 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_l
                         plan_th_cheb2leg!, plan_th_leg2cheb!
 
 @testset "ToeplitzHankel" begin
-    for x in ([1.0,2,3,4,5], [1.0+im,2-3im,3+4im,4-5im,5+10im])
+    for x in ([1.0], [1.0,2,3,4,5], [1.0+im,2-3im,3+4im,4-5im,5+10im])
         @test th_leg2cheb(x) ≈ lib_leg2cheb(x)
         @test th_cheb2leg(x) ≈ lib_cheb2leg(x)
         @test th_leg2chebu(x) ≈ lib_ultra2ultra(x, 0.5, 1.0)

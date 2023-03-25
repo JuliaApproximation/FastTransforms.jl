@@ -78,7 +78,7 @@ end
 function hankel_partialchol(v::Vector{T}) where T
     # Assumes positive definite
     σ = T[]
-    n = (length(v)+2) ÷ 2
+    n = isempty(v) ? 0 : (length(v)+2) ÷ 2
     C = Matrix{T}(undef, n, n)
     d = v[1:2:end] # diag of H
     @assert length(v) ≥ 2n-1
@@ -205,7 +205,9 @@ function _cheb2legTH_TLC(::Type{S}, mn, d) where S
     n = mn[d]
     t = zeros(S,n-1)
     S̃ = real(S)
-    t[1:2:end] = Λ.(0:one(S̃):div(n-2,2), -half(S̃), one(S̃))
+    if n > 1
+        t[1:2:end] = Λ.(0:one(S̃):div(n-2,2), -half(S̃), one(S̃))
+    end
     h = Λ.(1:half(S̃):n-1, zero(S̃), 3half(S̃))
     DL = (3half(S̃):n-half(S̃))
     DR = -(one(S̃):n-one(S̃))./4
