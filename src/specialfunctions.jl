@@ -153,8 +153,8 @@ end
 """
 The Lambda function ``\\Lambda(z,λ₁,λ₂) = \\frac{\\Gamma(z+\\lambda_1)}{Γ(z+\\lambda_2)}`` for the ratio of gamma functions.
 """
-Λ(z::Number,λ₁::Number,λ₂::Number) = exp(lgamma(z+λ₁)-lgamma(z+λ₂))
-function Λ(x::Float64,λ₁::Float64,λ₂::Float64)
+Λ(z::Number, λ₁::Number, λ₂::Number) = sign(z-one(z)/2)exp(lgamma(z+λ₁)-lgamma(z+λ₂))
+function Λ(x::Float64, λ₁::Float64, λ₂::Float64)
     if min(x+λ₁,x+λ₂) ≥ 8.979120323411497
         exp(λ₂-λ₁+(x-.5)*log1p((λ₁-λ₂)/(x+λ₂)))*(x+λ₁)^λ₁/(x+λ₂)^λ₂*stirlingseries(x+λ₁)/stirlingseries(x+λ₂)
     else

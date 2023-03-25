@@ -64,7 +64,7 @@ function *(A::ToeplitzPlan{T,1}, x::AbstractVector{T}) where T
 end
 
 function *(A::ToeplitzPlan{T,2,1, S}, x::AbstractMatrix{T}) where {T,S}
-    vc,tmp,dft = A.vectors[1],A.tmp, A.dft
+    vc,tmp,dft,idft = A.vectors[1],A.tmp, A.dft, A.idft
     M,N = size(tmp)
     m,n = size(x)
 
@@ -80,13 +80,13 @@ function *(A::ToeplitzPlan{T,2,1, S}, x::AbstractMatrix{T}) where {T,S}
         dft * tmp
         tmp .= tmp .* transpose(vc)
     end
-    dft \ tmp
+    idft * tmp
     x .= maybereal.(T, view(tmp,1:m,1:n))
 end
 
 
 function *(A::ToeplitzPlan{T,2,2, S}, X::AbstractMatrix{T}) where {T,S}
-    vcs,tmp,dft = A.vectors,A.tmp, A.dft
+    vcs,tmp,dft,idft = A.vectors,A.tmp, A.dft,A.idft
     vc1,vc2 = vcs
     M,N = size(tmp)
     m,n = size(X)
@@ -97,7 +97,7 @@ function *(A::ToeplitzPlan{T,2,2, S}, X::AbstractMatrix{T}) where {T,S}
     fill!(view(tmp, 1:m, n+1:N), zero(S))
     dft * tmp
     tmp .= vc1 .* tmp .* transpose(vc2)
-    dft \ tmp
+    idft * tmp
     @inbounds for k = 1:m, j = 1:n
         X[k,j] = maybereal(T, tmp[k,j])
     end
@@ -105,7 +105,7 @@ function *(A::ToeplitzPlan{T,2,2, S}, X::AbstractMatrix{T}) where {T,S}
 end
 
 function *(A::ToeplitzPlan{T,3,1, S}, x::AbstractArray{T,3}) where {T,S}
-    vc,tmp,dft = A.vectors[1],A.tmp, A.dft
+    vc,tmp,dft,idft = A.vectors[1],A.tmp, A.dft,A.idft
     M,N,L = size(tmp)
     m,n,l = size(x)
 
@@ -125,7 +125,7 @@ function *(A::ToeplitzPlan{T,3,1, S}, x::AbstractArray{T,3}) where {T,S}
         dft * tmp
         tmp .= tmp .* reshape(vc, 1, 1, L)
     end
-    dft \ tmp
+    idft * tmp
     @inbounds for k = 1:m, j = 1:n, ℓ = 1:l
         x[k,j,ℓ] = maybereal(T, tmp[k,j,ℓ])
     end
