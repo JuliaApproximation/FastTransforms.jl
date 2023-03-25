@@ -1,6 +1,6 @@
 using FastTransforms, LinearAlgebra, Test
 
-import FastTransforms: pochhammer, sqrtpi, SpecialFunctions.gamma
+import FastTransforms: pochhammer, sqrtpi, gamma, lgamma
 import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ
 import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimoments1, chebyshevjacobimoments2, chebyshevlogmoments1, chebyshevlogmoments2
 
