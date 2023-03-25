@@ -1,6 +1,6 @@
 using FastTransforms, LinearAlgebra, Test
 
-import FastTransforms: pochhammer, sqrtpi, SpecialFunctions.gamma
+import FastTransforms: pochhammer, sqrtpi, gamma, lgamma
 import FastTransforms: Cnλ, Λ, lambertw, Cnαβ, Anαβ
 import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimoments1, chebyshevjacobimoments2, chebyshevlogmoments1, chebyshevlogmoments2
 
@@ -36,4 +36,10 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2, chebyshevjacobimome
 
     @test norm(Cnαβ.(n,α,β) ./ Cnαβ.(n,big(α),big(β)) .- 1, Inf) < 3eps()
     @test norm(Anαβ.(n,α,β) ./ Anαβ.(n,big(α),big(β)) .- 1, Inf) < 4eps()
+
+    @testset "BigFloat bug" begin
+        @test Λ(0.0, -1/2, 1.0) ≈ -exp(lgamma(-1/2)-lgamma(1.0))
+        @test Λ(1.0, -1/2, 1.0) ≈ exp(lgamma(1-1/2)-lgamma(2.0))
+        @test Float64(Λ(big(0.0), -1/2, 1.0)) ≈ Λ(0.0, -1/2, 1.0)
+    end
 end

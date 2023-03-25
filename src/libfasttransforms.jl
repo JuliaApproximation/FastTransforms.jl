@@ -435,10 +435,11 @@ for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
           :sph2fourier, :sphv2fourier, :disk2cxf, :ann2cxf,
           :rectdisk2cheb, :tri2cheb, :tet2cheb)
     plan_f = Symbol("plan_", f)
+    lib_f = Symbol("lib_", f)
     @eval begin
         $plan_f(x::AbstractArray{T}, y...; z...) where T = $plan_f(T, size(x, 1), y...; z...)
         $plan_f(::Type{Complex{T}}, y...; z...) where T <: Real = $plan_f(T, y...; z...)
-        $f(x::AbstractArray, y...; z...) = $plan_f(x, y...; z...)*x
+        $lib_f(x::AbstractArray, y...; z...) = $plan_f(x, y...; z...)*x
     end
 end
 
