@@ -9,8 +9,8 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_l
         @test th_cheb2leg(x) ≈ lib_cheb2leg(x)
         @test th_leg2chebu(x) ≈ lib_ultra2ultra(x, 0.5, 1.0)
         @test th_ultra2ultra(x,0.1, 0.2) ≈ lib_ultra2ultra(x, 0.1, 0.2)
-        @test_broken th_jac2jac(x,0.1, 0.2,0.1,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.1,0.4)
-        @test_broken th_jac2jac(x,0.1, 0.2,0.3,0.2) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.2)
+        @test th_jac2jac(x,0.1, 0.2,0.1,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.1,0.4)
+        @test th_jac2jac(x,0.1, 0.2,0.3,0.2) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.2)
 
         @test all(th_leg2cheb(x) .=== leg2cheb(x))
         @test all(th_cheb2leg(x) .=== cheb2leg(x))

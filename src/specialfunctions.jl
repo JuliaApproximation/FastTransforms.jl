@@ -154,7 +154,7 @@ end
 """
 The Lambda function ``\\Lambda(z,λ₁,λ₂) = \\frac{\\Gamma(z+\\lambda_1)}{Γ(z+\\lambda_2)}`` for the ratio of gamma functions.
 """
-function Λ(z::Number, λ₁::Number, λ₂::Number)
+function Λ(z::Real, λ₁::Real, λ₂::Real)
     if z+λ₁ > 0 && z+λ₂ > 0
         exp(lgamma(z+λ₁)-lgamma(z+λ₂))
     else

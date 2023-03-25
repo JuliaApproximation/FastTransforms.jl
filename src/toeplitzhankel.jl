@@ -250,7 +250,7 @@ function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
         @assert α+β > -1
         jk = 0:n-1
         DL = (2jk .+ γ .+ β .+ 1).*Λ.(jk,γ+β+1,β+1)
-        t = Λ.(jk,α-γ,1)
+        t = convert(AbstractVector{S}, Λ.(jk, α-γ,1))
         h = Λ.(0:2n-2,α+β+1,γ+β+2)
         DR = Λ.(jk,β+1,α+β+1)./gamma(α-γ)
         C = hankel_partialchol(h)
@@ -260,7 +260,7 @@ function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
         DL = (2jk .+ δ .+ α .+ 1).*Λ.(jk,δ+α+1,α+1)
         h = Λ.(0:2n-2,α+β+1,δ+α+2)
         DR = Λ.(jk,α+1,α+β+1)./gamma(β-δ)
-        t = alternatesign!(Λ.(jk,β-δ,1))
+        t = alternatesign!(convert(AbstractVector{S}, Λ.(jk,β-δ,1)))
         C = hankel_partialchol(h)
         T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
     else

@@ -10,6 +10,8 @@ import FastTransforms: plan_uppertoeplitz!
     end
 
     @testset "Matrix" begin
+        T = [1 2 3; 0 1 2; 0 0 1]
+
         X = randn(3,3)
         P = plan_uppertoeplitz!([1,2,3], size(X), 1)
         @test P * copy(X) ≈ T * X
@@ -30,6 +32,8 @@ import FastTransforms: plan_uppertoeplitz!
     end
 
     @testset "Tensor" begin
+        T = [1 2 3; 0 1 2; 0 0 1]
+        
         X = randn(3,3,3)
         P = plan_uppertoeplitz!([1,2,3], size(X), 1)
         PX = P * copy(X)
