@@ -129,5 +129,6 @@ for f in (:leg2cheb, :cheb2leg, :ultra2ultra)
     @eval $f(x::AbstractArray, y...; z...) = $th_f(x::AbstractArray, y...; z...)
 end
 
+include("docstrings.jl")
 
 end # module
