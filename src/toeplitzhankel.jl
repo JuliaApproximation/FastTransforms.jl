@@ -102,6 +102,36 @@ function hankel_partialchol(v::Vector{T}) where T
     C[:,1:r]
 end
 
+# cholesky for D .* H .* D'
+function hankel_partialchol(v::Vector, D::AbstractVector)
+    T = promote_type(eltype(v), eltype(D))
+    # Assumes positive definite
+    σ = T[]
+    n = isempty(v) ? 0 : (length(v)+2) ÷ 2
+    C = Matrix{T}(undef, n, n)
+    d = v[1:2:end] .* D.^2 # diag of D .* H .* D'
+    @assert length(v) ≥ 2n-1
+    reltol = maximum(abs,d)*eps(T)*log(n)
+    r = 0
+    for k = 1:n
+        mx,idx = findmax(d)
+        if mx ≤ reltol break end
+        push!(σ, inv(mx))
+        C[:,k] .= view(v,idx:n+idx-1) .*D.*D[idx]
+        for j = 1:k-1
+            nCjidxσj = -C[idx,j]*σ[j]
+            LinearAlgebra.axpy!(nCjidxσj, view(C,:,j), view(C,:,k))
+        end
+        @inbounds for p=1:n
+            d[p] -= C[p,k]^2/mx
+        end
+        r += 1
+    end
+    for k=1:length(σ) rmul!(view(C,:,k), sqrt(σ[k])) end
+    C[:,1:r]
+end
+
+
 
 # Diagonally-scaled Toeplitz∘Hankel polynomial transforms
 
@@ -209,9 +239,10 @@ function _cheb2legTH_TLC(::Type{S}, mn, d) where S
         t[1:2:end] = Λ.(0:one(S̃):div(n-2,2), -half(S̃), one(S̃))
     end
     h = Λ.(1:half(S̃):n-1, zero(S̃), 3half(S̃))
-    DL = (3half(S̃):n-half(S̃))
-    DR = -(one(S̃):n-one(S̃))./4
-    C = hankel_partialchol(h)
+    D = 1:one(S):n-1
+    DL = (3half(S̃):n-half(S̃)) ./ D
+    DR = -(one(S̃):n-one(S̃)) ./ (4 .* D)
+    C = hankel_partialchol(h, D)
     T = plan_uppertoeplitz!(t, (_sub_dim_by_one(d, mn...)..., size(C,2)), d)
     T, DL .* C, DR .* C
 end

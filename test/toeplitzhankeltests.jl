@@ -4,7 +4,7 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_l
                         plan_th_cheb2leg!, plan_th_leg2cheb!
 
 @testset "ToeplitzHankel" begin
-    for x in ([1.0], [1.0,2,3,4,5], [1.0+im,2-3im,3+4im,4-5im,5+10im])
+    for x in ([1.0], [1.0,2,3,4,5], [1.0+im,2-3im,3+4im,4-5im,5+10im], collect(1.0:1000))
         @test th_leg2cheb(x) ≈ lib_leg2cheb(x)
         @test th_cheb2leg(x) ≈ lib_cheb2leg(x)
         @test th_leg2chebu(x) ≈ lib_ultra2ultra(x, 0.5, 1.0)
@@ -14,6 +14,9 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_l
 
         @test all(th_leg2cheb(x) .=== leg2cheb(x))
         @test all(th_cheb2leg(x) .=== cheb2leg(x))
+
+        @test th_cheb2leg(th_leg2cheb(x)) ≈ x atol=1E-9
+        @test th_leg2leg(th_cheb2cheb(x)) ≈ x atol=1E-11
     end
 
     for X in (randn(5,4), randn(5,4) + im*randn(5,4))
@@ -36,5 +39,14 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_l
         x = big.(collect(1.0:n))
         @test leg2cheb(x) ≈ lib_leg2cheb(x)
         @test cheb2leg(x) ≈ lib_cheb2leg(x)
+    end
+
+    @testset "jishnub example" begin
+        x = chebyshevpoints(4096);
+        f = x -> cospi(1000x);  
+        y = f.(x);
+        v = cheb2leg(chebyshevtransform(y))
+        @test norm(v - cheb2leg(leg2cheb(v)), Inf) ≤ 1E-13
+        @test norm(v - cheb2leg(leg2cheb(v)))/norm(v) ≤ 1E-14
     end
 end
