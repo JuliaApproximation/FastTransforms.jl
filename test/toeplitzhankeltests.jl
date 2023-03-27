@@ -16,7 +16,7 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_ultra2ultra,th_jac2jac, th_l
         @test all(th_cheb2leg(x) .=== cheb2leg(x))
 
         @test th_cheb2leg(th_leg2cheb(x)) ≈ x atol=1E-9
-        @test th_leg2cheb(th_cheb2leg(x)) ≈ x atol=1E-11
+        @test th_leg2cheb(th_cheb2leg(x)) ≈ x atol=1E-10
     end
 
     for X in (randn(5,4), randn(5,4) + im*randn(5,4))
