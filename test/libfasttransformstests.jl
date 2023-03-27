@@ -228,3 +228,9 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     pa = plan_spinsph_analysis(A, 2)
     test_nd_plans(p, ps, pa, A)
 end
+
+@testset "ultra2ulta bug and cheb2leg normalisation (#202, #203)" begin
+    @test ultra2ultra([0.0, 1.0], 1, 1) == [0,1]
+    @test cheb2leg([0.0, 1.0], normcheb=true) ≈ [0.,sqrt(2/π)]
+    @test cheb2leg([0.0, 1.0], normleg=true) ≈ [0.,sqrt(2/3)]
+end
