@@ -239,7 +239,7 @@ function _cheb2legTH_TLC(::Type{S}, mn, d) where S
         t[1:2:end] = Λ.(0:one(S̃):div(n-2,2), -half(S̃), one(S̃))
     end
     h = Λ.(1:half(S̃):n-1, zero(S̃), 3half(S̃))
-    D = 1:one(S):n-1
+    D = 1:n-1
     DL = (3half(S̃):n-half(S̃)) ./ D
     DR = -(one(S̃):n-one(S̃)) ./ (4 .* D)
     C = hankel_partialchol(h, D)
