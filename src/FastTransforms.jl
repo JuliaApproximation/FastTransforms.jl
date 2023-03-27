@@ -118,20 +118,21 @@ for f in (:jac2jac,
     :cheb2jac, :ultra2cheb, :cheb2ultra, :associatedjac2jac,
     :modifiedjac2jac, :modifiedlag2lag, :modifiedherm2herm,
     :sph2fourier, :sphv2fourier, :disk2cxf, :ann2cxf,
-    :rectdisk2cheb, :tri2cheb, :tet2cheb)
+    :rectdisk2cheb, :tri2cheb, :tet2cheb,
+    :leg2cheb, :cheb2leg, :ultra2ultra)
     lib_f = Symbol("lib_", f)
     @eval $f(x::AbstractArray, y...; z...) = $lib_f(x, y...; z...)
 end
 
 # following use Toeplitz-Hankel to avoid expensive plans
-for f in (:leg2cheb, :cheb2leg, :ultra2ultra)
-    th_f = Symbol("th_", f)
-    lib_f = Symbol("lib_", f)
-    @eval begin
-        $f(x::AbstractArray, y...; z...) = $th_f(x, y...; z...)
-        # $f(x::AbstractArray, y...; z...) = $lib_f(x, y...; z...)
-    end
-end
+# for f in (:leg2cheb, :cheb2leg, :ultra2ultra)
+#     th_f = Symbol("th_", f)
+#     lib_f = Symbol("lib_", f)
+#     @eval begin
+#         $f(x::AbstractArray, y...; z...) = $th_f(x, y...; z...)
+#         # $f(x::AbstractArray, y...; z...) = $lib_f(x, y...; z...)
+#     end
+# end
 
 
 end # module
