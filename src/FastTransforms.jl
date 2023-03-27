@@ -128,8 +128,8 @@ for f in (:leg2cheb, :cheb2leg, :ultra2ultra)
     th_f = Symbol("th_", f)
     lib_f = Symbol("lib_", f)
     @eval begin
-        $f(x::AbstractVector, y...; z...) = $th_f(x, y...; z...)
-        $f(x::AbstractArray, y...; z...) = $lib_f(x, y...; z...)
+        $f(x::AbstractArray, y...; z...) = $th_f(x, y...; z...)
+        # $f(x::AbstractArray, y...; z...) = $lib_f(x, y...; z...)
     end
 end
 
