@@ -108,7 +108,7 @@ function hankel_partialchol(v::Vector, D::AbstractVector)
     # Assumes positive definite
     σ = T[]
     n = isempty(v) ? 0 : (length(v)+2) ÷ 2
-    C = Matrix{T}(undef, n, n)
+    C = Matrix{T}(undef, n, 100)
     d = v[1:2:end] .* D.^2 # diag of D .* H .* D'
     @assert length(v) ≥ 2n-1
     reltol = maximum(abs,d)*eps(T)*log(n)
@@ -127,6 +127,7 @@ function hankel_partialchol(v::Vector, D::AbstractVector)
         end
         r += 1
     end
+    r == 100 && error("ranks more than 100 not yet supported")
     for k=1:length(σ) rmul!(view(C,:,k), sqrt(σ[k])) end
     C[:,1:r]
 end
