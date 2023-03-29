@@ -51,13 +51,13 @@ end
 
 function horner!(c::StridedVector{Float64}, x::Vector{Float64}, f::Vector{Float64})
     @assert length(x) == length(f)
-    ccall((:ft_horner, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c, 1), length(x), x, f)
+    ccall((:ft_horner, libfasttransforms), Cvoid, (Cint, Ref{Float64}, Cint, Cint, Ref{Float64}, Ref{Float64}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
 function horner!(c::StridedVector{Float32}, x::Vector{Float32}, f::Vector{Float32})
     @assert length(x) == length(f)
-    ccall((:ft_hornerf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c, 1), length(x), x, f)
+    ccall((:ft_hornerf, libfasttransforms), Cvoid, (Cint, Ref{Float32}, Cint, Cint, Ref{Float32}, Ref{Float32}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
@@ -77,13 +77,13 @@ end
 
 function clenshaw!(c::StridedVector{Float64}, x::Vector{Float64}, f::Vector{Float64})
     @boundscheck check_clenshaw_points(x, f)
-    ccall((:ft_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c, 1), length(x), x, f)
+    ccall((:ft_clenshaw, libfasttransforms), Cvoid, (Cint, Ref{Float64}, Cint, Cint, Ref{Float64}, Ref{Float64}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
 function clenshaw!(c::StridedVector{Float32}, x::Vector{Float32}, f::Vector{Float32})
     @boundscheck check_clenshaw_points(x, f)
-    ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c, 1), length(x), x, f)
+    ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ref{Float32}, Cint, Cint, Ref{Float32}, Ref{Float32}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
@@ -91,7 +91,7 @@ function clenshaw!(c::StridedVector{Float64}, A::Vector{Float64}, B::Vector{Floa
     N = length(c)
     @boundscheck check_clenshaw_recurrences(N, A, B, C)
     @boundscheck check_clenshaw_points(x, ϕ₀, f)
-    ccall((:ft_orthogonal_polynomial_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Cint, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}), N, c, stride(c, 1), A, B, C, length(x), x, ϕ₀, f)
+    ccall((:ft_orthogonal_polynomial_clenshaw, libfasttransforms), Cvoid, (Cint, Ref{Float64}, Cint, Ref{Float64}, Ref{Float64}, Ref{Float64}, Cint, Ref{Float64}, Ref{Float64}, Ref{Float64}), N, c, stride(c, 1), A, B, C, length(x), x, ϕ₀, f)
     f
 end
 
@@ -99,7 +99,7 @@ function clenshaw!(c::StridedVector{Float32}, A::Vector{Float32}, B::Vector{Floa
     N = length(c)
     @boundscheck check_clenshaw_recurrences(N, A, B, C)
     @boundscheck check_clenshaw_points(x, ϕ₀, f)
-    ccall((:ft_orthogonal_polynomial_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}, Cint, Ptr{Float32}, Ptr{Float32}, Ptr{Float32}), N, c, stride(c, 1), A, B, C, length(x), x, ϕ₀, f)
+    ccall((:ft_orthogonal_polynomial_clenshawf, libfasttransforms), Cvoid, (Cint, Ref{Float32}, Cint, Ref{Float32}, Ref{Float32}, Ref{Float32}, Cint, Ref{Float32}, Ref{Float32}, Ref{Float32}), N, c, stride(c, 1), A, B, C, length(x), x, ϕ₀, f)
     f
 end
 
@@ -517,32 +517,32 @@ function plan_associatedjac2jac(::Type{Float32}, n::Integer, c::Integer, α, β,
 end
 
 function plan_modifiedjac2jac(::Type{Float32}, n::Integer, α, β, u::Vector{Float32}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_jacobi_to_jacobif, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float32, Float32, Cint, Ptr{Float32}, Cint, Ptr{Float32}, Cint), n, α, β, length(u), u, 0, C_NULL, verbose)
+    plan = ccall((:ft_plan_modified_jacobi_to_jacobif, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float32, Float32, Cint, Ref{Float32}, Cint, Ptr{Float32}, Cint), n, α, β, length(u), u, 0, C_NULL, verbose)
     return FTPlan{Float32, 1, MODIFIEDJAC2JAC}(plan, n)
 end
 
 function plan_modifiedjac2jac(::Type{Float32}, n::Integer, α, β, u::Vector{Float32}, v::Vector{Float32}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_jacobi_to_jacobif, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float32, Float32, Cint, Ptr{Float32}, Cint, Ptr{Float32}, Cint), n, α, β, length(u), u, length(v), v, verbose)
+    plan = ccall((:ft_plan_modified_jacobi_to_jacobif, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float32, Float32, Cint, Ref{Float32}, Cint, Ref{Float32}, Cint), n, α, β, length(u), u, length(v), v, verbose)
     return FTPlan{Float32, 1, MODIFIEDJAC2JAC}(plan, n)
 end
 
 function plan_modifiedlag2lag(::Type{Float32}, n::Integer, α, u::Vector{Float32}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_laguerre_to_laguerref, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float32, Cint, Ptr{Float32}, Cint, Ptr{Float32}, Cint), n, α, length(u), u, 0, C_NULL, verbose)
+    plan = ccall((:ft_plan_modified_laguerre_to_laguerref, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float32, Cint, Ref{Float32}, Cint, Ptr{Float32}, Cint), n, α, length(u), u, 0, C_NULL, verbose)
     return FTPlan{Float32, 1, MODIFIEDLAG2LAG}(plan, n)
 end
 
 function plan_modifiedlag2lag(::Type{Float32}, n::Integer, α, u::Vector{Float32}, v::Vector{Float32}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_laguerre_to_laguerref, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float32, Cint, Ptr{Float32}, Cint, Ptr{Float32}, Cint), n, α, length(u), u, length(v), v, verbose)
+    plan = ccall((:ft_plan_modified_laguerre_to_laguerref, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float32, Cint, Ref{Float32}, Cint, Ref{Float32}, Cint), n, α, length(u), u, length(v), v, verbose)
     return FTPlan{Float32, 1, MODIFIEDLAG2LAG}(plan, n)
 end
 
 function plan_modifiedherm2herm(::Type{Float32}, n::Integer, u::Vector{Float32}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_hermite_to_hermitef, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ptr{Float32}, Cint, Ptr{Float32}, Cint), n, length(u), u, 0, C_NULL, verbose)
+    plan = ccall((:ft_plan_modified_hermite_to_hermitef, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ref{Float32}, Cint, Ptr{Float32}, Cint), n, length(u), u, 0, C_NULL, verbose)
     return FTPlan{Float32, 1, MODIFIEDHERM2HERM}(plan, n)
 end
 
 function plan_modifiedherm2herm(::Type{Float32}, n::Integer, u::Vector{Float32}, v::Vector{Float32}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_hermite_to_hermitef, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ptr{Float32}, Cint, Ptr{Float32}, Cint), n, length(u), u, length(v), v, verbose)
+    plan = ccall((:ft_plan_modified_hermite_to_hermitef, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ref{Float32}, Cint, Ref{Float32}, Cint), n, length(u), u, length(v), v, verbose)
     return FTPlan{Float32, 1, MODIFIEDHERM2HERM}(plan, n)
 end
 
@@ -608,32 +608,32 @@ function plan_associatedjac2jac(::Type{Float64}, n::Integer, c::Integer, α, β,
 end
 
 function plan_modifiedjac2jac(::Type{Float64}, n::Integer, α, β, u::Vector{Float64}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, β, length(u), u, 0, C_NULL, verbose)
+    plan = ccall((:ft_plan_modified_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Float64, Cint, Ref{Float64}, Cint, Ptr{Float64}, Cint), n, α, β, length(u), u, 0, C_NULL, verbose)
     return FTPlan{Float64, 1, MODIFIEDJAC2JAC}(plan, n)
 end
 
 function plan_modifiedjac2jac(::Type{Float64}, n::Integer, α, β, u::Vector{Float64}, v::Vector{Float64}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, β, length(u), u, length(v), v, verbose)
+    plan = ccall((:ft_plan_modified_jacobi_to_jacobi, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Float64, Cint, Ref{Float64}, Cint, Ref{Float64}, Cint), n, α, β, length(u), u, length(v), v, verbose)
     return FTPlan{Float64, 1, MODIFIEDJAC2JAC}(plan, n)
 end
 
 function plan_modifiedlag2lag(::Type{Float64}, n::Integer, α, u::Vector{Float64}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_laguerre_to_laguerre, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, length(u), u, 0, C_NULL, verbose)
+    plan = ccall((:ft_plan_modified_laguerre_to_laguerre, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Cint, Ref{Float64}, Cint, Ptr{Float64}, Cint), n, α, length(u), u, 0, C_NULL, verbose)
     return FTPlan{Float64, 1, MODIFIEDLAG2LAG}(plan, n)
 end
 
 function plan_modifiedlag2lag(::Type{Float64}, n::Integer, α, u::Vector{Float64}, v::Vector{Float64}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_laguerre_to_laguerre, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, α, length(u), u, length(v), v, verbose)
+    plan = ccall((:ft_plan_modified_laguerre_to_laguerre, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Float64, Cint, Ref{Float64}, Cint, Ref{Float64}, Cint), n, α, length(u), u, length(v), v, verbose)
     return FTPlan{Float64, 1, MODIFIEDLAG2LAG}(plan, n)
 end
 
 function plan_modifiedherm2herm(::Type{Float64}, n::Integer, u::Vector{Float64}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_hermite_to_hermite, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, length(u), u, 0, C_NULL, verbose)
+    plan = ccall((:ft_plan_modified_hermite_to_hermite, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ref{Float64}, Cint, Ptr{Float64}, Cint), n, length(u), u, 0, C_NULL, verbose)
     return FTPlan{Float64, 1, MODIFIEDHERM2HERM}(plan, n)
 end
 
 function plan_modifiedherm2herm(::Type{Float64}, n::Integer, u::Vector{Float64}, v::Vector{Float64}; verbose::Bool=false)
-    plan = ccall((:ft_plan_modified_hermite_to_hermite, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ptr{Float64}, Cint, Ptr{Float64}, Cint), n, length(u), u, length(v), v, verbose)
+    plan = ccall((:ft_plan_modified_hermite_to_hermite, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Ref{Float64}, Cint, Ref{Float64}, Cint), n, length(u), u, length(v), v, verbose)
     return FTPlan{Float64, 1, MODIFIEDHERM2HERM}(plan, n)
 end
 
@@ -770,17 +770,17 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_sph_synthesis, :plan_sph_analysis, :ft_plan
         transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m))
         function lmul!(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
             return x
         end
         function lmul!(p::AdjointFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
         function lmul!(p::TransposeFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
     end
@@ -802,17 +802,17 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_annulus_synthesis, :plan_annulus_analysis, 
         transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m, ft_get_rho_annulus_fftw_plan(p)))
         function lmul!(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
             return x
         end
         function lmul!(p::AdjointFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
         function lmul!(p::TransposeFTPlan{Float64, FTPlan{Float64, 2, $K}}, x::Matrix{Float64})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2))
             return x
         end
     end
@@ -831,17 +831,17 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_tet_synthesis, :plan_tet_analysis, :ft_plan
         transpose(p::FTPlan{T, 3, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.l, p.m))
         function lmul!(p::FTPlan{Float64, 3, $K}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2), size(x, 3))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
         function lmul!(p::AdjointFTPlan{Float64, FTPlan{Float64, 3, $K}}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
         function lmul!(p::TransposeFTPlan{Float64, FTPlan{Float64, 3, $K}}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
     end
@@ -860,18 +860,18 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_spinsph_synthesis, :plan_spinsph_analysis, 
         transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m, get_spin(p)))
         function lmul!(p::FTPlan{Complex{Float64}, 2, $K}, x::Matrix{Complex{Float64}})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{ComplexF64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
             return x
         end
         function lmul!(p::AdjointFTPlan{Complex{Float64}, FTPlan{Complex{Float64}, 2, $K}}, x::Matrix{Complex{Float64}})
             checksize(p, x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'C', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{ComplexF64}, Cint, Cint), 'C', p, x, size(x, 1), size(x, 2))
             return x
         end
         function lmul!(p::TransposeFTPlan{Complex{Float64}, FTPlan{Complex{Float64}, 2, $K}}, x::Matrix{Complex{Float64}})
             checksize(p, x)
             conj!(x)
-            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'C', p, x, size(x, 1), size(x, 2))
+            ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{ComplexF64}, Cint, Cint), 'C', p, x, size(x, 1), size(x, 2))
             conj!(x)
             return x
         end
@@ -1145,29 +1145,29 @@ for (fJ, fC) in ((:lmul!, :ft_execute_tet2cheb),
     @eval begin
         function $fJ(p::FTPlan{Float64, 3, TETRAHEDRON}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2), size(x, 3))
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
         function $fJ(p::AdjointFTPlan{Float64, FTPlan{Float64, 3, TETRAHEDRON}}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
         function $fJ(p::TransposeFTPlan{Float64, FTPlan{Float64, 3, TETRAHEDRON}}, x::Array{Float64, 3})
             checksize(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
+            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint, Cint), 'T', p, x, size(x, 1), size(x, 2), size(x, 3))
             return x
         end
     end
 end
 
 function execute_sph_polar_rotation!(x::Matrix{Float64}, α)
-    ccall((:ft_execute_sph_polar_rotation, libfasttransforms), Cvoid, (Ptr{Float64}, Cint, Cint, Float64, Float64), x, size(x, 1), size(x, 2), sin(α), cos(α))
+    ccall((:ft_execute_sph_polar_rotation, libfasttransforms), Cvoid, (Ref{Float64}, Cint, Cint, Float64, Float64), x, size(x, 1), size(x, 2), sin(α), cos(α))
     return x
 end
 
 function execute_sph_polar_reflection!(x::Matrix{Float64})
-    ccall((:ft_execute_sph_polar_reflection, libfasttransforms), Cvoid, (Ptr{Float64}, Cint, Cint), x, size(x, 1), size(x, 2))
+    ccall((:ft_execute_sph_polar_reflection, libfasttransforms), Cvoid, (Ref{Float64}, Cint, Cint), x, size(x, 1), size(x, 2))
     return x
 end
 
@@ -1183,19 +1183,19 @@ convert(::Type{ft_orthogonal_transformation}, Q::NTuple{9, Float64}) = ft_orthog
 
 function execute_sph_orthogonal_transformation!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, Q, x::Matrix{Float64})
     checksize(p, x)
-    ccall((:ft_execute_sph_orthogonal_transformation, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ft_orthogonal_transformation, Ptr{Float64}, Cint, Cint), p, Q, x, size(x, 1), size(x, 2))
+    ccall((:ft_execute_sph_orthogonal_transformation, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ft_orthogonal_transformation, Ref{Float64}, Cint, Cint), p, Q, x, size(x, 1), size(x, 2))
     return x
 end
 
 function execute_sph_yz_axis_exchange!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, x::Matrix{Float64})
     checksize(p, x)
-    ccall((:ft_execute_sph_yz_axis_exchange, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), p, x, size(x, 1), size(x, 2))
+    ccall((:ft_execute_sph_yz_axis_exchange, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Ref{Float64}, Cint, Cint), p, x, size(x, 1), size(x, 2))
     return x
 end
 
 function execute_sph_rotation!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, α, β, γ, x::Matrix{Float64})
     checksize(p, x)
-    ccall((:ft_execute_sph_rotation, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Float64, Float64, Float64, Ptr{Float64}, Cint, Cint), p, α, β, γ, x, size(x, 1), size(x, 2))
+    ccall((:ft_execute_sph_rotation, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, Float64, Float64, Float64, Ref{Float64}, Cint, Cint), p, α, β, γ, x, size(x, 1), size(x, 2))
     return x
 end
 
@@ -1211,7 +1211,7 @@ convert(::Type{ft_reflection}, w::NTuple{3, Float64}) = ft_reflection(w)
 
 function execute_sph_reflection!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, w, x::Matrix{Float64})
     checksize(p, x)
-    ccall((:ft_execute_sph_reflection, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ft_reflection, Ptr{Float64}, Cint, Cint), p, w, x, size(x, 1), size(x, 2))
+    ccall((:ft_execute_sph_reflection, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ft_reflection, Ref{Float64}, Cint, Cint), p, w, x, size(x, 1), size(x, 2))
     return x
 end
 execute_sph_reflection!(p::FTPlan{Float64, 2, SPHERICALISOMETRY}, w1, w2, w3, x::Matrix{Float64}) = execute_sph_reflection!(p, ft_reflection(w1, w2, w3), x)
