@@ -7,7 +7,7 @@ The keyword arguments denote whether the bases are normalized.
 leg2cheb
 
 """
-	cheb2leg(v::StridedVector; normcheb::Bool=false, normleg::Bool=false)
+	cheb2leg(v::AbstractVector; normcheb::Bool=false, normleg::Bool=false)
 
 Convert the vector of expansions coefficients `v` from a Chebyshev to a Legendre basis.
 The keyword arguments denote whether the bases are normalized.
