@@ -29,12 +29,20 @@ function _forwardrecurrence!(v::AbstractVector, A::AbstractVector, B::AbstractVe
     v[1] = p0
     N == 1 && return v
     v[2] = p1
-    @inbounds for n = 2:N-1
+    _forwardrecurrence!(v, A, B, C, x, 2:N)
+end
+
+function _forwardrecurrence!(v::AbstractVector, A::AbstractVector, B::AbstractVector, C::AbstractVector, x, kr::AbstractUnitRange)
+    n₀, N = first(kr), last(kr)
+    @boundscheck N > length(v) && throw(BoundsError(v, N))
+    p0, p1 = v[n₀-1], v[n₀]
+    @inbounds for n = n₀:N-1
         p1,p0 = _forwardrecurrence_next(n, A, B, C, x, p0, p1),p1
         v[n+1] = p1
     end
     v
 end
+
 
 
 
