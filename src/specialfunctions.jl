@@ -48,7 +48,7 @@ end
 pochhammer(x::Number,n::Number) = isinteger(n) ? pochhammer(x,Int(n)) : ogamma(x)/ogamma(x+n)
 
 function pochhammer(x::Number,n::UnitRange{T}) where T<:Real
-    ret = Vector{promote_type(typeof(x),T)}(length(n))
+    ret = Vector{promote_type(typeof(x),T)}(undef,length(n))
     ret[1] = pochhammer(x,first(n))
     for i=2:length(n)
         ret[i] = (x+n[i]-1)*ret[i-1]
