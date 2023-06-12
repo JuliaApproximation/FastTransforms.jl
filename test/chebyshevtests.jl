@@ -1,4 +1,5 @@
 using FastTransforms, Test
+using FFTW
 
 @testset "Chebyshev transform"  begin
     @testset "Chebyshev points" begin
@@ -138,6 +139,20 @@ using FastTransforms, Test
             @test_throws ArgumentError ichebyshevtransform(T[1], Val(2))
             @test_throws ArgumentError chebyshevtransform(T[], Val(2))
             @test_throws ArgumentError ichebyshevtransform(T[], Val(2))
+
+            @testset "FFTW flags" begin
+                x = Float64[]
+                P = @inferred plan_chebyshevtransform(x, flags=FFTW.PATIENT)
+                @test P * x isa AbstractVector{Float64}
+                @test P * x == x == Float64[]
+                P = @inferred plan_ichebyshevtransform(x, flags=FFTW.PATIENT)
+                @test P * x isa AbstractVector{Float64}
+                @test P * x == x == Float64[]
+                P = @inferred plan_chebyshevtransform!(x, flags=FFTW.PATIENT)
+                @test P * x === x && x == Float64[]
+                P = @inferred plan_ichebyshevtransform!(x, flags=FFTW.PATIENT)
+                @test P * x === x && x == Float64[]
+            end
         end
     end
 
@@ -196,6 +211,20 @@ using FastTransforms, Test
             @test ichebyshevutransform(T[1]) == T[1]
             @test chebyshevutransform(T[]) == T[]
             @test ichebyshevutransform(T[]) == T[]
+
+            @testset "FFTW flags" begin
+                x = Float64[]
+                P = @inferred plan_chebyshevutransform(x, flags=FFTW.PATIENT)
+                @test P * x isa AbstractVector{Float64}
+                @test P * x == x == Float64[]
+                P = @inferred plan_ichebyshevutransform(x, flags=FFTW.PATIENT)
+                @test P * x isa AbstractVector{Float64}
+                @test P * x == x == Float64[]
+                P = @inferred plan_chebyshevutransform!(x, flags=FFTW.PATIENT)
+                @test P * x === x && x == Float64[]
+                P = @inferred plan_ichebyshevutransform!(x, flags=FFTW.PATIENT)
+                @test P * x === x && x == Float64[]
+            end
         end
     end
     @testset "Chebyshev second kind points <-> second kind coefficients" begin
