@@ -18,7 +18,7 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [compat]
 AbstractFFTs = "1.0"
-FFTW = "1.0 - 1.6"
+FFTW = "~1.6"
 FastGaussQuadrature = "0.4, 0.5"
 FastTransforms_jll = "0.6.2"
 FillArrays = "0.9, 0.10, 0.11, 0.12, 0.13, 1"
