@@ -9,12 +9,8 @@ jobs:
     strategy:
       matrix:
         version:
-          - '1.7'
-          - '1'
-          - '^1.9.0-0'
+          - 'nightly'
         os:
-          - ubuntu-latest
-          - macOS-latest
           - windows-latest
         arch:
           - x86
