@@ -27,11 +27,21 @@ ChebyshevTransformPlan{T,kind,inplace,N}(plan::P) where {T,kind,inplace,N,P} =
 isinplace(::typeof(FFTW.plan_r2r)) = false
 isinplace(::typeof(FFTW.plan_r2r!)) = true
 
-function createplan(::Type{CP}, x::AbstractArray{T,N}, ::Val{kind},
-            planfn::F, rfftkind, dims...; kws...) where {CP,T<:fftwNumber,N,F,kind}
+@inline function createplan_validlength(::Type{CP}, x::AbstractArray{T,N}, ::Val{kind},
+            planfn::F, rfftkind, dims...;
+            kws...) where {CP,T<:fftwNumber,N,F,kind}
 
     inplace = isinplace(planfn)
+    plan = planfn(x, rfftkind, dims...; kws...)
+    CP{T,kind,inplace,N}(plan)
+end
+
+@inline function createplan(::Type{CP}, x::AbstractArray{T,N}, ::Val{kind},
+            planfn::F, rfftkind, dims...;
+            kws...) where {CP,T<:fftwNumber,N,F,kind}
+
     if isempty(x)
+        inplace = isinplace(planfn)
         flags = get(kws, :flags, FFTW.ESTIMATE)
         szA = size(x) .+ 1
         A = if flags & FFTW.ESTIMATE != 0
@@ -42,8 +52,7 @@ function createplan(::Type{CP}, x::AbstractArray{T,N}, ::Val{kind},
         plan = planfn(A, rfftkind, dims...; kws...)
         CP{T,kind,inplace,N,typeof(plan)}()
     else
-        plan = planfn(x, rfftkind, dims...; kws...)
-        CP{T,kind,inplace,N}(plan)
+        createplan_validlength(CP, x, Val(kind), planfn, rfftkind, dims...; kws...)
     end
 end
 
@@ -52,7 +61,8 @@ function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws.
 end
 function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    createplan(ChebyshevTransformPlan, x, Val(2), FFTW.plan_r2r!, SECONDKIND, dims...; kws...)
+    createplan_validlength(ChebyshevTransformPlan, x, Val(2), FFTW.plan_r2r!,
+        SECONDKIND, dims...; kws...)
 end
 
 
@@ -61,7 +71,8 @@ function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws..
 end
 function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    createplan(ChebyshevTransformPlan, x, Val(2), FFTW.plan_r2r, SECONDKIND, dims...; kws...)
+    createplan_validlength(ChebyshevTransformPlan, x, Val(2), FFTW.plan_r2r,
+        SECONDKIND, dims...; kws...)
 end
 
 plan_chebyshevtransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevtransform!(x, Val(1), dims...; kws...)
@@ -418,7 +429,8 @@ function plan_chebyshevutransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws
 end
 function plan_chebyshevutransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    createplan(ChebyshevUTransformPlan, x, Val(2), FFTW.plan_r2r!, USECONDKIND, dims...; kws...)
+    createplan_validlength(ChebyshevUTransformPlan, x, Val(2), FFTW.plan_r2r!,
+        USECONDKIND, dims...; kws...)
 end
 
 function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
@@ -426,7 +438,8 @@ function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws.
 end
 function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    createplan(ChebyshevUTransformPlan, x, Val(2), FFTW.plan_r2r, USECONDKIND, dims...; kws...)
+    createplan_validlength(ChebyshevUTransformPlan, x, Val(2), FFTW.plan_r2r,
+        USECONDKIND, dims...; kws...)
 end
 
 plan_chebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform!(x, Val(1), dims...; kws...)
@@ -535,7 +548,8 @@ function plan_ichebyshevutransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kw
 end
 function plan_ichebyshevutransform!(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    createplan(IChebyshevUTransformPlan, x, Val(2), FFTW.plan_r2r!, USECONDKIND, dims...; kws...)
+    createplan_validlength(IChebyshevUTransformPlan, x, Val(2), FFTW.plan_r2r!,
+        USECONDKIND, dims...; kws...)
 end
 
 function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
@@ -543,7 +557,8 @@ function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws
 end
 function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
     any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
-    createplan(IChebyshevUTransformPlan, x, Val(2), FFTW.plan_r2r, USECONDKIND, dims...; kws...)
+    createplan_validlength(IChebyshevUTransformPlan, x, Val(2), FFTW.plan_r2r,
+        USECONDKIND, dims...; kws...)
 end
 
 
