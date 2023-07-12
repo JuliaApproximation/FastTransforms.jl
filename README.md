@@ -157,12 +157,14 @@ julia> @time norm(ipaduatransform(paduatransform(v)) - v)/norm(v)
 
 ```
 
-# References:
+# References
 
-   [1]  D. Ruiz—Antolín and A. Townsend. <a href="https://doi.org/10.1137/17M1134822">A nonuniform fast Fourier transform based on low rank approximation</a>, *SIAM J. Sci. Comput.*, **40**:A529–A547, 2018.
+[1]  D. Ruiz—Antolín and A. Townsend, [A nonuniform fast Fourier transform based on low rank approximation](https://doi.org/10.1137/17M1134822), *SIAM J. Sci. Comput.*, **40**:A529–A547, 2018.
 
-   [2] S. Olver, R. M. Slevinsky, and A. Townsend. <a href="https://doi.org/10.1017/S0962492920000045">Fast algorithms using orthogonal polynomials</a>, *Acta Numerica*, **29**:573—699, 2020.
+[2] T. S. Gutleb, S. Olver and R. M. Slevinsky, [Polynomial and rational measure modifications of orthogonal polynomials via infinite-dimensional banded matrix factorizations](https://arxiv.org/abs/2302.08448), arXiv:2023.08448, 2023.
 
-   [3]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
+[3] S. Olver, R. M. Slevinsky, and A. Townsend, [Fast algorithms using orthogonal polynomials](https://doi.org/10.1017/S0962492920000045), *Acta Numerica*, **29**:573—699, 2020.
 
-   [4]  R. M. Slevinsky, <a href="https://arxiv.org/abs/1711.07866">Conquering the pre-computation in two-dimensional harmonic polynomial transforms</a>, arXiv:1711.07866, 2017.
+[4]  R. M. Slevinsky, [Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series](https://doi.org/10.1016/j.acha.2017.11.001), *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
+
+[5]  R. M. Slevinsky, [Conquering the pre-computation in two-dimensional harmonic polynomial transforms](https://arxiv.org/abs/1711.07866), arXiv:1711.07866, 2017.
