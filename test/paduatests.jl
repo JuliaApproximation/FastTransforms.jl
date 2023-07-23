@@ -53,4 +53,17 @@ using FastTransforms, Test
     g_l=paduaeval(g_xy,x,y,l,Val{false})
     @test f_xy(x,y) ≈ f_m
     @test g_xy(x,y) ≈ g_l
+
+    # odd n
+    m=135
+    l=85
+    f_m=paduaeval(f_xy,x,y,m,Val{true})
+    g_l=paduaeval(g_xy,x,y,l,Val{true})
+    @test f_xy(x,y) ≈ f_m
+    @test g_xy(x,y) ≈ g_l
+
+    f_m=paduaeval(f_xy,x,y,m,Val{false})
+    g_l=paduaeval(g_xy,x,y,l,Val{false})
+    @test f_xy(x,y) ≈ f_m
+    @test g_xy(x,y) ≈ g_l
 end
