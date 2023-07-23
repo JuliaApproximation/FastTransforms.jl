@@ -210,19 +210,43 @@ function paduapoints(::Type{T}, n::Integer) where T
     m=0
     delta=0
     NN=fld(n+2,2)
-    @inbounds for k=n:-1:0
-        if isodd(n)>0
-            delta=mod(k,2)
+    # x coordinates
+    for k=n:-1:0
+        if isodd(n)
+            delta = Int(isodd(k))
         end
-        @inbounds for j=NN+delta:-1:1
+        x = -cospi(T(k)/n)
+        for j=NN+delta:-1:1
             m+=1
-            MM[m,1]=sinpi(T(k)/n-T(0.5))
-            if isodd(n-k)>0
-                MM[m,2]=sinpi((2j-one(T))/(n+1)-T(0.5))
+            MM[m,1]=x
+        end
+    end
+    # y coordinates
+    # populate the first two sets, and copy the rest
+    m=0
+    for k=n:-1:n-1
+        if isodd(n)
+            delta = Int(isodd(k))
+        end
+        for j=NN+delta:-1:1
+            m+=1
+            if isodd(n-k)
+                MM[m,2]=-cospi((2j-one(T))/(n+1))
             else
-                MM[m,2]=sinpi(T(2j-2)/(n+1)-T(0.5))
+                MM[m,2]=-cospi(T(2j-2)/(n+1))
             end
         end
+    end
+    m += 1
+    for k in n-2:-1:0
+        if isodd(n)
+            delta = Int(isodd(k))
+        end
+        NNk = 2NN+isodd(n)
+        for j in range(m, length=NN+delta)
+            MM[j,2] = MM[j-NNk,2]
+        end
+        m += NN+delta
     end
     return MM
 end
