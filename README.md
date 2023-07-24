@@ -161,7 +161,7 @@ julia> @time norm(ipaduatransform(paduatransform(v)) - v)/norm(v)
 
 [1]  D. Ruiz—Antolín and A. Townsend, [A nonuniform fast Fourier transform based on low rank approximation](https://doi.org/10.1137/17M1134822), *SIAM J. Sci. Comput.*, **40**:A529–A547, 2018.
 
-[2] T. S. Gutleb, S. Olver and R. M. Slevinsky, [Polynomial and rational measure modifications of orthogonal polynomials via infinite-dimensional banded matrix factorizations](https://arxiv.org/abs/2302.08448), arXiv:2023.08448, 2023.
+[2] T. S. Gutleb, S. Olver and R. M. Slevinsky, [Polynomial and rational measure modifications of orthogonal polynomials via infinite-dimensional banded matrix factorizations](https://arxiv.org/abs/2302.08448), arXiv:2302.08448, 2023.
 
 [3] S. Olver, R. M. Slevinsky, and A. Townsend, [Fast algorithms using orthogonal polynomials](https://doi.org/10.1017/S0962492920000045), *Acta Numerica*, **29**:573—699, 2020.
 
