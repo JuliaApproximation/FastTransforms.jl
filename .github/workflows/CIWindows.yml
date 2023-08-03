@@ -1,25 +1,20 @@
-name: CI
+name: CI Windows
 on:
   - push
   - pull_request
 jobs:
-  test:
+  testwindows:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         version:
-          - '1.7'
           - '1'
         os:
-          - ubuntu-latest
-          - macOS-latest
+          - windows-latest
         arch:
           - x86
           - x64
-        exclude:
-          - os: macOS-latest
-            arch: x86
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1

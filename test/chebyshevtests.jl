@@ -69,10 +69,17 @@ using FastTransforms, Test
             @test g ≈ fcopy
             @test_throws ArgumentError Pi * T[1,2]
 
-            @test chebyshevtransform(T[1]) == T[1]
-            @test ichebyshevtransform(T[1]) == T[1]
-            @test chebyshevtransform(T[]) == T[]
-            @test ichebyshevtransform(T[]) == T[]
+            v = T[1]
+            @test chebyshevtransform(v) == v
+            @test ichebyshevtransform(v) == v
+            @test chebyshevtransform!(v) === v
+            @test ichebyshevtransform!(v) === v
+
+            v = T[]
+            @test chebyshevtransform(v) == v
+            @test ichebyshevtransform(v) == v
+            @test chebyshevtransform!(v) === v
+            @test ichebyshevtransform!(v) === v
         end
     end
     @testset "Chebyshev second kind points <-> first kind coefficients" begin
@@ -192,10 +199,17 @@ using FastTransforms, Test
             @test g ≈ fcopy
             @test_throws ArgumentError Pi * T[1,2]
 
-            @test chebyshevutransform(T[1]) == T[1]
-            @test ichebyshevutransform(T[1]) == T[1]
-            @test chebyshevutransform(T[]) == T[]
-            @test ichebyshevutransform(T[]) == T[]
+            v = T[1]
+            @test chebyshevutransform(v) == v
+            @test ichebyshevutransform(v) == v
+            @test chebyshevutransform!(v) === v
+            @test ichebyshevutransform!(v) === v
+
+            v = T[]
+            @test chebyshevutransform(v) == v
+            @test ichebyshevutransform(v) == v
+            @test chebyshevutransform!(v) === v
+            @test ichebyshevutransform!(v) === v
         end
     end
     @testset "Chebyshev second kind points <-> second kind coefficients" begin

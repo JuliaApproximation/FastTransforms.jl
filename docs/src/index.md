@@ -2,7 +2,7 @@
 
 ## Introduction
 
-`FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
+[`FastTransforms.jl`](https://github.com/JuliaApproximation/FastTransforms.jl) allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
 This package provides a Julia wrapper for the [C library](https://github.com/MikaelSlevinsky/FastTransforms) of the same name. Additionally, all three types of nonuniform fast Fourier transforms available, as well as the Padua transform.
 
