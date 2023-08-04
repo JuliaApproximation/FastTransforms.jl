@@ -209,20 +209,45 @@ function paduapoints(::Type{T}, n::Integer) where T
     MM=Matrix{T}(undef,N,2)
     m=0
     delta=0
-    NN=fld(n+2,2)
-    @inbounds for k=n:-1:0
-        if isodd(n)>0
-            delta=mod(k,2)
+    NN=div(n,2)+1
+    # x coordinates
+    for k=n:-1:0
+        if isodd(n)
+            delta = Int(isodd(k))
         end
+        x = -cospi(T(k)/n)
         @inbounds for j=NN+delta:-1:1
             m+=1
-            MM[m,1]=sinpi(T(k)/n-T(0.5))
-            if isodd(n-k)>0
-                MM[m,2]=sinpi((2j-one(T))/(n+1)-T(0.5))
+            MM[m,1]=x
+        end
+    end
+    # y coordinates
+    # populate the first two sets, and copy the rest
+    m=0
+    for k=n:-1:n-1
+        if isodd(n)
+            delta = Int(isodd(k))
+        end
+        for j=NN+delta:-1:1
+            m+=1
+            @inbounds if isodd(n-k)
+                MM[m,2]=-cospi((2j-one(T))/(n+1))
             else
-                MM[m,2]=sinpi(T(2j-2)/(n+1)-T(0.5))
+                MM[m,2]=-cospi(T(2j-2)/(n+1))
             end
         end
+    end
+    m += 1
+    # number of y coordinates between k=n and k=n-2
+    Ny_shift = 2NN+isodd(n)
+    for k in n-2:-1:0
+        if isodd(n)
+            delta = Int(isodd(k))
+        end
+        for j in range(m, length=NN+delta)
+            @inbounds MM[j,2] = MM[j-Ny_shift,2]
+        end
+        m += NN+delta
     end
     return MM
 end
