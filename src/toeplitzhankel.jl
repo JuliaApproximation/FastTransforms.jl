@@ -109,7 +109,7 @@ function hankel_partialchol(v::Vector, D::AbstractVector)
     σ = T[]
     n = isempty(v) ? 0 : (length(v)+2) ÷ 2
     C = Matrix{T}(undef, n, 100)
-    d = v[1:2:end] .* D.^2 # diag of D .* H .* D'
+    @views d = v[1:2:end] .* D.^2 # diag of D .* H .* D'
     @assert length(v) ≥ 2n-1
     reltol = maximum(abs,d)*eps(T)*log(n)
     r = 0
@@ -117,7 +117,7 @@ function hankel_partialchol(v::Vector, D::AbstractVector)
         mx,idx = findmax(d)
         if mx ≤ reltol break end
         push!(σ, inv(mx))
-        C[:,k] .= view(v,idx:n+idx-1) .*D.*D[idx]
+        C[:,k] .= view(v, range(idx, length=n)) .* D .* D[idx]
         for j = 1:k-1
             nCjidxσj = -C[idx,j]*σ[j]
             LinearAlgebra.axpy!(nCjidxσj, view(C,:,j), view(C,:,k))
@@ -127,7 +127,7 @@ function hankel_partialchol(v::Vector, D::AbstractVector)
         end
         r += 1
     end
-    r == 100 && error("ranks more than 100 not yet supported")
+    r >= 100 && error("ranks more than 100 not yet supported")
     for k=1:length(σ) rmul!(view(C,:,k), sqrt(σ[k])) end
     C[:,1:r]
 end
@@ -206,7 +206,7 @@ function _leg2chebuTH_TLC(::Type{S}, mn, d) where {S}
     S̃ = real(S)
     λ = Λ.(0:half(S̃):n-1)
     t = zeros(S,n)
-    t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
+    @views t[1:2:end] .= λ[1:2:n]./(((1:2:n).-2))
     h = λ./((1:2n-1).+1)
     C = hankel_partialchol(h)
     T = plan_uppertoeplitz!(-2t/π, (length(t), size(C,2)), 1)
@@ -237,7 +237,7 @@ function _cheb2legTH_TLC(::Type{S}, mn, d) where S
     t = zeros(S,n-1)
     S̃ = real(S)
     if n > 1
-        t[1:2:end] = Λ.(0:one(S̃):div(n-2,2), -half(S̃), one(S̃))
+        t[1:2:end] .= Λ.(0:one(S̃):div(n-2,2), -half(S̃), one(S̃))
     end
     h = Λ.(1:half(S̃):n-1, zero(S̃), 3half(S̃))
     D = 1:n-1
@@ -263,7 +263,7 @@ function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {
     DL = (zero(S̃):n-one(S̃)) .+ λ₂
     jk = 0:half(S̃):n-1
     t = zeros(S,n)
-    t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S̃))[1:2:n]
+    @views t[1:2:n] = Λ.(jk,λ₁-λ₂,one(S̃))[1:2:n]
     h = Λ.(jk,λ₁,λ₂+one(S̃))
     lmul!(gamma(λ₂)/gamma(λ₁),h)
     C = hankel_partialchol(h)
