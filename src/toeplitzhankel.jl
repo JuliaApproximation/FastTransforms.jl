@@ -1,7 +1,20 @@
 """
-Store a diagonally-scaled Toeplitz∘Hankel matrix:
+Represent a scaled Toeplitz∘Hankel matrix:
+
     DL(T∘H)DR
-where the Hankel matrix `H` is non-negative definite. This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
+
+where the Hankel matrix `H` is non-negative definite, via
+
+    ∑_{k=1}^r Diagonal(L[:,k])*T*Diagonal(R[:,k])
+
+where `L` and `R` are determined by doing a rank-r pivoted Cholesky decomposition of `H`, which in low rank form is
+
+    H ≈ ∑_{k=1}^r C[:,k]C[:,k]'
+
+so that `L[:,k] = DL*C[:,k]` and `R[:,k] = DR*C[:,k]`.
+
+This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
+The tuple storage allows plans applied to each dimension.
 """
 struct ToeplitzHankelPlan{S, N, M, N1, TP<:ToeplitzPlan{S,N1}} <: Plan{S}
     T::NTuple{M,TP}
@@ -209,7 +222,7 @@ function _leg2chebuTH_TLC(::Type{S}, mn, d) where {S}
     t[1:2:end] = λ[1:2:n]./(((1:2:n).-2))
     h = λ./((1:2n-1).+1)
     C = hankel_partialchol(h)
-    T = plan_uppertoeplitz!(-2t/π, (length(t), size(C,2)), 1)
+    T = plan_uppertoeplitz!(-2t/π, (mn..., size(C,2)), d)
     (T, (1:n) .* C, C)
 end
 
@@ -228,6 +241,10 @@ for f in (:leg2cheb, :leg2chebu)
         end
     end
 end
+
+###
+# th_cheb2leg
+###
 
 _sub_dim_by_one(d) = ()
 _sub_dim_by_one(d, m, n...) = (isone(d) ? m-1 : m, _sub_dim_by_one(d-1, n...)...)
@@ -257,7 +274,22 @@ function plan_th_cheb2leg!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) wh
     ChebyshevToLegendrePlanTH(ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims))
 end
 
-function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {S}
+
+###
+# th_ultra2ultra
+###
+
+plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims::Int) where {S} = ToeplitzHankelPlan(_ultra2ultraTH_TLC(S, mn, λ₁, λ₂, dims)..., dims)
+
+function plan_th_ultra2ultra!(::Type{S}, mn::NTuple{2,Int}, λ₁, λ₂, dims::NTuple{2,Int}) where {S}
+    @assert dims == (1,2)
+    T1,L1,C1 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 1)
+    T2,L2,C2 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 2)
+    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+end
+
+function _ultra2ultraTH_TLC(::Type{S}, mn, λ₁, λ₂, d) where {S}
+    n = mn[d]
     @assert abs(λ₁-λ₂) < 1
     S̃ = real(S)
     DL = (zero(S̃):n-one(S̃)) .+ λ₂
@@ -267,9 +299,13 @@ function plan_th_ultra2ultra!(::Type{S}, (n,)::Tuple{Int}, λ₁, λ₂) where {
     h = Λ.(jk,λ₁,λ₂+one(S̃))
     lmul!(gamma(λ₂)/gamma(λ₁),h)
     C = hankel_partialchol(h)
-    T = plan_uppertoeplitz!(lmul!(inv(gamma(λ₁-λ₂)),t), (length(t), size(C,2)), 1)
-    ToeplitzHankelPlan(T, DL .* C, C)
+    T = plan_uppertoeplitz!(lmul!(inv(gamma(λ₁-λ₂)),t), (mn..., size(C,2)), d)
+    T, DL .* C, C
 end
+
+###
+# th_jac2jac
+###
 
 function alternatesign!(v)
     @inbounds for k = 2:2:length(v)
@@ -315,5 +351,10 @@ for f in (:th_leg2cheb, :th_cheb2leg, :th_leg2chebu)
     end
 end
 
-th_ultra2ultra(v, λ₁, λ₂, dims...) = plan_th_ultra2ultra!(eltype(v),size(v),λ₁,λ₂, dims...)*copy(v)
+plan_th_ultra2ultra!(::Type{S}, mn::NTuple{N,Int}, λ₁, λ₂, dims::UnitRange) where {N,S} = plan_th_ultra2ultra!(S, mn, λ₁, λ₂, tuple(dims...))
+plan_th_ultra2ultra!(::Type{S}, mn::Tuple{Int}, λ₁, λ₂, dims::Tuple{Int}=(1,)) where {S} = plan_th_ultra2ultra!(S, mn, λ₁, λ₂, dims...)
+plan_th_ultra2ultra!(::Type{S}, (m,n)::NTuple{2,Int}, λ₁, λ₂) where {S} = plan_th_ultra2ultra!(S, (m,n), λ₁, λ₂, (1,2))
+plan_th_ultra2ultra!(arr::AbstractArray{T}, λ₁, λ₂, dims...) where T = plan_th_ultra2ultra!(T, size(arr), λ₁, λ₂, dims...)
+th_ultra2ultra(v, λ₁, λ₂, dims...) = plan_th_ultra2ultra!(eltype(v), size(v), λ₁, λ₂, dims...)*copy(v)
+
 th_jac2jac(v, α, β, γ, δ, dims...) = plan_th_jac2jac!(eltype(v),size(v),α,β,γ,δ, dims...)*copy(v)
