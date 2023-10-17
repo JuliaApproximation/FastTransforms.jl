@@ -279,14 +279,6 @@ end
 # th_ultra2ultra
 ###
 
-plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims::Int) where {S} = ToeplitzHankelPlan(_ultra2ultraTH_TLC(S, mn, λ₁, λ₂, dims)..., dims)
-
-function plan_th_ultra2ultra!(::Type{S}, mn::NTuple{2,Int}, λ₁, λ₂, dims::NTuple{2,Int}) where {S}
-    @assert dims == (1,2)
-    T1,L1,C1 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 1)
-    T2,L2,C2 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 2)
-    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
-end
 
 function _ultra2ultraTH_TLC(::Type{S}, mn, λ₁, λ₂, d) where {S}
     n = mn[d]
@@ -303,6 +295,16 @@ function _ultra2ultraTH_TLC(::Type{S}, mn, λ₁, λ₂, d) where {S}
     T, DL .* C, C
 end
 
+plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims::Int) where {S} = ToeplitzHankelPlan(_ultra2ultraTH_TLC(S, mn, λ₁, λ₂, dims)..., dims)
+
+function plan_th_ultra2ultra!(::Type{S}, mn::NTuple{2,Int}, λ₁, λ₂, dims::NTuple{2,Int}) where {S}
+    @assert dims == (1,2)
+    T1,L1,C1 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 1)
+    T2,L2,C2 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 2)
+    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+end
+
+
 ###
 # th_jac2jac
 ###
@@ -314,7 +316,8 @@ function alternatesign!(v)
     v
 end
 
-function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
+function _jac2jacTH_TLC(::Type{S}, mn, α, β, γ, δ, d) where {S}
+    n = mn[d]
     if β == δ
         @assert abs(α-γ) < 1
         @assert α+β > -1
@@ -324,7 +327,7 @@ function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
         h = Λ.(0:2n-2,α+β+1,γ+β+2)
         DR = Λ.(jk,β+1,α+β+1)./gamma(α-γ)
         C = hankel_partialchol(h)
-        T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
+        T = plan_uppertoeplitz!(t, (mn..., size(C,2)), d)
     elseif α == γ
         jk = 0:n-1
         DL = (2jk .+ δ .+ α .+ 1).*Λ.(jk,δ+α+1,α+1)
@@ -332,13 +335,27 @@ function plan_th_jac2jac!(::Type{S}, (n,), α, β, γ, δ) where {S}
         DR = Λ.(jk,α+1,α+β+1)./gamma(β-δ)
         t = alternatesign!(convert(AbstractVector{S}, Λ.(jk,β-δ,1)))
         C = hankel_partialchol(h)
-        T = plan_uppertoeplitz!(t, (length(t), size(C,2)), 1)
+        T = plan_uppertoeplitz!(t, (mn..., size(C,2)), d)
     else
         throw(ArgumentError("Cannot create Toeplitz dot Hankel, use a sequence of plans."))
     end
 
-    ToeplitzHankelPlan(T, DL .* C, DR .* C)
+    (T, DL .* C, DR .* C)
 end
+
+plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims::Int) where {S} = ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, β, γ, δ, dims)..., dims)
+
+function plan_th_jac2jac!(::Type{S}, mn::NTuple{2,Int}, α, β, γ, δ, dims::NTuple{2,Int}) where {S}
+    @assert dims == (1,2)
+    T1,L1,C1 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 1)
+    T2,L2,C2 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 2)
+    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+end
+
+
+###
+# other routines
+###
 
 for f in (:th_leg2cheb, :th_cheb2leg, :th_leg2chebu)
     plan = Symbol("plan_", f, "!")
@@ -357,4 +374,8 @@ plan_th_ultra2ultra!(::Type{S}, (m,n)::NTuple{2,Int}, λ₁, λ₂) where {S} = 
 plan_th_ultra2ultra!(arr::AbstractArray{T}, λ₁, λ₂, dims...) where T = plan_th_ultra2ultra!(T, size(arr), λ₁, λ₂, dims...)
 th_ultra2ultra(v, λ₁, λ₂, dims...) = plan_th_ultra2ultra!(eltype(v), size(v), λ₁, λ₂, dims...)*copy(v)
 
-th_jac2jac(v, α, β, γ, δ, dims...) = plan_th_jac2jac!(eltype(v),size(v),α,β,γ,δ, dims...)*copy(v)
+plan_th_jac2jac!(::Type{S}, mn::NTuple{N,Int}, α, β, γ, δ, dims::UnitRange) where {N,S} = plan_th_jac2jac!(S, mn, α, β, γ, δ, tuple(dims...))
+plan_th_jac2jac!(::Type{S}, mn::Tuple{Int}, α, β, γ, δ, dims::Tuple{Int}=(1,)) where {S} = plan_th_jac2jac!(S, mn, α, β, γ, δ, dims...)
+plan_th_jac2jac!(::Type{S}, (m,n)::NTuple{2,Int}, α, β, γ, δ) where {S} = plan_th_jac2jac!(S, (m,n), α, β, γ, δ, (1,2))
+plan_th_jac2jac!(arr::AbstractArray{T}, α, β, γ, δ, dims...) where T = plan_th_jac2jac!(T, size(arr), α, β, γ, δ, dims...)
+th_jac2jac(v, α, β, γ, δ, dims...) = plan_th_jac2jac!(eltype(v), size(v), α, β, γ, δ, dims...)*copy(v)
