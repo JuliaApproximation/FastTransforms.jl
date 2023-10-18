@@ -404,18 +404,36 @@ function _jacobi_convert_b(a, b, n) # Jacobi(a, b+1) \ Jacobi(a, b)
     end
 end
 
+function _lmul!(A::Bidiagonal, B::AbstractVecOrMat)
+    @assert A.uplo == 'U'
+    
+    m, n = size(B, 1), size(B, 2)
+    if m != size(A, 1)
+        throw(DimensionMismatch("right hand side B needs first dimension of size $(size(A,1)), has size $m"))
+    end
+    @inbounds for j = 1:n
+        for i = 1:m-1
+            Bij = A.dv[i]*B[i,j]
+            Bij += A.ev[i]*B[i+1,j]
+            B[i,j] = Bij
+        end
+        B[m,j] = A.dv[m]*B[m,j]
+    end
+    B
+end
+
 function _jac2jac_integerinc!(x, α, β, γ, δ)
-    n = length(x)
+    n = size(x,1)
 
     while !(α ≈ γ && β ≈ δ)
         if !(δ ≈ β) && δ > β
-            lmul!(UpperTriangular(_jacobi_convert_b(α, β, n)), x)
+            _lmul!(_jacobi_convert_b(α, β, n), x)
             β += 1
         elseif !(δ ≈ β) && δ < β
             ldiv!(_jacobi_convert_b(α, β-1, n), x)
             β -= 1
         elseif !(γ ≈ α) && γ > α
-            lmul!(UpperTriangular(_jacobi_convert_a(α, β, n)), x)
+            _lmul!(_jacobi_convert_a(α, β, n), x)
             α += 1
         else
             @assert γ < α
