@@ -309,6 +309,21 @@ end
 # th_jac2jac
 ###
 
+struct ComposePlan{T, Plans} <: Plan{T}
+    plans::Plans
+end
+
+ComposePlan{T}(A...) where T = ComposePlan{T,typeof(A)}(A)
+ComposePlan(A...) = ComposePlan{mapreduce(eltype, promote_type, A)}(A...)
+
+function *(P::ComposePlan, A::AbstractArray)
+    ret = A
+    for p in reverse(P.plans)
+        ret = p*ret
+    end
+    ret
+end
+
 function alternatesign!(v)
     @inbounds for k = 2:2:length(v)
         v[k] = -v[k]
@@ -343,13 +358,27 @@ function _jac2jacTH_TLC(::Type{S}, mn, α, β, γ, δ, d) where {S}
     (T, DL .* C, DR .* C)
 end
 
-plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims::Int) where {S} = ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, β, γ, δ, dims)..., dims)
+function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims::Int) where {S}
+    if α == γ || β == δ
+        ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, β, γ, δ, dims)..., dims)
+    else
+        P1 = ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, β, α, δ, dims)..., dims)
+        P2 = ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, δ, γ, δ, dims)..., dims)
+        ComposePlan(P2, P1)
+    end
+end
 
 function plan_th_jac2jac!(::Type{S}, mn::NTuple{2,Int}, α, β, γ, δ, dims::NTuple{2,Int}) where {S}
     @assert dims == (1,2)
-    T1,L1,C1 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 1)
-    T2,L2,C2 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 2)
-    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+    if α == γ || β == δ
+        T1,L1,C1 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 1)
+        T2,L2,C2 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 2)
+        ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+    else
+        P1 = plan_th_jac2jac!(S, mn, α, β, α, δ, dims)
+        P2 = plan_th_jac2jac!(S, mn, α, δ, γ, δ, dims)
+        ComposePlan(P2, P1)
+    end
 end
 
 

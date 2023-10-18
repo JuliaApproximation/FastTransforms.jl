@@ -11,10 +11,14 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_ultra2ultra(x,0.1, 0.2) ≈ lib_ultra2ultra(x, 0.1, 0.2)
         @test th_jac2jac(x,0.1, 0.2,0.1,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.1,0.4)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.2) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.2)
+        @test th_jac2jac(x,0.1, 0.2,0.3,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.4)
 
 
-        @test th_cheb2leg(th_leg2cheb(x)) ≈ x atol=1E-9
-        @test th_leg2cheb(th_cheb2leg(x)) ≈ x atol=1E-10
+        @test th_cheb2leg(th_leg2cheb(x)) ≈ x
+        @test th_leg2cheb(th_cheb2leg(x)) ≈ x
+        @test th_ultra2ultra(th_ultra2ultra(x, 0.1, 0.6), 0.6, 0.1) ≈ x
+        @test th_jac2jac(th_jac2jac(x, 0.1, 0.6, 0.1, 0.8), 0.1, 0.8, 0.1, 0.6) ≈ x
+        @test th_jac2jac(th_jac2jac(x, 0.1, 0.6, 0.2, 0.8), 0.2, 0.8, 0.1, 0.6) ≈ x
     end
 
     for X in (randn(5,4), randn(5,4) + im*randn(5,4))
@@ -52,6 +56,9 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_jac2jac(X, 0.1, 0.6, 0.1, 0.8, 1) ≈ hcat([jac2jac(X[:,j], 0.1, 0.6, 0.1, 0.8) for j=1:size(X,2)]...)
         @test th_jac2jac(X, 0.1, 0.6, 0.1, 0.8, 2) ≈ vcat([permutedims(jac2jac(X[k,:], 0.1, 0.6, 0.1, 0.8)) for k=1:size(X,1)]...)
         @test th_jac2jac(X, 0.1, 0.6, 0.1, 0.8) ≈ th_jac2jac(th_jac2jac(X, 0.1, 0.6, 0.1, 0.8, 1), 0.1, 0.6, 0.1, 0.8, 2)
+
+        @test th_jac2jac(X, 0.1, 0.6, 0.2, 0.8, 1) ≈ hcat([jac2jac(X[:,j], 0.1, 0.6, 0.2, 0.8) for j=1:size(X,2)]...)
+        @test th_jac2jac(X, 0.1, 0.6, 0.2, 0.8, 2) ≈ vcat([permutedims(jac2jac(X[k,:], 0.1, 0.6, 0.2, 0.8)) for k=1:size(X,1)]...)
 
         @test th_jac2jac(X, 0.1, 0.6, 0.1, 0.8) == plan_th_jac2jac!(X, 0.1, 0.6, 0.1, 0.8, 1:2)*copy(X)
         @test th_jac2jac(X, 0.1, 0.6, 0.1, 0.8) == plan_th_jac2jac!(X, 0.1, 0.6, 0.1, 0.8, 1:2)*copy(X)
