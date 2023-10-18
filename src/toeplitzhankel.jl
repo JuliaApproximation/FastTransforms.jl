@@ -312,13 +312,11 @@ end
 struct ComposePlan{T, Plans} <: Plan{T}
     plans::Plans
 end
-
-ComposePlan{T}(A...) where T = ComposePlan{T,typeof(A)}(A)
-ComposePlan(A...) = ComposePlan{mapreduce(eltype, promote_type, A)}(A...)
+ComposePlan(A::AbstractVector{<:Plan{T}}) where T = ComposePlan{T,typeof(A)}(A)
 
 function *(P::ComposePlan, A::AbstractArray)
     ret = A
-    for p in reverse(P.plans)
+    for p in P.plans
         ret = p*ret
     end
     ret
@@ -344,6 +342,7 @@ function _jac2jacTH_TLC(::Type{S}, mn, α, β, γ, δ, d) where {S}
         C = hankel_partialchol(h)
         T = plan_uppertoeplitz!(t, (mn..., size(C,2)), d)
     elseif α == γ
+        @assert abs(β-δ) < 1
         jk = 0:n-1
         DL = (2jk .+ δ .+ α .+ 1).*Λ.(jk,δ+α+1,α+1)
         h = Λ.(0:2n-2,α+β+1,δ+α+2)
@@ -358,27 +357,29 @@ function _jac2jacTH_TLC(::Type{S}, mn, α, β, γ, δ, d) where {S}
     (T, DL .* C, DR .* C)
 end
 
-function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims::Int) where {S}
-    if α == γ || β == δ
-        ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, β, γ, δ, dims)..., dims)
-    else
-        P1 = ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, β, α, δ, dims)..., dims)
-        P2 = ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, δ, γ, δ, dims)..., dims)
-        ComposePlan(P2, P1)
-    end
+_good_plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims::Int) where S = ToeplitzHankelPlan(_jac2jacTH_TLC(S, mn, α, β, γ, δ, dims)..., dims)
+
+function _good_plan_th_jac2jac!(::Type{S}, mn::NTuple{2,Int}, α, β, γ, δ, dims::NTuple{2,Int}) where S
+    T1,L1,C1 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 1)
+    T2,L2,C2 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 2)
+    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
-function plan_th_jac2jac!(::Type{S}, mn::NTuple{2,Int}, α, β, γ, δ, dims::NTuple{2,Int}) where {S}
-    @assert dims == (1,2)
-    if α == γ || β == δ
-        T1,L1,C1 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 1)
-        T2,L2,C2 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 2)
-        ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
-    else
-        P1 = plan_th_jac2jac!(S, mn, α, β, α, δ, dims)
-        P2 = plan_th_jac2jac!(S, mn, α, δ, γ, δ, dims)
-        ComposePlan(P2, P1)
+function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
+    if α == γ && β == δ
+        error("trivial transforms are not supported")
     end
+
+    if abs(α-γ) < 1 && abs(β - δ) < 1
+        if (α == γ || β == δ)
+            plans = [_good_plan_th_jac2jac!(S, mn, α, β, γ, δ, dims)]
+        else
+            plans = [_good_plan_th_jac2jac!(S, mn, α, β, α, δ, dims), _good_plan_th_jac2jac!(S, mn, α, δ, γ, δ, dims)]
+        end
+    else
+        error("Not supported yet")
+    end
+    ComposePlan(plans)
 end
 
 
