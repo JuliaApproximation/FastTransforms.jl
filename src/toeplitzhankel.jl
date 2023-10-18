@@ -309,12 +309,16 @@ end
 # th_jac2jac
 ###
 
-struct ComposePlan{T, Plans} <: Plan{T}
+struct Jac2JacPlanTH{T, Plans} <: Plan{T}
     plans::Plans
+    α::T
+    β::T
+    γ::T
+    δ::T
 end
-ComposePlan(A::AbstractVector{<:Plan{T}}) where T = ComposePlan{T,typeof(A)}(A)
 
-function *(P::ComposePlan, A::AbstractArray)
+function *(P::Jac2JacPlanTH, A::AbstractArray)
+    @assert abs(P.α-P.γ) < 1 && abs(P.β-P.δ) < 1
     ret = A
     for p in P.plans
         ret = p*ret
@@ -370,17 +374,37 @@ function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
         error("trivial transforms are not supported")
     end
 
-    if abs(α-γ) < 1 && abs(β - δ) < 1
-        if (α == γ || β == δ)
-            plans = [_good_plan_th_jac2jac!(S, mn, α, β, γ, δ, dims)]
-        else
-            plans = [_good_plan_th_jac2jac!(S, mn, α, β, α, δ, dims), _good_plan_th_jac2jac!(S, mn, α, δ, γ, δ, dims)]
-        end
+    
+    c = trunc(Int,α) + rem(γ,1)
+    d = trunc(Int,β) + rem(δ,1)
+
+
+    if (α == γ || β == δ)
+        plans = [_good_plan_th_jac2jac!(S, mn, α, β, c, d, dims)]
     else
-        error("Not supported yet")
+        plans = [_good_plan_th_jac2jac!(S, mn, α, β, α, d, dims), _good_plan_th_jac2jac!(S, mn, α, d, c, d, dims)]
     end
-    ComposePlan(plans)
+
+    Jac2JacPlanTH(plans, α, β, γ, δ)
 end
+
+function _jacobi_convert_a(a, b, n) # Jacobi(a+1, b) \ Jacobi(a, b)
+    if isone(-a-b)
+        Bidiagonal(Vcat(1, ((2:n) .+ (a+b)) ./ ((3:2:n) .+ (a+b))), -((1:n) .+ b) ./ ((3:2:n) .+ (a+b)), :U)
+    else
+        Bidiagonal(((1:n) .+ (a+b))./((1:2:n) .+ (a+b)), -((1:n) .+ b)./((3:2:n) .+ (a+b)), :U)
+    end
+end
+function _jacobi_convert_b(a, b, n) # Jacobi(a, b+1) \ Jacobi(a, b)
+    if isone(-a-b)
+        Bidiagonal(Vcat(1, ((2:n) .+ (a+b)) ./ ((3:2:n) .+ (a+b))), ((1:n) .+ a) ./ ((3:2:n) .+ (a+b)), :U)
+    else
+        Bidiagonal(((1:n) .+ (a+b))./((1:2:n) .+ (a+b)), ((1:n) .+ a)./((3:2:n) .+ (a+b)), :U)
+    end
+end
+
+
+    
 
 
 ###
