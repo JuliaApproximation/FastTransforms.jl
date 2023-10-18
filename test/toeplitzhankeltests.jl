@@ -12,7 +12,10 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_jac2jac(x,0.1, 0.2,0.1,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.1,0.4)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.2) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.2)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.4)
-
+        @test th_jac2jac(x,0.1, 0.2,1.3,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,1.3,0.4)
+        @test th_jac2jac(x,0.1, 0.2,1.3,2.4) ≈ lib_jac2jac(x, 0.1, 0.2,1.3,2.4)
+        @test th_jac2jac(x,0.1, 0.2,1.3,2.4) ≈ lib_jac2jac(x, 0.1, 0.2,1.3,2.4)
+        @test th_jac2jac(x,1.3, 1.2,-0.1,-0.2) ≈ lib_jac2jac(x, 1.3, 1.2,-0.1,-0.2)
 
         @test th_cheb2leg(th_leg2cheb(x)) ≈ x
         @test th_leg2cheb(th_cheb2leg(x)) ≈ x
@@ -64,6 +67,8 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_jac2jac(X, 0.1, 0.6, 0.1, 0.8) == plan_th_jac2jac!(X, 0.1, 0.6, 0.1, 0.8, 1:2)*copy(X)
 
         @test th_jac2jac(th_jac2jac(X, 0.1, 0.6, 0.1, 0.8), 0.1, 0.8, 0.1, 0.6) ≈ X
+
+        @test th_jac2jac(X, 0.1, 0.6, 0.1, 2.8, 1) ≈ hcat([jac2jac(X[:,j], 0.1, 0.6, 0.1, 2.8) for j=1:size(X,2)]...)
     end
 
     @testset "BigFloat" begin

@@ -317,13 +317,16 @@ struct Jac2JacPlanTH{T, Plans} <: Plan{T}
     δ::T
 end
 
+_nearest_jacobi_par(α, γ) = trunc(Int,α) + rem(γ,1)
+
 function *(P::Jac2JacPlanTH, A::AbstractArray)
-    @assert abs(P.α-P.γ) < 1 && abs(P.β-P.δ) < 1
     ret = A
     for p in P.plans
         ret = p*ret
     end
-    ret
+    c,d = _nearest_jacobi_par(P.α, P.γ), _nearest_jacobi_par(P.β, P.δ)
+
+    _jac2jac_integerinc!(ret, c, d, P.γ, P.δ)
 end
 
 function alternatesign!(v)
@@ -369,15 +372,13 @@ function _good_plan_th_jac2jac!(::Type{S}, mn::NTuple{2,Int}, α, β, γ, δ, di
     ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
+
 function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
     if α == γ && β == δ
         error("trivial transforms are not supported")
     end
 
-    
-    c = trunc(Int,α) + rem(γ,1)
-    d = trunc(Int,β) + rem(δ,1)
-
+    c,d = _nearest_jacobi_par(α, γ), _nearest_jacobi_par(β, δ)
 
     if (α == γ || β == δ)
         plans = [_good_plan_th_jac2jac!(S, mn, α, β, c, d, dims)]
@@ -390,17 +391,39 @@ end
 
 function _jacobi_convert_a(a, b, n) # Jacobi(a+1, b) \ Jacobi(a, b)
     if isone(-a-b)
-        Bidiagonal(Vcat(1, ((2:n) .+ (a+b)) ./ ((3:2:n) .+ (a+b))), -((1:n) .+ b) ./ ((3:2:n) .+ (a+b)), :U)
+        Bidiagonal(vcat(1, ((2:n) .+ (a+b)) ./ (range(3; step=2, length=n-1) .+ (a+b))), -((1:n-1) .+ b) ./ (range(3; step=2, length=n-1) .+ (a+b)), :U)
     else
-        Bidiagonal(((1:n) .+ (a+b))./((1:2:n) .+ (a+b)), -((1:n) .+ b)./((3:2:n) .+ (a+b)), :U)
+        Bidiagonal(((1:n) .+ (a+b))./(range(1; step=2, length=n) .+ (a+b)), -((1:n-1) .+ b)./(range(3; step=2, length=n-1) .+ (a+b)), :U)
     end
 end
 function _jacobi_convert_b(a, b, n) # Jacobi(a, b+1) \ Jacobi(a, b)
     if isone(-a-b)
-        Bidiagonal(Vcat(1, ((2:n) .+ (a+b)) ./ ((3:2:n) .+ (a+b))), ((1:n) .+ a) ./ ((3:2:n) .+ (a+b)), :U)
+        Bidiagonal(vcat(1, ((2:n) .+ (a+b)) ./ (range(3; step=2, length=n-1) .+ (a+b))), ((1:n-1) .+ a) ./ (range(3; step=2, length=n) .+ (a+b)), :U)
     else
-        Bidiagonal(((1:n) .+ (a+b))./((1:2:n) .+ (a+b)), ((1:n) .+ a)./((3:2:n) .+ (a+b)), :U)
+        Bidiagonal(((1:n) .+ (a+b))./(range(1; step=2, length=n) .+ (a+b)), ((1:n-1) .+ a)./(range(3; step=2, length=n-1) .+ (a+b)), :U)
     end
+end
+
+function _jac2jac_integerinc!(x, α, β, γ, δ)
+    n = length(x)
+
+    while !(α ≈ γ && β ≈ δ)
+        if !(δ ≈ β) && δ > β
+            lmul!(UpperTriangular(_jacobi_convert_b(α, β, n)), x)
+            β += 1
+        elseif !(δ ≈ β) && δ < β
+            ldiv!(_jacobi_convert_b(α, β-1, n), x)
+            β -= 1
+        elseif !(γ ≈ α) && γ > α
+            lmul!(UpperTriangular(_jacobi_convert_a(α, β, n)), x)
+            α += 1
+        else
+            @assert γ < α
+            ldiv!(_jacobi_convert_a(α-1, β, n), x)
+            α -= 1
+        end
+    end
+    x
 end
 
 
