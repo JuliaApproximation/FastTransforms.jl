@@ -309,12 +309,13 @@ end
 # th_jac2jac
 ###
 
-struct Jac2JacPlanTH{T, Plans} <: Plan{T}
+struct Jac2JacPlanTH{T, Plans, Dims} <: Plan{T}
     plans::Plans
     α::T
     β::T
     γ::T
     δ::T
+    dims::Dims
 end
 
 _nearest_jacobi_par(α, γ) = trunc(Int,α) + rem(γ,1)
@@ -326,7 +327,7 @@ function *(P::Jac2JacPlanTH, A::AbstractArray)
     end
     c,d = _nearest_jacobi_par(P.α, P.γ), _nearest_jacobi_par(P.β, P.δ)
 
-    _jac2jac_integerinc!(ret, c, d, P.γ, P.δ)
+    _jac2jac_integerinc!(ret, c, d, P.γ, P.δ, P.dims)
 end
 
 function alternatesign!(v)
@@ -386,7 +387,7 @@ function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
         plans = [_good_plan_th_jac2jac!(S, mn, α, β, α, d, dims), _good_plan_th_jac2jac!(S, mn, α, d, c, d, dims)]
     end
 
-    Jac2JacPlanTH(plans, α, β, γ, δ)
+    Jac2JacPlanTH(plans, α, β, γ, δ, dims)
 end
 
 function _jacobi_convert_a(a, b, n) # Jacobi(a+1, b) \ Jacobi(a, b)
@@ -422,30 +423,34 @@ function _lmul!(A::Bidiagonal, B::AbstractVecOrMat)
     B
 end
 
+_jacobi_raise_b!(x, α, β) = _lmul!(_jacobi_convert_b(α, β, n), x)
+_jacobi_raise_a!(x, α, β) = _lmul!(_jacobi_convert_a(α, β, n), x)
+
+_jacobi_lower_b!(x, α, β) = ldiv!(_jacobi_convert_b(α, β-1, n), x)
+_jacobi_lower_a!(x, α, β) = ldiv!(_jacobi_convert_a(α-1, β, n), x)
+
+
 function _jac2jac_integerinc!(x, α, β, γ, δ)
     n = size(x,1)
 
     while !(α ≈ γ && β ≈ δ)
         if !(δ ≈ β) && δ > β
-            _lmul!(_jacobi_convert_b(α, β, n), x)
+            _jacobi_raise_b!(x, α, β)
             β += 1
         elseif !(δ ≈ β) && δ < β
-            ldiv!(_jacobi_convert_b(α, β-1, n), x)
+            _jacobi_lower_b!(x, α, β)
             β -= 1
         elseif !(γ ≈ α) && γ > α
-            _lmul!(_jacobi_convert_a(α, β, n), x)
+            _jacobi_raise_a!(x, α, β)
             α += 1
         else
             @assert γ < α
-            ldiv!(_jacobi_convert_a(α-1, β, n), x)
+            _jacobi_lower_a!(x, α, β)
             α -= 1
         end
     end
     x
 end
-
-
-    
 
 
 ###
