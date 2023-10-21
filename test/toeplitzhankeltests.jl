@@ -1,8 +1,10 @@
-using FastTransforms, Test
+using FastTransforms, Test, Random
 import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th_jac2jac, th_leg2chebu,
                         lib_leg2cheb, lib_cheb2leg, lib_ultra2ultra, lib_jac2jac,
                         plan_th_cheb2leg!, plan_th_leg2chebu!, plan_th_leg2cheb!, plan_th_ultra2ultra!, plan_th_jac2jac!,
                         th_cheb2jac, th_jac2cheb
+
+Random.seed!(0)
 
 @testset "ToeplitzHankel" begin
     for x in ([1.0], [1.0,2,3,4,5], [1.0+im,2-3im,3+4im,4-5im,5+10im], collect(1.0:1000))
