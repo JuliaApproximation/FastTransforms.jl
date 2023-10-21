@@ -68,8 +68,9 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
 
         @test th_jac2jac(th_jac2jac(X, 0.1, 0.6, 0.1, 0.8), 0.1, 0.8, 0.1, 0.6) ≈ X
 
-        @test th_jac2jac(X, 0.1, 0.6, 0.1, 2.8, 1) ≈ hcat([jac2jac(X[:,j], 0.1, 0.6, 0.1, 2.8) for j=1:size(X,2)]...)
-        @test th_jac2jac(X, 0.1, 0.6, 0.1, 2.8, 2) ≈ vcat([permutedims(jac2jac(X[k,:], 0.1, 0.6, 0.1, 2.8)) for k=1:size(X,1)]...)
+        @test th_jac2jac(X, 0.1, 0.6, 3.1, 2.8, 1) ≈ hcat([jac2jac(X[:,j], 0.1, 0.6, 3.1, 2.8) for j=1:size(X,2)]...)
+        @test th_jac2jac(X, 0.1, 0.6, 3.1, 2.8, 2) ≈ vcat([permutedims(jac2jac(X[k,:], 0.1, 0.6, 3.1, 2.8)) for k=1:size(X,1)]...)
+        @test th_jac2jac(X, 0.1, 0.6, 3.1, 2.8) ≈ th_jac2jac(th_jac2jac(X, 0.1, 0.6, 3.1, 2.8, 1), 0.1, 0.6, 3.1, 2.8, 2)
     end
 
     @testset "BigFloat" begin

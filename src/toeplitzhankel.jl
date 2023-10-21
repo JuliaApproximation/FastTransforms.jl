@@ -423,29 +423,65 @@ function _lmul!(A::Bidiagonal, B::AbstractVecOrMat)
     B
 end
 
-_jacobi_raise_b!(x, α, β) = _lmul!(_jacobi_convert_b(α, β, n), x)
-_jacobi_raise_a!(x, α, β) = _lmul!(_jacobi_convert_a(α, β, n), x)
+function _jacobi_raise_b!(x, α, β, dims)
+    for d in dims
+        if d == 1
+            _lmul!(_jacobi_convert_b(α, β, size(x, d)), x)
+        else
+            _lmul!(_jacobi_convert_b(α, β, size(x, d)), x')
+        end
+    end
+    x
+end
+function _jacobi_raise_a!(x, α, β, dims)
+    for d in dims
+        if d == 1
+            _lmul!(_jacobi_convert_a(α, β, size(x, d)), x)
+        else
+            _lmul!(_jacobi_convert_a(α, β, size(x, d)), x')
+        end
+    end
+    x
+end
 
-_jacobi_lower_b!(x, α, β) = ldiv!(_jacobi_convert_b(α, β-1, n), x)
-_jacobi_lower_a!(x, α, β) = ldiv!(_jacobi_convert_a(α-1, β, n), x)
+function _jacobi_lower_b!(x, α, β, dims)
+    for d in dims
+        if d == 1
+            ldiv!(_jacobi_convert_b(α, β-1, size(x, d)), x)
+        else
+            ldiv!(jacobi_convert_b(α, β-1, size(x, d)), x')
+        end
+    end
+    x
+end
+function _jacobi_lower_a!(x, α, β, dims)
+    for d in dims
+        if d == 1
+            ldiv!(_jacobi_convert_a(α-1, β, size(x, d)), x)
+        else
+            ldiv!(jacobi_convert_a(α-1, β, size(x, d)), x')
+        end
+    end
+    x
+end
 
 
-function _jac2jac_integerinc!(x, α, β, γ, δ)
+function _jac2jac_integerinc!(x, α, β, γ, δ, dims)
     n = size(x,1)
 
     while !(α ≈ γ && β ≈ δ)
         if !(δ ≈ β) && δ > β
-            _jacobi_raise_b!(x, α, β)
+            _jacobi_raise_b!(x, α, β, dims)
             β += 1
         elseif !(δ ≈ β) && δ < β
-            _jacobi_lower_b!(x, α, β)
+            _jacobi_lower_b!(x, α, β, dims)
             β -= 1
         elseif !(γ ≈ α) && γ > α
-            _jacobi_raise_a!(x, α, β)
+            _jacobi_raise_a!(x, α, β, dims)
             α += 1
         else
             @assert γ < α
-            _jacobi_lower_a!(x, α, β)
+            _jacobi_lower_a!(x, α, β, dims)
             α -= 1
         end
     end
