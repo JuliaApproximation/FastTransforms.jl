@@ -318,7 +318,7 @@ struct Jac2JacPlanTH{T, Plans, Dims} <: Plan{T}
     dims::Dims
 end
 
-_nearest_jacobi_par(α, γ) = trunc(Int,α) + rem(γ,1)
+_nearest_jacobi_par(α, γ) = isapproxinteger(α-γ) ? α : trunc(Int,α) + rem(γ,1)
 
 function *(P::Jac2JacPlanTH, A::AbstractArray)
     ret = A
@@ -373,15 +373,19 @@ function _good_plan_th_jac2jac!(::Type{S}, mn::NTuple{2,Int}, α, β, γ, δ, di
     ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
+# The second case handles zero
+isapproxinteger(::Integer) = true
+isapproxinteger(x) = isinteger(x) || x ≈ round(Int,x)  || x+1 ≈ round(Int,x+1)
+
+
 
 function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
-    if α == γ && β == δ
-        error("trivial transforms are not supported")
-    end
-
     c,d = _nearest_jacobi_par(α, γ), _nearest_jacobi_par(β, δ)
 
-    if (α == γ || β == δ)
+    if isapproxinteger(β - δ) && isapproxinteger(α-γ)
+        # TODO: don't make extra plan
+        plans = typeof(_good_plan_th_jac2jac!(S, mn, α+0.1, β, α, β, dims))[]
+    elseif α ≈ γ || β ≈ δ
         plans = [_good_plan_th_jac2jac!(S, mn, α, β, c, d, dims)]
     else
         plans = [_good_plan_th_jac2jac!(S, mn, α, β, α, d, dims), _good_plan_th_jac2jac!(S, mn, α, d, c, d, dims)]
@@ -399,7 +403,7 @@ function _jacobi_convert_a(a, b, n) # Jacobi(a+1, b) \ Jacobi(a, b)
 end
 function _jacobi_convert_b(a, b, n) # Jacobi(a, b+1) \ Jacobi(a, b)
     if isone(-a-b)
-        Bidiagonal(vcat(1, ((2:n) .+ (a+b)) ./ (range(3; step=2, length=n-1) .+ (a+b))), ((1:n-1) .+ a) ./ (range(3; step=2, length=n) .+ (a+b)), :U)
+        Bidiagonal(vcat(1, ((2:n) .+ (a+b)) ./ (range(3; step=2, length=n-1) .+ (a+b))), ((1:n-1) .+ a) ./ (range(3; step=2, length=n-1) .+ (a+b)), :U)
     else
         Bidiagonal(((1:n) .+ (a+b))./(range(1; step=2, length=n) .+ (a+b)), ((1:n-1) .+ a)./(range(3; step=2, length=n-1) .+ (a+b)), :U)
     end

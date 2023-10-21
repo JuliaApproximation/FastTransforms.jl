@@ -9,13 +9,19 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_cheb2leg(x) ≈ lib_cheb2leg(x)
         @test th_leg2chebu(x) ≈ lib_ultra2ultra(x, 0.5, 1.0)
         @test th_ultra2ultra(x,0.1, 0.2) ≈ lib_ultra2ultra(x, 0.1, 0.2)
-        @test th_jac2jac(x,0.1, 0.2,0.1,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.1,0.4)
+        @test @inferred(th_jac2jac(x,0.1, 0.2,0.1,0.4)) ≈ lib_jac2jac(x, 0.1, 0.2,0.1,0.4)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.2) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.2)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.4)
-        @test th_jac2jac(x,0.1, 0.2,1.3,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,1.3,0.4)
+        @test @inferred(th_jac2jac(x,0.1, 0.2,1.3,0.4)) ≈ lib_jac2jac(x, 0.1, 0.2,1.3,0.4)
         @test th_jac2jac(x,0.1, 0.2,1.3,2.4) ≈ lib_jac2jac(x, 0.1, 0.2,1.3,2.4)
         @test th_jac2jac(x,0.1, 0.2,1.3,2.4) ≈ lib_jac2jac(x, 0.1, 0.2,1.3,2.4)
         @test th_jac2jac(x,1.3, 1.2,-0.1,-0.2) ≈ lib_jac2jac(x, 1.3, 1.2,-0.1,-0.2)
+        @test @inferred(th_jac2jac(x,-0.5, -0.5, -0.5,-0.5)) ≈ lib_jac2jac(x, -0.5, -0.5, -0.5,-0.5)
+        @test th_jac2jac(x,-0.5, -0.5, 0.5,0.5) ≈ lib_jac2jac(x, -0.5, -0.5, 0.5,0.5)
+        @test th_jac2jac(x,0.5,0.5,-0.5, -0.5) ≈ lib_jac2jac(x, 0.5,0.5,-0.5, -0.5)
+        @test th_jac2jac(x,-0.5, -0.5, 0.5,-0.5) ≈ lib_jac2jac(x, -0.5, -0.5, 0.5,-0.5)
+        @test th_jac2jac(x,0, 0, 5, 5) ≈ lib_jac2jac(x, 0, 0, 5, 5)
+        @test th_jac2jac(x, 5, 5, 0, 0) ≈ lib_jac2jac(x,  5, 5, 0, 0)
 
         @test th_cheb2leg(th_leg2cheb(x)) ≈ x
         @test th_leg2cheb(th_cheb2leg(x)) ≈ x
