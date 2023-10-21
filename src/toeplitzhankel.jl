@@ -284,7 +284,7 @@ isapproxinteger(::Integer) = true
 isapproxinteger(x) = isinteger(x) || x ≈ round(Int,x)  || x+1 ≈ round(Int,x+1)
 
 
-_nearest_jacobi_par(α, γ) = isapproxinteger(α-γ) ? α : trunc(Int,α) + rem(γ,1)
+_nearest_jacobi_par(α, γ) = isapproxinteger(α-γ) ? α : round(Int,α,RoundDown) + mod(γ,1)
 
 
 struct Ultra2UltraPlanTH{T, Plans, Dims} <: Plan{T}
@@ -444,12 +444,20 @@ struct Jac2JacPlanTH{T, Plans, Dims} <: Plan{T}
     dims::Dims
 end
 
+Jac2JacPlanTH(plans, α, β, γ, δ, dims) = Jac2JacPlanTH(plans, promote(α, β, γ, δ)..., dims)
+
 function *(P::Jac2JacPlanTH, A::AbstractArray)
+    if P.α + P.β ≤ -1
+        _jacobi_raise_a!(A, P.α, P.β)
+        c,d = _nearest_jacobi_par(P.α+1, P.γ), _nearest_jacobi_par(P.β, P.δ)
+    else
+        c,d = _nearest_jacobi_par(P.α, P.γ), _nearest_jacobi_par(P.β, P.δ)
+    end
+
     ret = A
     for p in P.plans
         ret = p*ret
     end
-    c,d = _nearest_jacobi_par(P.α, P.γ), _nearest_jacobi_par(P.β, P.δ)
 
     _jac2jac_integerinc!(ret, c, d, P.γ, P.δ, P.dims)
 end
@@ -463,9 +471,9 @@ end
 
 function _jac2jacTH_TLC(::Type{S}, mn, α, β, γ, δ, d) where {S}
     n = mn[d]
+    @assert α+β > -1
     if β == δ
         @assert abs(α-γ) < 1
-        @assert α+β > -1
         jk = 0:n-1
         DL = (2jk .+ γ .+ β .+ 1).*Λ.(jk,γ+β+1,β+1)
         t = convert(AbstractVector{S}, Λ.(jk, α-γ,1))
@@ -500,15 +508,28 @@ end
 
 
 function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
-    c,d = _nearest_jacobi_par(α, γ), _nearest_jacobi_par(β, δ)
+    if α + β ≤ -1
+        c,d = _nearest_jacobi_par(α+1, γ), _nearest_jacobi_par(β, δ)
+    else
+        c,d = _nearest_jacobi_par(α, γ), _nearest_jacobi_par(β, δ)
+    end
 
     if isapproxinteger(β - δ) && isapproxinteger(α-γ)
         # TODO: don't make extra plan
         plans = typeof(_good_plan_th_jac2jac!(S, mn, α+0.1, β, α, β, dims))[]
     elseif isapproxinteger(α - γ) || isapproxinteger(β - δ)
-        plans = [_good_plan_th_jac2jac!(S, mn, α, β, c, d, dims)]
+        if α + β ≤ -1
+            # avoid degenerecies
+            plans = [_good_plan_th_jac2jac!(S, mn, α+1, β, c, d, dims)]
+        else
+            plans = [_good_plan_th_jac2jac!(S, mn, α, β, c, d, dims)]
+        end
     else
-        plans = [_good_plan_th_jac2jac!(S, mn, α, β, α, d, dims), _good_plan_th_jac2jac!(S, mn, α, d, c, d, dims)]
+        if α + β ≤ -1
+            plans = [_good_plan_th_jac2jac!(S, mn, α+1, β, α+1, d, dims), _good_plan_th_jac2jac!(S, mn, α+1, d, c, d, dims)]
+        else
+            plans = [_good_plan_th_jac2jac!(S, mn, α, β, α, d, dims), _good_plan_th_jac2jac!(S, mn, α, d, c, d, dims)]
+        end
     end
 
     Jac2JacPlanTH(plans, α, β, γ, δ, dims)
