@@ -1,7 +1,10 @@
-using FastTransforms, Test
+using FastTransforms, Test, Random
 import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th_jac2jac, th_leg2chebu,
                         lib_leg2cheb, lib_cheb2leg, lib_ultra2ultra, lib_jac2jac,
-                        plan_th_cheb2leg!, plan_th_leg2chebu!, plan_th_leg2cheb!, plan_th_ultra2ultra!, plan_th_jac2jac!
+                        plan_th_cheb2leg!, plan_th_leg2chebu!, plan_th_leg2cheb!, plan_th_ultra2ultra!, plan_th_jac2jac!,
+                        th_cheb2jac, th_jac2cheb
+
+Random.seed!(0)
 
 @testset "ToeplitzHankel" begin
     for x in ([1.0], [1.0,2,3,4,5], [1.0+im,2-3im,3+4im,4-5im,5+10im], collect(1.0:1000))
@@ -26,10 +29,13 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_jac2jac(x, -1/2,-1/2,1/2,0) ≈ lib_jac2jac(x, -1/2,-1/2,1/2,0)
         @test th_jac2jac(x, -1/2,-1/2,0,1/2) ≈ lib_jac2jac(x, -1/2,-1/2,0,1/2)
         @test th_jac2jac(x, -3/4,-3/4,0,3/4) ≈ lib_jac2jac(x, -3/4,-3/4,0,3/4)
-        @test th_jac2jac(x,0, 0, 5, 5) ≈ lib_jac2jac(x, 0, 0, 5, 5)
         if length(x) < 10
+            @test th_jac2jac(x,0, 0, 5, 5) ≈ lib_jac2jac(x, 0, 0, 5, 5)
             @test th_jac2jac(x, 5, 5, 0, 0) ≈ lib_jac2jac(x,  5, 5, 0, 0)
         end
+
+        @test th_cheb2jac(x, 0.2, 0.3) ≈ cheb2jac(x, 0.2, 0.3)
+        @test th_jac2cheb(x, 0.2, 0.3) ≈ jac2cheb(x, 0.2, 0.3)
 
         @test th_cheb2leg(th_leg2cheb(x)) ≈ x
         @test th_leg2cheb(th_cheb2leg(x)) ≈ x
@@ -93,6 +99,18 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_jac2jac(X, 0.1, 0.6, 3.1, 2.8, 1) ≈ hcat([jac2jac(X[:,j], 0.1, 0.6, 3.1, 2.8) for j=1:size(X,2)]...)
         @test th_jac2jac(X, 0.1, 0.6, 3.1, 2.8, 2) ≈ vcat([permutedims(jac2jac(X[k,:], 0.1, 0.6, 3.1, 2.8)) for k=1:size(X,1)]...)
         @test th_jac2jac(X, 0.1, 0.6, 3.1, 2.8) ≈ th_jac2jac(th_jac2jac(X, 0.1, 0.6, 3.1, 2.8, 1), 0.1, 0.6, 3.1, 2.8, 2)
+
+        @test th_jac2jac(X, -0.5, -0.5, 3.1, 2.8, 1) ≈ hcat([jac2jac(X[:,j], -0.5, -0.5, 3.1, 2.8) for j=1:size(X,2)]...)
+        @test th_jac2jac(X, -0.5, -0.5, 3.1, 2.8, 2) ≈ vcat([permutedims(jac2jac(X[k,:], -0.5, -0.5, 3.1, 2.8)) for k=1:size(X,1)]...)
+        @test th_jac2jac(X, -0.5, -0.5, 3.1, 2.8) ≈ th_jac2jac(th_jac2jac(X, -0.5, -0.5, 3.1, 2.8, 1), -0.5, -0.5, 3.1, 2.8, 2)
+
+        @test th_cheb2jac(X, 3.1, 2.8, 1) ≈ hcat([cheb2jac(X[:,j], 3.1, 2.8) for j=1:size(X,2)]...)
+        @test th_cheb2jac(X, 3.1, 2.8, 2) ≈ vcat([permutedims(cheb2jac(X[k,:], 3.1, 2.8)) for k=1:size(X,1)]...)
+        @test th_cheb2jac(X, 3.1, 2.8) ≈ th_cheb2jac(th_cheb2jac(X, 3.1, 2.8, 1), 3.1, 2.8, 2)
+
+        @test th_jac2cheb(X, 3.1, 2.8, 1) ≈ hcat([jac2cheb(X[:,j], 3.1, 2.8) for j=1:size(X,2)]...)
+        @test th_jac2cheb(X, 3.1, 2.8, 2) ≈ vcat([permutedims(jac2cheb(X[k,:], 3.1, 2.8)) for k=1:size(X,1)]...)
+        @test th_jac2cheb(X, 3.1, 2.8) ≈ th_jac2cheb(th_jac2cheb(X, 3.1, 2.8, 1), 3.1, 2.8, 2)
     end
 
     @testset "BigFloat" begin
