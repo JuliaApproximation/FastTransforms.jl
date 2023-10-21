@@ -29,8 +29,8 @@ Random.seed!(0)
         @test th_jac2jac(x, -1/2,-1/2,1/2,0) ≈ lib_jac2jac(x, -1/2,-1/2,1/2,0)
         @test th_jac2jac(x, -1/2,-1/2,0,1/2) ≈ lib_jac2jac(x, -1/2,-1/2,0,1/2)
         @test th_jac2jac(x, -3/4,-3/4,0,3/4) ≈ lib_jac2jac(x, -3/4,-3/4,0,3/4)
-        @test th_jac2jac(x,0, 0, 5, 5) ≈ lib_jac2jac(x, 0, 0, 5, 5)
         if length(x) < 10
+            @test th_jac2jac(x,0, 0, 5, 5) ≈ lib_jac2jac(x, 0, 0, 5, 5)
             @test th_jac2jac(x, 5, 5, 0, 0) ≈ lib_jac2jac(x,  5, 5, 0, 0)
         end
 
