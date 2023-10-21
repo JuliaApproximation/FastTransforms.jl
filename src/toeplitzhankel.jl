@@ -448,7 +448,7 @@ Jac2JacPlanTH(plans, α, β, γ, δ, dims) = Jac2JacPlanTH(plans, promote(α, β
 
 function *(P::Jac2JacPlanTH, A::AbstractArray)
     if P.α + P.β ≤ -1
-        _jacobi_raise_a!(A, P.α, P.β)
+        _jacobi_raise_a!(A, P.α, P.β, P.dims)
         c,d = _nearest_jacobi_par(P.α+1, P.γ), _nearest_jacobi_par(P.β, P.δ)
     else
         c,d = _nearest_jacobi_par(P.α, P.γ), _nearest_jacobi_par(P.β, P.δ)
@@ -691,3 +691,71 @@ plan_th_jac2jac!(::Type{S}, mn::Tuple{Int}, α, β, γ, δ, dims::Tuple{Int}=(1,
 plan_th_jac2jac!(::Type{S}, (m,n)::NTuple{2,Int}, α, β, γ, δ) where {S} = plan_th_jac2jac!(S, (m,n), α, β, γ, δ, (1,2))
 plan_th_jac2jac!(arr::AbstractArray{T}, α, β, γ, δ, dims...) where T = plan_th_jac2jac!(T, size(arr), α, β, γ, δ, dims...)
 th_jac2jac(v, α, β, γ, δ, dims...) = plan_th_jac2jac!(eltype(v), size(v), α, β, γ, δ, dims...)*copy(v)
+
+
+####
+# cheb2jac
+####
+
+struct Cheb2JacPlanTH{T, Pl<:Jac2JacPlanTH{T}} <: Plan{T}
+    jac2jac::Pl
+end
+
+
+struct Jac2ChebPlanTH{T, Pl<:Jac2JacPlanTH{T}} <: Plan{T}
+    jac2jac::Pl
+end
+
+
+function jac_cheb_recurrencecoefficients(T, N)
+    n = 0:N
+    h = one(T)/2
+    A = (2n .+ one(T)) ./ (n .+ one(T))
+    A[1] /= 2
+    A, Zeros(n), 
+    ((n .- h) .* (n .- h) .* (2n .+ one(T))) ./ ((n .+ one(T)) .* n .* (2n .- one(T)))
+end
+
+
+function *(P::Cheb2JacPlanTH{T}, X::AbstractArray) where T
+    A,B,C = jac_cheb_recurrencecoefficients(T, max(size(X)...))
+
+    for d in P.jac2jac.dims
+        if d == 1
+            p = forwardrecurrence(size(X,1), A,B,C, one(T))
+            X .= p .\ X
+        else
+            @assert d == 2
+            n = size(X,2)
+            p = forwardrecurrence(size(X,2), A,B,C, one(T))
+            X .= X ./ transpose(p)
+        end
+    end
+    P.jac2jac*X
+end
+
+function *(P::Jac2ChebPlanTH{T}, X::AbstractArray) where T
+    X = P.jac2jac*X
+    A,B,C = jac_cheb_recurrencecoefficients(T, max(size(X)...))
+
+    for d in P.jac2jac.dims
+        if d == 1
+            p = forwardrecurrence(size(X,1), A,B,C, one(T))
+            X .= p .* X
+        else
+            @assert d == 2
+            n = size(X,2)
+            p = forwardrecurrence(size(X,2), A,B,C, one(T))
+            X .= X .* transpose(p)
+        end
+    end
+    X
+end
+
+plan_th_cheb2jac!(::Type{T}, mn, α, β, dims...) where T = Cheb2JacPlanTH(plan_th_jac2jac!(T, mn, -one(α)/2, -one(α)/2, α, β, dims...))
+plan_th_cheb2jac!(arr::AbstractArray{T}, α, β, dims...) where T = plan_th_cheb2jac!(T, size(arr), α, β, dims...)
+th_cheb2jac(v, α, β, dims...) = plan_th_cheb2jac!(eltype(v), size(v), α, β, dims...)*copy(v)
+
+plan_th_jac2cheb!(::Type{T}, mn, α, β, dims...) where T = Jac2ChebPlanTH(plan_th_jac2jac!(T, mn, α, β, -one(α)/2, -one(α)/2, dims...))
+plan_th_jac2cheb!(arr::AbstractArray{T}, α, β, dims...) where T = plan_th_jac2cheb!(T, size(arr), α, β, dims...)
+th_jac2cheb(v, α, β, dims...) = plan_th_jac2cheb!(eltype(v), size(v), α, β, dims...)*copy(v)
