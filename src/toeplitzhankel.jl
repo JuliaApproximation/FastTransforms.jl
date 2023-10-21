@@ -510,19 +510,63 @@ function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
     Jac2JacPlanTH(plans, α, β, γ, δ, dims)
 end
 
-function _jacobi_convert_a(a, b, n) # Jacobi(a+1, b) \ Jacobi(a, b)
-    if isone(-a-b)
-        Bidiagonal(vcat(1, ((2:n) .+ (a+b)) ./ (range(3; step=2, length=n-1) .+ (a+b))), -((1:n-1) .+ b) ./ (range(3; step=2, length=n-1) .+ (a+b)), :U)
-    else
-        Bidiagonal(((1:n) .+ (a+b))./(range(1; step=2, length=n) .+ (a+b)), -((1:n-1) .+ b)./(range(3; step=2, length=n-1) .+ (a+b)), :U)
+
+function _jacobi_raise_a!(B, a, b)
+    m, n = size(B, 1), size(B, 2)
+    @inbounds for j = 1:n
+        if m > 1
+            B[1,j] = B[1,j] - (1+b) / (a+b+3) * B[2,j]
+        end
+        for i = 2:m-1
+            B[i,j] = (i+a+b)/(a+b-1+2i) * B[i,j] - (i+b) / (a+b+2i+1) * B[i+1,j]
+        end
+        B[m,j] = (m+a+b)/(a+b-1+2m)*B[m,j]
     end
+    B
 end
-function _jacobi_convert_b(a, b, n) # Jacobi(a, b+1) \ Jacobi(a, b)
-    if isone(-a-b)
-        Bidiagonal(vcat(1, ((2:n) .+ (a+b)) ./ (range(3; step=2, length=n-1) .+ (a+b))), ((1:n-1) .+ a) ./ (range(3; step=2, length=n-1) .+ (a+b)), :U)
-    else
-        Bidiagonal(((1:n) .+ (a+b))./(range(1; step=2, length=n) .+ (a+b)), ((1:n-1) .+ a)./(range(3; step=2, length=n-1) .+ (a+b)), :U)
+
+function _jacobi_lower_a!(B, a, b)
+    m, n = size(B, 1), size(B, 2)
+
+    @inbounds for j = 1:n
+        B[m,j] = (a+b-1+2m)/(m+a+b) * B[m,j]
+        for i = m-1:-1:2
+            Bij = B[i,j] + (i+b) / (a+b+2i+1) * B[i+1,j]
+            B[i,j] = (a+b-1+2i)/(i+a+b)  * Bij
+        end
+        B[1,j] = B[1,j] + (1+b) / (a+b+3) * B[2,j]
     end
+    B
+end
+
+
+
+function _jacobi_raise_b!(B, a, b)
+    m, n = size(B, 1), size(B, 2)
+    @inbounds for j = 1:n
+        if m > 1
+            B[1,j] = B[1,j] + (1+a) / (a+b+3) * B[2,j]
+        end
+        for i = 2:m-1
+            B[i,j] = (i+a+b)/(a+b-1+2i) * B[i,j] + (i+a) / (a+b+2i+1) * B[i+1,j]
+        end
+        B[m,j] = (m+a+b)/(a+b-1+2m)*B[m,j]
+    end
+    B
+end
+
+function _jacobi_lower_b!(B, a, b)
+    m, n = size(B, 1), size(B, 2)
+
+    @inbounds for j = 1:n
+        B[m,j] = (a+b-1+2m)/(m+a+b) * B[m,j]
+        for i = m-1:-1:2
+            Bij = B[i,j] - (i+a) / (a+b+2i+1) * B[i+1,j]
+            B[i,j] = (a+b-1+2i)/(i+a+b)  * Bij
+        end
+        B[1,j] = B[1,j] - (1+a) / (a+b+3) * B[2,j]
+    end
+    B
 end
 
 
@@ -530,9 +574,9 @@ end
 function _jacobi_raise_b!(x, α, β, dims)
     for d in dims
         if d == 1
-            _lmul!(_jacobi_convert_b(α, β, size(x, d)), x)
+            _jacobi_raise_b!(x, α, β)
         else
-            _lmul!(_jacobi_convert_b(α, β, size(x, d)), x')
+            _jacobi_raise_b!(x', α, β)
         end
     end
     x
@@ -551,9 +595,9 @@ end
 function _jacobi_lower_b!(x, α, β, dims)
     for d in dims
         if d == 1
-            ldiv!(_jacobi_convert_b(α, β-1, size(x, d)), x)
+            _jacobi_lower_b!(x, α, β-1)
         else
-            ldiv!(jacobi_convert_b(α, β-1, size(x, d)), x')
+            _jacobi_lower_b!(x', α, β-1)
         end
     end
     x
