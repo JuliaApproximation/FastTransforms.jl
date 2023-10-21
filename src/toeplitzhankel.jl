@@ -279,6 +279,30 @@ end
 # th_ultra2ultra
 ###
 
+# The second case handles zero
+isapproxinteger(::Integer) = true
+isapproxinteger(x) = isinteger(x) || x ≈ round(Int,x)  || x+1 ≈ round(Int,x+1)
+
+
+_nearest_jacobi_par(α, γ) = isapproxinteger(α-γ) ? α : trunc(Int,α) + rem(γ,1)
+
+
+struct Ultra2UltraPlanTH{T, Plans, Dims} <: Plan{T}
+    plans::Plans
+    λ₁::T
+    λ₂::T
+    dims::Dims
+end
+
+function *(P::Ultra2UltraPlanTH, A::AbstractArray)
+    ret = A
+    for p in P.plans
+        ret = p*ret
+    end
+    c = _nearest_jacobi_par(P.λ₁, P.λ₂)
+
+    _ultra2ultra_integerinc!(ret, c, P.λ₂, P.dims)
+end
 
 function _ultra2ultraTH_TLC(::Type{S}, mn, λ₁, λ₂, d) where {S}
     n = mn[d]
@@ -295,19 +319,117 @@ function _ultra2ultraTH_TLC(::Type{S}, mn, λ₁, λ₂, d) where {S}
     T, DL .* C, C
 end
 
-plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims::Int) where {S} = ToeplitzHankelPlan(_ultra2ultraTH_TLC(S, mn, λ₁, λ₂, dims)..., dims)
+_good_plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims::Int) where S = ToeplitzHankelPlan(_ultra2ultraTH_TLC(S, mn, λ₁, λ₂, dims)..., dims)
 
-function plan_th_ultra2ultra!(::Type{S}, mn::NTuple{2,Int}, λ₁, λ₂, dims::NTuple{2,Int}) where {S}
-    @assert dims == (1,2)
+function _good_plan_th_ultra2ultra!(::Type{S}, mn::NTuple{2,Int}, λ₁, λ₂, dims::NTuple{2,Int}) where S
     T1,L1,C1 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 1)
     T2,L2,C2 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 2)
     ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
 
+
+function plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims) where {S}
+    c = _nearest_jacobi_par(λ₁, λ₂)
+
+    if isapproxinteger(λ₂ - λ₁)
+        # TODO: don't make extra plan
+        plans = typeof(_good_plan_th_ultra2ultra!(S, mn, λ₁+0.1, λ₂, dims))[]
+    else
+        plans = [_good_plan_th_ultra2ultra!(S, mn, λ₁, c, dims)]
+    end
+
+    Ultra2UltraPlanTH(plans, λ₁, λ₂, dims)
+end
+
+function _ultra_raise!(B, λ)
+    m, n = size(B, 1), size(B, 2)
+
+    @inbounds for j = 1:n
+        for i = 1:m-2
+            Bij = λ / (i+λ-1) * B[i,j]
+            Bij += -λ / (i+λ+1) * B[i+2,j]
+            B[i,j] = Bij
+        end
+        B[m-1,j] = λ / (m+λ-2)*B[m-1,j]
+        B[m,j] = λ / (m+λ-1)*B[m,j]
+    end
+    B
+end
+
+function _ultra_lower!(B, λ)
+    m, n = size(B, 1), size(B, 2)
+
+    @inbounds for j = 1:n
+        B[m,j] = (m+λ-1)/λ * B[m,j]
+        B[m-1,j] = (m+λ-2)/λ *B[m-1,j]
+        for i = m-2:-1:1
+            Bij = B[i,j] + λ / (i+λ+1) * B[i+2,j]
+            B[i,j] = (i+λ-1)/λ * Bij
+        end  
+    end
+    B
+end
+
+
+
+function _ultra_raise!(x, λ, dims)
+    for d in dims
+        if d == 1
+            _ultra_raise!(x, λ)
+        else
+            _ultra_raise!(x', λ)
+        end
+    end
+    x
+end
+
+function _ultra_lower!(x, λ, dims)
+    for d in dims
+        if d == 1
+            _ultra_lower!(x, λ-1)
+        else
+            _ultra_lower!(x', λ-1)
+        end
+    end
+    x
+end
+
+function _ultra2ultra_integerinc!(x, λ₁, λ₂, dims)
+    while !(λ₁ ≈ λ₂)
+        if λ₂ > λ₁
+            _ultra_raise!(x, λ₁, dims)
+            λ₁ += 1
+        else
+            _ultra_lower!(x, λ₁, dims)
+            λ₁ -= 1
+        end
+    end
+    x
+end
+
 ###
 # th_jac2jac
 ###
+
+
+function _lmul!(A::Bidiagonal, B::AbstractVecOrMat)
+    @assert A.uplo == 'U'
+    
+    m, n = size(B, 1), size(B, 2)
+    if m != size(A, 1)
+        throw(DimensionMismatch("right hand side B needs first dimension of size $(size(A,1)), has size $m"))
+    end
+    @inbounds for j = 1:n
+        for i = 1:m-1
+            Bij = A.dv[i]*B[i,j]
+            Bij += A.ev[i]*B[i+1,j]
+            B[i,j] = Bij
+        end
+        B[m,j] = A.dv[m]*B[m,j]
+    end
+    B
+end
 
 struct Jac2JacPlanTH{T, Plans, Dims} <: Plan{T}
     plans::Plans
@@ -317,8 +439,6 @@ struct Jac2JacPlanTH{T, Plans, Dims} <: Plan{T}
     δ::T
     dims::Dims
 end
-
-_nearest_jacobi_par(α, γ) = isapproxinteger(α-γ) ? α : trunc(Int,α) + rem(γ,1)
 
 function *(P::Jac2JacPlanTH, A::AbstractArray)
     ret = A
@@ -373,10 +493,6 @@ function _good_plan_th_jac2jac!(::Type{S}, mn::NTuple{2,Int}, α, β, γ, δ, di
     ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
-# The second case handles zero
-isapproxinteger(::Integer) = true
-isapproxinteger(x) = isinteger(x) || x ≈ round(Int,x)  || x+1 ≈ round(Int,x+1)
-
 
 
 function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
@@ -409,23 +525,7 @@ function _jacobi_convert_b(a, b, n) # Jacobi(a, b+1) \ Jacobi(a, b)
     end
 end
 
-function _lmul!(A::Bidiagonal, B::AbstractVecOrMat)
-    @assert A.uplo == 'U'
-    
-    m, n = size(B, 1), size(B, 2)
-    if m != size(A, 1)
-        throw(DimensionMismatch("right hand side B needs first dimension of size $(size(A,1)), has size $m"))
-    end
-    @inbounds for j = 1:n
-        for i = 1:m-1
-            Bij = A.dv[i]*B[i,j]
-            Bij += A.ev[i]*B[i+1,j]
-            B[i,j] = Bij
-        end
-        B[m,j] = A.dv[m]*B[m,j]
-    end
-    B
-end
+
 
 function _jacobi_raise_b!(x, α, β, dims)
     for d in dims
@@ -471,8 +571,6 @@ end
 
 
 function _jac2jac_integerinc!(x, α, β, γ, δ, dims)
-    n = size(x,1)
-
     while !(α ≈ γ && β ≈ δ)
         if !(δ ≈ β) && δ > β
             _jacobi_raise_b!(x, α, β, dims)

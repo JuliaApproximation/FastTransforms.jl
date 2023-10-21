@@ -9,6 +9,9 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_cheb2leg(x) ≈ lib_cheb2leg(x)
         @test th_leg2chebu(x) ≈ lib_ultra2ultra(x, 0.5, 1.0)
         @test th_ultra2ultra(x,0.1, 0.2) ≈ lib_ultra2ultra(x, 0.1, 0.2)
+        @test th_ultra2ultra(x,1, 2) ≈ lib_ultra2ultra(x, 1, 2)
+        @test th_ultra2ultra(x,0.1, 2.2) ≈ lib_ultra2ultra(x, 0.1, 2.2)
+        @test th_ultra2ultra(x, 2.2, 0.1) ≈ lib_ultra2ultra(x, 2.2, 0.1)
         @test @inferred(th_jac2jac(x,0.1, 0.2,0.1,0.4)) ≈ lib_jac2jac(x, 0.1, 0.2,0.1,0.4)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.2) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.2)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.4)
@@ -56,6 +59,14 @@ import FastTransforms: th_leg2cheb, th_cheb2leg, th_leg2chebu, th_ultra2ultra,th
         @test th_ultra2ultra(X, 0.1, 0.6, 1) ≈ hcat([ultra2ultra(X[:,j], 0.1, 0.6) for j=1:size(X,2)]...)
         @test th_ultra2ultra(X, 0.1, 0.6, 2) ≈ vcat([permutedims(ultra2ultra(X[k,:], 0.1, 0.6)) for k=1:size(X,1)]...)
         @test th_ultra2ultra(X, 0.1, 0.6) ≈ th_ultra2ultra(th_ultra2ultra(X, 0.1, 0.6, 1), 0.1, 0.6, 2)
+
+        @test th_ultra2ultra(X, 0.1, 2.6, 1) ≈ hcat([ultra2ultra(X[:,j], 0.1, 2.6) for j=1:size(X,2)]...)
+        @test th_ultra2ultra(X, 0.1, 2.6, 2) ≈ vcat([permutedims(ultra2ultra(X[k,:], 0.1, 2.6)) for k=1:size(X,1)]...)
+        @test th_ultra2ultra(X, 0.1, 2.6) ≈ th_ultra2ultra(th_ultra2ultra(X, 0.1, 2.6, 1), 0.1, 2.6, 2)
+
+        @test th_ultra2ultra(X, 2.6, 0.1, 1) ≈ hcat([ultra2ultra(X[:,j], 2.6, 0.1) for j=1:size(X,2)]...)
+        @test th_ultra2ultra(X, 2.6, 0.1, 2) ≈ vcat([permutedims(ultra2ultra(X[k,:], 2.6, 0.1)) for k=1:size(X,1)]...)
+        @test th_ultra2ultra(X, 2.6, 0.1) ≈ th_ultra2ultra(th_ultra2ultra(X, 2.6, 0.1, 1), 2.6, 0.1, 2)
 
         @test th_ultra2ultra(X, 0.1, 0.6) == plan_th_ultra2ultra!(X, 0.1, 0.6, 1:2)*copy(X)
         @test th_ultra2ultra(X, 0.1, 0.6) == plan_th_ultra2ultra!(X, 0.1, 0.6, 1:2)*copy(X)
