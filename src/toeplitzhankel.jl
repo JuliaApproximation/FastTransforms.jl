@@ -345,14 +345,16 @@ end
 function _ultra_raise!(B, λ)
     m, n = size(B, 1), size(B, 2)
 
-    @inbounds for j = 1:n
-        for i = 1:m-2
-            Bij = λ / (i+λ-1) * B[i,j]
-            Bij += -λ / (i+λ+1) * B[i+2,j]
-            B[i,j] = Bij
+    if m > 1
+        @inbounds for j = 1:n
+            for i = 1:m-2
+                Bij = λ / (i+λ-1) * B[i,j]
+                Bij += -λ / (i+λ+1) * B[i+2,j]
+                B[i,j] = Bij
+            end
+            B[m-1,j] = λ / (m+λ-2)*B[m-1,j]
+            B[m,j] = λ / (m+λ-1)*B[m,j]
         end
-        B[m-1,j] = λ / (m+λ-2)*B[m-1,j]
-        B[m,j] = λ / (m+λ-1)*B[m,j]
     end
     B
 end
@@ -360,13 +362,15 @@ end
 function _ultra_lower!(B, λ)
     m, n = size(B, 1), size(B, 2)
 
-    @inbounds for j = 1:n
-        B[m,j] = (m+λ-1)/λ * B[m,j]
-        B[m-1,j] = (m+λ-2)/λ *B[m-1,j]
-        for i = m-2:-1:1
-            Bij = B[i,j] + λ / (i+λ+1) * B[i+2,j]
-            B[i,j] = (i+λ-1)/λ * Bij
-        end  
+    if m > 1
+        @inbounds for j = 1:n
+            B[m,j] = (m+λ-1)/λ * B[m,j]
+            B[m-1,j] = (m+λ-2)/λ *B[m-1,j]
+            for i = m-2:-1:1
+                Bij = B[i,j] + λ / (i+λ+1) * B[i+2,j]
+                B[i,j] = (i+λ-1)/λ * Bij
+            end  
+        end
     end
     B
 end
@@ -501,7 +505,7 @@ function plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims) where {S}
     if isapproxinteger(β - δ) && isapproxinteger(α-γ)
         # TODO: don't make extra plan
         plans = typeof(_good_plan_th_jac2jac!(S, mn, α+0.1, β, α, β, dims))[]
-    elseif α ≈ γ || β ≈ δ
+    elseif isapproxinteger(α - γ) || isapproxinteger(β - δ)
         plans = [_good_plan_th_jac2jac!(S, mn, α, β, c, d, dims)]
     else
         plans = [_good_plan_th_jac2jac!(S, mn, α, β, α, d, dims), _good_plan_th_jac2jac!(S, mn, α, d, c, d, dims)]
@@ -513,14 +517,14 @@ end
 
 function _jacobi_raise_a!(B, a, b)
     m, n = size(B, 1), size(B, 2)
-    @inbounds for j = 1:n
-        if m > 1
+    if m > 1
+        @inbounds for j = 1:n
             B[1,j] = B[1,j] - (1+b) / (a+b+3) * B[2,j]
+            for i = 2:m-1
+                B[i,j] = (i+a+b)/(a+b-1+2i) * B[i,j] - (i+b) / (a+b+2i+1) * B[i+1,j]
+            end
+            B[m,j] = (m+a+b)/(a+b-1+2m)*B[m,j]
         end
-        for i = 2:m-1
-            B[i,j] = (i+a+b)/(a+b-1+2i) * B[i,j] - (i+b) / (a+b+2i+1) * B[i+1,j]
-        end
-        B[m,j] = (m+a+b)/(a+b-1+2m)*B[m,j]
     end
     B
 end
@@ -528,13 +532,15 @@ end
 function _jacobi_lower_a!(B, a, b)
     m, n = size(B, 1), size(B, 2)
 
-    @inbounds for j = 1:n
-        B[m,j] = (a+b-1+2m)/(m+a+b) * B[m,j]
-        for i = m-1:-1:2
-            Bij = B[i,j] + (i+b) / (a+b+2i+1) * B[i+1,j]
-            B[i,j] = (a+b-1+2i)/(i+a+b)  * Bij
+    if m > 1
+        @inbounds for j = 1:n
+            B[m,j] = (a+b-1+2m)/(m+a+b) * B[m,j]
+            for i = m-1:-1:2
+                Bij = B[i,j] + (i+b) / (a+b+2i+1) * B[i+1,j]
+                B[i,j] = (a+b-1+2i)/(i+a+b)  * Bij
+            end
+            B[1,j] = B[1,j] + (1+b) / (a+b+3) * B[2,j]
         end
-        B[1,j] = B[1,j] + (1+b) / (a+b+3) * B[2,j]
     end
     B
 end
@@ -543,14 +549,15 @@ end
 
 function _jacobi_raise_b!(B, a, b)
     m, n = size(B, 1), size(B, 2)
-    @inbounds for j = 1:n
-        if m > 1
+    if m > 1
+        @inbounds for j = 1:n
             B[1,j] = B[1,j] + (1+a) / (a+b+3) * B[2,j]
+            
+            for i = 2:m-1
+                B[i,j] = (i+a+b)/(a+b-1+2i) * B[i,j] + (i+a) / (a+b+2i+1) * B[i+1,j]
+            end
+            B[m,j] = (m+a+b)/(a+b-1+2m)*B[m,j]
         end
-        for i = 2:m-1
-            B[i,j] = (i+a+b)/(a+b-1+2i) * B[i,j] + (i+a) / (a+b+2i+1) * B[i+1,j]
-        end
-        B[m,j] = (m+a+b)/(a+b-1+2m)*B[m,j]
     end
     B
 end
@@ -558,13 +565,15 @@ end
 function _jacobi_lower_b!(B, a, b)
     m, n = size(B, 1), size(B, 2)
 
-    @inbounds for j = 1:n
-        B[m,j] = (a+b-1+2m)/(m+a+b) * B[m,j]
-        for i = m-1:-1:2
-            Bij = B[i,j] - (i+a) / (a+b+2i+1) * B[i+1,j]
-            B[i,j] = (a+b-1+2i)/(i+a+b)  * Bij
+    if m > 1
+        @inbounds for j = 1:n
+            B[m,j] = (a+b-1+2m)/(m+a+b) * B[m,j]
+            for i = m-1:-1:2
+                Bij = B[i,j] - (i+a) / (a+b+2i+1) * B[i+1,j]
+                B[i,j] = (a+b-1+2i)/(i+a+b)  * Bij
+            end
+            B[1,j] = B[1,j] - (1+a) / (a+b+3) * B[2,j]
         end
-        B[1,j] = B[1,j] - (1+a) / (a+b+3) * B[2,j]
     end
     B
 end
@@ -584,9 +593,9 @@ end
 function _jacobi_raise_a!(x, α, β, dims)
     for d in dims
         if d == 1
-            _lmul!(_jacobi_convert_a(α, β, size(x, d)), x)
+            _jacobi_raise_a!(x, α, β)
         else
-            _lmul!(_jacobi_convert_a(α, β, size(x, d)), x')
+            _jacobi_raise_a!(x', α, β)
         end
     end
     x
@@ -605,9 +614,9 @@ end
 function _jacobi_lower_a!(x, α, β, dims)
     for d in dims
         if d == 1
-            ldiv!(_jacobi_convert_a(α-1, β, size(x, d)), x)
+            _jacobi_lower_a!(x, α-1, β)
         else
-            ldiv!(jacobi_convert_a(α-1, β, size(x, d)), x')
+            _jacobi_lower_a!(x', α-1, β)
         end
     end
     x
