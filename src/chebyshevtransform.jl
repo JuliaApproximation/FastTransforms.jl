@@ -20,8 +20,7 @@ ChebyshevTransformPlan{T,kind}(plan::FFTW.r2rFFTWPlan{T,K,inplace,N,R}) where {T
 
 # jump through some hoops to make inferrable
 
-_fftKtype(::Val{N}, _...) where N = NTuple{N,Int32}
-_fftKtype(::Val{N}, ::AbstractVector) where N = Vector{Int32}
+_fftKtype(::Val{N}, _...) where N = Vector{Int32}
 
 function plan_chebyshevtransform!(x::AbstractArray{T,N}, ::Val{1}, dims...; kws...) where {T<:fftwNumber,N}
     if isempty(x)
@@ -410,7 +409,13 @@ function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{1}, dims...; kws.
     end
 end
 function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws...) where {T<:fftwNumber,N}
-    any(≤(1),size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
+    if isempty(dims)
+        any(≤(1), size(x)) && throw(ArgumentError("Array must contain at least 2 entries"))
+    else
+        for d in dims[1]
+            size(x,d) ≤ 1 && throw(ArgumentError("Array must contain at least 2 entries"))
+        end
+    end
     ChebyshevUTransformPlan{T,2}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
@@ -530,19 +535,23 @@ end
 end
 
 function *(P::ChebyshevUTransformPlan{T,2,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
-    n = length(x)
-    n ≤ 1 && return x
+    sc = one(T)
+    for d in P.plan.region
+        sc *= one(T)/(size(x,d)+1)
+    end
     _chebu2_prescale!(P.plan.region, x)
-    lmul!(one(T)/ (n+1), P.plan * x)
+    lmul!(sc, P.plan * x)
 end
 
 function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,2,K,false}, x::AbstractArray{T}) where {T,K}
-    n = length(x)
-    n ≤ 1 && return copyto!(y, x)
+    sc = one(T)
+    for d in P.plan.region
+        sc *= one(T)/(size(x,d)+1)
+    end
     _chebu2_prescale!(P.plan.region, x) # TODO don't mutate x
     _plan_mul!(y, P.plan, x)
     _chebu2_postscale!(P.plan.region, x)
-    lmul!(one(T)/ (n+1), y)
+    lmul!(sc, y)
 end
 
 *(P::ChebyshevUTransformPlan{T,kind,K,false,N}, x::AbstractArray{T,N}) where {T,kind,K,N} =

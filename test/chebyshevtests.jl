@@ -292,11 +292,6 @@ using FastTransforms, Test
             @test chebyshevtransform(ichebyshevtransform(X)) ≈ X
         end
 
-        X = randn(1,1)
-        @test chebyshevtransform!(copy(X), Val(1)) == ichebyshevtransform!(copy(X), Val(1)) == X
-        @test_throws ArgumentError chebyshevtransform!(copy(X), Val(2))
-        @test_throws ArgumentError ichebyshevtransform!(copy(X), Val(2))
-
         @testset "chebyshevutransform" begin
             @test @inferred(chebyshevutransform(X,1)) ≈ @inferred(chebyshevutransform!(copy(X),1)) ≈ hcat(chebyshevutransform.([X[:,k] for k=axes(X,2)])...)
             @test chebyshevutransform(X,2) ≈ chebyshevutransform!(copy(X),2) ≈ hcat(chebyshevutransform.([X[k,:] for k=axes(X,1)])...)'
@@ -307,6 +302,10 @@ using FastTransforms, Test
             @test @inferred(chebyshevutransform(X,Val(2))) ≈ @inferred(chebyshevutransform!(copy(X),Val(2))) ≈ chebyshevutransform(chebyshevutransform(X,Val(2),1),Val(2),2)
         end
 
+        X = randn(1,1)
+        @test chebyshevtransform!(copy(X), Val(1)) == ichebyshevtransform!(copy(X), Val(1)) == X
+        @test_throws ArgumentError chebyshevtransform!(copy(X), Val(2))
+        @test_throws ArgumentError ichebyshevtransform!(copy(X), Val(2))
     end
 
     @testset "tensor" begin
