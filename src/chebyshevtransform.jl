@@ -651,10 +651,14 @@ function mul!(y::AbstractArray{T}, P::IChebyshevUTransformPlan{T,1,K,false}, x::
     isempty(x) && return y
     _plan_mul!(y, P.plan, x)
     _ichebu1_postscale!(P.plan.region, y)
+    for d in P.plan.region
+        size(y,d) == 1 && lmul!(2, y) # fix doubling
+    end
+    y
 end
 
 function _ichebu2_rescale!(d::Number, x::AbstractArray{T}) where T
-    _chebu2_prescale!(d, x)
+    _chebu2_postscale!(d, x)
     ldiv!(2, x)
     x
 end

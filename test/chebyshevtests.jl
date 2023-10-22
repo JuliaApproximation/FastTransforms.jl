@@ -222,7 +222,7 @@ using FastTransforms, Test
 
             f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-3]' * g
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test @inferred(ichebyshevutransform(g, Val(2))) ≈ exp.(p_2)
+            @test @inferred(ichebyshevutransform(g, Val(2))) ≈ f ≈ exp.(p_2)
 
             fcopy = copy(f)
             gcopy = copy(g)
@@ -418,7 +418,7 @@ using FastTransforms, Test
             plan_chebyshevutransform(X,Val(1),2), plan_chebyshevutransform(X, Val(2),2),
             plan_ichebyshevutransform(X,Val(1),1), plan_ichebyshevutransform(X, Val(2),1),
             plan_ichebyshevutransform(X,Val(1),2), plan_ichebyshevutransform(X, Val(2),2))
-            @test_broken F \ (F*X) ≈ F * (F\X) ≈ X
+            @test F \ (F*X) ≈ F * (F\X) ≈ X
         end
     end
 end
