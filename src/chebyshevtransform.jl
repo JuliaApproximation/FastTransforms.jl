@@ -156,9 +156,8 @@ function *(P::ChebyshevTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where
 end
 
 function mul!(y::AbstractArray{T,N}, P::ChebyshevTransformPlan{T,1,K,false,N}, x::AbstractArray{<:Any,N}) where {T,K,N}
-    n = length(x)
-    length(y) == n || throw(DimensionMismatch("output must match dimension"))
-    n == 0 && return y
+    size(y) == size(x) || throw(DimensionMismatch("output must match dimension"))
+    isempty(x) && return y
     _plan_mul!(y, P.plan, x)
     _cheb1_rescale!(P.plan.region, y)
 end
@@ -466,39 +465,74 @@ function *(P::ChebyshevUTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) wher
 end
 
 function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::AbstractArray{T}) where {T,K}
-    n = length(x)
-    _chebu1_prescale!(P.plan.region, x)
+    size(y) == size(x) || throw(DimensionMismatch("output must match dimension"))
+    isempty(x) && return copyto!(y, x)
+    _chebu1_prescale!(P.plan.region, x) # Todo don't mutate x
     _plan_mul!(y, P.plan, x)
-    _chebu1_postscale!(P.plan.region, x)
+    _chebu1_postscale!(P.plan.region, y)
+    for d in P.plan.region
+        size(y,d) == 1 && ldiv!(2, y) # fix doubling
+    end
     y
 end
 
-@inline function _chebu2_prescale!(_, x::AbstractVector{T}) where T
-    n = length(x)
-    c = one(T)/ (n+1)
-    for k=1:n # sqrt(1-x_j^2) weight
-        x[k] *= sinpi(k*c)
+@inline function _chebu2_prescale!(d::Number, x::AbstractVecOrMat{T}) where T
+    m,n = size(x,1),size(x,2)
+    if d == 1
+        c = one(T)/ (m+1)
+        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
+            x[k,j] *= sinpi(k*c)
+        end
+    else
+        @assert d == 2
+        c = one(T)/ (n+1)
+        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
+            x[k,j] *= sinpi(j*c)
+        end
     end
     x
 end
 
-@inline function _chebu2_postscale!(_, x::AbstractVector{T}) where T
-    n = length(x)
-    c = one(T)/ (n+1)
-    @inbounds for k=1:n # sqrt(1-x_j^2) weight
-        x[k] /= sinpi(k*c)
+@inline function _chebu2_prescale!(d, y::AbstractArray)
+    for k in d
+        _chebu2_prescale!(k, y)
+    end
+    y
+end
+
+
+@inline function _chebu2_postscale!(d::Number, x::AbstractVecOrMat{T}) where T
+    m,n = size(x,1),size(x,2)
+    if d == 1
+        c = one(T)/ (m+1)
+        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
+            x[k,j] /= sinpi(k*c)
+        end
+    else
+        @assert d == 2
+        c = one(T)/ (n+1)
+        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
+            x[k,j] /= sinpi(j*c)
+        end
     end
     x
 end
 
-function *(P::ChebyshevUTransformPlan{T,2,K,true}, x::AbstractVector{T}) where {T,K}
+@inline function _chebu2_postscale!(d, y::AbstractArray)
+    for k in d
+        _chebu2_postscale!(k, y)
+    end
+    y
+end
+
+function *(P::ChebyshevUTransformPlan{T,2,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
     n = length(x)
     n ≤ 1 && return x
     _chebu2_prescale!(P.plan.region, x)
     lmul!(one(T)/ (n+1), P.plan * x)
 end
 
-function mul!(y::AbstractVector{T}, P::ChebyshevUTransformPlan{T,2,K,false}, x::AbstractVector{T}) where {T,K}
+function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,2,K,false}, x::AbstractArray{T}) where {T,K}
     n = length(x)
     n ≤ 1 && return copyto!(y, x)
     _chebu2_prescale!(P.plan.region, x)
