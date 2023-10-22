@@ -302,6 +302,19 @@ using FastTransforms, Test
             @test @inferred(chebyshevutransform(X,Val(2))) ≈ @inferred(chebyshevutransform!(copy(X),Val(2))) ≈ chebyshevutransform(chebyshevutransform(X,Val(2),1),Val(2),2)
         end
 
+        @testset "ichebyshevutransform" begin
+            @test @inferred(ichebyshevutransform(X,1)) ≈ @inferred(ichebyshevutransform!(copy(X),1)) ≈ hcat(ichebyshevutransform.([X[:,k] for k=axes(X,2)])...)
+            @test ichebyshevutransform(X,2) ≈ ichebyshevutransform!(copy(X),2) ≈ hcat(ichebyshevutransform.([X[k,:] for k=axes(X,1)])...)'
+            @test @inferred(ichebyshevutransform(X,Val(2),1)) ≈ @inferred(ichebyshevutransform!(copy(X),Val(2),1)) ≈ hcat(ichebyshevutransform.([X[:,k] for k=axes(X,2)],Val(2))...)
+            @test ichebyshevutransform(X,Val(2),2) ≈ ichebyshevutransform!(copy(X),Val(2),2) ≈ hcat(ichebyshevutransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
+
+            @test @inferred(ichebyshevutransform(X)) ≈ @inferred(ichebyshevutransform!(copy(X))) ≈ ichebyshevutransform(ichebyshevutransform(X,1),2)
+            @test @inferred(ichebyshevutransform(X,Val(2))) ≈ @inferred(ichebyshevutransform!(copy(X),Val(2))) ≈ ichebyshevutransform(ichebyshevutransform(X,Val(2),1),Val(2),2)
+
+            @test ichebyshevutransform(chebyshevutransform(X)) ≈ X
+            @test chebyshevutransform(ichebyshevutransform(X)) ≈ X
+        end
+
         X = randn(1,1)
         @test chebyshevtransform!(copy(X), Val(1)) == ichebyshevtransform!(copy(X), Val(1)) == X
         @test_throws ArgumentError chebyshevtransform!(copy(X), Val(2))
