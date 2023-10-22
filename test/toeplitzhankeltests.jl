@@ -36,6 +36,8 @@ Random.seed!(0)
 
         @test th_cheb2jac(x, 0.2, 0.3) ≈ cheb2jac(x, 0.2, 0.3)
         @test th_jac2cheb(x, 0.2, 0.3) ≈ jac2cheb(x, 0.2, 0.3)
+        @test th_cheb2jac(x, 1, 1) ≈ cheb2jac(x, 1, 1)
+        @test th_jac2cheb(x, 1, 1) ≈ jac2cheb(x, 1, 1)
 
         @test th_cheb2leg(th_leg2cheb(x)) ≈ x
         @test th_leg2cheb(th_cheb2leg(x)) ≈ x

@@ -283,8 +283,17 @@ end
 isapproxinteger(::Integer) = true
 isapproxinteger(x) = isinteger(x) || x ≈ round(Int,x)  || x+1 ≈ round(Int,x+1)
 
+"""
+  _nearest_jacobi_par(α, γ)
 
-_nearest_jacobi_par(α, γ) = isapproxinteger(α-γ) ? α : round(Int,α,RoundDown) + mod(γ,1)
+returns a number that is an integer different than γ but less than 1 away from α.
+"""
+function _nearest_jacobi_par(α::T, γ::T) where T
+    ret = isapproxinteger(α-γ) ? α : round(Int,α,RoundDown) + mod(γ,1)
+    ret ≤ -1 ? ret + 1 : ret
+end
+_nearest_jacobi_par(::Integer, ::Integer) = 0
+_nearest_jacobi_par(α, γ) = _nearest_jacobi_par(promote(α,γ)...)
 
 
 struct Ultra2UltraPlanTH{T, Plans, Dims} <: Plan{T}
