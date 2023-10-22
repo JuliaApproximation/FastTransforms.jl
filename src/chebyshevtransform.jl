@@ -149,8 +149,7 @@ end
 end
 
 function *(P::ChebyshevTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
-    n = length(x)
-    n == 0 && return x
+    isempty(x) && return x
 
     y = P.plan*x # will be  === x if in-place
     _cheb1_rescale!(P.plan.region, y)
@@ -371,7 +370,9 @@ ichebyshevtransform!(x::AbstractArray, dims...; kwds...) = plan_ichebyshevtransf
 ichebyshevtransform(x, dims...; kwds...) = plan_ichebyshevtransform(x, dims...; kwds...)*x
 
 
-## Chebyshev U
+#######
+# Chebyshev U
+#######
 
 const UFIRSTKIND = FFTW.RODFT10
 const USECONDKIND = FFTW.RODFT00
@@ -414,31 +415,58 @@ plan_chebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevutr
 plan_chebyshevutransform(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform(x, Val(1), dims...; kws...)
 
 
-@inline function _chebu1_prescale!(_, x::AbstractVector{T}) where T
-    n = length(x)
-    for k=1:n # sqrt(1-x_j^2) weight
-        x[k] *= sinpi(one(T)/(2n) + (k-one(T))/n)/n
+@inline function _chebu1_prescale!(d::Number, x::AbstractVecOrMat{T}) where T
+    m,n = size(x,1),size(x,2)
+    if d == 1
+        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
+            x[k,j] *= sinpi(one(T)/(2m) + (k-one(T))/m)/m
+        end
+    else
+        @assert d == 2
+        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
+            x[k,j] *= sinpi(one(T)/(2n) + (j-one(T))/n)/n
+        end
     end
     x
 end
 
-@inline function _chebu1_postscale!(_, x::AbstractVector{T}) where T
-    n = length(x)
-    for k=1:n # sqrt(1-x_j^2) weight
-        x[k] /= sinpi(one(T)/(2n) + (k-one(T))/n)/n
+@inline function _chebu1_prescale!(d, y::AbstractArray)
+    for k in d
+        _chebu1_prescale!(k, y)
+    end
+    y
+end
+
+@inline function _chebu1_postscale!(d::Number, x::AbstractVecOrMat{T}) where T
+    m,n = size(x,1),size(x,2)
+    if d == 1
+        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
+            x[k,j] /= sinpi(one(T)/(2m) + (k-one(T))/m)/m
+        end
+    else
+        @assert d == 2
+        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
+            x[k,j] /= sinpi(one(T)/(2n) + (j-one(T))/n)/n
+        end
     end
     x
 end
 
-function *(P::ChebyshevUTransformPlan{T,1,K,true}, x::AbstractVector{T}) where {T,K}
+@inline function _chebu1_postscale!(d, y::AbstractArray)
+    for k in d
+        _chebu1_postscale!(k, y)
+    end
+    y
+end
+
+function *(P::ChebyshevUTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
     length(x) ≤ 1 && return x
     _chebu1_prescale!(P.plan.region, x)
     P.plan * x
 end
 
-function mul!(y::AbstractVector{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::AbstractVector{T}) where {T,K}
+function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::AbstractArray{T}) where {T,K}
     n = length(x)
-    length(x) ≤ 1 && return copyto!(y, x)
     _chebu1_prescale!(P.plan.region, x)
     _plan_mul!(y, P.plan, x)
     _chebu1_postscale!(P.plan.region, x)
@@ -482,7 +510,7 @@ end
 *(P::ChebyshevUTransformPlan{T,kind,K,false,N}, x::AbstractArray{T,N}) where {T,kind,K,N} =
     mul!(similar(x), P, x)
 
-chebyshevutransform!(x::AbstractVector{T}, dims...; kws...) where {T<:fftwNumber} =
+chebyshevutransform!(x::AbstractArray{T}, dims...; kws...) where {T<:fftwNumber} =
     plan_chebyshevutransform!(x, dims...; kws...)*x
 
 
