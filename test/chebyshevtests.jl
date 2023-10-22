@@ -154,6 +154,7 @@ using FastTransforms, Test
             p_1 = chebyshevpoints(T, n)
             f = exp.(p_1)
             g = @inferred(chebyshevutransform(f))
+            @test f ≈ exp.(p_1)
 
             f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-1]' * g
             @test f̃(0.1) ≈ exp(T(0.1))
@@ -221,7 +222,7 @@ using FastTransforms, Test
 
             f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-3]' * g
             @test f̃(0.1) ≈ exp(T(0.1))
-            @test @inferred(ichebyshevutransform(g, Val(2))) ≈ exp.(p_2)
+            @test @inferred(ichebyshevutransform(g, Val(2))) ≈ f ≈ exp.(p_2)
 
             fcopy = copy(f)
             gcopy = copy(g)
@@ -289,6 +290,29 @@ using FastTransforms, Test
 
             @test ichebyshevtransform(chebyshevtransform(X)) ≈ X
             @test chebyshevtransform(ichebyshevtransform(X)) ≈ X
+        end
+
+        @testset "chebyshevutransform" begin
+            @test @inferred(chebyshevutransform(X,1)) ≈ @inferred(chebyshevutransform!(copy(X),1)) ≈ hcat(chebyshevutransform.([X[:,k] for k=axes(X,2)])...)
+            @test chebyshevutransform(X,2) ≈ chebyshevutransform!(copy(X),2) ≈ hcat(chebyshevutransform.([X[k,:] for k=axes(X,1)])...)'
+            @test @inferred(chebyshevutransform(X,Val(2),1)) ≈ @inferred(chebyshevutransform!(copy(X),Val(2),1)) ≈ hcat(chebyshevutransform.([X[:,k] for k=axes(X,2)],Val(2))...)
+            @test chebyshevutransform(X,Val(2),2) ≈ chebyshevutransform!(copy(X),Val(2),2) ≈ hcat(chebyshevutransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
+
+            @test @inferred(chebyshevutransform(X)) ≈ @inferred(chebyshevutransform!(copy(X))) ≈ chebyshevutransform(chebyshevutransform(X,1),2)
+            @test @inferred(chebyshevutransform(X,Val(2))) ≈ @inferred(chebyshevutransform!(copy(X),Val(2))) ≈ chebyshevutransform(chebyshevutransform(X,Val(2),1),Val(2),2)
+        end
+
+        @testset "ichebyshevutransform" begin
+            @test @inferred(ichebyshevutransform(X,1)) ≈ @inferred(ichebyshevutransform!(copy(X),1)) ≈ hcat(ichebyshevutransform.([X[:,k] for k=axes(X,2)])...)
+            @test ichebyshevutransform(X,2) ≈ ichebyshevutransform!(copy(X),2) ≈ hcat(ichebyshevutransform.([X[k,:] for k=axes(X,1)])...)'
+            @test @inferred(ichebyshevutransform(X,Val(2),1)) ≈ @inferred(ichebyshevutransform!(copy(X),Val(2),1)) ≈ hcat(ichebyshevutransform.([X[:,k] for k=axes(X,2)],Val(2))...)
+            @test ichebyshevutransform(X,Val(2),2) ≈ ichebyshevutransform!(copy(X),Val(2),2) ≈ hcat(ichebyshevutransform.([X[k,:] for k=axes(X,1)],Val(2))...)'
+
+            @test @inferred(ichebyshevutransform(X)) ≈ @inferred(ichebyshevutransform!(copy(X))) ≈ ichebyshevutransform(ichebyshevutransform(X,1),2)
+            @test @inferred(ichebyshevutransform(X,Val(2))) ≈ @inferred(ichebyshevutransform!(copy(X),Val(2))) ≈ ichebyshevutransform(ichebyshevutransform(X,Val(2),1),Val(2),2)
+
+            @test ichebyshevutransform(chebyshevutransform(X)) ≈ X
+            @test chebyshevutransform(ichebyshevutransform(X)) ≈ X
         end
 
         X = randn(1,1)
@@ -394,7 +418,7 @@ using FastTransforms, Test
             plan_chebyshevutransform(X,Val(1),2), plan_chebyshevutransform(X, Val(2),2),
             plan_ichebyshevutransform(X,Val(1),1), plan_ichebyshevutransform(X, Val(2),1),
             plan_ichebyshevutransform(X,Val(1),2), plan_ichebyshevutransform(X, Val(2),2))
-            @test_broken F \ (F*X) ≈ F * (F\X) ≈ X
+            @test F \ (F*X) ≈ F * (F\X) ≈ X
         end
     end
 end
