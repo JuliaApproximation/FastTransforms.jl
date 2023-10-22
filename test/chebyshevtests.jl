@@ -154,6 +154,7 @@ using FastTransforms, Test
             p_1 = chebyshevpoints(T, n)
             f = exp.(p_1)
             g = @inferred(chebyshevutransform(f))
+            @test f ≈ exp.(p_1)
 
             f̃ = x -> [sin((k+1)*acos(x))/sin(acos(x)) for k=0:n-1]' * g
             @test f̃(0.1) ≈ exp(T(0.1))
