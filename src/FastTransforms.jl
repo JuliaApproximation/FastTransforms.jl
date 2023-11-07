@@ -134,5 +134,6 @@ end
 #     end
 # end
 
+include("docstrings.jl")
 
 end # module
