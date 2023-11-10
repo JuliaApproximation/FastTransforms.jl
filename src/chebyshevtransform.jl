@@ -423,19 +423,13 @@ plan_chebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevutr
 plan_chebyshevutransform(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform(x, Val(1), dims...; kws...)
 
 
-@inline function _chebu1_prescale!(d::Number, x::AbstractVecOrMat{T}) where T
-    m,n = size(x,1),size(x,2)
-    if d == 1
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] *= sinpi(one(T)/(2m) + (k-one(T))/m)/m
-        end
-    else
-        @assert d == 2
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] *= sinpi(one(T)/(2n) + (j-one(T))/n)/n
-        end
-    end
-    x
+_permfirst(d, N) = [d; 1:d-1; d+1:N]
+
+@inline function _chebu1_prescale!(d::Number, X::AbstractArray{T,N}) where {T,N}
+    X̃ = PermutedDimsArray(X, _permfirst(d, N))
+    m = size(X̃,1)
+    X̃ .= (sinpi.(one(T)/(2m) .+ ((1:m) .- one(T))/m) ./ m) .* X̃
+    X
 end
 
 @inline function _chebu1_prescale!(d, y::AbstractArray)
