@@ -164,11 +164,11 @@ using FastTransforms, Test
             gcopy = copy(g)
             P = @inferred(plan_chebyshevutransform(f))
             @test P*f ≈ g
-            @test f == fcopy
+            @test f ≈ fcopy
             @test_throws ArgumentError P * T[1,2]
             P = @inferred(plan_chebyshevutransform(f, 1:1))
             @test P*f ≈ g
-            @test f == fcopy
+            @test f ≈ fcopy
             @test_throws ArgumentError P * T[1,2]
 
             P = @inferred(plan_chebyshevutransform!(f))
@@ -363,6 +363,47 @@ using FastTransforms, Test
 
             @test ichebyshevtransform(chebyshevtransform(X)) ≈ X
             @test chebyshevtransform(ichebyshevtransform(X)) ≈ X
+        end
+    
+        @testset "chebyshevutransform" begin
+            for k = axes(X,2), j = axes(X,3) X̃[:,k,j] = chebyshevutransform(X[:,k,j]) end
+            @test @inferred(chebyshevutransform(X,1)) ≈ @inferred(chebyshevutransform!(copy(X),1)) ≈ X̃
+            for k = axes(X,1), j = axes(X,3) X̃[k,:,j] = chebyshevutransform(X[k,:,j]) end
+            @test chebyshevutransform(X,2) ≈ chebyshevutransform!(copy(X),2) ≈ X̃
+            for k = axes(X,1), j = axes(X,2) X̃[k,j,:] = chebyshevutransform(X[k,j,:]) end
+            @test chebyshevutransform(X,3) ≈ chebyshevutransform!(copy(X),3) ≈ X̃
+
+            for k = axes(X,2), j = axes(X,3) X̃[:,k,j] = chebyshevutransform(X[:,k,j],Val(2)) end
+            @test @inferred(chebyshevutransform(X,Val(2),1)) ≈ @inferred(chebyshevutransform!(copy(X),Val(2),1)) ≈ X̃
+            for k = axes(X,1), j = axes(X,3) X̃[k,:,j] = chebyshevutransform(X[k,:,j],Val(2)) end
+            @test chebyshevutransform(X,Val(2),2) ≈ chebyshevutransform!(copy(X),Val(2),2) ≈ X̃
+            for k = axes(X,1), j = axes(X,2) X̃[k,j,:] = chebyshevutransform(X[k,j,:],Val(2)) end
+            @test chebyshevutransform(X,Val(2),3) ≈ chebyshevutransform!(copy(X),Val(2),3) ≈ X̃
+
+            @test @inferred(chebyshevutransform(X)) ≈ @inferred(chebyshevutransform!(copy(X))) ≈ chebyshevutransform(chebyshevutransform(chebyshevutransform(X,1),2),3)
+            @test @inferred(chebyshevutransform(X,Val(2))) ≈ @inferred(chebyshevutransform!(copy(X),Val(2))) ≈ chebyshevutransform(chebyshevutransform(chebyshevutransform(X,Val(2),1),Val(2),2),Val(2),3)
+        end
+
+        @testset "ichebyshevutransform" begin
+            for k = axes(X,2), j = axes(X,3) X̃[:,k,j] = ichebyshevutransform(X[:,k,j]) end
+            @test @inferred(ichebyshevutransform(X,1)) ≈ @inferred(ichebyshevutransform!(copy(X),1)) ≈ X̃
+            for k = axes(X,1), j = axes(X,3) X̃[k,:,j] = ichebyshevutransform(X[k,:,j]) end
+            @test ichebyshevutransform(X,2) ≈ ichebyshevutransform!(copy(X),2) ≈ X̃
+            for k = axes(X,1), j = axes(X,2) X̃[k,j,:] = ichebyshevutransform(X[k,j,:]) end
+            @test ichebyshevutransform(X,3) ≈ ichebyshevutransform!(copy(X),3) ≈ X̃
+
+            for k = axes(X,2), j = axes(X,3) X̃[:,k,j] = ichebyshevutransform(X[:,k,j],Val(2)) end
+            @test @inferred(ichebyshevutransform(X,Val(2),1)) ≈ @inferred(ichebyshevutransform!(copy(X),Val(2),1)) ≈ X̃
+            for k = axes(X,1), j = axes(X,3) X̃[k,:,j] = ichebyshevutransform(X[k,:,j],Val(2)) end
+            @test ichebyshevutransform(X,Val(2),2) ≈ ichebyshevutransform!(copy(X),Val(2),2) ≈ X̃
+            for k = axes(X,1), j = axes(X,2) X̃[k,j,:] = ichebyshevutransform(X[k,j,:],Val(2)) end
+            @test ichebyshevutransform(X,Val(2),3) ≈ ichebyshevutransform!(copy(X),Val(2),3) ≈ X̃
+
+            @test @inferred(ichebyshevutransform(X)) ≈ @inferred(ichebyshevutransform!(copy(X))) ≈ ichebyshevutransform(ichebyshevutransform(ichebyshevutransform(X,1),2),3)
+            @test @inferred(ichebyshevutransform(X,Val(2))) ≈ @inferred(ichebyshevutransform!(copy(X),Val(2))) ≈ ichebyshevutransform(ichebyshevutransform(ichebyshevutransform(X,Val(2),1),Val(2),2),Val(2),3)
+
+            @test ichebyshevutransform(chebyshevutransform(X)) ≈ X
+            @test chebyshevutransform(ichebyshevutransform(X)) ≈ X
         end
 
         X = randn(1,1,1)
