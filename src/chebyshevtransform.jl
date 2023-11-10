@@ -439,19 +439,11 @@ end
     y
 end
 
-@inline function _chebu1_postscale!(d::Number, x::AbstractVecOrMat{T}) where T
-    m,n = size(x,1),size(x,2)
-    if d == 1
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] /= sinpi(one(T)/(2m) + (k-one(T))/m)/m
-        end
-    else
-        @assert d == 2
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] /= sinpi(one(T)/(2n) + (j-one(T))/n)/n
-        end
-    end
-    x
+@inline function _chebu1_postscale!(d::Number, X::AbstractArray{T,N}) where {T,N}
+    X̃ = PermutedDimsArray(X, _permfirst(d, N))
+    m = size(X̃,1)
+    X̃ .= X̃ ./ (sinpi.(one(T)/(2m) .+ ((1:m) .- one(T))/m) ./ m)
+    X
 end
 
 @inline function _chebu1_postscale!(d, y::AbstractArray)
@@ -479,21 +471,13 @@ function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::A
     y
 end
 
-@inline function _chebu2_prescale!(d::Number, x::AbstractVecOrMat{T}) where T
-    m,n = size(x,1),size(x,2)
-    if d == 1
-        c = one(T)/ (m+1)
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] *= sinpi(k*c)
-        end
-    else
-        @assert d == 2
-        c = one(T)/ (n+1)
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] *= sinpi(j*c)
-        end
-    end
-    x
+
+@inline function _chebu2_prescale!(d::Number, X::AbstractArray{T,N}) where {T,N}
+    X̃ = PermutedDimsArray(X, _permfirst(d, N))
+    m = size(X̃,1)
+    c = one(T)/ (m+1)
+    X̃ .= sinpi.((1:m) .* c) .* X̃
+    X
 end
 
 @inline function _chebu2_prescale!(d, y::AbstractArray)
@@ -504,21 +488,12 @@ end
 end
 
 
-@inline function _chebu2_postscale!(d::Number, x::AbstractVecOrMat{T}) where T
-    m,n = size(x,1),size(x,2)
-    if d == 1
-        c = one(T)/ (m+1)
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] /= sinpi(k*c)
-        end
-    else
-        @assert d == 2
-        c = one(T)/ (n+1)
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] /= sinpi(j*c)
-        end
-    end
-    x
+@inline function _chebu2_postscale!(d::Number, X::AbstractArray{T,N}) where {T,N}
+    X̃ = PermutedDimsArray(X, _permfirst(d, N))
+    m = size(X̃,1)
+    c = one(T)/ (m+1)
+    X̃ .= X̃ ./ sinpi.((1:m) .* c)
+    X
 end
 
 @inline function _chebu2_postscale!(d, y::AbstractArray)
@@ -612,20 +587,13 @@ inv(P::IChebyshevUTransformPlan{T,2}) where {T} = ChebyshevUTransformPlan{T,2}(P
 inv(P::ChebyshevUTransformPlan{T,1}) where {T} = IChebyshevUTransformPlan{T,1}(inv(P.plan).p)
 inv(P::IChebyshevUTransformPlan{T,1}) where {T} = ChebyshevUTransformPlan{T,1}(inv(P.plan).p)
 
-@inline function _ichebu1_postscale!(d::Number, x::AbstractVecOrMat{T}) where T
-    m,n = size(x,1),size(x,2)
-    if d == 1
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] /= 2sinpi(one(T)/(2m) + (k-one(T))/m)
-        end
-    else
-        @assert d == 2
-        for j = 1:n, k = 1:m # sqrt(1-x_j^2) weight
-            x[k,j] /= 2sinpi(one(T)/(2n) + (j-one(T))/n)
-        end
-    end
-    x
+@inline function _ichebu1_postscale!(d::Number, X::AbstractArray{T,N}) where {T,N}
+    X̃ = PermutedDimsArray(X, _permfirst(d, N))
+    m = size(X̃,1)
+    X̃ .= X̃ ./ (2 .* sinpi.(one(T)/(2m) .+ ((1:m) .- one(T))/m))
+    X
 end
+
 
 @inline function _ichebu1_postscale!(d, y::AbstractArray)
     for k in d
