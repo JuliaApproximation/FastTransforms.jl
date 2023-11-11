@@ -89,76 +89,19 @@ function uppertoeplitz_padvec(v::AbstractVector{T}) where T
     tmp
 end
 
-function plan_uppertoeplitz!(v::AbstractVector{T}) where T
-    tmp = uppertoeplitz_padvec(v)
-    dft = plan_fft!(tmp)
-    idft = plan_ifft!(similar(tmp))
-    return ToeplitzPlan{float(T)}(dft * tmp, similar(tmp), dft, idft, (1,))
-end
-
-# TODO: support different transforms
-# function plan_uppertoeplitz!(v1::AbstractVector{T}, v2::AbstractVector{T}) where T
-#     S = float(T)
-#     m,n = length(v1), length(v2)
-#     tmp = zeros(S, 2m-1, 2n-1)
-#     pv1 = uppertoeplitz_padvec(v1)
-#     pv2 = uppertoeplitz_padvec(v2)
-#     dft = plan_r2r!(tmp, FFTW.R2HC)
-#     return ToeplitzPlan((r2r!(pv1, FFTW.R2HC), r2r!(pv2, FFTW.R2HC)), tmp, dft, 1:2)
-# end
-
-function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim::Int) where T
-    S = complex(float(T))
-    m,n = szs
-    if isone(dim)
-        tmp = zeros(S, max(0,2m-1), n)
-        pv = uppertoeplitz_padvec(v[1:m])
-    else # dim == 2
-        tmp = zeros(S, m, max(0,2n-1))
-        pv = uppertoeplitz_padvec(v[1:n])
-    end
-    if isempty(tmp)
-        # dummy plans just to create type
-        dft = plan_fft!(similar(tmp, 1, 1), dim)
-        idft = plan_ifft!(similar(tmp, 1, 1), dim)
-        ToeplitzPlan{float(T)}(pv, tmp, dft, idft, dim)
-    else
-        dft = plan_fft!(tmp, dim)
-        idft = plan_ifft!(similar(tmp), dim)
-        return ToeplitzPlan{float(T)}(fft!(pv), tmp, dft, idft, dim)
-    end
-end
-
-function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{3,Int}, dim::Int) where T
-    S = complex(float(T))
-    m,n,l = szs
-    if isone(dim)
-        tmp = zeros(S, 2m-1, n, l)
-        pv = uppertoeplitz_padvec(v[1:m])
-    elseif dim == 2
-        tmp = zeros(S, m, 2n-1, l)
-        pv = uppertoeplitz_padvec(v[1:n])
-    else
-        @assert dim == 3
-        tmp = zeros(S, m, n, 2l-1)
-        pv = uppertoeplitz_padvec(v[1:l])
-    end
-    dft = plan_fft!(tmp, dim)
-    idft = plan_ifft!(similar(tmp), dim)
-    return ToeplitzPlan{float(T)}(fft!(pv), tmp, dft, idft, dim)
-end
-
-
 uppertoeplitz_vecs(v, dims::AbstractVector, szs) = [fft!(uppertoeplitz_padvec(v[1:szs[d]])) for d in dims]
 uppertoeplitz_vecs(v, dims::Tuple{}, szs) = ()
 uppertoeplitz_vecs(v, dims::Tuple, szs) = (fft!(uppertoeplitz_padvec(v[1:szs[first(dims)]])), uppertoeplitz_vecs(v, tail(dims), szs)...)
+uppertoeplitz_vecs(v, d::Int, szs) = (fft!(uppertoeplitz_padvec(v[1:szs[d]])),)
 
-function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim=(1,2)) where T
+function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{N,Int}, dim=ntuple(identity,Val(N))) where {T,N}
     S = complex(float(T))
-    @assert dim == (1,2)
+    
     tmp = zeros(S, to_toeplitzplan_size(dim, szs)...)
     dft = plan_fft!(tmp, dim)
     idft = plan_ifft!(similar(tmp), dim)
     
     return ToeplitzPlan{float(T)}(uppertoeplitz_vecs(v, dim, szs), tmp, dft, idft, dim)
 end
+
+plan_uppertoeplitz!(v::AbstractVector{T}) where T = plan_uppertoeplitz!(v, size(v))
