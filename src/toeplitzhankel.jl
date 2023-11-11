@@ -16,75 +16,52 @@ so that `L[:,k] = DL*C[:,k]` and `R[:,k] = DR*C[:,k]`.
 This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
 The tuple storage allows plans applied to each dimension.
 """
-struct ToeplitzHankelPlan{S, N, M, N1, TP<:ToeplitzPlan{S,N1}} <: Plan{S}
-    T::NTuple{M,TP}
-    L::NTuple{M,Matrix{S}}
-    R::NTuple{M,Matrix{S}}
-    tmp::Array{S,N1}
-    dims::NTuple{M,Int}
-    function ToeplitzHankelPlan{S,N,M,N1,TP}(T::NTuple{M,TP}, L, R, dims) where {S,TP,N,N1,M}
+struct ToeplitzHankelPlan{S, N, LowR, N1, TP, Dims} <: Plan{S}
+    T::TP # A length M Vector or Tuple of ToeplitzPlan
+    L::LowR  # A length M Vector or Tuple of Matrices storing low rank factors of L
+    R::LowR # A length M Vector or Tuple of Matrices storing low rank factors of R
+    tmp::Array{S,N1} # A larger dimensional array to transform each scaled array all-at-once
+    dims::Dims # A length M Vector or Tuple of Int storing the dimensions acted on
+    function ToeplitzHankelPlan{S,N,N1,LowR,TP,Dims}(T, L::LowR, R::LowR, dims) where {S,TP,N,N1,M}
         tmp = Array{S}(undef, max.(size.(T)...)...)
-        new{S,N,M,N1,TP}(T, L, R, tmp, dims)
+        new{S,N,N1,LowR,TP,Dims}(T, L, R, tmp, dims)
     end
-    ToeplitzHankelPlan{S,N,M,N1,TP}(T::NTuple{M,TP}, L, R, dims::Int) where {S,TP,N,N1,M} =
-        ToeplitzHankelPlan{S,N,M,N1,TP}(T, L, R, (dims,))
 end
 
-ToeplitzHankelPlan(T::ToeplitzPlan{S,2}, L::Matrix, R::Matrix, dims=1) where S =
-    ToeplitzHankelPlan{S, 1, 1, 2, typeof(T)}((T,), (L,), (R,), dims)
-
-ToeplitzHankelPlan(T::ToeplitzPlan{S,3}, L::Matrix, R::Matrix, dims) where S =
-    ToeplitzHankelPlan{S, 2, 1,3, typeof(T)}((T,), (L,), (R,), dims)
-
-ToeplitzHankelPlan(T::NTuple{2,TP}, L::Tuple, R::Tuple, dims) where {S,TP<:ToeplitzPlan{S,3}} =
-    ToeplitzHankelPlan{S, 2,2,3, TP}(T, L, R, dims)
 
 
-function *(P::ToeplitzHankelPlan{<:Any,1}, v::AbstractVector)
-    (R,),(L,),(T,),tmp = P.R,P.L,P.T,P.tmp
+function _th_applymul!(d, v::AbstractVector, T, L, R, tmp)
+    @assert d == 1
     tmp .= R .* v
     T * tmp
     tmp .= L .* tmp
     sum!(v, tmp)
 end
 
-function _th_applymul1!(v, T, L, R, tmp)
+function _th_applymul!(d, v::AbstractMatrix, T, L, R, tmp)
     N = size(R,2)
     m,n = size(v)
-    tmp[1:m,1:n,1:N] .=  reshape(R,size(R,1),1,N) .* v
-    T * view(tmp,1:m,1:n,1:N)
-    view(tmp,1:m,1:n,1:N) .*=  reshape(L,size(L,1),1,N)
-    sum!(v, view(tmp,1:m,1:n,1:N))
-end
-
-function _th_applymul2!(v, T, L, R, tmp)
-    N = size(R,2)
-    m,n = size(v)
-    tmp[1:m,1:n,1:N] .=  reshape(R,1,size(R,1),N) .* v
-    T * view(tmp,1:m,1:n,1:N)
-    view(tmp,1:m,1:n,1:N) .*=  reshape(L,1,size(L,1),N)
-    sum!(v, view(tmp,1:m,1:n,1:N))
-end
-
-
-function *(P::ToeplitzHankelPlan{<:Any,2,1}, v::AbstractMatrix)
-    (R,),(L,),(T,),tmp = P.R,P.L,P.T,P.tmp
-    if P.dims == (1,)
-        _th_applymul1!(v, T, L, R, tmp)
+    if d == 1
+        tmp[1:m,1:n,1:N] .=  reshape(R,size(R,1),1,N) .* v
+        T * view(tmp,1:m,1:n,1:N)
+        view(tmp,1:m,1:n,1:N) .*=  reshape(L,size(L,1),1,N)
     else
-        _th_applymul2!(v, T, L, R, tmp)
+        @assert d == 2
+        tmp[1:m,1:n,1:N] .=  reshape(R,1,size(R,1),N) .* v
+        T * view(tmp,1:m,1:n,1:N)
+        view(tmp,1:m,1:n,1:N) .*=  reshape(L,1,size(L,1),N)
+    end
+    sum!(v, view(tmp,1:m,1:n,1:N))
+end
+
+
+function *(P::ToeplitzHankelPlan, v::AbstractMatrix)
+    for (R,L,T,d) in zip(P.R,P.L,P.T,P.dims)
+        _th_applymul!(d, v, T, L, R, P.tmp)
     end
     v
 end
 
-function *(P::ToeplitzHankelPlan{<:Any,2,2}, v::AbstractMatrix)
-    (R1,R2),(L1,L2),(T1,T2),tmp = P.R,P.L,P.T,P.tmp
-
-    _th_applymul1!(v, T1, L1, R1, tmp)
-    _th_applymul2!(v, T2, L2, R2, tmp)
-
-    v
-end
 
 # partial cholesky for a Hankel matrix
 
