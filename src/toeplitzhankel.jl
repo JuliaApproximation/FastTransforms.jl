@@ -16,18 +16,22 @@ so that `L[:,k] = DL*C[:,k]` and `R[:,k] = DR*C[:,k]`.
 This allows a Cholesky decomposition in 𝒪(K²N) operations and 𝒪(KN) storage, K = log N log ɛ⁻¹.
 The tuple storage allows plans applied to each dimension.
 """
-struct ToeplitzHankelPlan{S, N, LowR, N1, TP, Dims} <: Plan{S}
+struct ToeplitzHankelPlan{S, N, N1, LowR, TP, Dims} <: Plan{S}
     T::TP # A length M Vector or Tuple of ToeplitzPlan
     L::LowR  # A length M Vector or Tuple of Matrices storing low rank factors of L
     R::LowR # A length M Vector or Tuple of Matrices storing low rank factors of R
     tmp::Array{S,N1} # A larger dimensional array to transform each scaled array all-at-once
     dims::Dims # A length M Vector or Tuple of Int storing the dimensions acted on
-    function ToeplitzHankelPlan{S,N,N1,LowR,TP,Dims}(T, L::LowR, R::LowR, dims) where {S,TP,N,N1,M}
+    function ToeplitzHankelPlan{S,N,N1,LowR,TP,Dims}(T::TP, L::LowR, R::LowR, dims) where {S,N,N1,LowR,TP,Dims}
         tmp = Array{S}(undef, max.(size.(T)...)...)
         new{S,N,N1,LowR,TP,Dims}(T, L, R, tmp, dims)
     end
 end
 
+
+ToeplitzHankelPlan{S,N,M}(T::TP, L::LowR, R::LowR, dims::Dims) where {S,N,M,LowR,TP,Dims} = ToeplitzHankelPlan{S,N,M,LowR,TP,Dims}(T, L, R, dims)
+ToeplitzHankelPlan{S,N}(T, L, R, dims) where {S,N} = ToeplitzHankelPlan{S,N,N+1}(T, L, R, dims)
+ToeplitzHankelPlan(T::ToeplitzPlan{S,M}, L::Matrix, R::Matrix, dims=1) where {S,M} = ToeplitzHankelPlan{S,M-1,M}((T,), (L,), (R,), dims)
 
 
 function _th_applymul!(d, v::AbstractVector, T, L, R, tmp)
@@ -55,7 +59,7 @@ function _th_applymul!(d, v::AbstractMatrix, T, L, R, tmp)
 end
 
 
-function *(P::ToeplitzHankelPlan, v::AbstractMatrix)
+function *(P::ToeplitzHankelPlan{<:Any,N}, v::AbstractArray{<:Any,N}) where N
     for (R,L,T,d) in zip(P.R,P.L,P.T,P.dims)
         _th_applymul!(d, v, T, L, R, P.tmp)
     end
@@ -159,10 +163,10 @@ end
 function *(P::ChebyshevToLegendrePlanTH, V::AbstractMatrix)
     m,n = size(V)
     dims = P.toeplitzhankel.dims
-    if dims == (1,)
+    if dims == 1
         _cheb2leg_rescale1!(V)
         P.toeplitzhankel*view(V,2:m,:)
-    elseif dims == (2,)
+    elseif dims == 2
         _cheb2leg_rescale1!(transpose(V))
         P.toeplitzhankel*view(V,:,2:n)
     else
@@ -170,9 +174,9 @@ function *(P::ChebyshevToLegendrePlanTH, V::AbstractMatrix)
         (R1,R2),(L1,L2),(T1,T2),tmp = P.toeplitzhankel.R,P.toeplitzhankel.L,P.toeplitzhankel.T,P.toeplitzhankel.tmp
 
         _cheb2leg_rescale1!(V)
-        _th_applymul1!(view(V,2:m,:), T1, L1, R1, tmp)
+        _th_applymul!(1, view(V,2:m,:), T1, L1, R1, tmp)
         _cheb2leg_rescale1!(transpose(V))
-        _th_applymul2!(view(V,:,2:n), T2, L2, R2, tmp)
+        _th_applymul!(2, view(V,:,2:n), T2, L2, R2, tmp)
     end
     V
 end
@@ -214,7 +218,7 @@ for f in (:leg2cheb, :leg2chebu)
             @assert dims == (1,2)
             T1,L1,C1 = $TLC(S, mn, 1)
             T2,L2,C2 = $TLC(S, mn, 2)
-            ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+            ToeplitzHankelPlan{S,2}((T1,T2), (L1,L2), (C1,C2), dims)
         end
     end
 end
@@ -248,7 +252,7 @@ function plan_th_cheb2leg!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) wh
     @assert dims == (1,2)
     T1,L1,C1 = _cheb2legTH_TLC(S, mn, 1)
     T2,L2,C2 = _cheb2legTH_TLC(S, mn, 2)
-    ChebyshevToLegendrePlanTH(ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims))
+    ChebyshevToLegendrePlanTH(ToeplitzHankelPlan{S,2}((T1,T2), (L1,L2), (C1,C2), dims))
 end
 
 
@@ -314,7 +318,7 @@ _good_plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims::Int) where S = Toe
 function _good_plan_th_ultra2ultra!(::Type{S}, mn::NTuple{2,Int}, λ₁, λ₂, dims::NTuple{2,Int}) where S
     T1,L1,C1 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 1)
     T2,L2,C2 = _ultra2ultraTH_TLC(S, mn, λ₁, λ₂, 2)
-    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+    ToeplitzHankelPlan{S,2}((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
 
@@ -492,7 +496,7 @@ _good_plan_th_jac2jac!(::Type{S}, mn, α, β, γ, δ, dims::Int) where S = Toepl
 function _good_plan_th_jac2jac!(::Type{S}, mn::NTuple{2,Int}, α, β, γ, δ, dims::NTuple{2,Int}) where S
     T1,L1,C1 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 1)
     T2,L2,C2 = _jac2jacTH_TLC(S, mn, α, β, γ, δ, 2)
-    ToeplitzHankelPlan((T1,T2), (L1,L2), (C1,C2), dims)
+    ToeplitzHankelPlan{S,2}((T1,T2), (L1,L2), (C1,C2), dims)
 end
 
 
