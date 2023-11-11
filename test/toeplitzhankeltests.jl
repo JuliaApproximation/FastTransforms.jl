@@ -130,4 +130,9 @@ Random.seed!(0)
         @test norm(v - th_cheb2leg(th_leg2cheb(v)), Inf) ≤ 1E-13
         @test norm(v - th_cheb2leg(th_leg2cheb(v)))/norm(v) ≤ 1E-14
     end
+
+    # @testset "tensor" begin
+    #     X = randn(5,4,3)
+    #     th_leg2cheb(X, 1)
+    # end
 end

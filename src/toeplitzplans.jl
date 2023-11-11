@@ -1,39 +1,35 @@
 using FFTW
 import FFTW: plan_r2r!
 
-struct ToeplitzPlan{T, N, M, S, VECS<:Tuple{Vararg{Vector{S}}}, P<:Plan{S}, Pi<:Plan{S}} <: Plan{T}
-    vectors::VECS
+
+"""
+    ToeplitzPlan
+
+applies Toeplitz matrices fast along each dimension.
+"""
+
+struct ToeplitzPlan{T, N, Dims, S, VECS, P<:Plan{S}, Pi<:Plan{S}} <: Plan{T}
+    vectors::VECS # Vector or Tuple of storage
     tmp::Array{S,N}
     dft::P
     idft::Pi
-    dims::NTuple{M,Int}
+    dims::Dims
 end
 
-ToeplitzPlan{T}(v::AbstractVector, tmp, dft, idft, dims) where T = ToeplitzPlan{T}((v,), tmp, dft, idft, dims)
-ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims::NTuple{M,Int}) where {T,S,N,M} = ToeplitzPlan{T,N,M,S,typeof(v),typeof(dft), typeof(idft)}(v, tmp, dft, idft, dims)
-ToeplitzPlan{T}(v::Tuple{Vararg{Vector{S}}}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims::Int) where {T,S,N} = ToeplitzPlan{T}(v, tmp, dft, idft, (dims,))
+ToeplitzPlan{T}(v::AbstractVector{<:Number}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims) where {T,S,N} = ToeplitzPlan{T}((v,), tmp, dft, idft, dims)
+ToeplitzPlan{T}(v, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims) where {T,S,N} = ToeplitzPlan{T,N,typeof(dims),S,typeof(v),typeof(dft), typeof(idft)}(v, tmp, dft, idft, dims)
 
-size(A::ToeplitzPlan{<:Any,1}) = ((length(A.tmp)+1) ÷ 2,)
-function size(A::ToeplitzPlan{<:Any,2,1})
-    if A.dims == (1,)
-        ((size(A.tmp,1)+1) ÷ 2, size(A.tmp,2))
-    else # A.dims == (2,)
-        (size(A.tmp,1), (size(A.tmp,2)+1) ÷ 2)
+
+divdimby2(d::Int, sz1, szs...) = isone(d) ? ((sz1 + 1) ÷ 2, szs...) : (sz1, divdimby2(d-1, szs...)...)
+
+function size(A::ToeplitzPlan)
+    ret = size(A.tmp)
+    for d in A.dims
+        ret = divdimby2(d, ret...)
     end
+    ret
 end
 
-function size(A::ToeplitzPlan{<:Any,3,1})
-    if A.dims == (1,)
-        ((size(A.tmp,1)+1) ÷ 2, size(A.tmp,2), size(A.tmp,3))
-    elseif A.dims == (2,)
-        (size(A.tmp,1), (size(A.tmp,2)+1) ÷ 2, size(A.tmp,3))
-    else
-        (size(A.tmp,1), size(A.tmp,2), (size(A.tmp,3)+1) ÷ 2)
-    end
-end
-
-
-size(A::ToeplitzPlan{<:Any,2,2}) = ((size(A.tmp,1)+1) ÷ 2, (size(A.tmp,2)+1) ÷ 2)
 
 # based on ToeplitzMatrices.jl
 """
@@ -44,100 +40,30 @@ Return real-valued part of `x` if `T` is a type of a real number, and `x` otherw
 maybereal(::Type, x) = x
 maybereal(::Type{<:Real}, x) = real(x)
 
-function *(A::ToeplitzPlan{T,1}, x::AbstractVector{T}) where T
-    vc,tmp,dft,idft = A.vectors[1],A.tmp, A.dft,A.idft
-    S = eltype(tmp)
-    N = length(tmp)
-    n = length(x)
-    if 2n-1 ≠ N
-        throw(DimensionMismatch("Toeplitz plan does not match size of input"))
-    end
-    copyto!(view(tmp, 1:n), x)
-    fill!(view(tmp, n+1:N), zero(S))
-    dft * tmp
-    tmp .*= vc
-    idft * tmp
-    @inbounds for k = 1:n
-        x[k] = maybereal(T, tmp[k])
-    end
-    x
-end
+function *(A::ToeplitzPlan{T,N}, X::AbstractArray{T,N}) where {T,N}
+    vcs,Y,dft,idft,dims = A.vectors,A.tmp, A.dft,A.idft,A.dims
 
-function *(A::ToeplitzPlan{T,2,1, S}, x::AbstractMatrix{T}) where {T,S}
-    vc,tmp,dft,idft = A.vectors[1],A.tmp, A.dft, A.idft
-    M,N = size(tmp)
-    m,n = size(x)
+    isempty(X) && return X
 
-    if isempty(x)
-        return x
+    fill!(Y, zero(eltype(Y)))
+    copyto!(view(Y, axes(X)...), X)
+
+    # Fourier transform each dimension
+    dft * Y
+    
+    # Multiply by a diagonal matrix along each dimension by permuting
+    # to first dimension
+    for (vc,d) in zip(vcs,dims)
+        Ỹ = PermutedDimsArray(Y, _permfirst(d, N))
+        Ỹ .= vc .* Ỹ
     end
 
-    if A.dims == (1,)
-        copyto!(view(tmp, 1:m, :), x)
-        fill!(view(tmp, m+1:M, :), zero(S))
-        if !isempty(tmp)
-            dft * tmp
-        end
-        tmp .= vc .* tmp
-    else
-        @assert A.dims == (2,)
-        copyto!(view(tmp, :, 1:n), x)
-        fill!(view(tmp, :, n+1:N), zero(S))
-        dft * tmp
-        tmp .= tmp .* transpose(vc)
-    end
-    idft * tmp
-    x .= maybereal.(T, view(tmp,1:m,1:n))
-end
+    # Transform back
+    idft * Y
 
-
-function *(A::ToeplitzPlan{T,2,2, S}, X::AbstractMatrix{T}) where {T,S}
-    vcs,tmp,dft,idft = A.vectors,A.tmp, A.dft,A.idft
-    vc1,vc2 = vcs
-    M,N = size(tmp)
-    m,n = size(X)
-
-    @assert A.dims == (1,2)
-    copyto!(view(tmp, 1:m, 1:n), X)
-    fill!(view(tmp, m+1:M, :), zero(S))
-    fill!(view(tmp, 1:m, n+1:N), zero(S))
-    dft * tmp
-    tmp .= vc1 .* tmp .* transpose(vc2)
-    idft * tmp
-    @inbounds for k = 1:m, j = 1:n
-        X[k,j] = maybereal(T, tmp[k,j])
-    end
+    X .= maybereal.(T, view(Y, axes(X)...))
     X
 end
-
-function *(A::ToeplitzPlan{T,3,1, S}, x::AbstractArray{T,3}) where {T,S}
-    vc,tmp,dft,idft = A.vectors[1],A.tmp, A.dft,A.idft
-    M,N,L = size(tmp)
-    m,n,l = size(x)
-
-    if A.dims == (1,)
-        copyto!(view(tmp, 1:m, :, :), x)
-        fill!(view(tmp, m+1:M, :, :), zero(S))
-        dft * tmp
-        tmp .= vc .* tmp
-    elseif A.dims == (2,)
-        copyto!(view(tmp, :, 1:n, :), x)
-        fill!(view(tmp, :, n+1:N, :), zero(S))
-        dft * tmp
-        tmp .= tmp .* transpose(vc)
-    else
-        copyto!(view(tmp, :, :, 1:l), x)
-        fill!(view(tmp, :, :, l+1:L), zero(S))
-        dft * tmp
-        tmp .= tmp .* reshape(vc, 1, 1, L)
-    end
-    idft * tmp
-    @inbounds for k = 1:m, j = 1:n, ℓ = 1:l
-        x[k,j,ℓ] = maybereal(T, tmp[k,j,ℓ])
-    end
-    x
-end
-
 
 
 function uppertoeplitz_padvec(v::AbstractVector{T}) where T
