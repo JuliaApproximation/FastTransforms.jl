@@ -34,28 +34,14 @@ ToeplitzHankelPlan{S,N}(T, L, R, dims) where {S,N} = ToeplitzHankelPlan{S,N,N+1}
 ToeplitzHankelPlan(T::ToeplitzPlan{S,M}, L::Matrix, R::Matrix, dims=1) where {S,M} = ToeplitzHankelPlan{S,M-1,M}((T,), (L,), (R,), dims)
 
 
-function _th_applymul!(d, v::AbstractVector, T, L, R, tmp)
-    @assert d == 1
-    tmp .= R .* v
-    T * tmp
-    tmp .= L .* tmp
-    sum!(v, tmp)
-end
-
-function _th_applymul!(d, v::AbstractMatrix, T, L, R, tmp)
-    N = size(R,2)
-    m,n = size(v)
-    if d == 1
-        tmp[1:m,1:n,1:N] .=  reshape(R,size(R,1),1,N) .* v
-        T * view(tmp,1:m,1:n,1:N)
-        view(tmp,1:m,1:n,1:N) .*=  reshape(L,size(L,1),1,N)
-    else
-        @assert d == 2
-        tmp[1:m,1:n,1:N] .=  reshape(R,1,size(R,1),N) .* v
-        T * view(tmp,1:m,1:n,1:N)
-        view(tmp,1:m,1:n,1:N) .*=  reshape(L,1,size(L,1),N)
-    end
-    sum!(v, view(tmp,1:m,1:n,1:N))
+_reshape_broadcast(d, R, ::Val{N}, M) where N = reshape(R,ntuple(k -> k == d ? size(R,1) : 1, Val(N))...,M)
+function _th_applymul!(d, v::AbstractArray{<:Any,N}, T, L, R, tmp) where N
+    M = size(R,2)
+    ax = (axes(v)..., OneTo(M))
+    tmp[ax...] .=  _reshape_broadcast(d, R, Val(N), M) .* v
+    T * view(tmp, ax...)
+    view(tmp,ax...) .*= _reshape_broadcast(d, L, Val(N), M)
+    sum!(v, view(tmp,ax...))
 end
 
 
