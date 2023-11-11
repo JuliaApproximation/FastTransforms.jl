@@ -193,18 +193,14 @@ function _leg2chebuTH_TLC(::Type{S}, mn, d) where {S}
     (T, (1:n) .* C, C)
 end
 
-
 for f in (:leg2cheb, :leg2chebu)
     plan = Symbol("plan_th_", f, "!")
     TLC = Symbol("_", f, "TH_TLC")
     @eval begin
-        $plan(::Type{S}, mn::Tuple, dims::Int) where {S} = ToeplitzHankelPlan($TLC(S, mn, dims)..., dims)
-
-        function $plan(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
-            @assert dims == (1,2)
-            T1,L1,C1 = $TLC(S, mn, 1)
-            T2,L2,C2 = $TLC(S, mn, 2)
-            ToeplitzHankelPlan{S,2}((T1,T2), (L1,L2), (C1,C2), dims)
+        $plan(::Type{S}, mn::NTuple{N,Int}, dims::Int) where {S,N} = ToeplitzHankelPlan($TLC(S, mn, dims)..., dims)
+        function $plan(::Type{S}, mn::NTuple{N,Int}, dims=ntuple(identity,Val(N))) where {S,N}
+            TLCs = $TLC.(S, Ref(mn), dims)
+            ToeplitzHankelPlan{S,N}(map(first, TLCs), map(TLC -> TLC[2], TLCs), map(last, TLCs), dims)
         end
     end
 end
@@ -652,9 +648,6 @@ end
 for f in (:th_leg2cheb, :th_cheb2leg, :th_leg2chebu)
     plan = Symbol("plan_", f, "!")
     @eval begin
-        $plan(::Type{S}, mn::NTuple{N,Int}, dims::UnitRange) where {N,S} = $plan(S, mn, tuple(dims...))
-        $plan(::Type{S}, mn::Tuple{Int}, dims::Tuple{Int}=(1,)) where {S} = $plan(S, mn, dims...)
-        $plan(::Type{S}, (m,n)::NTuple{2,Int}) where {S} = $plan(S, (m,n), (1,2))
         $plan(arr::AbstractArray{T}, dims...) where T = $plan(T, size(arr), dims...)
         $f(v, dims...) = $plan(eltype(v), size(v), dims...)*copy(v)
     end
