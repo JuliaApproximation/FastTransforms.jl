@@ -21,14 +21,26 @@ ToeplitzPlan{T}(v, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims) where {T,
 
 
 divdimby2(d::Int, sz1, szs...) = isone(d) ? ((sz1 + 1) ÷ 2, szs...) : (sz1, divdimby2(d-1, szs...)...)
+muldimby2(d::Int, sz1, szs...) = isone(d) ? (2sz1 - 1, szs...) : (sz1, muldimby2(d-1, szs...)...)
 
-function size(A::ToeplitzPlan)
-    ret = size(A.tmp)
-    for d in A.dims
+function toeplitzplan_size(dims, szs)
+    ret = szs
+    for d in dims
         ret = divdimby2(d, ret...)
     end
     ret
 end
+
+function to_toeplitzplan_size(dims, szs)
+    ret = szs
+    for d in dims
+        ret = muldimby2(d, ret...)
+    end
+    ret
+end
+
+
+size(A::ToeplitzPlan) = toeplitzplan_size(A.dims, size(A.tmp))
 
 
 # based on ToeplitzMatrices.jl
@@ -136,14 +148,17 @@ function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{3,Int}, dim::Int)
     return ToeplitzPlan{float(T)}(fft!(pv), tmp, dft, idft, dim)
 end
 
+
+uppertoeplitz_vecs(v, dims::AbstractVector, szs) = [fft!(uppertoeplitz_padvec(v[1:szs[d]])) for d in dims]
+uppertoeplitz_vecs(v, dims::Tuple{}, szs) = ()
+uppertoeplitz_vecs(v, dims::Tuple, szs) = (fft!(uppertoeplitz_padvec(v[1:szs[first(dims)]])), uppertoeplitz_vecs(v, tail(dims), szs)...)
+
 function plan_uppertoeplitz!(v::AbstractVector{T}, szs::NTuple{2,Int}, dim=(1,2)) where T
-    @assert dim == (1,2)
     S = complex(float(T))
-    m,n = szs
-    tmp = zeros(S, 2m-1, 2n-1)
-    pv1 = uppertoeplitz_padvec(v[1:m])
-    pv2 = uppertoeplitz_padvec(v[1:n])
+    @assert dim == (1,2)
+    tmp = zeros(S, to_toeplitzplan_size(dim, szs)...)
     dft = plan_fft!(tmp, dim)
     idft = plan_ifft!(similar(tmp), dim)
-    return ToeplitzPlan{float(T)}((fft!(pv1), fft!(pv2)), tmp, dft, idft, dim)
+    
+    return ToeplitzPlan{float(T)}(uppertoeplitz_vecs(v, dim, szs), tmp, dft, idft, dim)
 end

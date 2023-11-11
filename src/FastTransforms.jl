@@ -8,7 +8,7 @@ using FastGaussQuadrature, FillArrays, LinearAlgebra,
 @reexport using GenericFFT
 
 import Base: convert, unsafe_convert, eltype, ndims, adjoint, transpose, show,
-             *, \, inv, length, size, view, getindex
+             *, \, inv, length, size, view, getindex, tail
 
 import Base.GMP: Limb
 

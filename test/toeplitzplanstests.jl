@@ -34,23 +34,32 @@ import FastTransforms: plan_uppertoeplitz!
     @testset "Tensor" begin
         T = [1 2 3; 0 1 2; 0 0 1]
         
-        X = randn(3,3,3)
-        P = plan_uppertoeplitz!([1,2,3], size(X), 1)
-        PX = P * copy(X)
-        for ℓ = 1:size(X,3)
-            @test PX[:,:,ℓ] ≈ T*X[:,:,ℓ]
-        end
+        @testset "3D" begin
+            X = randn(3,3,3)
+            P = plan_uppertoeplitz!([1,2,3], size(X), 1)
+            PX = P * copy(X)
+            for ℓ = 1:size(X,3)
+                @test PX[:,:,ℓ] ≈ T*X[:,:,ℓ]
+            end
 
-        P = plan_uppertoeplitz!([1,2,3], size(X), 2)
-        PX = P * copy(X)
-        for ℓ = 1:size(X,3)
-            @test PX[:,:,ℓ] ≈ X[:,:,ℓ]*T'
-        end
+            P = plan_uppertoeplitz!([1,2,3], size(X), 2)
+            PX = P * copy(X)
+            for ℓ = 1:size(X,3)
+                @test PX[:,:,ℓ] ≈ X[:,:,ℓ]*T'
+            end
 
-        P = plan_uppertoeplitz!([1,2,3], size(X), 3)
-        PX = P * copy(X)
-        for j = 1:size(X,2)
-            @test PX[:,j,:] ≈ X[:,j,:]*T'
+            P = plan_uppertoeplitz!([1,2,3], size(X), 3)
+            PX = P * copy(X)
+            for j = 1:size(X,2)
+                @test PX[:,j,:] ≈ X[:,j,:]*T'
+            end
+
+
+            # P = plan_uppertoeplitz!([1,2,3], size(X), 1:3)
+            # PX = P * copy(X)
+            # for j = 1:size(X,2)
+            #     @test PX[:,j,:] ≈ X[:,j,:]*T'
+            # end
         end
     end
 
