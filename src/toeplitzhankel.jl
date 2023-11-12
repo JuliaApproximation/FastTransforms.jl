@@ -133,9 +133,9 @@ function *(P::ChebyshevToLegendrePlanTH, v::AbstractVector{S}) where S
     v
 end
 
-function _cheb2leg_rescale1!(V::AbstractMatrix{S}) where S
-    m,n = size(V)
-    for j = 1:n
+function _cheb2leg_rescale1!(V::AbstractArray{S}) where S
+    m = size(V,1)
+    for j = CartesianIndices(tail(axes(V)))
         ret = zero(S)
         @inbounds for k = 1:2:m
             ret += -V[k,j]/(k*(k-2))

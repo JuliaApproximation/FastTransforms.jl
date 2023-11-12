@@ -133,7 +133,7 @@ Random.seed!(0)
 
     @testset "tensor" begin
             X = randn(5,4,3)
-            for trans in (th_leg2cheb,) # :th_cheb2leg)
+            for trans in (th_leg2cheb, th_cheb2leg)
                 Y = trans(X, 1)
                 for ℓ = 1:size(X,3)
                     @test Y[:,:,ℓ] ≈ trans(X[:,:,ℓ],1)
