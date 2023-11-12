@@ -16,7 +16,6 @@ struct ToeplitzPlan{T, N, Dims, S, VECS, P<:Plan{S}, Pi<:Plan{S}} <: Plan{T}
     dims::Dims
 end
 
-ToeplitzPlan{T}(v::AbstractVector{<:Number}, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims) where {T,S,N} = ToeplitzPlan{T}((v,), tmp, dft, idft, dims)
 ToeplitzPlan{T}(v, tmp::Array{S,N}, dft::Plan{S}, idft::Plan{S}, dims) where {T,S,N} = ToeplitzPlan{T,N,typeof(dims),S,typeof(v),typeof(dft), typeof(idft)}(v, tmp, dft, idft, dims)
 
 
