@@ -130,4 +130,37 @@ Random.seed!(0)
         @test norm(v - th_cheb2leg(th_leg2cheb(v)), Inf) ≤ 1E-13
         @test norm(v - th_cheb2leg(th_leg2cheb(v)))/norm(v) ≤ 1E-14
     end
+
+    @testset "tensor" begin
+        X = randn(5,4,3)
+        for trans in (th_leg2cheb, th_cheb2leg)
+            Y = trans(X, 1)
+            for ℓ = 1:size(X,3)
+                @test Y[:,:,ℓ] ≈ trans(X[:,:,ℓ],1)
+            end
+            Y = trans(X, 2)
+            for ℓ = 1:size(X,3)
+                @test Y[:,:,ℓ] ≈ trans(X[:,:,ℓ],2)
+            end
+            Y = trans(X, 3)
+            for j = 1:size(X,2)
+                @test Y[:,j,:] ≈ trans(X[:,j,:],2)
+            end
+
+            Y = trans(X, (1,3))
+            for j = 1:size(X,2)
+                @test Y[:,j,:] ≈ trans(X[:,j,:])
+            end 
+
+            Y = trans(X, 1:3)
+            M = copy(X)
+            for j = 1:size(X,3)
+                M[:,:,j] = trans(M[:,:,j])
+            end
+            for k = 1:size(X,1), j=1:size(X,2)
+                M[k,j,:] = trans(M[k,j,:])
+            end
+            @test M ≈ Y
+        end
+    end
 end
