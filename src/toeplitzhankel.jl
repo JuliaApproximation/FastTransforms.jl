@@ -189,7 +189,7 @@ for f in (:leg2cheb, :leg2chebu)
     TLC = Symbol("_", f, "TH_TLC")
     @eval begin
         $plan(::Type{S}, mn::NTuple{N,Int}, dims::Int) where {S,N} = ToeplitzHankelPlan($TLC(S, mn, dims)..., dims)
-        function $plan(::Type{S}, mn::NTuple{N,Int}, dims=ntuple(identity,Val(N))) where {S,N}
+        function $plan(::Type{S}, mn::NTuple{N,Int}, dims) where {S,N}
             TLCs = $TLC.(S, Ref(mn), dims)
             ToeplitzHankelPlan{S,N}(map(first, TLCs), map(TLC -> TLC[2], TLCs), map(last, TLCs), dims)
         end
@@ -221,7 +221,7 @@ end
 
 plan_th_cheb2leg!(::Type{S}, mn::NTuple{N,Int}, dims::Int) where {S,N} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(_cheb2legTH_TLC(S, mn, dims)..., dims))
 
-function plan_th_cheb2leg!(::Type{S}, mn::NTuple{N,Int}, dims=ntuple(identity,Val(N))) where {S,N}
+function plan_th_cheb2leg!(::Type{S}, mn::NTuple{N,Int}, dims) where {S,N}
     TLCs = _cheb2legTH_TLC.(S, Ref(mn), dims)
     ChebyshevToLegendrePlanTH(ToeplitzHankelPlan{S,N}(map(first, TLCs), map(TLC -> TLC[2], TLCs), map(last, TLCs), dims))
 end
