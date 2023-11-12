@@ -145,24 +145,15 @@ function _cheb2leg_rescale1!(V::AbstractMatrix{S}) where S
     V
 end
 
+_dropfirstdim(d::Int) = ()
+_dropfirstdim(d::Int, m, szs...) = ((d == 1 ? 2 : 1):m, _dropfirstdim(d-1, szs...)...)
 
-function *(P::ChebyshevToLegendrePlanTH, V::AbstractMatrix)
+function *(P::ChebyshevToLegendrePlanTH, V::AbstractArray{<:Any,N}) where N
     m,n = size(V)
-    dims = P.toeplitzhankel.dims
-    if dims == 1
-        _cheb2leg_rescale1!(V)
-        P.toeplitzhankel*view(V,2:m,:)
-    elseif dims == 2
-        _cheb2leg_rescale1!(transpose(V))
-        P.toeplitzhankel*view(V,:,2:n)
-    else
-        @assert dims == (1,2)
-        (R1,R2),(L1,L2),(T1,T2),tmp = P.toeplitzhankel.R,P.toeplitzhankel.L,P.toeplitzhankel.T,P.toeplitzhankel.tmp
-
-        _cheb2leg_rescale1!(V)
-        _th_applymul!(1, view(V,2:m,:), T1, L1, R1, tmp)
-        _cheb2leg_rescale1!(transpose(V))
-        _th_applymul!(2, view(V,:,2:n), T2, L2, R2, tmp)
+    tmp = P.toeplitzhankel.tmp
+    for (d,R,L,T) in zip(P.toeplitzhankel.dims,P.toeplitzhankel.R,P.toeplitzhankel.L,P.toeplitzhankel.T)
+        _cheb2leg_rescale1!(PermutedDimsArray(V, _permfirst(d, N)))
+        _th_applymul!(d, view(V, _dropfirstdim(d, size(V)...)...), T, L, R, tmp)
     end
     V
 end
@@ -228,13 +219,11 @@ function _cheb2legTH_TLC(::Type{S}, mn, d) where S
     T, DL .* C, DR .* C
 end
 
-plan_th_cheb2leg!(::Type{S}, mn::Tuple, dims::Int) where {S} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(_cheb2legTH_TLC(S, mn, dims)..., dims))
+plan_th_cheb2leg!(::Type{S}, mn::NTuple{N,Int}, dims::Int) where {S,N} = ChebyshevToLegendrePlanTH(ToeplitzHankelPlan(_cheb2legTH_TLC(S, mn, dims)..., dims))
 
-function plan_th_cheb2leg!(::Type{S}, mn::NTuple{2,Int}, dims::NTuple{2,Int}) where {S}
-    @assert dims == (1,2)
-    T1,L1,C1 = _cheb2legTH_TLC(S, mn, 1)
-    T2,L2,C2 = _cheb2legTH_TLC(S, mn, 2)
-    ChebyshevToLegendrePlanTH(ToeplitzHankelPlan{S,2}((T1,T2), (L1,L2), (C1,C2), dims))
+function plan_th_cheb2leg!(::Type{S}, mn::NTuple{N,Int}, dims=ntuple(identity,Val(N))) where {S,N}
+    TLCs = _cheb2legTH_TLC.(S, Ref(mn), dims)
+    ChebyshevToLegendrePlanTH(ToeplitzHankelPlan{S,N}(map(first, TLCs), map(TLC -> TLC[2], TLCs), map(last, TLCs), dims))
 end
 
 
@@ -649,6 +638,7 @@ for f in (:th_leg2cheb, :th_cheb2leg, :th_leg2chebu)
     plan = Symbol("plan_", f, "!")
     @eval begin
         $plan(arr::AbstractArray{T}, dims...) where T = $plan(T, size(arr), dims...)
+        $plan(::Type{S}, mn::NTuple{N,Int}) where {S,N} = $plan(S, mn, ntuple(identity,Val(N)))
         $f(v, dims...) = $plan(eltype(v), size(v), dims...)*copy(v)
     end
 end
