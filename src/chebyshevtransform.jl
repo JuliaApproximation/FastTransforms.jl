@@ -2,6 +2,8 @@
 
 abstract type ChebyshevPlan{T} <: Plan{T} end
 
+*(P::ChebyshevPlan{T}, x::AbstractArray{T}) where T = error("Plan applied to wrong size array")
+
 size(P::ChebyshevPlan) = isdefined(P, :plan) ? size(P.plan) : (0,)
 length(P::ChebyshevPlan) = isdefined(P, :plan) ? length(P.plan) : 0
 
@@ -150,6 +152,8 @@ end
     end
     ldiv!(_prod_size(size(y), d), y)
 end
+
+
 
 function *(P::ChebyshevTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
     isempty(x) && return x

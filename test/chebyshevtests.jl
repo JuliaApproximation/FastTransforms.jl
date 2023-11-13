@@ -462,4 +462,9 @@ using FastTransforms, Test
             @test F \ (F*X) ≈ F * (F\X) ≈ X
         end
     end
+
+    @testset "incompatible shapes" begin
+        @test_throws ErrorException plan_chebyshevtransform(randn(5)) * randn(5,5)
+        @test_throws ErrorException plan_ichebyshevtransform(randn(5)) * randn(5,5)
+    end
 end
