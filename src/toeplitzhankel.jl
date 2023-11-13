@@ -118,7 +118,7 @@ end
 
 
 
-struct ChebyshevToLegendrePlanTH{TH}
+struct ChebyshevToLegendrePlanTH{S,TH<:ToeplitzHankelPlan{S}} <: Plan{S}
     toeplitzhankel::TH
 end
 
