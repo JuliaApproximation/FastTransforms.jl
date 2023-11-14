@@ -58,76 +58,22 @@ plan_chebyshevtransform(x::AbstractArray, dims...; kws...) = plan_chebyshevtrans
 @inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::AbstractArray) where T = mul!(y, P, convert(Array{T}, x))
 
 
+for op in (:ldiv, :lmul)
+    op_dim_begin! = Symbol(string(op) * "_dim_begin!")
+    op_dim_end! = Symbol(string(op) * "_dim_end!")
+    op! = Symbol(string(op) * "!")
+    @eval begin
+        function $op_dim_begin!(α, d::Number, y::AbstractArray{<:Any,N}) where N
+            # scale just the d-th dimension by permuting it to the first
+            ỹ = PermutedDimsArray(y, _permfirst(d, N))
+            $op!(α, view(ỹ, 1, ntuple(_ -> :, Val(N-1))...))
+        end
 
-ldiv_dim_begin!(α, d::Number, y::AbstractVector) = y[1] /= α
-function ldiv_dim_begin!(α, d::Number, y::AbstractMatrix)
-    if isone(d)
-        ldiv!(α, @view(y[1,:]))
-    else
-        ldiv!(α, @view(y[:,1]))
-    end
-end
-function ldiv_dim_begin!(α, d::Number, y::AbstractArray{<:Any,3})
-    if isone(d)
-        ldiv!(α, @view(y[1,:,:]))
-    elseif d == 2
-        ldiv!(α, @view(y[:,1,:]))
-    else # d == 3
-        ldiv!(α, @view(y[:,:,1]))
-    end
-end
-
-ldiv_dim_end!(α, d::Number, y::AbstractVector) = y[end] /= α
-function ldiv_dim_end!(α, d::Number, y::AbstractMatrix)
-    if isone(d)
-        ldiv!(α, @view(y[end,:]))
-    else
-        ldiv!(α, @view(y[:,end]))
-    end
-end
-function ldiv_dim_end!(α, d::Number, y::AbstractArray{<:Any,3})
-    if isone(d)
-        ldiv!(α, @view(y[end,:,:]))
-    elseif d == 2
-        ldiv!(α, @view(y[:,end,:]))
-    else # d == 3
-        ldiv!(α, @view(y[:,:,end]))
-    end
-end
-
-lmul_dim_begin!(α, d::Number, y::AbstractVector) = y[1] *= α
-function lmul_dim_begin!(α, d::Number, y::AbstractMatrix)
-    if isone(d)
-        lmul!(α, @view(y[1,:]))
-    else
-        lmul!(α, @view(y[:,1]))
-    end
-end
-function lmul_dim_begin!(α, d::Number, y::AbstractArray{<:Any,3})
-    if isone(d)
-        lmul!(α, @view(y[1,:,:]))
-    elseif d == 2
-        lmul!(α, @view(y[:,1,:]))
-    else # d == 3
-        lmul!(α, @view(y[:,:,1]))
-    end
-end
-
-lmul_dim_end!(α, d::Number, y::AbstractVector) = y[end] *= α
-function lmul_dim_end!(α, d::Number, y::AbstractMatrix)
-    if isone(d)
-        lmul!(α, @view(y[end,:]))
-    else
-        lmul!(α, @view(y[:,end]))
-    end
-end
-function lmul_dim_end!(α, d::Number, y::AbstractArray{<:Any,3})
-    if isone(d)
-        lmul!(α, @view(y[end,:,:]))
-    elseif d == 2
-        lmul!(α, @view(y[:,end,:]))
-    else # d == 3
-        lmul!(α, @view(y[:,:,end]))
+        function $op_dim_end!(α, d::Number, y::AbstractArray{<:Any,N}) where N
+            # scale just the d-th dimension by permuting it to the first
+            ỹ = PermutedDimsArray(y, _permfirst(d, N))
+            $op!(α, view(ỹ, size(ỹ,1), ntuple(_ -> :, Val(N-1))...))
+        end
     end
 end
 
