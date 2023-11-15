@@ -467,4 +467,10 @@ using FastTransforms, Test
         @test_throws ErrorException plan_chebyshevtransform(randn(5)) * randn(5,5)
         @test_throws ErrorException plan_ichebyshevtransform(randn(5)) * randn(5,5)
     end
+
+    @testset "plan via size" begin
+        X = randn(3,4)
+        p = plan_chebyshevtransform(Float64, (3,4))
+        @test p * X == chebyshevtransform(X)
+    end
 end
