@@ -49,9 +49,6 @@ function plan_chebyshevtransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws..
     ChebyshevTransformPlan{T,2}(FFTW.plan_r2r(x, SECONDKIND, dims...; kws...))
 end
 
-plan_chebyshevtransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevtransform!(x, Val(1), dims...; kws...)
-plan_chebyshevtransform(x::AbstractArray, dims...; kws...) = plan_chebyshevtransform(x, Val(1), dims...; kws...)
-
 
 # convert x if necessary
 @inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::StridedArray{T}) where T = mul!(y, P, x)
@@ -221,9 +218,6 @@ function plan_ichebyshevtransform(x::AbstractArray{T}, ::Val{2}, dims...; kws...
     inv(plan_chebyshevtransform(x, Val(2), dims...; kws...))
 end
 
-plan_ichebyshevtransform!(x::AbstractArray, dims...; kws...) = plan_ichebyshevtransform!(x, Val(1), dims...; kws...)
-plan_ichebyshevtransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevtransform(x, Val(1), dims...; kws...)
-
 @inline function _icheb1_prescale!(d::Number, x::AbstractArray)
     lmul_dim_begin!(2, d, x)
     x
@@ -368,9 +362,6 @@ function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws.
     end
     ChebyshevUTransformPlan{T,2}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
-
-plan_chebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform!(x, Val(1), dims...; kws...)
-plan_chebyshevutransform(x::AbstractArray, dims...; kws...) = plan_chebyshevutransform(x, Val(1), dims...; kws...)
 
 
 _permfirst(d, N) = [d; 1:d-1; d+1:N]
@@ -525,9 +516,6 @@ function plan_ichebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws
     IChebyshevUTransformPlan{T,2}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
-
-plan_ichebyshevutransform!(x::AbstractArray, dims...; kws...) = plan_ichebyshevutransform!(x, Val(1), dims...; kws...)
-plan_ichebyshevutransform(x::AbstractArray, dims...; kws...) = plan_ichebyshevutransform(x, Val(1), dims...; kws...)
 
 # second kind Chebyshev transforms share a plan with their inverse
 # so we support this via inv
@@ -744,3 +732,14 @@ end
     copyto!(x, IChebyshevTransformPlan{T,1,Nothing,false,N,R}() * x)
 # *(P::IChebyshevTransformPlan{T,SECONDKIND,false,Nothing}, x::AbstractVector{T}) where T =
 #     IChebyshevTransformPlan{T,SECONDKIND,true,Nothing}() * copy(x)
+
+
+for pln in (:plan_chebyshevtransform!, :plan_chebyshevtransform, 
+            :plan_chebyshevutransform!, :plan_chebyshevutransform, 
+            :plan_ichebyshevutransform, :plan_ichebyshevutransform!, 
+            :plan_ichebyshevtransform, :plan_ichebyshevtransform!)
+    @eval begin
+        $pln(x::AbstractArray, dims...; kws...) = $pln(x, Val(1), dims...; kws...)
+        $pln(::Type{T}, szs, dims...; kwds...) where T = $pln(Array{T}(undef, szs...), dims...; kwds...)
+    end
+end
