@@ -299,7 +299,7 @@ function plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims) where {S}
 
     if isapproxinteger(λ₂ - λ₁)
         # TODO: don't make extra plan
-        plans = typeof(_good_plan_th_ultra2ultra!(S, mn, λ₁+0.1, λ₂, dims))[]
+        plans = typeof(_good_plan_th_ultra2ultra!(S, mn, λ₂+0.1, λ₂, dims))[]
     else
         plans = [_good_plan_th_ultra2ultra!(S, mn, λ₁, c, dims)]
     end
