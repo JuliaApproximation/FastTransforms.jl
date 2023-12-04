@@ -164,4 +164,23 @@ Random.seed!(0)
             @test M ≈ Y
         end
     end
+
+    @testset "inv" begin
+        x = randn(10)
+        pl = plan_th_cheb2leg!(x)
+        @test size(pl) == (10,)
+        @test pl\(pl*x) ≈ x
+
+        X = randn(10,3)
+        for pl in (plan_th_cheb2leg!(X), plan_th_cheb2leg!(X, 1), plan_th_cheb2leg!(X, 2))
+            @test size(pl) == (10,3)
+            @test pl\(pl*copy(X)) ≈ X
+        end
+
+        X = randn(10,3,5)
+        for pl in (plan_th_cheb2leg!(X), plan_th_cheb2leg!(X, 1), plan_th_cheb2leg!(X, 2),  plan_th_cheb2leg!(X, 3))
+            @test size(pl) == (10,3,5)
+            @test pl\(pl*copy(X)) ≈ X
+        end
+    end
 end
