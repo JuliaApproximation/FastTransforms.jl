@@ -33,6 +33,8 @@ ToeplitzHankelPlan{S,N,M}(T::TP, L::LowR, R::LowR, dims::Dims) where {S,N,M,LowR
 ToeplitzHankelPlan{S,N}(T, L, R, dims) where {S,N} = ToeplitzHankelPlan{S,N,N+1}(T, L, R, dims)
 ToeplitzHankelPlan(T::ToeplitzPlan{S,M}, L::Matrix, R::Matrix, dims=1) where {S,M} = ToeplitzHankelPlan{S,M-1,M}((T,), (L,), (R,), dims)
 
+size(TH::ToeplitzHankelPlan) = size(first(TH.T))
+
 
 _reshape_broadcast(d, R, ::Val{N}, M) where N = reshape(R,ntuple(k -> k == d ? size(R,1) : 1, Val(N))...,M)
 function _th_applymul!(d, v::AbstractArray{<:Any,N}, T, L, R, tmp) where N
@@ -51,6 +53,8 @@ function *(P::ToeplitzHankelPlan{<:Any,N}, v::AbstractArray{<:Any,N}) where N
     end
     v
 end
+
+*(P::ToeplitzHankelPlan, v::AbstractArray) = error("plan applied to wrong-sized array")
 
 
 # partial cholesky for a Hankel matrix
@@ -158,6 +162,10 @@ function *(P::ChebyshevToLegendrePlanTH, V::AbstractArray{<:Any,N}) where N
     V
 end
 
+_add1tod(d::Integer, a, b...) = d == 1 ? (a+1, b...) : (a, _add1tod(d-1, b...)...)
+_add1tod(d, a, b...) = _add1tod(first(d), a, b...)
+size(P::ChebyshevToLegendrePlanTH) = Base.front(_add1tod(P.toeplitzhankel.dims, size(first(P.toeplitzhankel.T))...))
+inv(P::ChebyshevToLegendrePlanTH{T}) where T = plan_th_leg2cheb!(T, size(P), P.toeplitzhankel.dims)
 
 
 function _leg2chebTH_TLC(::Type{S}, mn, d) where S
