@@ -69,6 +69,7 @@ for op in (:ldiv, :lmul)
     @eval begin
         function $op_dim_begin!(α, d::Number, y::AbstractArray)
             # scale just the d-th dimension by permuting it to the first
+            d ∈ 1:ndims(y) || throw(ArgumentError("dimension $d must lie between 1 and $(ndims(y))"))
             Rpre = CartesianIndices(axes(y)[1:d-1])
             Rpost = CartesianIndices(axes(y)[d+1:end])
             applydim!(v -> $op!(α, v), y, Rpre, Rpost, 1)
@@ -76,6 +77,7 @@ for op in (:ldiv, :lmul)
 
         function $op_dim_end!(α, d::Number, y::AbstractArray)
             # scale just the d-th dimension by permuting it to the first
+            d ∈ 1:ndims(y) || throw(ArgumentError("dimension $d must lie between 1 and $(ndims(y))"))
             Rpre = CartesianIndices(axes(y)[1:d-1])
             Rpost = CartesianIndices(axes(y)[d+1:end])
             applydim!(v -> $op!(α, v), y, Rpre, Rpost, size(y, d))
