@@ -373,13 +373,14 @@ function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws.
 end
 
 
-_permfirst(d, N) = [d; 1:d-1; d+1:N]
+@inline _permfirst(d, N) = ntuple(i -> i == 1 ? d : i <= d ? i-1 : i, N)
 
 for f in [:_chebu1_prescale!, :_chebu1_postscale!, :_chebu2_prescale!, :_chebu2_postscale!,
             :_ichebu1_postscale!]
     _f = Symbol(:_, f)
     @eval begin
         @inline function $f(d::Number, X::AbstractArray)
+            d ∈ 1:ndims(X) || throw("dimension $d must lie between 1 and $(ndims(X))")
             Rpre = CartesianIndices(axes(X)[1:d-1])
             Rpost = CartesianIndices(axes(X)[d+1:end])
             $_f(d, X, Rpre, Rpost)
