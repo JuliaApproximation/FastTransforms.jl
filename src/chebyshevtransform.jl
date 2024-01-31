@@ -61,6 +61,11 @@ function applydim!(op!, X::AbstractArray, Rpre, Rpost, ind)
     end
     X
 end
+function applydim!(op!, X::AbstractArray, d::Integer, ind)
+    Rpre = CartesianIndices(axes(X)[1:d-1])
+    Rpost = CartesianIndices(axes(X)[d+1:end])
+    applydim!(op!, X, Rpre, Rpost, ind)
+end
 
 for op in (:ldiv, :lmul)
     op_dim_begin! = Symbol(op, :_dim_begin!)
@@ -70,17 +75,13 @@ for op in (:ldiv, :lmul)
         function $op_dim_begin!(α, d::Number, y::AbstractArray)
             # scale just the d-th dimension by permuting it to the first
             d ∈ 1:ndims(y) || throw(ArgumentError("dimension $d must lie between 1 and $(ndims(y))"))
-            Rpre = CartesianIndices(axes(y)[1:d-1])
-            Rpost = CartesianIndices(axes(y)[d+1:end])
-            applydim!(v -> $op!(α, v), y, Rpre, Rpost, 1)
+            applydim!(v -> $op!(α, v), y, d, 1)
         end
 
         function $op_dim_end!(α, d::Number, y::AbstractArray)
             # scale just the d-th dimension by permuting it to the first
             d ∈ 1:ndims(y) || throw(ArgumentError("dimension $d must lie between 1 and $(ndims(y))"))
-            Rpre = CartesianIndices(axes(y)[1:d-1])
-            Rpost = CartesianIndices(axes(y)[d+1:end])
-            applydim!(v -> $op!(α, v), y, Rpre, Rpost, size(y, d))
+            applydim!(v -> $op!(α, v), y, d, size(y, d))
         end
     end
 end
@@ -383,9 +384,7 @@ for f in [:_chebu1_prescale!, :_chebu1_postscale!, :_chebu2_prescale!, :_chebu2_
     @eval begin
         @inline function $f(d::Number, X::AbstractArray)
             d ∈ 1:ndims(X) || throw("dimension $d must lie between 1 and $(ndims(X))")
-            Rpre = CartesianIndices(axes(X)[1:d-1])
-            Rpost = CartesianIndices(axes(X)[d+1:end])
-            $_f(d, X, Rpre, Rpost)
+            $_f(d, X)
             X
         end
         @inline function $f(d, y::AbstractArray)
@@ -397,16 +396,16 @@ for f in [:_chebu1_prescale!, :_chebu1_postscale!, :_chebu2_prescale!, :_chebu2_
     end
 end
 
-function __chebu1_prescale!(d::Number, X::AbstractArray{T}, Rpre, Rpost) where {T}
+function __chebu1_prescale!(d::Number, X::AbstractArray{T}) where {T}
     m = size(X,d)
     r = one(T)/(2m) .+ ((1:m) .- one(T))./m
-    applydim!(v -> v .*= sinpi.(r) ./ m, X, Rpre, Rpost, :)
+    applydim!(v -> v .*= sinpi.(r) ./ m, X, d, :)
 end
 
-@inline function __chebu1_postscale!(d::Number, X::AbstractArray{T}, Rpre, Rpost) where {T}
+@inline function __chebu1_postscale!(d::Number, X::AbstractArray{T}) where {T}
     m = size(X,d)
     r = one(T)/(2m) .+ ((1:m) .- one(T))./m
-    applydim!(v -> v ./= sinpi.(r) ./ m, X, Rpre, Rpost, :)
+    applydim!(v -> v ./= sinpi.(r) ./ m, X, d, :)
 end
 
 function *(P::ChebyshevUTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
@@ -428,18 +427,18 @@ function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::A
 end
 
 
-@inline function __chebu2_prescale!(d, X::AbstractArray{T}, Rpre, Rpost) where {T}
+@inline function __chebu2_prescale!(d, X::AbstractArray{T}) where {T}
     m = size(X,d)
     c = one(T)/ (m+1)
     r = (1:m) .* c
-    applydim!(v -> v .*= sinpi.(r), X, Rpre, Rpost, :)
+    applydim!(v -> v .*= sinpi.(r), X, d, :)
 end
 
-@inline function __chebu2_postscale!(d::Number, X::AbstractArray{T}, Rpre, Rpost) where {T}
+@inline function __chebu2_postscale!(d::Number, X::AbstractArray{T}) where {T}
     m = size(X,d)
     c = one(T)/ (m+1)
     r = (1:m) .* c
-    applydim!(v -> v ./= sinpi.(r), X, Rpre, Rpost, :)
+    applydim!(v -> v ./= sinpi.(r), X, d, :)
 end
 
 function *(P::ChebyshevUTransformPlan{T,2,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
@@ -523,10 +522,10 @@ inv(P::IChebyshevUTransformPlan{T,2}) where {T} = ChebyshevUTransformPlan{T,2}(P
 inv(P::ChebyshevUTransformPlan{T,1}) where {T} = IChebyshevUTransformPlan{T,1}(inv(P.plan).p)
 inv(P::IChebyshevUTransformPlan{T,1}) where {T} = ChebyshevUTransformPlan{T,1}(inv(P.plan).p)
 
-@inline function __ichebu1_postscale!(d::Number, X::AbstractArray{T}, Rpre, Rpost) where {T}
+@inline function __ichebu1_postscale!(d::Number, X::AbstractArray{T}) where {T}
     m = size(X,d)
     r = one(T)/(2m) .+ ((1:m) .- one(T))/m
-    applydim!(v -> v ./= 2 .* sinpi.(r), X, Rpre, Rpost, :)
+    applydim!(v -> v ./= 2 .* sinpi.(r), X, d, :)
 end
 
 function *(P::IChebyshevUTransformPlan{T,1,K,true}, x::AbstractArray{T}) where {T<:fftwNumber,K}
