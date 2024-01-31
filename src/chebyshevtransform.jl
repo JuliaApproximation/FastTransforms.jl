@@ -52,7 +52,7 @@ end
 
 # convert x if necessary
 _maybemutablecopy(x::StridedArray{T}, ::Type{T}) where {T} = x
-_maybemutablecopy(x, T) = copyto!(similar(x, T), x)
+_maybemutablecopy(x, T) = Array{T}(x)
 @inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::StridedArray{T}) where T = mul!(y, P, _maybemutablecopy(x, T))
 
 
