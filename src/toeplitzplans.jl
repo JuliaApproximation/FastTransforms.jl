@@ -61,12 +61,11 @@ function *(A::ToeplitzPlan{T,N}, X::AbstractArray{T,N}) where {T,N}
 
     # Fourier transform each dimension
     dft * Y
-    
+
     # Multiply by a diagonal matrix along each dimension by permuting
     # to first dimension
     for (vc,d) in zip(vcs,dims)
-        Ỹ = PermutedDimsArray(Y, _permfirst(d, N))
-        Ỹ .= vc .* Ỹ
+        applydim!(v -> v .= vc .* v, Y, d, :)
     end
 
     # Transform back

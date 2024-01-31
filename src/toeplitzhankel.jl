@@ -137,14 +137,14 @@ function *(P::ChebyshevToLegendrePlanTH, v::AbstractVector{S}) where S
     v
 end
 
-function _cheb2leg_rescale1!(V::AbstractArray{S}) where S
-    m = size(V,1)
-    for j = CartesianIndices(tail(axes(V)))
+function _cheb2leg_rescale1!(V::AbstractArray{S}, Rpre, Rpost, d) where S
+    m = size(V,d)
+    for Ipost in Rpost, Ipre in Rpre
         ret = zero(S)
         @inbounds for k = 1:2:m
-            ret += -V[k,j]/(k*(k-2))
+            ret += -V[Ipre,k,Ipost]/(k*(k-2))
         end
-        V[1,j] = ret
+        V[Ipre,1,Ipost] = ret
     end
     V
 end
@@ -152,11 +152,13 @@ end
 _dropfirstdim(d::Int) = ()
 _dropfirstdim(d::Int, m, szs...) = ((d == 1 ? 2 : 1):m, _dropfirstdim(d-1, szs...)...)
 
-function *(P::ChebyshevToLegendrePlanTH, V::AbstractArray{<:Any,N}) where N
+function *(P::ChebyshevToLegendrePlanTH, V::AbstractArray)
     m,n = size(V)
     tmp = P.toeplitzhankel.tmp
     for (d,R,L,T) in zip(P.toeplitzhankel.dims,P.toeplitzhankel.R,P.toeplitzhankel.L,P.toeplitzhankel.T)
-        _cheb2leg_rescale1!(PermutedDimsArray(V, _permfirst(d, N)))
+        Rpre = CartesianIndices(axes(V)[1:d-1])
+        Rpost = CartesianIndices(axes(V)[d+1:end])
+        _cheb2leg_rescale1!(V, Rpre, Rpost, d)
         _th_applymul!(d, view(V, _dropfirstdim(d, size(V)...)...), T, L, R, tmp)
     end
     V
