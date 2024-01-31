@@ -375,9 +375,6 @@ function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws.
     ChebyshevUTransformPlan{T,2}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
-
-@inline _permfirst(d, N) = ntuple(i -> i == 1 ? d : i <= d ? i-1 : i, N)
-
 for f in [:_chebu1_prescale!, :_chebu1_postscale!, :_chebu2_prescale!, :_chebu2_postscale!,
             :_ichebu1_postscale!]
     _f = Symbol(:_, f)
