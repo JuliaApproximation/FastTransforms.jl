@@ -308,6 +308,23 @@ function chebyshevlogmoments1(::Type{T}, N::Int) where T
 end
 
 """
+Modified Chebyshev moments of the first kind with respect to the absolute value weight:
+
+```math
+    \\int_{-1}^{+1} T_n(x) |x|{\\rm\\,d}x.
+```
+"""
+function chebyshevabsmoments1(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    if N > 0
+        for i=0:4:N-1
+            @inbounds μ[i+1] = -T(1)/T((i÷2)^2-1)
+        end
+    end
+    μ
+end
+
+"""
 Modified Chebyshev moments of the second kind:
 
 ```math
@@ -359,6 +376,23 @@ function chebyshevlogmoments2(::Type{T}, N::Int) where T
     μ
 end
 
+"""
+Modified Chebyshev moments of the second kind with respect to the absolute value weight:
+
+```math
+    \\int_{-1}^{+1} U_n(x) |x|{\\rm\\,d}x.
+```
+"""
+function chebyshevabsmoments2(::Type{T}, N::Int) where T
+    μ = chebyshevabsmoments1(T, N)
+    if N > 1
+        μ[2] *= two(T)
+        for i=1:N-2
+            @inbounds μ[i+2] = 2μ[i+2] + μ[i]
+        end
+    end
+    μ
+end
 
 function sphrand(::Type{T}, m::Int, n::Int) where T
     A = zeros(T, m, n)
