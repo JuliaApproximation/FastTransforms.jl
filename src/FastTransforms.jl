@@ -1,6 +1,6 @@
 module FastTransforms
 
-using FastGaussQuadrature, FillArrays, LinearAlgebra,
+using BandedMatrices, FastGaussQuadrature, FillArrays, LinearAlgebra,
       Reexport, SpecialFunctions, ToeplitzMatrices
 
 @reexport using AbstractFFTs
@@ -19,6 +19,8 @@ import AbstractFFTs: Plan, ScaledPlan,
                      fftshift, ifftshift, rfft_output_size, brfft_output_size,
                      normalization
 
+import BandedMatrices: bandwidths
+
 import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
              plan_dct, plan_idct, fftwNumber
 
@@ -26,7 +28,7 @@ import FastGaussQuadrature: unweightedgausshermite
 
 import FillArrays: AbstractFill, getindex_value
 
-import LinearAlgebra: mul!, lmul!, ldiv!
+import LinearAlgebra: mul!, lmul!, ldiv!, cholesky
 
 import GenericFFT: interlace # imported in downstream packages
 
@@ -111,6 +113,8 @@ include("specialfunctions.jl")
 
 include("toeplitzplans.jl")
 include("toeplitzhankel.jl")
+
+include("SymmetricToeplitzPlusHankel.jl")
 
 # following use libfasttransforms by default
 for f in (:jac2jac,
