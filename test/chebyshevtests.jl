@@ -443,6 +443,10 @@ using FastTransforms, Test
         @test plan_chebyshevtransform!(x)copy(x) ≈ chebyshevtransform(x)
         @test plan_ichebyshevtransform!(x)copy(x) ≈ ichebyshevtransform(x)
     end
+    @testset "BigInt" begin
+        x = big(10)^400 .+ BigInt[1,2,3]
+        @test ichebyshevtransform(chebyshevtransform(x)) ≈ x
+    end
 
     @testset "immutable vectors" begin
         F = plan_chebyshevtransform([1.,2,3])
