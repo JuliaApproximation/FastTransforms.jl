@@ -1,6 +1,7 @@
 # FastTransforms.jl
 
 [![Build Status](https://github.com/JuliaApproximation/FastTransforms.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/FastTransforms.jl/actions?query=workflow%3ACI) [![codecov](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl/branch/master/graph/badge.svg?token=BxTvSNgmLL)](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/dev)
+[![pkgeval](https://juliahub.com/docs/General/FastTransforms/stable/pkgeval.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html)
 
 `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
