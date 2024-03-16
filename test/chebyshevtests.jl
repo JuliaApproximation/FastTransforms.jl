@@ -447,6 +447,7 @@ using FastTransforms, Test
     @testset "immutable vectors" begin
         F = plan_chebyshevtransform([1.,2,3])
         @test chebyshevtransform(1.0:3) == F * (1:3)
+        @test ichebyshevtransform(1.0:3) == ichebyshevtransform([1.0:3;])
     end
 
     @testset "inv" begin
