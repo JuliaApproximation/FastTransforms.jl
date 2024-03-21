@@ -63,7 +63,7 @@ savefig(joinpath(GENFIGS, "halfrange.html"))
 ###```
 
 # By [Theorem 2.20](https://arxiv.org/abs/2302.08448) it turns out that the *derivatives* of the half-range Chebyshev polynomials are a linear combination of at most two polynomials orthogonal with respect to $\sqrt{(3+y)(1-y)}(1+y)$ on $(-1,1)$. This fact enables us to compute the banded differentiation matrix:
-v̂ = 3*[u; 0]+XP[1:N+1, 1:N]*u
+v̂ = 3*[u; 0]+XP[1:N+2, 1:N+1]*u
 v = jac2jac(v̂, -0.5, 0.0, 0.5, 1.0; norm1 = true, norm2 = true)
 function threshold!(A::AbstractArray, ϵ)
     for i in eachindex(A)
