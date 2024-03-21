@@ -43,7 +43,8 @@ qvals = k-> ichebyshevtransform(q(k))
 
 # With the symmetric Jacobi matrix for $P_n^{(-\frac{1}{2}, 0)}(y)$ and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):
 XP = SymTridiagonal([-inv((4n-1)*(4n-5)) for n in 1:n+1], [4n*(2n-1)/(4n-1)/sqrt((4n-3)*(4n+1)) for n in 1:n])
-XQ = FastTransforms.modified_jacobi_matrix(P, XP);
+XQ = FastTransforms.modified_jacobi_matrix(P, XP)
+SymTridiagonal(XQ.dv[1:10], XQ.ev[1:9])
 
 # And we plot:
 x = (chebyshevpoints(Float64, n+1, Val(1)) .+ 1 ) ./ 2
@@ -62,7 +63,7 @@ savefig(joinpath(GENFIGS, "halfrange.html"))
 ###```
 
 # By [Theorem 2.20](https://arxiv.org/abs/2302.08448) it turns out that the *derivatives* of the half-range Chebyshev polynomials are a linear combination of at most two polynomials orthogonal with respect to $\sqrt{(3+y)(1-y)}(1+y)$ on $(-1,1)$. This fact enables us to compute the banded differentiation matrix:
-v̂ = 3*u+XP[1:N+1,1:N]*u
+v̂ = 3*[u; 0]+XP[1:N+1, 1:N]*u
 v = jac2jac(v̂, -0.5, 0.0, 0.5, 1.0; norm1 = true, norm2 = true)
 function threshold!(A::AbstractArray, ϵ)
     for i in eachindex(A)
@@ -73,3 +74,4 @@ end
 P′ = plan_modifiedjac2jac(Float64, n+1, 0.5, 1.0, v)
 DP = UpperTriangular(diagm(1=>[sqrt(n*(n+1/2)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(-1/2,0)}(y) = P^{(1/2,1)}(y) D_P.
 DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(y) = Q̂(y) D_Q.
+UpperTriangular(DQ[1:10,1:10])
