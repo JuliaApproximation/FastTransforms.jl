@@ -56,7 +56,7 @@ for k in 1:10
     scatter!(λ, zero(λ); markersize=2.5, color=palette(:default)[k+1])
 end
 p
-#savefig(joinpath(GENFIGS, "halfrange.html"))
+savefig(joinpath(GENFIGS, "halfrange.html"))
 ###```@raw html
 ###<object type="text/html" data="../halfrange.html" style="width:100%;height:400px;"></object>
 ###```
