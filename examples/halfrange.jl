@@ -43,7 +43,7 @@ qvals = k-> ichebyshevtransform(q(k))
 
 # With the symmetric Jacobi matrix for $P_n^{(-\frac{1}{2}, 0)}(y)$ and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):
 XP = SymTridiagonal([-inv((4n-1)*(4n-5)) for n in 1:n+1], [4n*(2n-1)/(4n-1)/sqrt((4n-3)*(4n+1)) for n in 1:n])
-XQ = FastTransforms.modified_jacobi_matrix(P, XP)
+XQ = FastTransforms.modified_jacobi_matrix(P, XP);
 
 # And we plot:
 x = (chebyshevpoints(Float64, n+1, Val(1)) .+ 1 ) ./ 2
