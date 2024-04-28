@@ -598,7 +598,7 @@ ichebyshevutransform(x, dims...; kwds...) = plan_ichebyshevutransform(x, dims...
 ## Code generation for integer inputs
 
 for func in (:chebyshevtransform,:ichebyshevtransform,:chebyshevutransform,:ichebyshevutransform)
-    @eval $func(x::AbstractVector{T}, dims...; kwds...) where {T<:Integer} = $func(convert(AbstractVector{Float64},x), dims...; kwds...)
+    @eval $func(x::AbstractVector{T}, dims...; kwds...) where {T<:Integer} = $func(convert(AbstractVector{float(T)},x), dims...; kwds...)
 end
 
 
