@@ -49,8 +49,9 @@ end
 
 
 # convert x if necessary
-@inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::StridedArray{T}) where T = mul!(y, P, x)
-@inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::AbstractArray) where T = mul!(y, P, convert(Array{T}, x))
+_maybemutablecopy(x::StridedArray{T}, ::Type{T}) where {T} = x
+_maybemutablecopy(x, T) = Array{T}(x)
+@inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::AbstractArray) where T = mul!(y, P, _maybemutablecopy(x, T))
 
 
 for op in (:ldiv, :lmul)
@@ -309,7 +310,8 @@ function mul!(y::AbstractArray{T,N}, P::IChebyshevTransformPlan{T,2,K,false,N}, 
     _icheb2_rescale!(P.plan.region, y)
 end
 
-*(P::IChebyshevTransformPlan{T,kind,K,false,N}, x::AbstractArray{T,N}) where {T,kind,K,N} = mul!(similar(x), P, x)
+*(P::IChebyshevTransformPlan{T,kind,K,false,N}, x::AbstractArray{T,N}) where {T,kind,K,N} =
+    mul!(similar(x), P, _maybemutablecopy(x, T))
 ichebyshevtransform!(x::AbstractArray, dims...; kwds...) = plan_ichebyshevtransform!(x, dims...; kwds...)*x
 ichebyshevtransform(x, dims...; kwds...) = plan_ichebyshevtransform(x, dims...; kwds...)*x
 
