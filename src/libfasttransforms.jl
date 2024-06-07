@@ -1250,3 +1250,16 @@ for (fC, T) in ((:execute_jacobi_similarityf, Float32), (:execute_jacobi_similar
         end
     end
 end
+
+function modified_jacobi_matrix(R, XP)
+    n = size(R, 1) - 1
+    XQ = SymTridiagonal(zeros(n), zeros(n-1))
+    XQ.dv[1] = (R[1, 1]*XP[1, 1] + R[1, 2]*XP[2, 1])/R[1, 1]
+    for i in 1:n-1
+        XQ.ev[i] = R[i+1, i+1]*XP[i+1, i]/R[i, i]
+    end
+    for i in 2:n
+        XQ.dv[i] = (R[i, i]*XP[i,i] + R[i, i+1]*XP[i+1, i] - XQ[i, i-1]*R[i-1, i])/R[i, i]
+    end
+    return XQ
+end
