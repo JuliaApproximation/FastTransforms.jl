@@ -53,22 +53,34 @@ _maybemutablecopy(x::StridedArray{T}, ::Type{T}) where {T} = x
 _maybemutablecopy(x, T) = Array{T}(x)
 @inline _plan_mul!(y::AbstractArray{T}, P::Plan{T}, x::AbstractArray) where T = mul!(y, P, _maybemutablecopy(x, T))
 
+function applydim!(op!, X::AbstractArray, Rpre, Rpost, ind)
+    for Ipost in Rpost, Ipre in Rpre
+        v = view(X, Ipre, ind, Ipost)
+        op!(v)
+    end
+    X
+end
+function applydim!(op!, X::AbstractArray, d::Integer, ind)
+    Rpre = CartesianIndices(axes(X)[1:d-1])
+    Rpost = CartesianIndices(axes(X)[d+1:end])
+    applydim!(op!, X, Rpre, Rpost, ind)
+end
 
 for op in (:ldiv, :lmul)
-    op_dim_begin! = Symbol(string(op) * "_dim_begin!")
-    op_dim_end! = Symbol(string(op) * "_dim_end!")
-    op! = Symbol(string(op) * "!")
+    op_dim_begin! = Symbol(op, :_dim_begin!)
+    op_dim_end! = Symbol(op, :_dim_end!)
+    op! = Symbol(op, :!)
     @eval begin
-        function $op_dim_begin!(α, d::Number, y::AbstractArray{<:Any,N}) where N
+        function $op_dim_begin!(α, d::Number, y::AbstractArray)
             # scale just the d-th dimension by permuting it to the first
-            ỹ = PermutedDimsArray(y, _permfirst(d, N))
-            $op!(α, view(ỹ, 1, ntuple(_ -> :, Val(N-1))...))
+            d ∈ 1:ndims(y) || throw(ArgumentError("dimension $d must lie between 1 and $(ndims(y))"))
+            applydim!(v -> $op!(α, v), y, d, 1)
         end
 
-        function $op_dim_end!(α, d::Number, y::AbstractArray{<:Any,N}) where N
+        function $op_dim_end!(α, d::Number, y::AbstractArray)
             # scale just the d-th dimension by permuting it to the first
-            ỹ = PermutedDimsArray(y, _permfirst(d, N))
-            $op!(α, view(ỹ, size(ỹ,1), ntuple(_ -> :, Val(N-1))...))
+            d ∈ 1:ndims(y) || throw(ArgumentError("dimension $d must lie between 1 and $(ndims(y))"))
+            applydim!(v -> $op!(α, v), y, d, size(y, d))
         end
     end
 end
@@ -363,35 +375,34 @@ function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws.
     ChebyshevUTransformPlan{T,2}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
-
-_permfirst(d, N) = [d; 1:d-1; d+1:N]
-
-@inline function _chebu1_prescale!(d::Number, X::AbstractArray{T,N}) where {T,N}
-    X̃ = PermutedDimsArray(X, _permfirst(d, N))
-    m = size(X̃,1)
-    X̃ .= (sinpi.(one(T)/(2m) .+ ((1:m) .- one(T))/m) ./ m) .* X̃
-    X
-end
-
-@inline function _chebu1_prescale!(d, y::AbstractArray)
-    for k in d
-        _chebu1_prescale!(k, y)
+for f in [:_chebu1_prescale!, :_chebu1_postscale!, :_chebu2_prescale!, :_chebu2_postscale!,
+            :_ichebu1_postscale!]
+    _f = Symbol(:_, f)
+    @eval begin
+        @inline function $f(d::Number, X::AbstractArray)
+            d ∈ 1:ndims(X) || throw("dimension $d must lie between 1 and $(ndims(X))")
+            $_f(d, X)
+            X
+        end
+        @inline function $f(d, y::AbstractArray)
+            for k in d
+                $f(k, y)
+            end
+            y
+        end
     end
-    y
 end
 
-@inline function _chebu1_postscale!(d::Number, X::AbstractArray{T,N}) where {T,N}
-    X̃ = PermutedDimsArray(X, _permfirst(d, N))
-    m = size(X̃,1)
-    X̃ .= X̃ ./ (sinpi.(one(T)/(2m) .+ ((1:m) .- one(T))/m) ./ m)
-    X
+function __chebu1_prescale!(d::Number, X::AbstractArray{T}) where {T}
+    m = size(X,d)
+    r = one(T)/(2m) .+ ((1:m) .- one(T))./m
+    applydim!(v -> v .*= sinpi.(r) ./ m, X, d, :)
 end
 
-@inline function _chebu1_postscale!(d, y::AbstractArray)
-    for k in d
-        _chebu1_postscale!(k, y)
-    end
-    y
+@inline function __chebu1_postscale!(d::Number, X::AbstractArray{T}) where {T}
+    m = size(X,d)
+    r = one(T)/(2m) .+ ((1:m) .- one(T))./m
+    applydim!(v -> v ./= sinpi.(r) ./ m, X, d, :)
 end
 
 function *(P::ChebyshevUTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
@@ -413,35 +424,18 @@ function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::A
 end
 
 
-@inline function _chebu2_prescale!(d::Number, X::AbstractArray{T,N}) where {T,N}
-    X̃ = PermutedDimsArray(X, _permfirst(d, N))
-    m = size(X̃,1)
+@inline function __chebu2_prescale!(d, X::AbstractArray{T}) where {T}
+    m = size(X,d)
     c = one(T)/ (m+1)
-    X̃ .= sinpi.((1:m) .* c) .* X̃
-    X
+    r = (1:m) .* c
+    applydim!(v -> v .*= sinpi.(r), X, d, :)
 end
 
-@inline function _chebu2_prescale!(d, y::AbstractArray)
-    for k in d
-        _chebu2_prescale!(k, y)
-    end
-    y
-end
-
-
-@inline function _chebu2_postscale!(d::Number, X::AbstractArray{T,N}) where {T,N}
-    X̃ = PermutedDimsArray(X, _permfirst(d, N))
-    m = size(X̃,1)
+@inline function __chebu2_postscale!(d::Number, X::AbstractArray{T}) where {T}
+    m = size(X,d)
     c = one(T)/ (m+1)
-    X̃ .= X̃ ./ sinpi.((1:m) .* c)
-    X
-end
-
-@inline function _chebu2_postscale!(d, y::AbstractArray)
-    for k in d
-        _chebu2_postscale!(k, y)
-    end
-    y
+    r = (1:m) .* c
+    applydim!(v -> v ./= sinpi.(r), X, d, :)
 end
 
 function *(P::ChebyshevUTransformPlan{T,2,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
@@ -525,19 +519,10 @@ inv(P::IChebyshevUTransformPlan{T,2}) where {T} = ChebyshevUTransformPlan{T,2}(P
 inv(P::ChebyshevUTransformPlan{T,1}) where {T} = IChebyshevUTransformPlan{T,1}(inv(P.plan).p)
 inv(P::IChebyshevUTransformPlan{T,1}) where {T} = ChebyshevUTransformPlan{T,1}(inv(P.plan).p)
 
-@inline function _ichebu1_postscale!(d::Number, X::AbstractArray{T,N}) where {T,N}
-    X̃ = PermutedDimsArray(X, _permfirst(d, N))
-    m = size(X̃,1)
-    X̃ .= X̃ ./ (2 .* sinpi.(one(T)/(2m) .+ ((1:m) .- one(T))/m))
-    X
-end
-
-
-@inline function _ichebu1_postscale!(d, y::AbstractArray)
-    for k in d
-        _ichebu1_postscale!(k, y)
-    end
-    y
+@inline function __ichebu1_postscale!(d::Number, X::AbstractArray{T}) where {T}
+    m = size(X,d)
+    r = one(T)/(2m) .+ ((1:m) .- one(T))/m
+    applydim!(v -> v ./= 2 .* sinpi.(r), X, d, :)
 end
 
 function *(P::IChebyshevUTransformPlan{T,1,K,true}, x::AbstractArray{T}) where {T<:fftwNumber,K}
