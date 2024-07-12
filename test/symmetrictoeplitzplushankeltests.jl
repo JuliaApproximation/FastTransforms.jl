@@ -37,3 +37,15 @@ end
         @test R ≈ U
     end
 end
+
+@testset "Fast Cholesky" begin
+    n = 128
+    for T in (Float32, Float64, BigFloat)
+        R = plan_leg2cheb(T, n; normcheb=true)*I
+        X = Tridiagonal([T(n)/(2n-1) for n in 1:n-1], zeros(T, n), [T(n)/(2n+1) for n in 1:n-1]) # Legendre X
+        W = Symmetric(R'R)
+        F = FastTransforms.fastcholesky(W, X)
+        @test F.L*F.L' ≈ W
+        @test F.U ≈ R
+    end
+end
