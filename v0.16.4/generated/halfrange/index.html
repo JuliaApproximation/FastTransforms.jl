@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Half-range Chebyshev polynomials · FastTransforms.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="FastTransforms.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">FastTransforms.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../dev/">Development</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../annulus/">Integration on an annulus</a></li><li><a class="tocitem" href="../automaticdifferentiation/">Automatic differentiation through spherical harmonic transforms</a></li><li><a class="tocitem" href="../chebyshev/">Chebyshev transform</a></li><li><a class="tocitem" href="../disk/">Holomorphic integration on the unit disk</a></li><li class="is-active"><a class="tocitem" href>Half-range Chebyshev polynomials</a></li><li><a class="tocitem" href="../nonlocaldiffusion/">Nonlocal diffusion on <span>$\mathbb{S}^2$</span></a></li><li><a class="tocitem" href="../padua/">Padua transform</a></li><li><a class="tocitem" href="../sphere/">Spherical harmonic addition theorem</a></li><li><a class="tocitem" href="../spinweighted/">Spin-weighted spherical harmonics</a></li><li><a class="tocitem" href="../subspaceangles/">Subspace angles</a></li><li><a class="tocitem" href="../triangle/">Calculus on the reference triangle</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Half-range Chebyshev polynomials</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Half-range Chebyshev polynomials</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaApproximation/FastTransforms.jl/blob/master/examples/halfrange.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Half-range-Chebyshev-polynomials-1"><a class="docs-heading-anchor" href="#Half-range-Chebyshev-polynomials-1">Half-range Chebyshev polynomials</a><a class="docs-heading-anchor-permalink" href="#Half-range-Chebyshev-polynomials-1" title="Permalink"></a></h1><p>In <a href="https://doi.org/10.1137/090752456">this paper</a>, <a href="https://github.com/daanhb">Daan Huybrechs</a> introduced the so-called half-range Chebyshev polynomials as the semi-classical orthogonal polynomials with respect to the inner product:</p><div>\[\langle f, g \rangle = \int_0^1 f(x) g(x)\frac{{\rm d} x}{\sqrt{1-x^2}}.\]</div><p>By the variable transformation <span>$y = 2x-1$</span>, the resulting polynomials can be related to orthogonal polynomials on <span>$(-1,1)$</span> with the Jacobi weight <span>$(1-y)^{-\frac{1}{2}}$</span> modified by the weight <span>$(3+y)^{-\frac{1}{2}}$</span>.</p><p>We shall use the fact that:</p><div>\[\frac{1}{\sqrt{3+y}} = \sqrt{\frac{2}{3+\sqrt{8}}}\sum_{n=0}^\infty P_n(y) \left(\frac{-1}{3+\sqrt{8}}\right)^n,\]</div><p>and results from <a href="https://arxiv.org/abs/2302.08448">this paper</a> to consider the half-range Chebyshev polynomials as modifications of the Jacobi polynomials <span>$P_n^{(-\frac{1}{2},0)}(y)$</span>.</p><pre><code class="language-julia">using FastTransforms, LinearAlgebra, Plots, LaTeXStrings
+const GENFIGS = joinpath(pkgdir(FastTransforms), &quot;docs/src/generated&quot;)
+!isdir(GENFIGS) &amp;&amp; mkdir(GENFIGS)
+plotlyjs()</code></pre><pre><code class="language-none">Plots.PlotlyJSBackend()</code></pre><p>We truncate the generating function to ensure a relative error less than <code>eps()</code> in the uniform norm on <span>$(-1,1)$</span>:</p><pre><code class="language-julia">z = -1/(3+sqrt(8))
+K = sqrt(-2z)
+N = ceil(Int, log(abs(z), eps()/2*(1-abs(z))/K) - 1)
+d = K .* z .^(0:N)</code></pre><pre><code class="language-none">21-element Vector{Float64}:
+  0.585786437626905
+ -0.10050506338833466
+  0.017243942703102998
+ -0.0029585928302833363
+  0.0005076142785970194
+ -8.70928412987791e-5
+  1.4942769195655289e-5
+ -2.563773875152638e-6
+  4.3987405526054037e-7
+ -7.547045641060418e-8
+  1.2948683203084688e-8
+ -2.221642807903953e-9
+  3.8117364433902886e-10
+ -6.53990581302203e-11
+  1.122070444229295e-11
+ -1.925168523537399e-12
+  3.303066989314436e-13
+ -5.6671670051262317e-14
+  9.723321376130305e-15
+ -1.6682582055195078e-15
+  2.862278569867433e-16</code></pre><p>Then, we convert this representation to the expansion in Jacobi polynomials <span>$P_n^{(-\frac{1}{2}, 0)}(y)$</span>:</p><pre><code class="language-julia">u = jac2jac(d, 0.0, 0.0, -0.5, 0.0; norm1 = false, norm2 = true)</code></pre><pre><code class="language-none">21-element Vector{Float64}:
+  0.9340010840223151
+ -0.09412895357801879
+  0.012332003442981326
+ -0.0017749924171044493
+  0.00026739546832682813
+ -4.137724994351243e-5
+  6.516867953544994e-6
+ -1.0393137552650633e-6
+  1.673019401749671e-7
+ -2.7126077156467505e-8
+  4.423525597533419e-9
+ -7.247452797834485e-10
+  1.1920483520702293e-10
+ -1.9671182646957104e-11
+  3.2552876283504113e-12
+ -5.400110170678753e-13
+  8.977555063800248e-14
+ -1.4948797757615094e-14
+  2.4980123321513196e-15
+ -4.125155260660654e-16
+  7.540496818753807e-17</code></pre><p>Our working polynomial degree will be:</p><pre><code class="language-julia">n = 100</code></pre><pre><code class="language-none">100</code></pre><p>We compute the connection coefficients between the modified orthogonal polynomials and the Jacobi polynomials:</p><pre><code class="language-julia">P = plan_modifiedjac2jac(Float64, n+1, -0.5, 0.0, u)</code></pre><pre><code class="language-none">FastTransforms Modified Jacobi--Jacobi plan for 101-element array of Float64</code></pre><p>We store the connection to first kind Chebyshev polynomials:</p><pre><code class="language-julia">P1 = plan_jac2cheb(Float64, n+1, -0.5, 0.0; normjac = true)</code></pre><pre><code class="language-none">FastTransforms Jacobi--Chebyshev plan for 101-element array of Float64</code></pre><p>We compute the Chebyshev series for the degree-<span>$k\le n$</span> modified polynomial and its values at the Chebyshev points:</p><pre><code class="language-julia">q = k -&gt; lmul!(P1, lmul!(P, [zeros(k); 1.0; zeros(n-k)]))
+qvals = k-&gt; ichebyshevtransform(q(k))</code></pre><pre><code class="language-none">#3 (generic function with 1 method)</code></pre><p>With the symmetric Jacobi matrix for <span>$P_n^{(-\frac{1}{2}, 0)}(y)$</span> and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):</p><pre><code class="language-julia">XP = SymTridiagonal([-inv((4n-1)*(4n-5)) for n in 1:n+1], [4n*(2n-1)/(4n-1)/sqrt((4n-3)*(4n+1)) for n in 1:n])
+XQ = FastTransforms.modified_jacobi_matrix(P, XP)
+SymTridiagonal(XQ.dv[1:10], XQ.ev[1:9])</code></pre><pre><code class="language-none">10×10 LinearAlgebra.SymTridiagonal{Float64, Vector{Float64}}:
+ 0.27324    0.615517     ⋅           ⋅            ⋅            ⋅            ⋅            ⋅            ⋅             ⋅ 
+ 0.615517  -0.0327708   0.509195     ⋅            ⋅            ⋅            ⋅            ⋅            ⋅             ⋅ 
+  ⋅         0.509195   -0.0115134   0.50391       ⋅            ⋅            ⋅            ⋅            ⋅             ⋅ 
+  ⋅          ⋅          0.50391    -0.00564494   0.502131      ⋅            ⋅            ⋅            ⋅             ⋅ 
+  ⋅          ⋅           ⋅          0.502131    -0.00333235   0.501338      ⋅            ⋅            ⋅             ⋅ 
+  ⋅          ⋅           ⋅           ⋅           0.501338    -0.00219677   0.500918      ⋅            ⋅             ⋅ 
+  ⋅          ⋅           ⋅           ⋅            ⋅           0.500918    -0.00155663   0.500668      ⋅             ⋅ 
+  ⋅          ⋅           ⋅           ⋅            ⋅            ⋅           0.500668    -0.00116057   0.500509       ⋅ 
+  ⋅          ⋅           ⋅           ⋅            ⋅            ⋅            ⋅           0.500509    -0.000898551   0.5004
+  ⋅          ⋅           ⋅           ⋅            ⋅            ⋅            ⋅            ⋅           0.5004       -0.000716244</code></pre><p>And we plot:</p><pre><code class="language-julia">x = (chebyshevpoints(Float64, n+1, Val(1)) .+ 1 ) ./ 2
+p = plot(x, qvals(0); linewidth=2.0, legend = false, xlim=(0,1), xlabel=L&quot;x&quot;,
+         ylabel=L&quot;T^h_n(x)&quot;, title=&quot;Half-Range Chebyshev Polynomials and Their Roots&quot;,
+         extra_plot_kwargs = KW(:include_mathjax =&gt; &quot;cdn&quot;))
+for k in 1:10
+    λ = (eigvals(SymTridiagonal(XQ.dv[1:k], XQ.ev[1:k-1])) .+ 1) ./ 2
+    plot!(x, qvals(k); linewidth=2.0, color=palette(:default)[k+1])
+    scatter!(λ, zero(λ); markersize=2.5, color=palette(:default)[k+1])
+end
+p
+savefig(joinpath(GENFIGS, &quot;halfrange.html&quot;))</code></pre><object type="text/html" data="../halfrange.html" style="width:100%;height:400px;"></object><pre><code class="language-none">&quot;/home/runner/work/FastTransforms.jl/FastTransforms.jl/docs/src/generated/halfrange.html&quot;</code></pre><p>By <a href="https://arxiv.org/abs/2302.08448">Theorem 2.20</a> it turns out that the <em>derivatives</em> of the half-range Chebyshev polynomials are a linear combination of at most two polynomials orthogonal with respect to <span>$\sqrt{(3+y)(1-y)}(1+y)$</span> on <span>$(-1,1)$</span>. This fact enables us to compute the banded differentiation matrix:</p><pre><code class="language-julia">v̂ = 3*[u; 0]+XP[1:N+2, 1:N+1]*u
+v = jac2jac(v̂, -0.5, 0.0, 0.5, 1.0; norm1 = true, norm2 = true)
+function threshold!(A::AbstractArray, ϵ)
+    for i in eachindex(A)
+        if abs(A[i]) &lt; ϵ A[i] = 0 end
+    end
+    A
+end
+P′ = plan_modifiedjac2jac(Float64, n+1, 0.5, 1.0, v)
+DP = UpperTriangular(diagm(1=&gt;[sqrt(n*(n+1/2)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(-1/2,0)}(y) = P^{(1/2,1)}(y) D_P.
+DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(y) = Q̂(y) D_Q.
+UpperTriangular(DQ[1:10,1:10])</code></pre><pre><code class="language-none">10×10 LinearAlgebra.UpperTriangular{Float64, Matrix{Float64}}:
+ 0.0  2.11682  0.481094  0.0       0.0      0.0       0.0       0.0       0.0       0.0
+  ⋅   0.0      3.82901   0.789619  0.0      0.0       0.0       0.0       0.0       0.0
+  ⋅    ⋅       0.0       5.53918   1.08781  0.0       0.0       0.0       0.0       0.0
+  ⋅    ⋅        ⋅        0.0       7.24821  1.38334   0.0       0.0       0.0       0.0
+  ⋅    ⋅        ⋅         ⋅        0.0      8.95658   1.67782   0.0       0.0       0.0
+  ⋅    ⋅        ⋅         ⋅         ⋅       0.0      10.6646    1.97177   0.0       0.0
+  ⋅    ⋅        ⋅         ⋅         ⋅        ⋅        0.0      12.3723    2.26542   0.0
+  ⋅    ⋅        ⋅         ⋅         ⋅        ⋅         ⋅        0.0      14.0799    2.55888
+  ⋅    ⋅        ⋅         ⋅         ⋅        ⋅         ⋅         ⋅        0.0      15.7874
+  ⋅    ⋅        ⋅         ⋅         ⋅        ⋅         ⋅         ⋅         ⋅        0.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../disk/">« Holomorphic integration on the unit disk</a><a class="docs-footer-nextpage" href="../nonlocaldiffusion/">Nonlocal diffusion on <span>$\mathbb{S}^2$</span> »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 12 July 2024 20:53">Friday 12 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
