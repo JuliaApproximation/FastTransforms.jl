@@ -34,7 +34,7 @@ import GenericFFT: interlace # imported in downstream packages
 
 import RecurrenceRelationships: clenshaw!, check_clenshaw_recurrences
 
-const _forwardrecurrence! = RecurrenceRelationships.forwardrecurrence_partial!
+const _forwardrecurrence! = RecurrenceRelationships.forwardrecurrence!
 const _clenshaw_next = RecurrenceRelationships.clenshaw_next
 const _forwardrecurrence_next = RecurrenceRelationships.forwardrecurrence_next
 
