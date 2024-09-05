@@ -324,41 +324,29 @@ function plan_fmm_leg2cheb(::Type{Float64}, n::Integer)
     M = 18
     BOTH = 2
     lagrange = 0
-    verbose = 2
+    verbose = 0
     plan = ccall((:ft_create_fmm, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Cint, Cint, Cint), n, maxs, M, BOTH, lagrange, verbose)
     return FTPlan{Float64, 1, FMMLEG2CHEB}(plan, n)
 end
 
-function mul!(y::StridedVector{Float64}, p::FTPlan{Float64, 1, FMMLEG2CHEB}, x::StridedVector{Float64})
+function lmul!(p::FTPlan{Float64, 1, FMMLEG2CHEB}, x::StridedVector{Float64})
     checksize(p, x)
-    checksize(p, y)
     checkstride(p, x)
-    checkstride(p, y)
+    y = zero(x)
     L2C = 0
     flops = ccall((:ft_execute, libfasttransforms), Cint, (Ptr{Float64}, Ptr{Float64}, Ptr{ft_plan_struct}, Cint, Cint), x, y, p, L2C, 1)
-    return y
+    x .= y
+    return x
 end
-function div!(y::StridedVector{Float64}, p::FTPlan{Float64, 1, FMMLEG2CHEB}, x::StridedVector{Float64})
+function ldiv!(p::FTPlan{Float64, 1, FMMLEG2CHEB}, x::StridedVector{Float64})
     checksize(p, x)
-    checksize(p, y)
     checkstride(p, x)
-    checkstride(p, y)
+    y = zero(x)
     C2L = 1
     flops = ccall((:ft_execute, libfasttransforms), Cint, (Ptr{Float64}, Ptr{Float64}, Ptr{ft_plan_struct}, Cint, Cint), x, y, p, C2L, 1)
-    return y
+    x .= y
+    return x
 end
-
-function *(p::FTPlan{T, 1, FMMLEG2CHEB}, x::AbstractArray{T}) where T
-    Ax = Array(x)
-    y = zero(Ax)
-    mul!(y, p, Ax)
-end
-function \(p::FTPlan{T, 1, FMMLEG2CHEB}, x::AbstractArray{T}) where T
-    Ax = Array(x)
-    y = zero(Ax)
-    div!(y, p, Ax)
-end
-
 
 struct AdjointFTPlan{T, S, R}
     parent::S
