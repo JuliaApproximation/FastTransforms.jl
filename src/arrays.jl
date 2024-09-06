@@ -13,15 +13,6 @@ function ArrayPlan(F::FTPlan{<:T}, c::AbstractArray{T}, dims::Tuple{<:Int}=(1,))
     ArrayPlan(F, size(c), dims)
 end
 
-function inv_perm(d::Vector{<:Int})
-    inv_d = Vector{Int}(undef, length(d))
-    for (i, val) in enumerate(d)
-        inv_d[val] = i
-    end
-    return inv_d
-end
-inv_perm(d::Tuple) = inv_perm([d...])
-
 function *(P::ArrayPlan, f::AbstractArray)
     F, dims, szs = P.F, P.dims, P.szs
     @assert length(dims) == 1
@@ -33,7 +24,7 @@ function *(P::ArrayPlan, f::AbstractArray)
 
     fr = reshape(fp, size(fp,1), :)
 
-    permutedims(reshape(F*fr, size(fp)...), inv_perm(perm))
+    permutedims(reshape(F*fr, size(fp)...), invperm(perm))
 end
 
 function \(P::ArrayPlan, f::AbstractArray)
@@ -47,7 +38,7 @@ function \(P::ArrayPlan, f::AbstractArray)
 
     fr = reshape(fp, size(fp,1), :)
 
-    permutedims(reshape(F\fr, size(fp)...), inv_perm(perm))
+    permutedims(reshape(F\fr, size(fp)...), invperm(perm))
 end
 
 struct NDimsPlan{T, FF<:ArrayPlan{<:T}, Szs<:Tuple, Dims<:Tuple} <: Plan{T}
@@ -79,7 +70,7 @@ function *(P::NDimsPlan, f::AbstractArray)
     for d in dims
         perm = ntuple(k -> k == d1 ? t[d] : k == d ? t[d1] : t[k], ndims(g))
         gp = permutedims(g, perm)
-        g = permutedims(F*gp, inv_perm(perm))
+        g = permutedims(F*gp, invperm(perm))
     end
     return g
 end
@@ -93,7 +84,7 @@ function \(P::NDimsPlan, f::AbstractArray)
     for d in dims
         perm = ntuple(k -> k == d1 ? t[d] : k == d ? t[d1] : t[k], ndims(g))
         gp = permutedims(g, perm)
-        g = permutedims(F\gp, inv_perm(perm))
+        g = permutedims(F\gp, invperm(perm))
     end
     return g
 end
