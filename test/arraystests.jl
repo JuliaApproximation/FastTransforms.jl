@@ -31,6 +31,12 @@ import FastTransforms: ArrayPlan, NDimsPlan
         c = randn(20,10,20)
         @test_throws ErrorException("Different size in dims axes not yet implemented in N-dimensional transform.") NDimsPlan(ArrayPlan(plan_cheb2leg(c), c), (1,2))        
 
+        c = randn(5,20)
+        F = plan_cheb2leg(c)
+        FT = ArrayPlan(F, c)
+        P = NDimsPlan(FT, (1,))
+        @test F*c ≈ FT*c ≈ P*c
+
         c = randn(20,20,5);
         F = plan_cheb2leg(c)
         FT = ArrayPlan(F, c)
@@ -39,7 +45,6 @@ import FastTransforms: ArrayPlan, NDimsPlan
         @test size(P) == size(c)
         @test size(P,1) == size(c,1)
         @test size(P,1,2) == (size(c,1), size(c,2))
-
 
         f = similar(c);
         for k in axes(f,3)

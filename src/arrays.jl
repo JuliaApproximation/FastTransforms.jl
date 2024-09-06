@@ -71,7 +71,7 @@ function *(P::NDimsPlan, f::AbstractArray)
     g = copy(f)
     t = 1:ndims(g)
     for d in dims
-        perm = ntuple(k -> k == 1 ? t[d] : k == d ? t[1] : t[k], length(t))
+        perm = ntuple(k -> k == 1 ? t[d] : k == d ? t[1] : t[k], ndims(g))
         gp = permutedims(g, perm)
         g = permutedims(F*gp, inv_perm(perm))
     end
@@ -84,7 +84,7 @@ function \(P::NDimsPlan, f::AbstractArray)
     g = copy(f)
     t = 1:ndims(g)
     for d in dims
-        perm = ntuple(k -> k == 1 ? t[d] : k == d ? t[1] : t[k], length(t))
+        perm = ntuple(k -> k == 1 ? t[d] : k == d ? t[1] : t[k], ndims(g))
         gp = permutedims(g, perm)
         g = permutedims(F\gp, inv_perm(perm))
     end
