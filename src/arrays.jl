@@ -31,7 +31,7 @@ function *(P::ArrayPlan, f::AbstractArray)
     perm = [d; setdiff(1:ndims(f), d)]
     fp = permutedims(f, perm)
 
-    fr = reshape(fp, size(fp,1), prod(size(fp)[2:end]))
+    fr = reshape(fp, size(fp,1), :)
 
     permutedims(reshape(F*fr, size(fp)...), inv_perm(perm))
 end
@@ -45,33 +45,39 @@ function \(P::ArrayPlan, f::AbstractArray)
     perm = [d; setdiff(1:ndims(f), d)]
     fp = permutedims(f, perm)
 
-    fr = reshape(fp, size(fp,1), prod(size(fp)[2:end]))
+    fr = reshape(fp, size(fp,1), :)
 
     permutedims(reshape(F\fr, size(fp)...), inv_perm(perm))
 end
 
-struct NDimsPlan{T, FF<:ArrayPlan{<:T}, Dims<:Tuple} <: Plan{T}
+struct NDimsPlan{T, FF<:ArrayPlan{<:T}, Szs<:Tuple, Dims<:Tuple} <: Plan{T}
     F::FF
+    szs::Szs
     dims::Dims
-    function NDimsPlan(F, dims)
-        if length(Set(size(F, dims...))) > 1
+    function NDimsPlan(F, szs, dims)
+        if length(Set(szs[[dims...]])) > 1
             error("Different size in dims axes not yet implemented in N-dimensional transform.")
         end
-        new{eltype(F), typeof(F), typeof(dims)}(F, dims)
+        new{eltype(F), typeof(F), typeof(szs), typeof(dims)}(F, szs, dims)
     end
 end
 
-size(P::NDimsPlan) = size(P.F)
-size(P::NDimsPlan, k::Int) = size(P.F, k)
-size(P::NDimsPlan, k...) = size(P.F, k...)
+size(P::NDimsPlan) = P.szs
+size(P::NDimsPlan, k::Int) = P.szs[k]
+size(P::NDimsPlan, k...) = P.szs[[k...]]
+
+function NDimsPlan(F::FTPlan, szs::Tuple, dims::Tuple)
+    NDimsPlan(ArrayPlan(F, szs, (first(dims),)), szs, dims)
+end
 
 function *(P::NDimsPlan, f::AbstractArray)
     F, dims = P.F, P.dims
-    @assert size(F) == size(f)
+    @assert size(P) == size(f)
     g = copy(f)
     t = 1:ndims(g)
+    d1 = dims[1]
     for d in dims
-        perm = ntuple(k -> k == 1 ? t[d] : k == d ? t[1] : t[k], ndims(g))
+        perm = ntuple(k -> k == d1 ? t[d] : k == d ? t[d1] : t[k], ndims(g))
         gp = permutedims(g, perm)
         g = permutedims(F*gp, inv_perm(perm))
     end
@@ -80,11 +86,12 @@ end
 
 function \(P::NDimsPlan, f::AbstractArray)
     F, dims = P.F, P.dims
-    @assert size(F) == size(f)
+    @assert size(P) == size(f)
     g = copy(f)
     t = 1:ndims(g)
+    d1 = dims[1]
     for d in dims
-        perm = ntuple(k -> k == 1 ? t[d] : k == d ? t[1] : t[k], ndims(g))
+        perm = ntuple(k -> k == d1 ? t[d] : k == d ? t[d1] : t[k], ndims(g))
         gp = permutedims(g, perm)
         g = permutedims(F\gp, inv_perm(perm))
     end

@@ -29,18 +29,18 @@ import FastTransforms: ArrayPlan, NDimsPlan
 
     @testset "NDimsPlan" begin
         c = randn(20,10,20)
-        @test_throws ErrorException("Different size in dims axes not yet implemented in N-dimensional transform.") NDimsPlan(ArrayPlan(plan_cheb2leg(c), c), (1,2))        
+        @test_throws ErrorException("Different size in dims axes not yet implemented in N-dimensional transform.") NDimsPlan(ArrayPlan(plan_cheb2leg(c), c), size(c), (1,2))        
 
         c = randn(5,20)
         F = plan_cheb2leg(c)
         FT = ArrayPlan(F, c)
-        P = NDimsPlan(FT, (1,))
+        P = NDimsPlan(F, size(c), (1,))
         @test F*c ≈ FT*c ≈ P*c
 
         c = randn(20,20,5);
         F = plan_cheb2leg(c)
         FT = ArrayPlan(F, c)
-        P = NDimsPlan(FT, (1,2))
+        P = NDimsPlan(FT, size(c), (1,2))
 
         @test size(P) == size(c)
         @test size(P,1) == size(c,1)
@@ -53,12 +53,12 @@ import FastTransforms: ArrayPlan, NDimsPlan
         @test f ≈ P*c
         @test c ≈ P\f
 
-        c = randn(10,5,10,60)
-        F = plan_cheb2leg(c)
-        P = NDimsPlan(ArrayPlan(F, c), (1,3))
+        c = randn(5,10,10,60)
+        F = plan_cheb2leg(randn(10))
+        P = NDimsPlan(F, size(c), (2,3))
         f = similar(c)
-        for i in axes(f,2), j in axes(f,4)
-            f[:,i,:,j] = (F*(F*c[:,i,:,j])')'
+        for i in axes(f,1), j in axes(f,4)
+            f[i,:,:,j] = (F*(F*c[i,:,:,j])')'
         end
         @test f ≈ P*c
         @test c ≈ P\f
