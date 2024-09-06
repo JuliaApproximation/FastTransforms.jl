@@ -28,7 +28,7 @@ function *(P::ArrayPlan, f::AbstractArray)
     @assert szs == size(f)
     d = first(dims)
 
-    perm = [d; setdiff(1:ndims(f), d)]
+    perm = (d, ntuple(i-> i + (i >= d), ndims(f) -1)...)
     fp = permutedims(f, perm)
 
     fr = reshape(fp, size(fp,1), :)
@@ -42,7 +42,7 @@ function \(P::ArrayPlan, f::AbstractArray)
     @assert szs == size(f)
     d = first(dims)
 
-    perm = [d; setdiff(1:ndims(f), d)]
+    perm = (d, ntuple(i-> i + (i >= d), ndims(f) -1)...)
     fp = permutedims(f, perm)
 
     fr = reshape(fp, size(fp,1), :)
