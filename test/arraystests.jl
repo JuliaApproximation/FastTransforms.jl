@@ -8,8 +8,6 @@ import FastTransforms: ArrayPlan, NDimsPlan
         FT = ArrayPlan(F, c)
 
         @test size(FT) == size(c)
-        @test size(FT,1) == size(c,1)
-        @test size(FT,1,2) == (size(c,1), size(c,2))
 
         f = similar(c);
         for k in axes(c,3)
@@ -43,8 +41,6 @@ import FastTransforms: ArrayPlan, NDimsPlan
         P = NDimsPlan(FT, size(c), (1,2))
 
         @test size(P) == size(c)
-        @test size(P,1) == size(c,1)
-        @test size(P,1,2) == (size(c,1), size(c,2))
 
         f = similar(c);
         for k in axes(f,3)

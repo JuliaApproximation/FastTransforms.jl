@@ -4,8 +4,6 @@ struct ArrayPlan{T, FF<:FTPlan{<:T}, Szs<:Tuple, Dims<:Tuple{<:Int}} <: Plan{T}
     dims::Dims
 end
 size(P::ArrayPlan) = P.szs
-size(P::ArrayPlan, k::Int) = P.szs[k]
-size(P::ArrayPlan, k...) = P.szs[[k...]]
 
 function ArrayPlan(F::FTPlan{<:T}, c::AbstractArray{T}, dims::Tuple{<:Int}=(1,)) where T
     szs = size(c)
@@ -54,8 +52,6 @@ struct NDimsPlan{T, FF<:ArrayPlan{<:T}, Szs<:Tuple, Dims<:Tuple} <: Plan{T}
 end
 
 size(P::NDimsPlan) = P.szs
-size(P::NDimsPlan, k::Int) = P.szs[k]
-size(P::NDimsPlan, k...) = P.szs[[k...]]
 
 function NDimsPlan(F::FTPlan, szs::Tuple, dims::Tuple)
     NDimsPlan(ArrayPlan(F, szs, (first(dims),)), szs, dims)
