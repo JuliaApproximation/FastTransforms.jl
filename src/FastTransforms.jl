@@ -128,6 +128,7 @@ for f in (:jac2jac,
     @eval $f(x::AbstractArray, y...; z...) = $lib_f(x, y...; z...)
 end
 
+include("arrays.jl")
 # following use Toeplitz-Hankel to avoid expensive plans
 # for f in (:leg2cheb, :cheb2leg, :ultra2ultra)
 #     th_f = Symbol("th_", f)
