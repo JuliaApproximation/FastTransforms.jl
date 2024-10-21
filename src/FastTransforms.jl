@@ -1,7 +1,7 @@
 module FastTransforms
 
 using BandedMatrices, FastGaussQuadrature, FillArrays, LinearAlgebra,
-      Reexport, SpecialFunctions, ToeplitzMatrices
+      Reexport, SpecialFunctions, ToeplitzMatrices, RecurrenceRelationships
 
 @reexport using AbstractFFTs
 @reexport using FFTW
@@ -32,6 +32,12 @@ import LinearAlgebra: mul!, lmul!, ldiv!, cholesky
 
 import GenericFFT: interlace # imported in downstream packages
 
+import RecurrenceRelationships: clenshaw!, check_clenshaw_recurrences
+
+const _forwardrecurrence! = RecurrenceRelationships.forwardrecurrence!
+const _clenshaw_next = RecurrenceRelationships.clenshaw_next
+const _forwardrecurrence_next = RecurrenceRelationships.forwardrecurrence_next
+
 export leg2cheb, cheb2leg, ultra2ultra, jac2jac,
        lag2lag, jac2ultra, ultra2jac, jac2cheb,
        cheb2jac, ultra2cheb, cheb2ultra, associatedjac2jac,
@@ -53,7 +59,6 @@ export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
        plan_tet2cheb, plan_tet_synthesis, plan_tet_analysis,
        plan_spinsph2fourier, plan_spinsph_synthesis, plan_spinsph_analysis
 
-include("clenshaw.jl")
 
 include("libfasttransforms.jl")
 include("elliptic.jl")

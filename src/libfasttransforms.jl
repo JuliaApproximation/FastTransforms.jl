@@ -61,12 +61,6 @@ function horner!(c::StridedVector{Float32}, x::Vector{Float32}, f::Vector{Float3
     f
 end
 
-function check_clenshaw_recurrences(N, A, B, C)
-    if length(A) < N || length(B) < N || length(C) < N+1
-        throw(ArgumentError("A, B must contain at least $N entries and C must contain at least $(N+1) entrie"))
-    end
-end
-
 function check_clenshaw_points(x, ϕ₀, f)
     length(x) == length(ϕ₀) == length(f) || throw(ArgumentError("Dimensions must match"))
 end
