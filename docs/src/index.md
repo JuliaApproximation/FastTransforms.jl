@@ -13,10 +13,6 @@ For this documentation, please see the documentation for [FastTransforms](https:
 ### Fast Cholesky factorization of the Gram matrix
 
 ```@docs
-AbstractGramMatrix
-```
-
-```@docs
 GramMatrix
 ```
 

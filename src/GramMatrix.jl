@@ -1,8 +1,3 @@
-"""
-    AbstractGramMatrix
-
-Supertype of Gram matrices such as [`GramMatrix`](@ref) and [`ChebyshevGramMatrix`](@ref).
-"""
 abstract type AbstractGramMatrix{T} <: LayoutMatrix{T} end
 
 @inline issymmetric(G::AbstractGramMatrix) = true
@@ -23,7 +18,7 @@ the Gram matrix satisfies the skew-symmetric rank-2 displacement equation (``X =
 ```math
 X^\\top W - WX = GJG^\\top,
 ```
-where ``J = \\begin{pmatrix} 0 & 1\\ -1 & 0\\end{pmatrix}`` and where:
+where ``J = \\begin{pmatrix} 0 & 1\\\\ -1 & 0\\end{pmatrix}`` and where:
 ```math
 G_{:, 1} = e_n,\\quad{\\rm and}\\quad G_{:, 2} = W_{n-1, :}X_{n-1, n} - X^\\top W_{:, n}.
 ```
