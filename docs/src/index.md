@@ -10,6 +10,20 @@ This package provides a Julia wrapper for the [C library](https://github.com/Mik
 
 For this documentation, please see the documentation for [FastTransforms](https://github.com/MikaelSlevinsky/FastTransforms). Most transforms have separate forward and inverse plans. In some instances, however, the inverse is in the sense of least-squares, and therefore only the forward transform is planned.
 
+### Fast Cholesky factorization of the Gram matrix
+
+```@docs
+AbstractGramMatrix
+```
+
+```@docs
+GramMatrix
+```
+
+```@docs
+ChebyshevGramMatrix
+```
+
 ## Nonuniform fast Fourier transforms
 
 ```@docs

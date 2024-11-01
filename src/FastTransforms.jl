@@ -1,6 +1,6 @@
 module FastTransforms
 
-using BandedMatrices, FastGaussQuadrature, FillArrays, LinearAlgebra,
+using ArrayLayouts, BandedMatrices, FastGaussQuadrature, FillArrays, LazyArrays, LinearAlgebra,
       Reexport, SpecialFunctions, ToeplitzMatrices, RecurrenceRelationships
 
 @reexport using AbstractFFTs
@@ -19,6 +19,8 @@ import AbstractFFTs: Plan, ScaledPlan,
                      fftshift, ifftshift, rfft_output_size, brfft_output_size,
                      normalization
 
+import ArrayLayouts: colsupport, LayoutMatrix, MemoryLayout, AbstractBandedLayout
+
 import BandedMatrices: bandwidths
 
 import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
@@ -28,7 +30,7 @@ import FastGaussQuadrature: unweightedgausshermite
 
 import FillArrays: AbstractFill, getindex_value
 
-import LinearAlgebra: mul!, lmul!, ldiv!, cholesky
+import LinearAlgebra: cholesky, issymmetric, isposdef, mul!, lmul!, ldiv!
 
 import GenericFFT: interlace # imported in downstream packages
 
@@ -98,13 +100,17 @@ export plan_clenshawcurtis, plan_fejer1, plan_fejer2
 include("clenshawcurtis.jl")
 include("fejer.jl")
 
-export weightedhermitetransform, iweightedhermitetransform
-
-include("hermite.jl")
-
 export gaunt
 
 include("gaunt.jl")
+
+export GramMatrix, ChebyshevGramMatrix
+
+include("GramMatrix.jl")
+
+export weightedhermitetransform, iweightedhermitetransform
+
+include("hermite.jl")
 
 export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
        sphvones, sphvzeros, sphvrand, sphvrandn,
