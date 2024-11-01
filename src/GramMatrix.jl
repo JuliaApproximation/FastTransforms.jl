@@ -7,7 +7,7 @@ abstract type AbstractGramMatrix{T} <: LayoutMatrix{T} end
 """
     GramMatrix(W::AbstractMatrix, X::AbstractMatrix)
 
-Construct a Gram matrix of size ``size(W)`` with data stored in ``W``.
+Construct a symmetric positive-definite Gram matrix with data stored in ``W``.
 Given a family of orthogonal polynomials ``{\\bf P}(x) = \\{p_0(x), p_1(x),\\ldots\\}``
 and a continuous inner product ``\\langle f, g\\rangle``, the Gram matrix is defined by:
 ```math
@@ -161,7 +161,7 @@ end
 """
     ChebyshevGramMatrix(μ::AbstractVector)
 
-Construct a Chebyshev--Gram matrix of size ``(length(μ)+1)÷2`` with entries:
+Construct a Chebyshev--Gram matrix of size `(length(μ)+1)÷2` with entries:
 ```math
 W_{i,j} = \\frac{\\mu_{|i-j|+1} +\\mu_{i+j-1}}{2}.
 ```
