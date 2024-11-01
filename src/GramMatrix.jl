@@ -22,7 +22,7 @@ where ``J = \\begin{pmatrix} 0 & 1\\\\ -1 & 0\\end{pmatrix}`` and where:
 ```math
 G_{:, 1} = e_n,\\quad{\\rm and}\\quad G_{:, 2} = W_{n-1, :}X_{n-1, n} - X^\\top W_{:, n}.
 ```
-Fast (``{\\cal O}(n^2)``) Cholesky factorization of the Gram matrix returns the
+Fast (``O(n^2)``) Cholesky factorization of the Gram matrix returns the
 connection coefficients between ``{\\bf P}(x)`` and the polynomials ``{\\bf Q}(x)``
 orthogonal in the modified inner product, ``{\\bf P}(x) = {\\bf Q}(x) R``.
 """

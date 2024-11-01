@@ -125,7 +125,9 @@ include("specialfunctions.jl")
 include("toeplitzplans.jl")
 include("toeplitzhankel.jl")
 
-include("SymmetricToeplitzPlusHankel.jl")
+export ToeplitzPlusHankel
+
+include("ToeplitzPlusHankel.jl")
 
 # following use libfasttransforms by default
 for f in (:jac2jac,
