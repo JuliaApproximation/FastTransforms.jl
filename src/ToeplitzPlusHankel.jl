@@ -275,8 +275,8 @@ function normest(A::ToeplitzPlusHankel{T}) where T
         for i = 2:n-m
             ret1 += m*abs2(tr[i])
         end
-        for i = n-m+1:n
-            ret1 += (n-i)*abs2(tr[i])
+        for i = max(n-m+1, 2):n
+            ret1 += (n+1-i)*abs2(tr[i])
         end
         for i = 1:m
             ret2 += i*abs2(h[i])
@@ -294,8 +294,8 @@ function normest(A::ToeplitzPlusHankel{T}) where T
         for i = 2:m-n
             ret1 += n*abs2(tc[i])
         end
-        for i = m-n+1:m
-            ret1 += (m-i)*abs2(tc[i])
+        for i = max(m-n+1, 2):m
+            ret1 += (m+1-i)*abs2(tc[i])
         end
         for i = 1:n
             ret2 += i*abs2(h[i])
@@ -310,10 +310,6 @@ function normest(A::ToeplitzPlusHankel{T}) where T
     sqrt(ret1) + sqrt(ret2)
 end
 
-normest(A::Symmetric{T, <: ToeplitzPlusHankel{T}}) where T = normest(parent(A))
+normest(A::Symmetric{T, <: ToeplitzPlusHankel{T}}) where T = normest(parent(A))+1
 normest(A::Hermitian{T, <: ToeplitzPlusHankel{T}}) where T = normest(parent(A))
-
-function normest(A::ChebyshevGramMatrix{T}) where T
-    n = size(A, 1)
-    normest(A[1:n, 1:n])
-end
+normest(A::ChebyshevGramMatrix{T}) where T = normest(ToeplitzPlusHankel(A))
