@@ -59,7 +59,7 @@ function compute_skew_generators(W::GramMatrix{T}) where T
     n = size(W, 1)
     G = zeros(T, n, 2)
     G[n, 1] = one(T)
-    G[:, 2] .= W[n-1, :]*X[n-1, n] + W[n, :]*X[n, n] - X'W[:, n]
+    G[:, 2] .= W[:, n-1]*X[n-1, n] + W[:, n]*X[n, n] - X'W[:, n]
     return G
 end
 
