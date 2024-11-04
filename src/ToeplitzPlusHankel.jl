@@ -310,6 +310,6 @@ function normest(A::ToeplitzPlusHankel{T}) where T
     sqrt(ret1) + sqrt(ret2)
 end
 
-normest(A::Symmetric{T, <: ToeplitzPlusHankel{T}}) where T = normest(parent(A))+1
+normest(A::Symmetric{T, <: ToeplitzPlusHankel{T}}) where T = normest(parent(A))
 normest(A::Hermitian{T, <: ToeplitzPlusHankel{T}}) where T = normest(parent(A))
 normest(A::ChebyshevGramMatrix{T}) where T = normest(ToeplitzPlusHankel(A))
