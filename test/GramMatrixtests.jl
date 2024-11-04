@@ -28,6 +28,15 @@ using FastTransforms, BandedMatrices, LazyArrays, LinearAlgebra, Test
         @test bandwidths(G) == (b, b)
         F = cholesky(G)
         @test F.L*F.L' ≈ W
+
+        X = BandedMatrix(SymTridiagonal(T[2n-1 for n in 1:n+b], T[-n for n in 1:n+b-1])) # Laguerre X, tests nonzero diagonal
+        W = I+X^2+X^4
+        W = Symmetric(W[1:n, 1:n])
+        X = BandedMatrix(SymTridiagonal(T[2n-1 for n in 1:n], T[-n for n in 1:n-1])) # Laguerre X
+        G = GramMatrix(W, X)
+        @test bandwidths(G) == (b, b)
+        F = cholesky(G)
+        @test F.L*F.L' ≈ W
     end
     W = reshape([i for i in 1.0:n^2], n, n)
     X = reshape([i for i in 1.0:4n^2], 2n, 2n)
