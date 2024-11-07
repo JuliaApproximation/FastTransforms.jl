@@ -138,6 +138,7 @@ end
     SPINSPHERESYNTHESIS
     SPINSPHEREANALYSIS
     SPHERICALISOMETRY
+    FMMLEG2CHEB
 end
 
 Transforms(t::Transforms) = t
@@ -181,7 +182,8 @@ let k2s = Dict(LEG2CHEB             => "Legendre--Chebyshev",
                TETRAHEDRONANALYSIS  => "FFTW Chebyshev analysis on the tetrahedron",
                SPINSPHERESYNTHESIS  => "FFTW Fourier synthesis on the sphere (spin-weighted)",
                SPINSPHEREANALYSIS   => "FFTW Fourier analysis on the sphere (spin-weighted)",
-               SPHERICALISOMETRY    => "Spherical isometry")
+               SPHERICALISOMETRY    => "Spherical isometry",
+               FMMLEG2CHEB          => "FMM Legendre--Chebyshev")
     global kind2string
     kind2string(k::Union{Integer, Transforms}) = k2s[Transforms(k)]
 end
@@ -308,6 +310,38 @@ destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHERESYNTHESIS}) = ccall((:ft_d
 destroy_plan(p::FTPlan{Complex{Float64}, 2, SPINSPHEREANALYSIS}) = ccall((:ft_destroy_spinsphere_fftw_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 destroy_plan(p::FTPlan{Float64, 2, SPHERICALISOMETRY}) = ccall((:ft_destroy_sph_isometry_plan, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
 
+destroy_plan(p::FTPlan{Float32, 1, FMMLEG2CHEB}) = ccall((:ft_free_fmmf, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+destroy_plan(p::FTPlan{Float64, 1, FMMLEG2CHEB}) = ccall((:ft_free_fmm, libfasttransforms), Cvoid, (Ptr{ft_plan_struct}, ), p)
+
+function plan_fmm_leg2cheb(::Type{Float64}, n::Integer)
+    maxs = 64
+    M = 18
+    BOTH = 2
+    lagrange = 0
+    verbose = 0
+    plan = ccall((:ft_create_fmm, libfasttransforms), Ptr{ft_plan_struct}, (Cint, Cint, Cint, Cint, Cint, Cint), n, maxs, M, BOTH, lagrange, verbose)
+    return FTPlan{Float64, 1, FMMLEG2CHEB}(plan, n)
+end
+
+function lmul!(p::FTPlan{Float64, 1, FMMLEG2CHEB}, x::StridedVector{Float64})
+    checksize(p, x)
+    checkstride(p, x)
+    y = zero(x)
+    L2C = 0
+    flops = ccall((:ft_execute, libfasttransforms), Cint, (Ptr{Float64}, Ptr{Float64}, Ptr{ft_plan_struct}, Cint, Cint), x, y, p, L2C, 1)
+    x .= y
+    return x
+end
+function ldiv!(p::FTPlan{Float64, 1, FMMLEG2CHEB}, x::StridedVector{Float64})
+    checksize(p, x)
+    checkstride(p, x)
+    y = zero(x)
+    C2L = 1
+    flops = ccall((:ft_execute, libfasttransforms), Cint, (Ptr{Float64}, Ptr{Float64}, Ptr{ft_plan_struct}, Cint, Cint), x, y, p, C2L, 1)
+    x .= y
+    return x
+end
+
 struct AdjointFTPlan{T, S, R}
     parent::S
     adjoint::R
@@ -427,7 +461,7 @@ for f in (:leg2cheb, :cheb2leg, :ultra2ultra, :jac2jac,
           :cheb2jac, :ultra2cheb, :cheb2ultra, :associatedjac2jac,
           :modifiedjac2jac, :modifiedlag2lag, :modifiedherm2herm,
           :sph2fourier, :sphv2fourier, :disk2cxf, :ann2cxf,
-          :rectdisk2cheb, :tri2cheb, :tet2cheb)
+          :rectdisk2cheb, :tri2cheb, :tet2cheb, :fmm_leg2cheb)
     plan_f = Symbol("plan_", f)
     lib_f = Symbol("lib_", f)
     @eval begin
