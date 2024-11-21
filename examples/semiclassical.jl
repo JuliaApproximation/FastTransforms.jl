@@ -52,7 +52,7 @@ savefig(joinpath(GENFIGS, "semiclassical.html"))
 ###<object type="text/html" data="../semiclassical.html" style="width:100%;height:400px;"></object>
 ###```
 
-# By [Theorem 2.20](https://arxiv.org/abs/2302.08448) it turns out that the *derivatives* of these particular semi-classical Jacobi polynomials are a linear combination of at most four polynomials orthogonal with respect to $(1-x)^{\alpha+1}(1+x)^{\beta+1}(2+x)^{\gamma+1}(3+x)^{\delta+1}(5-x)^{\epsilon+1}$ on $(-1,1)$. This fact enables us to compute the banded differentiation matrix:
+# By [Theorem 2.20](https://arxiv.org/abs/2302.08448) it turns out that the *derivatives* of these particular semi-classical Jacobi polynomials are a linear combination of at most four polynomials orthogonal with respect to the weight $w^{(\alpha+1,\beta+1,\gamma+1,\delta+1,\epsilon+1)}(x)$ on $(-1,1)$. This fact enables us to compute the banded differentiation matrix:
 v = Fun(x->(2+x)^(γ+1)*(3+x)^(δ+1)*(5-x)^(ϵ+1), NormalizedJacobi(β+1, α+1))
 function threshold!(A::AbstractArray, ϵ)
     for i in eachindex(A)
@@ -61,6 +61,6 @@ function threshold!(A::AbstractArray, ϵ)
     A
 end
 P′ = plan_modifiedjac2jac(Float64, n+1, α+1, β+1, v.coefficients)
-DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(-1/2,0)}(y) = P^{(1/2,1)}(y) D_P.
+DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(y) = P^{(α+1,β+1)}(y) D_P.
 DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(y) = Q̂(y) D_Q.
 UpperTriangular(DQ[1:10,1:10])
