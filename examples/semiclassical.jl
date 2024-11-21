@@ -28,11 +28,11 @@ P1 = plan_jac2cheb(Float64, n+1, α, β; normjac = true)
 
 # We compute the Chebyshev series for the degree-$k\le n$ modified polynomial and its values at the Chebyshev points:
 q = k -> lmul!(P1, lmul!(P, [zeros(k); 1.0; zeros(n-k)]))
-qvals = k-> ichebyshevtransform(q(k))
+qvals = k -> ichebyshevtransform(q(k))
 
 # With the symmetric Jacobi matrix for $P_n^{(\alpha, \beta)}(x)$ and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):
 x = Fun(x->x, NormalizedJacobi(β, α))
-XP = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:n, 1:n]))
+XP = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:n+1, 1:n+1]))
 XQ = FastTransforms.modified_jacobi_matrix(P, XP)
 SymTridiagonal(XQ.dv[1:10], XQ.ev[1:9])
 
@@ -63,4 +63,47 @@ end
 P′ = plan_modifiedjac2jac(Float64, n+1, α+1, β+1, v.coefficients)
 DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(y) = P^{(α+1,β+1)}(y) D_P.
 DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(y) = Q̂(y) D_Q.
+UpperTriangular(DQ[1:10,1:10])
+
+# A faster method now exists via the `GramMatrix` architecture and its associated displacement equation. We compute `U`:
+U = Symmetric(Multiplication(u, space(u))[1:n+1, 1:n+1])
+
+# Then we form a `GramMatrix` together with the Jacobi matrix:
+G = GramMatrix(U, XP)
+
+# And compute its cholesky factorization. The upper-triangular Cholesky factor represents the connection between original Jacobi and semi-classical Jacobi as ${\bf P}^{(\alpha,\beta)}(x) = {\bf Q}(x) R$.
+R = cholesky(G).U
+
+# Every else works almost as before, including evaluation on a Chebyshev grid:
+q = k -> lmul!(P1, ldiv!(R, [zeros(k); 1.0; zeros(n-k)]))
+qvals = k -> ichebyshevtransform(q(k))
+
+# Computation of the modified Jacobi matrix:
+XQ1 = FastTransforms.modified_jacobi_matrix(R, XP)
+norm(XQ-XQ1)/norm(XQ)
+
+# Plotting:
+x = chebyshevpoints(Float64, n+1, Val(1))
+p = plot(x, qvals(0); linewidth=2.0, legend = false, xlim=(-1,1), xlabel=L"x",
+         ylabel=L"Q_n(x)", title="Semi-classical Jacobi Polynomials and Their Roots",
+         extra_plot_kwargs = KW(:include_mathjax => "cdn"))
+for k in 1:10
+    λ = eigvals(SymTridiagonal(XQ1.dv[1:k], XQ1.ev[1:k-1]))
+    plot!(x, qvals(k); linewidth=2.0, color=palette(:default)[k+1])
+    scatter!(λ, zero(λ); markersize=2.5, color=palette(:default)[k+1])
+end
+p
+savefig(joinpath(GENFIGS, "semiclassical1.html"))
+###```@raw html
+###<object type="text/html" data="../semiclassical1.html" style="width:100%;height:400px;"></object>
+###```
+
+# And banded differentiation:
+V = Symmetric(Multiplication(v, space(v))[1:n+1, 1:n+1])
+x = Fun(x->x, NormalizedJacobi(β+1, α+1))
+XP′ = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:n+1, 1:n+1]))
+G′ = GramMatrix(V, XP′)
+R′ = cholesky(G′).U
+DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(y) = P^{(α+1,β+1)}(y) D_P.
+DQ = UpperTriangular(threshold!(R′*(DP*(R\I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(y) = Q̂(y) D_Q.
 UpperTriangular(DQ[1:10,1:10])
