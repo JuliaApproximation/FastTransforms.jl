@@ -1,0 +1,66 @@
+# # Semi-classical Jacobi polynomials
+# In this example, we will consider the semi-classical orthogonal polynomials with respect to the inner product:
+# ```math
+# \langle f, g \rangle = \int_{-1}^1 f(x) g(x) w(x){\rm d} x,
+# ```
+# where $w(x) = w^{(\alpha,\beta,\gamma,\delta,\epsilon)}(x) = (1-x)^\alpha(1+x)^\beta(2+x)^\gamma(3+x)^\delta(5-x)^\epsilon$ is a modification of the Jacobi weight.
+# We shall use results from [this paper](https://arxiv.org/abs/2302.08448) to consider these semi-classical orthogonal polynomials as modifications of the Jacobi polynomials $P_n^{(\alpha,\beta)}(x)$.
+
+using ApproxFun, FastTransforms, LinearAlgebra, Plots, LaTeXStrings
+const GENFIGS = joinpath(pkgdir(FastTransforms), "docs/src/generated")
+!isdir(GENFIGS) && mkdir(GENFIGS)
+plotlyjs()
+
+# We set the five parameters:
+α,β,γ,δ,ϵ = -0.125, -0.25, 0.123, 0.456, 0.789
+
+# We use `ApproxFun` to construct a finite normalized Jacobi series as a proxy for $(2+x)^\gamma(3+x)^\delta(5-x)^\epsilon$.
+u = Fun(x->(2+x)^γ*(3+x)^δ*(5-x)^ϵ, NormalizedJacobi(β, α))
+
+# Our working polynomial degree will be:
+n = 100
+
+# We compute the connection coefficients between the modified orthogonal polynomials and the Jacobi polynomials:
+P = plan_modifiedjac2jac(Float64, n+1, α, β, u.coefficients)
+
+# We store the connection to first kind Chebyshev polynomials:
+P1 = plan_jac2cheb(Float64, n+1, α, β; normjac = true)
+
+# We compute the Chebyshev series for the degree-$k\le n$ modified polynomial and its values at the Chebyshev points:
+q = k -> lmul!(P1, lmul!(P, [zeros(k); 1.0; zeros(n-k)]))
+qvals = k-> ichebyshevtransform(q(k))
+
+# With the symmetric Jacobi matrix for $P_n^{(\alpha, \beta)}(x)$ and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):
+x = Fun(x->x, NormalizedJacobi(β, α))
+XP = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:n, 1:n]))
+XQ = FastTransforms.modified_jacobi_matrix(P, XP)
+SymTridiagonal(XQ.dv[1:10], XQ.ev[1:9])
+
+# And we plot:
+x = chebyshevpoints(Float64, n+1, Val(1))
+p = plot(x, qvals(0); linewidth=2.0, legend = false, xlim=(-1,1), xlabel=L"x",
+         ylabel=L"Q_n(x)", title="Semi-classical Jacobi Polynomials and Their Roots",
+         extra_plot_kwargs = KW(:include_mathjax => "cdn"))
+for k in 1:10
+    λ = eigvals(SymTridiagonal(XQ.dv[1:k], XQ.ev[1:k-1]))
+    plot!(x, qvals(k); linewidth=2.0, color=palette(:default)[k+1])
+    scatter!(λ, zero(λ); markersize=2.5, color=palette(:default)[k+1])
+end
+p
+savefig(joinpath(GENFIGS, "semiclassical.html"))
+###```@raw html
+###<object type="text/html" data="../semiclassical.html" style="width:100%;height:400px;"></object>
+###```
+
+# By [Theorem 2.20](https://arxiv.org/abs/2302.08448) it turns out that the *derivatives* of these particular semi-classical Jacobi polynomials are a linear combination of at most four polynomials orthogonal with respect to $(1-x)^{\alpha+1}(1+x)^{\beta+1}(2+x)^{\gamma+1}(3+x)^{\delta+1}(5-x)^{\epsilon+1}$ on $(-1,1)$. This fact enables us to compute the banded differentiation matrix:
+v = Fun(x->(2+x)^(γ+1)*(3+x)^(δ+1)*(5-x)^(ϵ+1), NormalizedJacobi(β+1, α+1))
+function threshold!(A::AbstractArray, ϵ)
+    for i in eachindex(A)
+        if abs(A[i]) < ϵ A[i] = 0 end
+    end
+    A
+end
+P′ = plan_modifiedjac2jac(Float64, n+1, α+1, β+1, v.coefficients)
+DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(-1/2,0)}(y) = P^{(1/2,1)}(y) D_P.
+DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(y) = Q̂(y) D_Q.
+UpperTriangular(DQ[1:10,1:10])
