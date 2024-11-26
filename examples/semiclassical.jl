@@ -34,7 +34,7 @@ qvals = k -> ichebyshevtransform(q(k))
 x = Fun(x->x, NormalizedJacobi(β, α))
 XP = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:n+1, 1:n+1]))
 XQ = FastTransforms.modified_jacobi_matrix(P, XP)
-SymTridiagonal(XQ.dv[1:10], XQ.ev[1:9])
+view(XQ, 1:7, 1:7)
 
 # And we plot:
 x = chebyshevpoints(Float64, n+1, Val(1))
@@ -63,7 +63,7 @@ end
 P′ = plan_modifiedjac2jac(Float64, n+1, α+1, β+1, v.coefficients)
 DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(x) = P^{(α+1,β+1)}(x) D_P.
 DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(x) = Q̂(x) D_Q.
-UpperTriangular(DQ[1:10, 1:10])
+UpperTriangular(DQ[1:9, 1:9])
 
 # A faster method now exists via the `GramMatrix` architecture and its associated displacement equation. Given the modified orthogonal polynomial moments implied by the normalized Jacobi series for $u(x)$, we pad this vector to the necessary size and construct the `GramMatrix` with these moments, the multiplication operator, and the constant $\tilde{P}_0^{(\alpha,\beta)}(x)$:
 μ = PaddedVector(u.coefficients, 2n+1)
@@ -71,11 +71,11 @@ x = Fun(x->x, NormalizedJacobi(β, α))
 XP2 = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:2n+1, 1:2n+1]))
 p0 = Fun(NormalizedJacobi(β, α), [1])(0)
 G = GramMatrix(μ, XP2, p0)
-G[1:10, 1:10]
+view(G, 1:7, 1:7)
 
 # And compute its cholesky factorization. The upper-triangular Cholesky factor represents the connection between original Jacobi and semi-classical Jacobi as ${\bf P}^{(\alpha,\beta)}(x) = {\bf Q}(x) R$.
 R = cholesky(G).U
-R[1:10, 1:10]
+UpperTriangular(view(R, 1:7, 1:7))
 
 # Every else works almost as before, including evaluation on a Chebyshev grid:
 q = k -> lmul!(P1, ldiv!(R, [zeros(k); 1.0; zeros(n-k)]))
@@ -110,4 +110,4 @@ G′ = GramMatrix(μ′, XP′, p0′)
 R′ = cholesky(G′).U
 DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(x) = P^{(α+1,β+1)}(x) D_P.
 DQ = UpperTriangular(threshold!(R′*(DP*(R\I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(x) = Q̂(x) D_Q.
-UpperTriangular(DQ[1:10, 1:10])
+UpperTriangular(DQ[1:9, 1:9])
