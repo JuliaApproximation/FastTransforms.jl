@@ -4,9 +4,9 @@
 # \langle f, g \rangle = \int_{-1}^1 f(x) g(x) w(x){\rm d} x,
 # ```
 # where $w(x) = w^{(\alpha,\beta,\gamma,\delta,\epsilon)}(x) = (1-x)^\alpha(1+x)^\beta(2+x)^\gamma(3+x)^\delta(5-x)^\epsilon$ is a modification of the Jacobi weight.
-# We shall use results from [this paper](https://arxiv.org/abs/2302.08448) to consider these semi-classical orthogonal polynomials as modifications of the Jacobi polynomials $P_n^{(\alpha,\beta)}(x)$.
+# We shall use results from [this paper](https://arxiv.org/abs/2302.08448) to consider these semi-classical orthogonal polynomials as modifications of the orthonormalized Jacobi polynomials $\tilde{P}_n^{(\alpha,\beta)}(x)$.
 
-using ApproxFun, FastTransforms, LinearAlgebra, Plots, LaTeXStrings
+using ApproxFun, FastTransforms, LazyArrays, LinearAlgebra, Plots, LaTeXStrings
 const GENFIGS = joinpath(pkgdir(FastTransforms), "docs/src/generated")
 !isdir(GENFIGS) && mkdir(GENFIGS)
 plotlyjs()
@@ -30,7 +30,7 @@ P1 = plan_jac2cheb(Float64, n+1, α, β; normjac = true)
 q = k -> lmul!(P1, lmul!(P, [zeros(k); 1.0; zeros(n-k)]))
 qvals = k -> ichebyshevtransform(q(k))
 
-# With the symmetric Jacobi matrix for $P_n^{(\alpha, \beta)}(x)$ and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):
+# With the symmetric Jacobi matrix for $\tilde{P}_n^{(\alpha, \beta)}(x)$ and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):
 x = Fun(x->x, NormalizedJacobi(β, α))
 XP = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:n+1, 1:n+1]))
 XQ = FastTransforms.modified_jacobi_matrix(P, XP)
@@ -61,18 +61,21 @@ function threshold!(A::AbstractArray, ϵ)
     A
 end
 P′ = plan_modifiedjac2jac(Float64, n+1, α+1, β+1, v.coefficients)
-DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(y) = P^{(α+1,β+1)}(y) D_P.
-DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(y) = Q̂(y) D_Q.
-UpperTriangular(DQ[1:10,1:10])
+DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(x) = P^{(α+1,β+1)}(x) D_P.
+DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(x) = Q̂(x) D_Q.
+UpperTriangular(DQ[1:10, 1:10])
 
-# A faster method now exists via the `GramMatrix` architecture and its associated displacement equation. We compute `U`:
-U = Symmetric(Multiplication(u, space(u))[1:n+1, 1:n+1])
-
-# Then we form a `GramMatrix` together with the Jacobi matrix:
-G = GramMatrix(U, XP)
+# A faster method now exists via the `GramMatrix` architecture and its associated displacement equation. Given the modified orthogonal polynomial moments implied by the normalized Jacobi series for $u(x)$, we pad this vector to the necessary size and construct the `GramMatrix` with these moments, the multiplication operator, and the constant $\tilde{P}_0^{(\alpha,\beta)}(x)$:
+μ = PaddedVector(u.coefficients, 2n+1)
+x = Fun(x->x, NormalizedJacobi(β, α))
+XP2 = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:2n+1, 1:2n+1]))
+p0 = Fun(NormalizedJacobi(β, α), [1])(0)
+G = GramMatrix(μ, XP2, p0)
+G[1:10, 1:10]
 
 # And compute its cholesky factorization. The upper-triangular Cholesky factor represents the connection between original Jacobi and semi-classical Jacobi as ${\bf P}^{(\alpha,\beta)}(x) = {\bf Q}(x) R$.
 R = cholesky(G).U
+R[1:10, 1:10]
 
 # Every else works almost as before, including evaluation on a Chebyshev grid:
 q = k -> lmul!(P1, ldiv!(R, [zeros(k); 1.0; zeros(n-k)]))
@@ -99,11 +102,12 @@ savefig(joinpath(GENFIGS, "semiclassical1.html"))
 ###```
 
 # And banded differentiation:
-V = Symmetric(Multiplication(v, space(v))[1:n+1, 1:n+1])
-x = Fun(x->x, NormalizedJacobi(β+1, α+1))
-XP′ = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:n+1, 1:n+1]))
-G′ = GramMatrix(V, XP′)
+μ′ = PaddedVector(v.coefficients, 2n+1)
+x′ = Fun(x->x, NormalizedJacobi(β+1, α+1))
+XP′ = SymTridiagonal(Symmetric(Multiplication(x′, space(x′))[1:2n+1, 1:2n+1]))
+p0′ = Fun(NormalizedJacobi(β+1, α+1), [1])(0)
+G′ = GramMatrix(μ′, XP′, p0′)
 R′ = cholesky(G′).U
-DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(y) = P^{(α+1,β+1)}(y) D_P.
-DQ = UpperTriangular(threshold!(R′*(DP*(R\I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(y) = Q̂(y) D_Q.
-UpperTriangular(DQ[1:10,1:10])
+DP = UpperTriangular(diagm(1=>[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(x) = P^{(α+1,β+1)}(x) D_P.
+DQ = UpperTriangular(threshold!(R′*(DP*(R\I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(x) = Q̂(x) D_Q.
+UpperTriangular(DQ[1:10, 1:10])

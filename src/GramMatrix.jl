@@ -50,6 +50,64 @@ GramMatrix(W::WT, X::XT) where {T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix
 @inline bandwidths(G::GramMatrix) = bandwidths(G.W)
 @inline MemoryLayout(G::GramMatrix) = MemoryLayout(G.W)
 
+"""
+    GramMatrix(μ::AbstractVector, X::AbstractMatrix)
+
+Construct a GramMatrix from modified orthogonal polynomial moments and the multiplication operator.
+In the standard (classical) normalization, ``p_0(x) = 1``, so that the moments
+``\\mu_n = \\langle p_{n-1}, 1\\rangle`` are in fact the first column of the Gram matrix.
+The recurrence is built from ``X^\\top W = WX``.
+"""
+GramMatrix(μ::AbstractVector{T}, X::XT) where {T, XT <: AbstractMatrix{T}} = GramMatrix(μ, X, one(T))
+function GramMatrix(μ::AbstractVector{T}, X::XT, p0::T) where {T, XT <: AbstractMatrix{T}}
+    N = length(μ)
+    n = (N+1)÷2
+    @assert N == size(X, 1) == size(X, 2)
+    @assert bandwidths(X) == (1, 1)
+    W = Matrix{T}(undef, N, N)
+    if n > 0
+        @inbounds for m in 1:N
+            W[m, 1] = p0*μ[m]
+        end
+    end
+    if n > 1
+        @inbounds for m in 2:N-1
+            W[m, 2] = (X[m-1, m]*W[m-1, 1] + (X[m, m]-X[1, 1])*W[m, 1] + X[m+1, m]*W[m+1, 1])/X[2, 1]
+        end
+    end
+    @inbounds @simd for n in 3:n
+        for m in n:N-n+1
+            W[m, n] = (X[m-1, m]*W[m-1, n-1] + (X[m, m]-X[n-1, n-1])*W[m, n-1] + X[m+1, m]*W[m+1, n-1] - X[n-2, n-1]*W[m, n-2])/X[n, n-1]
+        end
+    end
+    return GramMatrix(Symmetric(W[1:n, 1:n], :L), eval(XT.name.name)(view(X, 1:n, 1:n)))
+end
+
+function GramMatrix(μ::PaddedVector{T}, X::XT, p0::T) where {T, XT <: AbstractMatrix{T}}
+    N = length(μ)
+    b = length(μ.args[2])-1
+    n = (N+1)÷2
+    @assert N == size(X, 1) == size(X, 2)
+    @assert bandwidths(X) == (1, 1)
+    W = BandedMatrix{T}(undef, (N, N), (b, 0))
+    if n > 0
+        @inbounds for m in 1:min(N, b+1)
+            W[m, 1] = p0*μ[m]
+        end
+    end
+    if n > 1
+        @inbounds for m in 2:min(N-1, b+2)
+            W[m, 2] = (X[m-1, m]*W[m-1, 1] + (X[m, m]-X[1, 1])*W[m, 1] + X[m+1, m]*W[m+1, 1])/X[2, 1]
+        end
+    end
+    @inbounds @simd for n in 3:n
+        for m in n:min(N-n+1, b+n)
+            W[m, n] = (X[m-1, m]*W[m-1, n-1] + (X[m, m]-X[n-1, n-1])*W[m, n-1] + X[m+1, m]*W[m+1, n-1] - X[n-2, n-1]*W[m, n-2])/X[n, n-1]
+        end
+    end
+    return GramMatrix(Symmetric(W[1:n, 1:n], :L), eval(XT.name.name)(view(X, 1:n, 1:n)))
+end
+
 #
 # X'W-W*X = G*J*G'
 # This returns G, where J = [0 1; -1 0], respecting the skew-symmetry of the right-hand side.
@@ -201,7 +259,6 @@ function compute_skew_generators(W::ChebyshevGramMatrix{T}) where T
     @inbounds @simd for j in 1:n-1
         G[j, 2] = -(μ[n+2-j] + μ[n+j])/2
     end
-    G[n, 2] = -μ[2]/2
     G
 end
 
