@@ -6,17 +6,14 @@ plotlyjs()</code></pre><pre><code class="language-none">Plots.PlotlyJSBackend()<
 qvals = k -&gt; ichebyshevtransform(q(k))</code></pre><pre><code class="language-none">#5 (generic function with 1 method)</code></pre><p>With the symmetric Jacobi matrix for <span>$\tilde{P}_n^{(\alpha, \beta)}(x)$</span> and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):</p><pre><code class="language-julia">x = Fun(x-&gt;x, NormalizedJacobi(β, α))
 XP = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:n+1, 1:n+1]))
 XQ = FastTransforms.modified_jacobi_matrix(P, XP)
-SymTridiagonal(XQ.dv[1:10], XQ.ev[1:9])</code></pre><pre><code class="language-none">10×10 LinearAlgebra.SymTridiagonal{Float64, Vector{Float64}}:
- -0.052227  0.611763      ⋅           ⋅            ⋅            ⋅           ⋅            ⋅            ⋅            ⋅ 
-  0.611763  0.000494468  0.518899     ⋅            ⋅            ⋅           ⋅            ⋅            ⋅            ⋅ 
-   ⋅        0.518899     0.00129929  0.507083      ⋅            ⋅           ⋅            ⋅            ⋅            ⋅ 
-   ⋅         ⋅           0.507083    0.000851746  0.503749      ⋅           ⋅            ⋅            ⋅            ⋅ 
-   ⋅         ⋅            ⋅          0.503749     0.000542956  0.502328     ⋅            ⋅            ⋅            ⋅ 
-   ⋅         ⋅            ⋅           ⋅           0.502328     0.00037014  0.501587      ⋅            ⋅            ⋅ 
-   ⋅         ⋅            ⋅           ⋅            ⋅           0.501587    0.000267516  0.501151      ⋅            ⋅ 
-   ⋅         ⋅            ⋅           ⋅            ⋅            ⋅          0.501151     0.000202134  0.500873      ⋅ 
-   ⋅         ⋅            ⋅           ⋅            ⋅            ⋅           ⋅           0.500873     0.000158029  0.500685
-   ⋅         ⋅            ⋅           ⋅            ⋅            ⋅           ⋅            ⋅           0.500685     0.000126906</code></pre><p>And we plot:</p><pre><code class="language-julia">x = chebyshevpoints(Float64, n+1, Val(1))
+view(XQ, 1:7, 1:7)</code></pre><pre><code class="language-none">7×7 view(::LinearAlgebra.SymTridiagonal{Float64, Vector{Float64}}, 1:7, 1:7) with eltype Float64:
+ -0.052227  0.611763      ⋅           ⋅            ⋅            ⋅           ⋅ 
+  0.611763  0.000494468  0.518899     ⋅            ⋅            ⋅           ⋅ 
+   ⋅        0.518899     0.00129929  0.507083      ⋅            ⋅           ⋅ 
+   ⋅         ⋅           0.507083    0.000851746  0.503749      ⋅           ⋅ 
+   ⋅         ⋅            ⋅          0.503749     0.000542956  0.502328     ⋅ 
+   ⋅         ⋅            ⋅           ⋅           0.502328     0.00037014  0.501587
+   ⋅         ⋅            ⋅           ⋅            ⋅           0.501587    0.000267516</code></pre><p>And we plot:</p><pre><code class="language-julia">x = chebyshevpoints(Float64, n+1, Val(1))
 p = plot(x, qvals(0); linewidth=2.0, legend = false, xlim=(-1,1), xlabel=L&quot;x&quot;,
          ylabel=L&quot;Q_n(x)&quot;, title=&quot;Semi-classical Jacobi Polynomials and Their Roots&quot;,
          extra_plot_kwargs = KW(:include_mathjax =&gt; &quot;cdn&quot;))
@@ -36,43 +33,36 @@ end
 P′ = plan_modifiedjac2jac(Float64, n+1, α+1, β+1, v.coefficients)
 DP = UpperTriangular(diagm(1=&gt;[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(x) = P^{(α+1,β+1)}(x) D_P.
 DQ = UpperTriangular(threshold!(P′\(DP*(P*I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(x) = Q̂(x) D_Q.
-UpperTriangular(DQ[1:10, 1:10])</code></pre><pre><code class="language-none">10×10 LinearAlgebra.UpperTriangular{Float64, Matrix{Float64}}:
- 0.0  7.02067   3.74167  -0.0809111  -0.113147    0.0         0.0         0.0         0.0         0.0
-  ⋅   0.0      12.0138    5.7562     -0.0612112  -0.149381    0.0         0.0         0.0         0.0
-  ⋅    ⋅        0.0      17.1606      7.59222    -0.0517326  -0.177356    0.0         0.0         0.0
-  ⋅    ⋅         ⋅        0.0        22.3446      9.38452    -0.0442887  -0.203279    0.0         0.0
-  ⋅    ⋅         ⋅         ⋅          0.0        27.5348     11.1618     -0.0369428  -0.228469    0.0
-  ⋅    ⋅         ⋅         ⋅           ⋅          0.0        32.7255     12.932      -0.0294519  -0.253304
-  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅          0.0        37.916      14.6983     -0.0218256
-  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅          0.0        43.1061     16.462
-  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅           ⋅          0.0        48.2958
-  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅           ⋅           ⋅          0.0</code></pre><p>A faster method now exists via the <code>GramMatrix</code> architecture and its associated displacement equation. Given the modified orthogonal polynomial moments implied by the normalized Jacobi series for <span>$u(x)$</span>, we pad this vector to the necessary size and construct the <code>GramMatrix</code> with these moments, the multiplication operator, and the constant <span>$\tilde{P}_0^{(\alpha,\beta)}(x)$</span>:</p><pre><code class="language-julia">μ = PaddedVector(u.coefficients, 2n+1)
+UpperTriangular(DQ[1:9, 1:9])</code></pre><pre><code class="language-none">9×9 LinearAlgebra.UpperTriangular{Float64, Matrix{Float64}}:
+ 0.0  7.02067   3.74167  -0.0809111  -0.113147    0.0         0.0         0.0         0.0
+  ⋅   0.0      12.0138    5.7562     -0.0612112  -0.149381    0.0         0.0         0.0
+  ⋅    ⋅        0.0      17.1606      7.59222    -0.0517326  -0.177356    0.0         0.0
+  ⋅    ⋅         ⋅        0.0        22.3446      9.38452    -0.0442887  -0.203279    0.0
+  ⋅    ⋅         ⋅         ⋅          0.0        27.5348     11.1618     -0.0369428  -0.228469
+  ⋅    ⋅         ⋅         ⋅           ⋅          0.0        32.7255     12.932      -0.0294519
+  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅          0.0        37.916      14.6983
+  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅          0.0        43.1061
+  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅           ⋅          0.0</code></pre><p>A faster method now exists via the <code>GramMatrix</code> architecture and its associated displacement equation. Given the modified orthogonal polynomial moments implied by the normalized Jacobi series for <span>$u(x)$</span>, we pad this vector to the necessary size and construct the <code>GramMatrix</code> with these moments, the multiplication operator, and the constant <span>$\tilde{P}_0^{(\alpha,\beta)}(x)$</span>:</p><pre><code class="language-julia">μ = PaddedVector(u.coefficients, 2n+1)
 x = Fun(x-&gt;x, NormalizedJacobi(β, α))
 XP2 = SymTridiagonal(Symmetric(Multiplication(x, space(x))[1:2n+1, 1:2n+1]))
 p0 = Fun(NormalizedJacobi(β, α), [1])(0)
 G = GramMatrix(μ, XP2, p0)
-G[1:10, 1:10]</code></pre><pre><code class="language-none">10×10 Matrix{Float64}:
-  6.23087      0.250052     -0.116126      0.00655593   -0.00105379    0.00017771   -3.63458e-5    7.84452e-6   -1.78645e-6    4.17841e-7
-  0.250052     6.16778       0.20056      -0.0956742     0.00537811   -0.000867428   0.00014667   -3.0069e-5     6.50088e-6   -1.48227e-6
- -0.116126     0.20056       6.21001       0.195291     -0.092858      0.00516771   -0.000829459   0.000139559  -2.85329e-5    6.15569e-6
-  0.00655593  -0.0956742     0.195291      6.21487       0.194013     -0.091981      0.00510563   -0.000818228   0.000137483  -2.80846e-5
- -0.00105379   0.00537811   -0.092858      0.194013      6.21641       0.193488     -0.0915835     0.00507762   -0.000813118   0.000136541
-  0.00017771  -0.000867428   0.00516771   -0.091981      0.193488      6.21711       0.193216     -0.0913674     0.00506216   -0.000810261
- -3.63458e-5   0.00014667   -0.000829459   0.00510563   -0.0915835     0.193216      6.21749       0.193058     -0.0912363     0.00505264
-  7.84452e-6  -3.0069e-5     0.000139559  -0.000818228   0.00507762   -0.0913674     0.193058      6.21772       0.192956     -0.0911507
- -1.78645e-6   6.50088e-6   -2.85329e-5    0.000137483  -0.000813118   0.00506216   -0.0912363     0.192956      6.21787       0.192888
-  4.17841e-7  -1.48227e-6    6.15569e-6   -2.80846e-5    0.000136541  -0.000810261   0.00505264   -0.0911507     0.192888      6.21797</code></pre><p>And compute its cholesky factorization. The upper-triangular Cholesky factor represents the connection between original Jacobi and semi-classical Jacobi as <span>${\bf P}^{(\alpha,\beta)}(x) = {\bf Q}(x) R$</span>.</p><pre><code class="language-julia">R = cholesky(G).U
-R[1:10, 1:10]</code></pre><pre><code class="language-none">10×10 Matrix{Float64}:
- 2.49617  0.100174  -0.0465217   0.0026264  -0.000422164   7.1193e-5    -1.45606e-5    3.14262e-6   -7.15674e-7    1.67393e-7
- 0.0      2.48148    0.0827006  -0.0386613   0.00218434   -0.000352435   5.96937e-5   -1.22442e-5    2.64865e-6   -6.0409e-7
- 0.0      0.0        2.49018     0.0797576  -0.0373701     0.00208827   -0.000335346   5.65089e-5   -1.15595e-5    2.49517e-6
- 0.0      0.0        0.0         2.49139     0.079104     -0.036992      0.00206099   -0.000330425   5.55951e-5   -1.13621e-5
- 0.0      0.0        0.0         0.0         2.49174       0.0788577    -0.0368254     0.00204913   -0.000328267   5.51962e-5
- 0.0      0.0        0.0         0.0         0.0           2.49189       0.0787344    -0.0367357     0.00204268   -0.000327077
- 0.0      0.0        0.0         0.0         0.0           0.0           2.49197       0.078663     -0.0366815     0.00203873
- 0.0      0.0        0.0         0.0         0.0           0.0           0.0           2.49202       0.0786179    -0.0366462
- 0.0      0.0        0.0         0.0         0.0           0.0           0.0           0.0           2.49206       0.0785874
- 0.0      0.0        0.0         0.0         0.0           0.0           0.0           0.0           0.0           2.49208</code></pre><p>Every else works almost as before, including evaluation on a Chebyshev grid:</p><pre><code class="language-julia">q = k -&gt; lmul!(P1, ldiv!(R, [zeros(k); 1.0; zeros(n-k)]))
+view(G, 1:7, 1:7)</code></pre><pre><code class="language-none">7×7 view(::GramMatrix{Float64, LinearAlgebra.Symmetric{Float64, BandedMatrices.BandedMatrix{Float64, Matrix{Float64}, Base.OneTo{Int64}}}, LinearAlgebra.SymTridiagonal{Float64, Vector{Float64}}}, 1:7, 1:7) with eltype Float64:
+  6.23087      0.250052     -0.116126      0.00655593  -0.00105379   0.00017771   -3.63458e-5
+  0.250052     6.16778       0.20056      -0.0956742    0.00537811  -0.000867428   0.00014667
+ -0.116126     0.20056       6.21001       0.195291    -0.092858     0.00516771   -0.000829459
+  0.00655593  -0.0956742     0.195291      6.21487      0.194013    -0.091981      0.00510563
+ -0.00105379   0.00537811   -0.092858      0.194013     6.21641      0.193488     -0.0915835
+  0.00017771  -0.000867428   0.00516771   -0.091981     0.193488     6.21711       0.193216
+ -3.63458e-5   0.00014667   -0.000829459   0.00510563  -0.0915835    0.193216      6.21749</code></pre><p>And compute its cholesky factorization. The upper-triangular Cholesky factor represents the connection between original Jacobi and semi-classical Jacobi as <span>${\bf P}^{(\alpha,\beta)}(x) = {\bf Q}(x) R$</span>.</p><pre><code class="language-julia">R = cholesky(G).U
+UpperTriangular(view(R, 1:7, 1:7))</code></pre><pre><code class="language-none">7×7 LinearAlgebra.UpperTriangular{Float64, SubArray{Float64, 2, LinearAlgebra.UpperTriangular{Float64, LinearAlgebra.Adjoint{Float64, BandedMatrices.BandedMatrix{Float64, Matrix{Float64}, Base.OneTo{Int64}}}}, Tuple{UnitRange{Int64}, UnitRange{Int64}}, false}}:
+ 2.49617  0.100174  -0.0465217   0.0026264  -0.000422164   7.1193e-5    -1.45606e-5
+  ⋅       2.48148    0.0827006  -0.0386613   0.00218434   -0.000352435   5.96937e-5
+  ⋅        ⋅         2.49018     0.0797576  -0.0373701     0.00208827   -0.000335346
+  ⋅        ⋅          ⋅          2.49139     0.079104     -0.036992      0.00206099
+  ⋅        ⋅          ⋅           ⋅          2.49174       0.0788577    -0.0368254
+  ⋅        ⋅          ⋅           ⋅           ⋅            2.49189       0.0787344
+  ⋅        ⋅          ⋅           ⋅           ⋅             ⋅            2.49197</code></pre><p>Every else works almost as before, including evaluation on a Chebyshev grid:</p><pre><code class="language-julia">q = k -&gt; lmul!(P1, ldiv!(R, [zeros(k); 1.0; zeros(n-k)]))
 qvals = k -&gt; ichebyshevtransform(q(k))</code></pre><pre><code class="language-none">#17 (generic function with 1 method)</code></pre><p>Computation of the modified Jacobi matrix:</p><pre><code class="language-julia">XQ1 = FastTransforms.modified_jacobi_matrix(R, XP)
 norm(XQ-XQ1)/norm(XQ)</code></pre><pre><code class="language-none">2.4194977316379476e-16</code></pre><p>Plotting:</p><pre><code class="language-julia">x = chebyshevpoints(Float64, n+1, Val(1))
 p = plot(x, qvals(0); linewidth=2.0, legend = false, xlim=(-1,1), xlabel=L&quot;x&quot;,
@@ -92,14 +82,13 @@ G′ = GramMatrix(μ′, XP′, p0′)
 R′ = cholesky(G′).U
 DP = UpperTriangular(diagm(1=&gt;[sqrt(n*(n+α+β+1)) for n in 1:n])) # The classical differentiation matrix representing 𝒟 P^{(α,β)}(x) = P^{(α+1,β+1)}(x) D_P.
 DQ = UpperTriangular(threshold!(R′*(DP*(R\I)), 100eps())) # The semi-classical differentiation matrix representing 𝒟 Q(x) = Q̂(x) D_Q.
-UpperTriangular(DQ[1:10, 1:10])</code></pre><pre><code class="language-none">10×10 LinearAlgebra.UpperTriangular{Float64, Matrix{Float64}}:
- 0.0  7.02067   3.74167  -0.0809111  -0.113147    0.0         0.0         0.0         0.0         0.0
-  ⋅   0.0      12.0138    5.7562     -0.0612112  -0.149381    0.0         0.0         0.0         0.0
-  ⋅    ⋅        0.0      17.1606      7.59222    -0.0517326  -0.177356    0.0         0.0         0.0
-  ⋅    ⋅         ⋅        0.0        22.3446      9.38452    -0.0442887  -0.203279    0.0         0.0
-  ⋅    ⋅         ⋅         ⋅          0.0        27.5348     11.1618     -0.0369428  -0.228469    0.0
-  ⋅    ⋅         ⋅         ⋅           ⋅          0.0        32.7255     12.932      -0.0294519  -0.253304
-  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅          0.0        37.916      14.6983     -0.0218256
-  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅          0.0        43.1061     16.462
-  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅           ⋅          0.0        48.2958
-  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅           ⋅           ⋅          0.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../padua/">« Padua transform</a><a class="docs-footer-nextpage" href="../sphere/">Spherical harmonic addition theorem »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 26 November 2024 18:19">Tuesday 26 November 2024</span>. Using Julia version 1.11.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+UpperTriangular(DQ[1:9, 1:9])</code></pre><pre><code class="language-none">9×9 LinearAlgebra.UpperTriangular{Float64, Matrix{Float64}}:
+ 0.0  7.02067   3.74167  -0.0809111  -0.113147    0.0         0.0         0.0         0.0
+  ⋅   0.0      12.0138    5.7562     -0.0612112  -0.149381    0.0         0.0         0.0
+  ⋅    ⋅        0.0      17.1606      7.59222    -0.0517326  -0.177356    0.0         0.0
+  ⋅    ⋅         ⋅        0.0        22.3446      9.38452    -0.0442887  -0.203279    0.0
+  ⋅    ⋅         ⋅         ⋅          0.0        27.5348     11.1618     -0.0369428  -0.228469
+  ⋅    ⋅         ⋅         ⋅           ⋅          0.0        32.7255     12.932      -0.0294519
+  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅          0.0        37.916      14.6983
+  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅          0.0        43.1061
+  ⋅    ⋅         ⋅         ⋅           ⋅           ⋅           ⋅           ⋅          0.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../padua/">« Padua transform</a><a class="docs-footer-nextpage" href="../sphere/">Spherical harmonic addition theorem »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 26 November 2024 18:45">Tuesday 26 November 2024</span>. Using Julia version 1.11.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
