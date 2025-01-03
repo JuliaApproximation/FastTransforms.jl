@@ -61,7 +61,7 @@ C = [k/(k+1) for k in 0:N]
 c = zeros(N); c[N] = 1
 pts = vec([z(θ, φ)⋅y for θ in θ, φ in φ])
 phi0 = ones(N*M)
-F = reshape(FastTransforms.clenshaw!(c, A, B, C, pts, phi0, zeros(N*M)), N, M)
+F = reshape(FastTransforms.clenshaw!(zeros(N*M), c, A, B, C, pts, phi0), N, M)
 
 # We superpose a surface plot of $f$ on top of the grid:
 X = [sinpi(θ)*cospi(φ) for θ in θ, φ in φ]
@@ -91,7 +91,7 @@ U = threshold!(P\V, 400*eps())
 nrm1 = norm(U)
 
 # Similarly, on the tensor product grid, our function samples are:
-Pnxy = FastTransforms.clenshaw!(c, A, B, C, [x⋅y], [1.0], [0.0])[1]
+Pnxy = FastTransforms.clenshaw!([0.0], c, A, B, C, [x⋅y], [1.0])[1]
 F = [(F[n, m] - Pnxy)/(z(θ[n], φ[m])⋅y - x⋅y) for n in 1:N, m in 1:M]
 
 # We superpose a surface plot of $f$ on top of the grid:
@@ -108,7 +108,7 @@ U = threshold!(P\V, 400*eps())
 
 # Finally, the Legendre polynomial $P_n(z\cdot x)$ is aligned with the grid:
 pts = vec([z(θ, φ)⋅x for θ in θ, φ in φ])
-F = reshape(FastTransforms.clenshaw!(c, A, B, C, pts, phi0, zeros(N*M)), N, M)
+F = reshape(FastTransforms.clenshaw!(zeros(N*M), c, A, B, C, pts, phi0), N, M)
 
 # We superpose a surface plot of $f$ on top of the grid:
 scatter3d(vec(X), vec(Y), vec(Z); markersize=1.25, markercolor=:violetred)
