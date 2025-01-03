@@ -64,7 +64,7 @@ function GramMatrix(μ::AbstractVector{T}, X::XT, p0::T) where {T, XT <: Abstrac
     n = (N+1)÷2
     @assert N == size(X, 1) == size(X, 2)
     @assert bandwidths(X) == (1, 1)
-    W = Matrix{T}(undef, N, N)
+    W = LowerTriangular(Matrix{T}(undef, N, N))
     if n > 0
         @inbounds for m in 1:N
             W[m, 1] = p0*μ[m]
