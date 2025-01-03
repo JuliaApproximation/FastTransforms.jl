@@ -13,7 +13,6 @@ examples = [
     "halfrange.jl",
     "nonlocaldiffusion.jl",
     "padua.jl",
-    "semiclassical.jl",
     "sphere.jl",
     "spinweighted.jl",
     "subspaceangles.jl",
