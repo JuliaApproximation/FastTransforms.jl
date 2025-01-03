@@ -47,7 +47,6 @@ makedocs(
                         "generated/halfrange.md",
                         "generated/nonlocaldiffusion.md",
                         "generated/padua.md",
-                        "generated/semiclassical.md",
                         "generated/sphere.md",
                         "generated/spinweighted.md",
                         "generated/subspaceangles.md",
