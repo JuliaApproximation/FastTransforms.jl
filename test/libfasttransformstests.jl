@@ -8,10 +8,10 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         c = one(T) ./ (1:n)
         x = collect(-1 .+ 2*(0:n-1)/T(n))
         f = similar(x)
-        @test FastTransforms.horner!(c, x, f) == f
+        @test FastTransforms.horner!(f, c, x) == f
         fd = T[sum(c[k]*x^(k-1) for k in 1:length(c)) for x in x]
         @test f ≈ fd
-        @test FastTransforms.clenshaw!(c, x, f) == f
+        @test FastTransforms.clenshaw!(f, c, x) == f
         fd = T[sum(c[k]*cos((k-1)*acos(x)) for k in 1:length(c)) for x in x]
         @test f ≈ fd
         A = T[(2k+one(T))/(k+one(T)) for k in 0:length(c)-1]
@@ -19,7 +19,7 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         C = T[k/(k+one(T)) for k in 0:length(c)]
         phi0 = ones(T, length(x))
         c = FastTransforms.lib_cheb2leg(c)
-        @test FastTransforms.clenshaw!(c, A, B, C, x, phi0, f) == f
+        @test FastTransforms.clenshaw!(f, c, A, B, C, x, phi0) == f
         @test f ≈ fd
     end
 
