@@ -18,7 +18,7 @@ the Gram matrix satisfies the skew-symmetric rank-2 displacement equation (``X =
 ```math
 XᵀW - WX = GJGᵀ,
 ```
-where ``[0 1; -1 0]`` and where:
+where ``J = [0 1; -1 0]`` and where:
 ```math
 G[:, 1] = 𝐞_n, G_{:, 2} = W[n-1, :]X[n-1, n] - Xᵀ W[:, n].
 ```
