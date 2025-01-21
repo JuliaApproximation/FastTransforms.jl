@@ -55,8 +55,8 @@ GramMatrix(W::WT, X::XT) where {T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix
 
 Construct a GramMatrix from modified orthogonal polynomial moments and the multiplication operator.
 In the standard (classical) normalization, ``p_0(x) = 1``, so that the moments
-``\\mu_n = ⟨ p_{n-1}, 1⟩`` are in fact the first column of the Gram matrix.
-The recurrence is built from ``X^\\top W = WX``.
+``µ_n = ⟨ p_{n-1}, 1⟩`` are in fact the first column of the Gram matrix.
+The recurrence is built from ``XᵀW = WX``.
 """
 GramMatrix(μ::AbstractVector{T}, X::XT) where {T, XT <: AbstractMatrix{T}} = GramMatrix(μ, X, one(T))
 function GramMatrix(μ::AbstractVector{T}, X::XT, p0::T) where {T, XT <: AbstractMatrix{T}}
@@ -221,12 +221,12 @@ end
 
 Construct a Chebyshev--Gram matrix of size `(length(μ)+1)÷2` with entries:
 ```math
-W_{i,j} = \\frac{\\mu_{|i-j|+1} +\\mu_{i+j-1}}{2}.
+W_{i,j} = \\frac{µ_{|i-j|+1} +µ_{i+j-1}}{2}.
 ```
 Due to the linearization of a product of two first-kind Chebyshev polynomials,
 the Chebyshev--Gram matrix can be constructed from modified Chebyshev moments:
 ```math
-\\mu_{n} = ⟨ T_{n-1}, 1⟩.
+µ_{n} = ⟨ T_{n-1}, 1⟩.
 ```
 Specialized construction and Cholesky factorization is given for this type.
 
