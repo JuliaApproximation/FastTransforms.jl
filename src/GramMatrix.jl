@@ -28,7 +28,7 @@ Construct a symmetric positive-definite Gram matrix with data stored in ``W``.
 Given a family of orthogonal polynomials ``𝐏(x) = {p₀(x), p₁(x),…}``
 and a continuous inner product ``⟨f, g⟩``, the Gram matrix is defined by:
 ```math
-W[i, j] = ⟨pᵢ₋₁, pⱼ₋₁⟩.
+W[i, j] = ⟨p_{i-1}, p_{j-1}⟩.
 ```
 Moreover, given ``X``, the transposed Jacobi matrix that satisfies ``x 𝐏(x) = 𝐏(x) X``,
 the Gram matrix satisfies the skew-symmetric rank-2 displacement equation (``X = X[1:n, 1:n]``):
@@ -37,7 +37,7 @@ XᵀW - WX = GJGᵀ,
 ```
 where ``J = [0 1; -1 0]`` and where:
 ```math
-G[:, 1] = 𝐞ₙ, \\quad  G[:, 2] = W[n-1, :]X[n-1, n] - Xᵀ W[:, n].
+G[:, 1] = 𝐞_n, \\quad  G[:, 2] = W[n-1, :]X[n-1, n] - Xᵀ W[:, n].
 ```
 Fast (``O(n^2)``) Cholesky factorization of the Gram matrix returns the
 connection coefficients between ``𝐏(x)`` and the polynomials ``𝐐(x)``
