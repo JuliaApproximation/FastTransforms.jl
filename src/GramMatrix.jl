@@ -8,23 +8,23 @@ abstract type AbstractGramMatrix{T} <: LayoutMatrix{T} end
     GramMatrix(W::AbstractMatrix, X::AbstractMatrix)
 
 Construct a symmetric positive-definite Gram matrix with data stored in ``W``.
-Given a family of orthogonal polynomials ``{\\bf P}(x) = \\{p_0(x), p_1(x),\\ldots\\}``
-and a continuous inner product ``\\langle f, g\\rangle``, the Gram matrix is defined by:
+Given a family of orthogonal polynomials ``𝐏(x) = {p₀(x), p₁(x),…}``
+and a continuous inner product ``⟨f, g⟩``, the Gram matrix is defined by:
 ```math
-W_{i,j} = \\langle p_{i-1}, p_{j-1}\\rangle.
+Wᵢⱼ = ⟨pᵢ₋₁, pⱼ₋₁⟩.
 ```
-Moreover, given ``X``, the transposed Jacobi matrix that satisfies ``x {\\bf P}(x) = {\\bf P}(x) X``,
-the Gram matrix satisfies the skew-symmetric rank-2 displacement equation (``X = X_{1:n, 1:n}``):
+Moreover, given ``X``, the transposed Jacobi matrix that satisfies ``x 𝐏(x) = 𝐏(x) X``,
+the Gram matrix satisfies the skew-symmetric rank-2 displacement equation (``X = X[1:n, 1:n]``):
 ```math
-X^\\top W - WX = GJG^\\top,
+XᵀW - WX = GJGᵀ,
 ```
-where ``J = \\begin{pmatrix} 0 & 1\\\\ -1 & 0\\end{pmatrix}`` and where:
+where ``J = [0 1; -1 0]`` and where:
 ```math
-G_{:, 1} = e_n,\\quad{\\rm and}\\quad G_{:, 2} = W_{n-1, :}X_{n-1, n} - X^\\top W_{:, n}.
+G[:, 1] = 𝐞_n, G_{:, 2} = W[n-1, :]X[n-1, n] - Xᵀ W[:, n].
 ```
 Fast (``O(n^2)``) Cholesky factorization of the Gram matrix returns the
-connection coefficients between ``{\\bf P}(x)`` and the polynomials ``{\\bf Q}(x)``
-orthogonal in the modified inner product, ``{\\bf P}(x) = {\\bf Q}(x) R``.
+connection coefficients between ``𝐏(x)`` and the polynomials ``𝐐(x)``
+orthogonal in the modified inner product, ``𝐏(x) = 𝐐(x) R``.
 """
 struct GramMatrix{T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix{T}} <: AbstractGramMatrix{T}
     W::WT
@@ -55,8 +55,8 @@ GramMatrix(W::WT, X::XT) where {T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix
 
 Construct a GramMatrix from modified orthogonal polynomial moments and the multiplication operator.
 In the standard (classical) normalization, ``p_0(x) = 1``, so that the moments
-``\\mu_n = \\langle p_{n-1}, 1\\rangle`` are in fact the first column of the Gram matrix.
-The recurrence is built from ``X^\\top W = WX``.
+``µ_n = ⟨ p_{n-1}, 1⟩`` are in fact the first column of the Gram matrix.
+The recurrence is built from ``XᵀW = WX``.
 """
 GramMatrix(μ::AbstractVector{T}, X::XT) where {T, XT <: AbstractMatrix{T}} = GramMatrix(μ, X, one(T))
 function GramMatrix(μ::AbstractVector{T}, X::XT, p0::T) where {T, XT <: AbstractMatrix{T}}
@@ -221,12 +221,12 @@ end
 
 Construct a Chebyshev--Gram matrix of size `(length(μ)+1)÷2` with entries:
 ```math
-W_{i,j} = \\frac{\\mu_{|i-j|+1} +\\mu_{i+j-1}}{2}.
+W_{i,j} = \\frac{µ_{|i-j|+1} +µ_{i+j-1}}{2}.
 ```
 Due to the linearization of a product of two first-kind Chebyshev polynomials,
 the Chebyshev--Gram matrix can be constructed from modified Chebyshev moments:
 ```math
-\\mu_{n} = \\langle T_{n-1}, 1\\rangle.
+µ_{n} = ⟨ T_{n-1}, 1⟩.
 ```
 Specialized construction and Cholesky factorization is given for this type.
 
