@@ -64,7 +64,7 @@ end
         R = plan_cheb2jac(T, n, α, β; normjac=true)*I
         @test F.U ≈ R
 
-        μ = -FastTransforms.chebyshevlogmoments1(T, 2n-1)
+        μ = FastTransforms.chebyshevlogmoments1(T, 2n-1)
         G = ChebyshevGramMatrix(μ)
         F = cholesky(G)
         @test F.L*F.L' ≈ G

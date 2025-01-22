@@ -269,6 +269,34 @@ function chebyshevmoments1(::Type{T}, N::Int) where T
 end
 
 """
+Modified Chebyshev moments of the first kind:
+
+```math
+    \\int_^a T_n(x) {\\rm\\,d}x.
+```
+"""
+function chebyshevmoments1(::Type{T}, N::Int, a::T) where T
+    μ = zeros(T, N)
+    μ[1] = a
+    μ[2] = a^2/2
+    θ = acos(a)
+    for i = 2:N-1
+        @inbounds μ[i+1] = (cos((i+1)*θ)/(i+1) - cos((i-1)*θ)/(i-1))/2
+    end
+    μ
+end
+
+function chebyshevmoments1(::Type{T}, N::Int, a::NTuple{L, T}, w::NTuple{M, T}) where {T, L, M}
+    @assert L == M+1
+    @assert M > 0
+    μ = zeros(T, N)
+    for k in 1:M
+        μ .+= w[k]*(chebyshevmoments1(T, N, a[k+1]) - chebyshevmoments1(T, N, a[k]))
+    end
+    μ
+end
+
+"""
 Modified Chebyshev moments of the first kind with respect to the Jacobi weight:
 
 ```math
@@ -291,17 +319,35 @@ end
 Modified Chebyshev moments of the first kind with respect to the logarithmic weight:
 
 ```math
-    \\int_{-1}^{+1} T_n(x) \\log\\left(\\frac{1-x}{2}\\right){\\rm\\,d}x.
+    \\int_{-1}^{+1} T_n(x) \\log\\left(\\frac{2}{1-x}\\right){\\rm\\,d}x.
 ```
 """
 function chebyshevlogmoments1(::Type{T}, N::Int) where T
     μ = zeros(T, N)
-    N > 0 && (μ[1] = -two(T))
+    N > 0 && (μ[1] = two(T))
     if N > 1
-        μ[2] = -one(T)
+        μ[2] = one(T)
         for i=1:N-2
-            cst = isodd(i) ? T(4)/T(i^2-4) : T(4)/T(i^2-1)
+            cst = isodd(i) ? T(4)/T(4-i^2) : T(4)/T(1-i^2)
             @inbounds μ[i+2] = ((i-2)*μ[i]+cst)/(i+2)
+        end
+    end
+    μ
+end
+
+"""
+Modified Chebyshev moments of the first kind with respect to the log-Chebyshev weight:
+
+```math
+    \\int_{-1}^{+1} T_n(x) \\log\\left(\\frac{2}{1-x}\\right)\\frac{{\\rm d}x}{\\sqrt{1-x^2}}.
+```
+"""
+function chebyshevlogchebyshevmoments1(::Type{T}, N::Int) where T
+    μ = zeros(T, N)
+    N > 0 && (μ[1] = 2*log(T(2))*π)
+    if N > 1
+        for i=1:N-1
+            @inbounds μ[i+1] = T(π)/i
         end
     end
     μ
