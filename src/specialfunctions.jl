@@ -408,7 +408,7 @@ end
 Modified Chebyshev moments of the second kind with respect to the logarithmic weight:
 
 ```math
-    \\int_{-1}^{+1} U_n(x) \\log\\left(\\frac{1-x}{2}\\right){\\rm\\,d}x.
+    \\int_{-1}^{+1} U_n(x) \\log\\left(\\frac{2}{1-x}\\right){\\rm\\,d}x.
 ```
 """
 function chebyshevlogmoments2(::Type{T}, N::Int) where T
