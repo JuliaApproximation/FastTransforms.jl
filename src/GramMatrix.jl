@@ -59,35 +59,13 @@ In the standard (classical) normalization, ``p_0(x) = 1``, so that the moments
 The recurrence is built from ``X^\\top W = WX``.
 """
 GramMatrix(μ::AbstractVector{T}, X::XT) where {T, XT <: AbstractMatrix{T}} = GramMatrix(μ, X, one(T))
-function GramMatrix(μ::AbstractVector{T}, X::XT, p0::T) where {T, XT <: AbstractMatrix{T}}
-    N = length(μ)
-    n = (N+1)÷2
-    @assert N == size(X, 1) == size(X, 2)
-    @assert bandwidths(X) == (1, 1)
-    W = LowerTriangular(Matrix{T}(undef, N, N))
-    if n > 0
-        @inbounds for m in 1:N
-            W[m, 1] = p0*μ[m]
-        end
-    end
-    if n > 1
-        @inbounds for m in 2:N-1
-            W[m, 2] = (X[m-1, m]*W[m-1, 1] + (X[m, m]-X[1, 1])*W[m, 1] + X[m+1, m]*W[m+1, 1])/X[2, 1]
-        end
-    end
-    @inbounds @simd for n in 3:n
-        for m in n:N-n+1
-            W[m, n] = (X[m-1, m]*W[m-1, n-1] + (X[m, m]-X[n-1, n-1])*W[m, n-1] + X[m+1, m]*W[m+1, n-1] - X[n-2, n-1]*W[m, n-2])/X[n, n-1]
-        end
-    end
-    return GramMatrix(Symmetric(W[1:n, 1:n], :L), eval(XT.name.name)(view(X, 1:n, 1:n)))
-end
 
-function GramMatrix(μ::PaddedVector{T}, X::XT, p0::T) where {T, XT <: AbstractMatrix{T}}
-    N = length(μ)
-    b = length(μ.args[2])-1
+
+function GramMatrix(μ::AbstractVector{T}, X::XT, p0::T) where {T, XT <: AbstractMatrix{T}}
+    N = size(X, 1)
+    b = length(μ)-1
     n = (N+1)÷2
-    @assert N == size(X, 1) == size(X, 2)
+    @assert N == size(X, 2)
     @assert bandwidths(X) == (1, 1)
     W = BandedMatrix{T}(undef, (N, N), (b, 0))
     if n > 0

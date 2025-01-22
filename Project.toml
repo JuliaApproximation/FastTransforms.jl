@@ -1,7 +1,6 @@
 name = "FastTransforms"
 uuid = "057dd010-8810-581a-b7be-e3fc3b93f78c"
-version = "0.17"
-
+version = "0.18.0"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -19,6 +18,13 @@ RecurrenceRelationships = "807425ed-42ea-44d6-a357-6771516d7b2c"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
+[weakdeps]
+InfiniteArrays = "4858937d-0d70-526a-a4dd-2d5cb5dd786c"
+
+[extensions]
+FastTransformsInfiniteArraysExt = "InfiniteArrays"
+
+
 [compat]
 AbstractFFTs = "1.0"
 ArrayLayouts = "1.10"
@@ -28,15 +34,17 @@ FastGaussQuadrature = "0.4, 0.5, 1"
 FastTransforms_jll = "0.6.2"
 FillArrays = "0.9, 0.10, 0.11, 0.12, 0.13, 1"
 GenericFFT = "0.1"
+InfiniteArrays = "0.15"
 LazyArrays = "2.2"
 RecurrenceRelationships = "0.2"
 SpecialFunctions = "0.10, 1, 2"
 ToeplitzMatrices = "0.7.1, 0.8"
-julia = "1.7"
+julia = "1.10"
 
 [extras]
+InfiniteArrays = "4858937d-0d70-526a-a4dd-2d5cb5dd786c"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Random"]
+test = ["InfiniteArrays", "Random", "Test"]
