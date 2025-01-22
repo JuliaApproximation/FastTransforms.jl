@@ -263,7 +263,7 @@ end
 
 Construct a Chebyshev--Gram matrix of size `(length(μ)+1)÷2` with entries:
 ```math
-2 W[i, j] = µ_{|i-j|+1} + µ_{i+j-1}.
+2 W[i, j] = µ[|i-j|+1] + µ[i+j-1].
 ```
 Due to the linearization of a product of two first-kind Chebyshev polynomials,
 the Chebyshev--Gram matrix can be constructed from modified Chebyshev moments:
