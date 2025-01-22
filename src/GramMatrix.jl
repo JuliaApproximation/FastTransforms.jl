@@ -4,6 +4,23 @@ abstract type AbstractGramMatrix{T} <: LayoutMatrix{T} end
 @inline isposdef(G::AbstractGramMatrix) = true
 @inline colsupport(G::AbstractGramMatrix, j) = colrange(G, j)
 
+struct GramMatrix{T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix{T}} <: AbstractGramMatrix{T}
+    W::WT
+    X::XT
+    function GramMatrix{T, WT, XT}(W::WT, X::XT) where {T, WT, XT}
+        if size(W) ≠ size(X)
+            throw(ArgumentError("Cannot construct a GramMatrix with W and X of different sizes."))
+        end
+        if !issymmetric(W)
+            throw(ArgumentError("Cannot construct a GramMatrix with a nonsymmetric W."))
+        end
+        if bandwidths(X) ≠ (1, 1)
+            throw(ArgumentError("Cannot construct a GramMatrix with a nontridiagonal X."))
+        end
+        new{T, WT, XT}(W, X)
+    end
+end
+
 """
     GramMatrix(W::AbstractMatrix, X::AbstractMatrix)
 
@@ -25,24 +42,11 @@ G[:, 1] = 𝐞ₙ, \\quad  G[:, 2] = W[n-1, :]X[n-1, n] - Xᵀ W[:, n].
 Fast (``O(n^2)``) Cholesky factorization of the Gram matrix returns the
 connection coefficients between ``𝐏(x)`` and the polynomials ``𝐐(x)``
 orthogonal in the modified inner product, ``𝐏(x) = 𝐐(x) R``.
-"""
-struct GramMatrix{T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix{T}} <: AbstractGramMatrix{T}
-    W::WT
-    X::XT
-    function GramMatrix{T, WT, XT}(W::WT, X::XT) where {T, WT, XT}
-        if size(W) ≠ size(X)
-            throw(ArgumentError("Cannot construct a GramMatrix with W and X of different sizes."))
-        end
-        if !issymmetric(W)
-            throw(ArgumentError("Cannot construct a GramMatrix with a nonsymmetric W."))
-        end
-        if bandwidths(X) ≠ (1, 1)
-            throw(ArgumentError("Cannot construct a GramMatrix with a nontridiagonal X."))
-        end
-        new{T, WT, XT}(W, X)
-    end
-end
 
+See also [`ChebyshevGramMatrix`](@ref) for a special case.
+
+> K. Gumerov, S. Rigg, and R. M. Slevinsky, [Fast measure modification of orthogonal polynomials via matrices with displacement structure](https://arxiv.org/abs/2412.17663), arXiv:2412.17663, 2024.
+"""
 GramMatrix(W::WT, X::XT) where {T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix{T}} = GramMatrix{T, WT, XT}(W, X)
 
 @inline size(G::GramMatrix) = size(G.W)
@@ -106,6 +110,39 @@ function GramMatrix(μ::PaddedVector{T}, X::XT, p0::T) where {T, XT <: AbstractM
         end
     end
     return GramMatrix(Symmetric(W[1:n, 1:n], :L), eval(XT.name.name)(view(X, 1:n, 1:n)))
+end
+
+"""
+    GramMatrix(cnm1::AbstractVector, cn::AbstractVector, X::AbstractMatrix)
+
+Construct a GramMatrix from its last two columns and the multiplication operator.
+The recurrence is built from ``XᵀW = WX`` and is used in case the moment method is unstable (such as with Laguerre).
+"""
+function GramMatrix(cnm1::AbstractVector{T}, cn::AbstractVector{T}, X::XT) where {T, XT <: AbstractMatrix{T}}
+    N = length(cn)
+    @assert N == length(cnm1) == size(X, 1) == size(X, 2)
+    @assert bandwidths(X) == (1, 1)
+    W = Matrix{T}(undef, N, N)
+    if N > 0
+        @inbounds for m in 1:N
+            W[N, m] = W[m, N] = cn[m]
+        end
+    end
+    if N > 1
+        @inbounds for m in 1:N
+            W[N-1, m] = W[m, N-1] = cnm1[m]
+        end
+    end
+    @inbounds @simd for n in N:-1:3
+        W[1, n-2]  = ((X[1, 1]-X[n-1, n-1])*W[1, n-1] + X[2, 1]*W[2, n-1] - X[n, n-1]*W[1, n])/X[n-2, n-1]
+        for m in 2:n-2
+            W[m, n-2]  = (X[m-1, m]*W[m-1, n-1] + (X[m, m]-X[n-1, n-1])*W[m, n-1] + X[m+1, m]*W[m+1, n-1] - X[n, n-1]*W[m, n])/X[n-2, n-1]
+        end
+        for m in n-1:N-2
+            W[m, n-2] = W[n-2, m]
+        end
+    end
+    return GramMatrix(W, X)
 end
 
 #
@@ -216,6 +253,11 @@ function fastcholesky!(L::BandedMatrix{T}, X, G, c, ĉ, l, v, row1, n) where T
     L[n, n] = sqrt(c[n])
 end
 
+struct ChebyshevGramMatrix{T, V <: AbstractVector{T}} <: AbstractGramMatrix{T}
+    μ::V
+    n::Int
+end
+
 """
     ChebyshevGramMatrix(μ::AbstractVector)
 
@@ -232,11 +274,6 @@ Specialized construction and Cholesky factorization is given for this type.
 
 See also [`GramMatrix`](@ref) for the general case.
 """
-struct ChebyshevGramMatrix{T, V <: AbstractVector{T}} <: AbstractGramMatrix{T}
-    μ::V
-    n::Int
-end
-
 function ChebyshevGramMatrix(μ::V) where {T, V <: AbstractVector{T}}
     n = (length(μ)+1)÷2
     ChebyshevGramMatrix{T, V}(μ, n)

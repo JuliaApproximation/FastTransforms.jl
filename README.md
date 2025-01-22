@@ -162,10 +162,12 @@ julia> @time norm(ipaduatransform(paduatransform(v)) - v)/norm(v)
 
 [1]  D. Ruiz—Antolín and A. Townsend, [A nonuniform fast Fourier transform based on low rank approximation](https://doi.org/10.1137/17M1134822), *SIAM J. Sci. Comput.*, **40**:A529–A547, 2018.
 
-[2] T. S. Gutleb, S. Olver and R. M. Slevinsky, [Polynomial and rational measure modifications of orthogonal polynomials via infinite-dimensional banded matrix factorizations](https://arxiv.org/abs/2302.08448), arXiv:2302.08448, 2023.
+[2] K. Gumerov, S. Rigg, and R. M. Slevinsky, [Fast measure modification of orthogonal polynomials via matrices with displacement structure](https://arxiv.org/abs/2412.17663), arXiv:2412.17663, 2024.
 
-[3] S. Olver, R. M. Slevinsky, and A. Townsend, [Fast algorithms using orthogonal polynomials](https://doi.org/10.1017/S0962492920000045), *Acta Numerica*, **29**:573—699, 2020.
+[3] T. S. Gutleb, S. Olver and R. M. Slevinsky, [Polynomial and rational measure modifications of orthogonal polynomials via infinite-dimensional banded matrix factorizations](https://arxiv.org/abs/2302.08448), arXiv:2302.08448, 2023.
 
-[4]  R. M. Slevinsky, [Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series](https://doi.org/10.1016/j.acha.2017.11.001), *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
+[4] S. Olver, R. M. Slevinsky, and A. Townsend, [Fast algorithms using orthogonal polynomials](https://doi.org/10.1017/S0962492920000045), *Acta Numerica*, **29**:573—699, 2020.
 
-[5]  R. M. Slevinsky, [Conquering the pre-computation in two-dimensional harmonic polynomial transforms](https://arxiv.org/abs/1711.07866), arXiv:1711.07866, 2017.
+[5]  R. M. Slevinsky, [Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series](https://doi.org/10.1016/j.acha.2017.11.001), *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
+
+[6]  R. M. Slevinsky, [Conquering the pre-computation in two-dimensional harmonic polynomial transforms](https://arxiv.org/abs/1711.07866), arXiv:1711.07866, 2017.
