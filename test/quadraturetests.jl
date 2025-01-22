@@ -19,7 +19,7 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2,
 
     μ = chebyshevlogmoments1(Float64, N)
     w = clenshawcurtisweights(μ)
-    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(3 .- x)) - π^2/12) ≤ 4eps()
 
     x = fejernodes1(Float64, N)
     μ = chebyshevmoments1(Float64, N)
@@ -32,7 +32,7 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2,
 
     μ = chebyshevlogmoments1(Float64, N)
     w = fejerweights1(μ)
-    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(3 .- x)) - π^2/12) ≤ 4eps()
 
     x = fejernodes2(Float64, N)
     μ = chebyshevmoments2(Float64, N)
@@ -45,5 +45,5 @@ import FastTransforms: chebyshevmoments1, chebyshevmoments2,
 
     μ = chebyshevlogmoments2(Float64, N)
     w = fejerweights2(μ)
-    @test norm(sum(w./(x .- 3)) - π^2/12) ≤ 4eps()
+    @test norm(sum(w./(3 .- x)) - π^2/12) ≤ 4eps()
 end
