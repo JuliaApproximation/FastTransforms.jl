@@ -29,7 +29,7 @@ using FastTransforms, BandedMatrices, LazyArrays, LinearAlgebra, Test
         F = cholesky(G)
         @test F.L*F.L' ≈ W
 
-        @test G[1:66,1:66] ≈ GramMatrix(W[1:5, 1], X)
+        @test G ≈ GramMatrix(W[1:5, 1], X̃)
 
         X = BandedMatrix(SymTridiagonal(T[2n-1 for n in 1:n+b], T[-n for n in 1:n+b-1])) # Laguerre X, tests nonzero diagonal
         W = I+X^2+X^4

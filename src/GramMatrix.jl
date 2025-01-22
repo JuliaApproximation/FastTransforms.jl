@@ -78,12 +78,12 @@ function GramMatrix(μ::AbstractVector{T}, X::XT, p0::T) where {T, XT <: Abstrac
             W[m, 2] = (X[m-1, m]*W[m-1, 1] + (X[m, m]-X[1, 1])*W[m, 1] + X[m+1, m]*W[m+1, 1])/X[2, 1]
         end
     end
-    @inbounds @simd for n in 3:n
-        for m in n:min(N-n+1, b+n)
-            W[m, n] = (X[m-1, m]*W[m-1, n-1] + (X[m, m]-X[n-1, n-1])*W[m, n-1] + X[m+1, m]*W[m+1, n-1] - X[n-2, n-1]*W[m, n-2])/X[n, n-1]
+    @inbounds @simd for j in 3:N
+        for m in j:min(N, b+j)
+            W[m, j] = (X[m-1, m]*W[m-1, j-1] + (X[m, m]-X[j-1, j-1])*W[m, j-1] + (m < N ? X[m+1, m]*W[m+1, j-1] : zero(T)) - X[j-2, j-1]*W[m, j-2])/X[j, j-1]
         end
     end
-    return GramMatrix(Symmetric(W[1:n, 1:n], :L), eval(XT.name.name)(view(X, 1:n, 1:n)))
+    return GramMatrix(Symmetric(W, :L), X)
 end
 
 #
