@@ -6,6 +6,8 @@ using FastTransforms, BandedMatrices, LazyArrays, LinearAlgebra, Test
         R = plan_leg2cheb(T, n; normcheb=true)*I
         X = Tridiagonal([T(n)/(2n-1) for n in 1:n-1], zeros(T, n), [T(n)/(2n+1) for n in 1:n-1]) # Legendre X
         W = GramMatrix(Symmetric(R'R), X)
+        @test issymmetric(W)
+        @test isposdef(W)
         F = cholesky(W)
         @test F.L*F.L' ≈ Symmetric(R'R)
         @test F.U ≈ R
