@@ -19,9 +19,9 @@ import AbstractFFTs: Plan, ScaledPlan,
                      fftshift, ifftshift, rfft_output_size, brfft_output_size,
                      normalization
 
-import ArrayLayouts: colsupport, LayoutMatrix, MemoryLayout, AbstractBandedLayout
+import ArrayLayouts: rowsupport, colsupport, LayoutMatrix, MemoryLayout, AbstractBandedLayout
 
-import BandedMatrices: bandwidths
+import BandedMatrices: bandwidths, BandedLayout
 
 import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
              plan_dct, plan_idct, fftwNumber

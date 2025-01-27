@@ -2,7 +2,6 @@ abstract type AbstractGramMatrix{T} <: LayoutMatrix{T} end
 
 @inline issymmetric(G::AbstractGramMatrix) = true
 @inline isposdef(G::AbstractGramMatrix) = true
-@inline colsupport(G::AbstractGramMatrix, j) = colrange(G, j)
 
 struct GramMatrix{T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix{T}} <: AbstractGramMatrix{T}
     W::WT
@@ -53,6 +52,8 @@ GramMatrix(W::WT, X::XT) where {T, WT <: AbstractMatrix{T}, XT <: AbstractMatrix
 @inline getindex(G::GramMatrix, i::Integer, j::Integer) = G.W[i, j]
 @inline bandwidths(G::GramMatrix) = bandwidths(G.W)
 @inline MemoryLayout(G::GramMatrix) = MemoryLayout(G.W)
+@inline rowsupport(G::GramMatrix, j) = rowsupport(MemoryLayout(G), G.W, j)
+@inline colsupport(G::GramMatrix, j) = colsupport(MemoryLayout(G), G.W, j)
 
 """
     GramMatrix(μ::AbstractVector, X::AbstractMatrix)
@@ -282,6 +283,7 @@ end
 @inline size(G::ChebyshevGramMatrix) = (G.n, G.n)
 @inline getindex(G::ChebyshevGramMatrix, i::Integer, j::Integer) = (G.μ[abs(i-j)+1] + G.μ[i+j-1])/2
 @inline bandwidths(G::ChebyshevGramMatrix{T, <: PaddedVector{T}}) where T = (length(G.μ.args[2])-1, length(G.μ.args[2])-1)
+@inline MemoryLayout(G::ChebyshevGramMatrix{T, <: PaddedVector{T}}) where T = BandedLayout()
 
 #
 # 2X'W-W*2X = G*J*G'
