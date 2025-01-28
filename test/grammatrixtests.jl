@@ -22,14 +22,16 @@ using FastTransforms, BandedMatrices, LazyArrays, LinearAlgebra, Test
         b = 4
         X = BandedMatrix(SymTridiagonal(zeros(T, n+b), [sqrt(T(n)^2/(4*n^2-1)) for n in 1:n+b-1])) # normalized Legendre X
         M = Symmetric((I+X^2+X^4)[1:n, 1:n])
-        W = GramMatrix(M, X[1:n, 1:n])
+        X = BandedMatrix(SymTridiagonal(zeros(T, n), [sqrt(T(n)^2/(4*n^2-1)) for n in 1:n-1])) # normalized Legendre X
+        W = GramMatrix(M, X)
         @test bandwidths(W) == (b, b)
         F = cholesky(W)
         @test F.L*F.L' ≈ M
 
         X = BandedMatrix(SymTridiagonal(T[2n-1 for n in 1:n+b], T[-n for n in 1:n+b-1])) # Laguerre X, tests nonzero diagonal
         M = Symmetric((I+X^2+X^4)[1:n, 1:n])
-        W = GramMatrix(M, X[1:n, 1:n])
+        X = BandedMatrix(SymTridiagonal(T[2n-1 for n in 1:n], T[-n for n in 1:n-1])) # Laguerre X, tests nonzero diagonal
+        W = GramMatrix(M, X)
         @test bandwidths(W) == (b, b)
         F = cholesky(W)
         @test F.L*F.L' ≈ M
