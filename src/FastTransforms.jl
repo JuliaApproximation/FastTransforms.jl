@@ -1,13 +1,14 @@
 module FastTransforms
 
-using ArrayLayouts, BandedMatrices, FastGaussQuadrature, FillArrays, LazyArrays, LinearAlgebra,
-      SpecialFunctions, ToeplitzMatrices, RecurrenceRelationships
+using ArrayLayouts, BandedMatrices, BlockArrays, BlockBandedMatrices,
+      FastGaussQuadrature, FillArrays, LazyArrays, LinearAlgebra,
+      SpecialFunctions, StaticArrays, ToeplitzMatrices, RecurrenceRelationships
 
 using AbstractFFTs
 using FFTW
 using GenericFFT
 
-import Base: convert, unsafe_convert, eltype, ndims, adjoint, transpose, show,
+import Base: axes, convert, unsafe_convert, eltype, ndims, adjoint, transpose, show, showerror,
              *, \, inv, length, size, view, getindex, tail, OneTo
 
 import Base.GMP: Limb
@@ -22,6 +23,10 @@ import AbstractFFTs: Plan, ScaledPlan,
 import ArrayLayouts: rowsupport, colsupport, LayoutMatrix, MemoryLayout, AbstractBandedLayout
 
 import BandedMatrices: bandwidths, BandedLayout
+
+import BlockArrays: _blockindex_getindex, blockrowsupport, blockcolsupport
+
+import BlockBandedMatrices: blockbandwidths, subblockbandwidths, blockcolrange
 
 import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
              plan_dct, plan_idct, fftwNumber
@@ -104,6 +109,10 @@ include("gaunt.jl")
 export GramMatrix, ChebyshevGramMatrix
 
 include("GramMatrix.jl")
+
+export BivariateGramMatrix, BivariateChebyshevGramMatrix
+
+include("BivariateGramMatrix.jl")
 
 export weightedhermitetransform, iweightedhermitetransform
 
