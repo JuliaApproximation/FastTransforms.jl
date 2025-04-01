@@ -1,4 +1,4 @@
-using BlockArrays, FastTransforms, LazyArrays, LinearAlgebra, Test
+using BlockArrays, BlockBandedMatrices, FastTransforms, LazyArrays, LinearAlgebra, Test
 
 import FastTransforms: chebyshevmoments1, chebyshevabsmoments1, bivariatemoments
 
@@ -18,11 +18,6 @@ import FastTransforms: chebyshevmoments1, chebyshevabsmoments1, bivariatemoments
     WC = BivariateChebyshevGramMatrix(μ)
     @test W ≈ WC
 
-    R = cholesky(W).U
-    RC = cholesky(WC).U
-
-    @test R ≈ RC
-
     Gx = FastTransforms.compute_skew_generators(Val(1), W)
     GxC = FastTransforms.compute_skew_generators(Val(1), WC)
     @test Gx ≈ GxC
@@ -34,4 +29,20 @@ import FastTransforms: chebyshevmoments1, chebyshevabsmoments1, bivariatemoments
     J = [zeros(n, n) Matrix{Float64}(I, n, n); Matrix{Float64}(-I, n, n) zeros(n, n)]
     @test W.X'W-W*W.X ≈ Gx*J*Gx'
     @test W.Y'W-W*W.Y ≈ Gy*J*Gy'
+
+    R = cholesky(W).U
+    RC = cholesky(WC).U
+
+    @test R ≈ RC
+
+    μ1 = PaddedVector(1 ./ [1,2,3], 2n-1)
+    μ2 = PaddedVector(1 ./ [1,2,3,4,5,6], 2n-1)
+    μ = bivariatemoments(μ1, μ2)
+    μ̂ = bivariatemoments(Vector(μ1), Vector(μ2))
+    @test μ ≈ μ̂
+
+    W = BivariateGramMatrix(μ, X, Y)
+    WC = BivariateChebyshevGramMatrix(μ)
+    @test blockbandwidths(W) == blockbandwidths(WC) == subblockbandwidths(W) == subblockbandwidths(WC) == (7, 7)
+    @test W ≈ WC
 end

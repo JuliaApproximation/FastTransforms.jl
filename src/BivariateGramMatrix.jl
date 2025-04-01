@@ -17,6 +17,20 @@ function bivariatemoments(μ1::AbstractVector{T}, μ2::AbstractVector{T}) where 
     return μ
 end
 
+function bivariatemoments(μ1::PaddedVector{T}, μ2::PaddedVector{T}) where T
+    @assert length(μ1) == length(μ2)
+    N = length(μ1)
+    b = length(μ1.args[2])+length(μ2.args[2])-1
+    v = Vector{T}(undef, b*(b+1)÷2)
+    for n in 0:b-1
+        for k in 0:n
+            v[n*(n+1)÷2+k+1] = μ1[n-k+1]*μ2[k+1]
+        end
+    end
+    μ = BlockedVector(PaddedVector(v, N*(N+1)÷2), 1:N)
+    return μ
+end
+
 # These should live in BlockBandedMatrices.jl after PR #223
 
 @inline function inbands_viewblock(A::BandedBlockBandedMatrix, KJ::Block{2})
@@ -130,7 +144,8 @@ end
 
 function BivariateGramMatrix(μ::BlockedVector{T, <: PaddedVector{T}}, X::XT, Y::YT, p0::T) where {T, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}}
     N = blocklength(μ)
-    b = blocklength(μ.args[2])-1
+    bb = length(μ.blocks.args[2])
+    b = ceil(Int, (-1+sqrt(1+8bb))/2) - 1
     n = (N+1)÷2
     @assert N == blocksize(X, 1) == blocksize(X, 2) == blocksize(Y, 1) == blocksize(Y, 2)
     @assert blockbandwidths(X) == blockbandwidths(Y) == (1, 1)
