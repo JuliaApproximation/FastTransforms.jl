@@ -8,10 +8,10 @@ Bivariate modified moments of ``P_{n,k}(x,y) = p_{n-k}(x) q_k(y)`` with respect 
 function bivariatemoments(μ1::AbstractVector{T}, μ2::AbstractVector{T}) where T
     @assert length(μ1) == length(μ2)
     N = length(μ1)
-    μ = BlockVector{T}(undef, 1:N)
+    μ = BlockedVector{T}(undef, 1:N)
     for n in 0:N-1
         for k in 0:n
-            μ.blocks[n+1][k+1] = μ1[n-k+1]*μ2[k+1]
+            μ[BlockIndex(n+1, k+1)] = μ1[n-k+1]*μ2[k+1]
         end
     end
     return μ
@@ -79,8 +79,8 @@ BivariateGramMatrix(W::WT, X::XT, Y::YT) where {T, WT <: AbstractMatrix{T}, XT <
 @inline blockrowsupport(G::BivariateGramMatrix, j) = blockrowsupport(MemoryLayout(G), G.W, j)
 @inline blockcolsupport(G::BivariateGramMatrix, j) = blockcolsupport(MemoryLayout(G), G.W, j)
 
-BivariateGramMatrix(μ::AbstractVector{T}, X::XT, Y::YT) where {T, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}} = BivariateGramMatrix(μ, X, Y, one(T))
-function BivariateGramMatrix(μ::AbstractVector{T}, X::XT, Y::YT, p0::T) where {T, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}}
+BivariateGramMatrix(μ::AbstractBlockVector{T}, X::XT, Y::YT) where {T, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}} = BivariateGramMatrix(μ, X, Y, one(T))
+function BivariateGramMatrix(μ::AbstractBlockVector{T}, X::XT, Y::YT, p0::T) where {T, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}}
     N = blocklength(μ)
     n = (N+1)÷2
     @assert N == blocksize(X, 1) == blocksize(X, 2) == blocksize(Y, 1) == blocksize(Y, 2)
@@ -90,7 +90,7 @@ function BivariateGramMatrix(μ::AbstractVector{T}, X::XT, Y::YT, p0::T) where {
     W = BlockMatrix{T}(undef, 1:N, 1:N)
     if n > 0
         for m in 1:N
-            setblock!(W, p0*μ[Block(m, 1)], m, 1)
+            W[Block(m, 1)] = p0*μ[Block(m, 1)]
         end
     end
     if n > 1
@@ -108,27 +108,27 @@ function BivariateGramMatrix(μ::AbstractVector{T}, X::XT, Y::YT, p0::T) where {
     WN = BlockMatrix{T}(undef, 1:n, 1:n)
     for j in 1:n
         for k in j:n
-            setblock!(WN, viewblock(W, Block(k, j)), k, j)
+            WN[Block(k, j)] = viewblock(W, Block(k, j))
         end
     end
     WS = Symmetric(WN, :L)
     XN = BandedBlockBandedMatrix{T}(undef, 1:n, 1:n, (1, 1), (0, 0))
     for j in 1:n
         for k in max(1, j-1):min(n, j+1)
-            setblock!(XN, viewblock(X, Block(k, j)), k, j)
+            XN[Block(k, j)] = viewblock(X, Block(k, j))
         end
     end
     YN = BandedBlockBandedMatrix{T}(undef, 1:n, 1:n, (1, 1), (1, 1))
     for j in 1:n
         for k in max(1, j-1):min(n, j+1)
-            setblock!(YN, viewblock(Y, Block(k, j)), k, j)
+            YN[Block(k, j)] = viewblock(Y, Block(k, j))
         end
     end
     return BivariateGramMatrix(WS, XN, YN)
     #return BivariateGramMatrix(Symmetric(W[Block.(1:n), Block.(1:n)], :L), X[Block.(1:n), Block.(1:n)], Y[Block.(1:n), Block.(1:n)])
 end
 
-function BivariateGramMatrix(μ::PaddedVector{T}, X::XT, Y::YT, p0::T) where {T, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}}
+function BivariateGramMatrix(μ::BlockedVector{T, <: PaddedVector{T}}, X::XT, Y::YT, p0::T) where {T, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}}
     N = blocklength(μ)
     b = blocklength(μ.args[2])-1
     n = (N+1)÷2
@@ -139,7 +139,7 @@ function BivariateGramMatrix(μ::PaddedVector{T}, X::XT, Y::YT, p0::T) where {T,
     W = BandedBlockBandedMatrix{T}(undef, 1:N, 1:N, (b, 0), (b, b))
     if n > 0
         for m in 1:min(N, b+1)
-            setblock!(W, p0*μ[Block(m, 1)], m, 1)
+            W[Block(m, 1)] = p0*μ[Block(m, 1)]
         end
     end
     if n > 1
@@ -157,20 +157,20 @@ function BivariateGramMatrix(μ::PaddedVector{T}, X::XT, Y::YT, p0::T) where {T,
     WN = BandedBlockBandedMatrix{T}(undef, 1:n, 1:n, (b, 0), (b, b))
     for j in 1:n
         for k in j:min(n, j+b)
-            setblock!(WN, viewblock(W, Block(k, j)), k, j)
+            WN[Block(k, j)] = viewblock(W, Block(k, j))
         end
     end
     WS = Symmetric(WN, :L)
     XN = BandedBlockBandedMatrix{T}(undef, 1:n, 1:n, (1, 1), (0, 0))
     for j in 1:n
         for k in max(1, j-1):min(n, j+1)
-            setblock!(XN, viewblock(X, Block(k, j)), k, j)
+            XN[Block(k, j)] = viewblock(X, Block(k, j))
         end
     end
     YN = BandedBlockBandedMatrix{T}(undef, 1:n, 1:n, (1, 1), (1, 1))
     for j in 1:n
         for k in max(1, j-1):min(n, j+1)
-            setblock!(YN, viewblock(Y, Block(k, j)), k, j)
+            YN[Block(k, j)] = viewblock(Y, Block(k, j))
         end
     end
     return BivariateGramMatrix(WS, XN, YN)
@@ -351,51 +351,174 @@ end
 
 
 
-struct BivariateChebyshevGramMatrix{T, BV <: AbstractBlockVector{T}, BS <: NTuple{2, AbstractUnitRange{Int}}, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}} <: AbstractBivariateGramMatrix{T}
+struct BivariateChebyshevGramMatrix{T, BV <: AbstractBlockVector{T}, BS <: NTuple{2, AbstractUnitRange{Int}}} <: AbstractBivariateGramMatrix{T}
     μ::BV
     axes::BS
-    X::XT
-    Y::YT
-    function BivariateChebyshevGramMatrix{T, BV, BS, XT, YT}(μ::BV, axes::BS, X::XT, Y::YT) where {T, BV, BS, XT, YT}
-        if size(X) ≠ size(Y)
-            throw(ArgumentError("Cannot construct a BivariateChebyshevGramMatrix with X and Y of different sizes."))
-        end
-        if blockbandwidths(X) ≠ (1, 1)
-            throw(ArgumentError("Cannot construct a BivariateChebyshevGramMatrix with a nonblocktridiagonal X."))
-        end
-        if blockbandwidths(Y) ≠ (1, 1)
-            throw(ArgumentError("Cannot construct a BivariateChebyshevGramMatrix with a nonblocktridiagonal Y."))
-        end
-        new{T, BV, BS, XT, YT}(μ, axes, X, Y)
-    end
 end
-
-BivariateChebyshevGramMatrix(μ::BV, axes::BS, X::XT, Y::YT) where {T, BV <: AbstractBlockVector{T}, BS <: NTuple{2, AbstractUnitRange{Int}}, XT <: AbstractMatrix{T}, YT <: AbstractMatrix{T}} = BivariateChebyshevGramMatrix{T, BV, BS, XT, YT}(μ, axes, X, Y)
 
 function BivariateChebyshevGramMatrix(μ::AbstractBlockVector{T}) where T
-    n = (length(μ.blocks)+1)÷2
-    BivariateChebyshevGramMatrix(μ, (blockedrange(1:n), blockedrange(1:n)), _chebyshev_x(T, n), _chebyshev_y(T, n))
+    n = (blocklength(μ)+1)÷2
+    BivariateChebyshevGramMatrix(μ, (blockedrange(1:n), blockedrange(1:n)))
 end
 
-@inline axes(W::BivariateChebyshevGramMatrix) = W.axes
+@inline axes(G::BivariateChebyshevGramMatrix) = G.axes
 
-Base.@propagate_inbounds getindex(W::BivariateChebyshevGramMatrix{T}, blockindex::BlockIndex{2}) where T = _blockindex_getindex(W, blockindex)
+Base.@propagate_inbounds getindex(G::BivariateChebyshevGramMatrix{T}, blockindex::BlockIndex{2}) where T = _blockindex_getindex(G, blockindex)
 
-@inline function _blockindex_getindex(W::BivariateChebyshevGramMatrix{T}, bi::BlockIndex{2}) where T
-    μ = W.μ
-    @boundscheck blockcheckbounds(W, Block(bi.I))
+@inline function _blockindex_getindex(G::BivariateChebyshevGramMatrix{T}, bi::BlockIndex{2}) where T
+    @boundscheck blockcheckbounds(G, Block(bi.I))
     m, n = bi.I
     j, k = bi.α
     @boundscheck (1 ≤ j ≤ m) && (1 ≤ k ≤ n)
-    v = (μ.blocks[m+n-1][j+k-1]+μ.blocks[abs(m-j-n+k)+j+k-1][j+k-1]+μ.blocks[m-j+n-k+abs(j-k)+1][abs(j-k)+1]+μ.blocks[abs(m-j-n+k)+abs(j-k)+1][abs(j-k)+1])/4
+    μ = G.μ
+    v = (μ[BlockIndex(m+n-1, j+k-1)]+μ[BlockIndex(abs(m-j-n+k)+j+k-1, j+k-1)]+μ[BlockIndex(m-j+n-k+abs(j-k)+1, abs(j-k)+1)]+μ[BlockIndex(abs(m-j-n+k)+abs(j-k)+1, abs(j-k)+1)])/4
     return v
 end
 
-@inline function getindex(W::BivariateChebyshevGramMatrix{T}, i::Vararg{Integer, 2}) where T
-    @boundscheck checkbounds(W, i...)
-    @inbounds v = W[findblockindex.(axes(W), i)...]
+@inline function getindex(G::BivariateChebyshevGramMatrix{T}, i::Vararg{Integer, 2}) where T
+    @boundscheck checkbounds(G, i...)
+    @inbounds v = G[findblockindex.(axes(G), i)...]
     return v
 end
+
+@inline function blockbandwidths(G::BivariateChebyshevGramMatrix{T, <: BlockedVector{T, <: PaddedVector{T}}}) where T
+    N = length(G.μ.blocks.args[2])
+    b = ceil(Int, (-1+sqrt(1+8N))/2) - 1
+    return (b, b)
+end
+@inline function subblockbandwidths(G::BivariateChebyshevGramMatrix{T, <: BlockedVector{T, <: PaddedVector{T}}}) where T
+    N = length(G.μ.blocks.args[2])
+    b = ceil(Int, (-1+sqrt(1+8N))/2) - 1
+    return (b, b)
+end
+@inline MemoryLayout(G::BivariateChebyshevGramMatrix{T, <: BlockedVector{T, <: PaddedVector{T}}}) where T = BandedBlockBandedLayout()
+
+#
+# The computation of the skew-symmetric generators for the bivariate Chebyshev--Gram matrix equation:
+# Z'W-WZ = GJGᵀ,
+# where Z = X or Y is a bivariate Chebyshev Jacobi matrix that is block tridiagonal.
+# Since the bivariate Chebyhsev-Gram matrix is special, these formulas compute G
+# without the use of X or Y (thus without matrix multiplication).
+#
+function compute_skew_generators(::Val{1}, W::BivariateChebyshevGramMatrix{T}) where T
+    N = blocksize(W, 1)
+    G = BlockMatrix{T}(undef_blocks, 1:N, SVector(N, N))
+    for j in 1:N-1
+        G.blocks[j, 1] = zeros(T, j, N)
+    end
+    G.blocks[N, 1] = Matrix{T}(I, N, N)
+    μ = W.μ
+    @inbounds for m in 1:N-1
+        GB = zeros(T, m, N)
+        for k in 1:N-1
+            for j in 1:m
+                GB[j, k] = -(μ[BlockIndex(m+N, j+k-1)]+μ[BlockIndex(abs(m-j-N-1+k)+j+k-1, j+k-1)]+μ[BlockIndex(m-j+N+1-k+abs(j-k)+1, abs(j-k)+1)]+μ[BlockIndex(abs(m-j-N-1+k)+abs(j-k)+1, abs(j-k)+1)])/8
+            end
+        end
+        for j in 1:m
+            GB[j, N] = -(μ[BlockIndex(m+N, j+N-1)]+μ[BlockIndex(abs(m-j-1)+j+N-1, j+N-1)]+μ[BlockIndex(m-j+1+abs(j-N)+1, abs(j-N)+1)]+μ[BlockIndex(abs(m-j-1)+abs(j-N)+1, abs(j-N)+1)])/4
+        end
+        G.blocks[m, 2] = GB
+    end
+    GB = zeros(T, N, N)
+    @inbounds for k in 1:N-1
+        for j in 1:N
+            if abs(k-j-1)+j+k-1 < 2N
+                GB[j, k] -= μ[BlockIndex(abs(k-j-1)+j+k-1, j+k-1)]
+            end
+            if 2N-j+1-k+abs(j-k)+1 < 2N
+                GB[j, k] -= μ[BlockIndex(2N-j+1-k+abs(j-k)+1, abs(j-k)+1)]
+            end
+            if abs(k-j-1)+abs(j-k)+1 < 2N
+                GB[j, k] -= μ[BlockIndex(abs(k-j-1)+abs(j-k)+1, abs(j-k)+1)]
+            end
+            GB[j, k] /= 8
+        end
+    end
+    @inbounds for j in 1:N
+        if abs(N-j-1)+j+N-1 < 2N
+            GB[j, N] -= μ[BlockIndex(abs(N-j-1)+j+N-1, j+N-1)]
+        end
+        if N-j+1+abs(j-N)+1 < 2N
+            GB[j, N] -= μ[BlockIndex(N-j+1+abs(j-N)+1, abs(j-N)+1)]
+        end
+        if abs(N-j-1)+abs(j-N)+1 < 2N
+            GB[j, N] -= μ[BlockIndex(abs(N-j-1)+abs(j-N)+1, abs(j-N)+1)]
+        end
+        GB[j, N] /= 4
+    end
+    @inbounds for k in 1:N
+        for j in 1:k
+            GB[j, k] -= GB[k, j]
+            GB[k, j] = zero(T)
+        end
+    end
+    G.blocks[N, 2] = GB
+
+    G
+end
+
+function compute_skew_generators(::Val{2}, W::BivariateChebyshevGramMatrix{T}) where T
+    N = blocksize(W, 1)
+    G = BlockMatrix{T}(undef_blocks, 1:N, SVector(N, N))
+    for j in 1:N-1
+        G.blocks[j, 1] = zeros(T, j, N)
+    end
+    G.blocks[N, 1] = Matrix{T}(I, N, N)
+    μ = W.μ
+    @inbounds for m in 1:N-1
+        GB = zeros(T, m, N)
+        for j in 1:m
+            GB[j, 1] = -(μ[BlockIndex(m+N, j+1)]+μ[BlockIndex(abs(m-j-N+1)+j+1, j+1)]+μ[BlockIndex(m-j+N-1+abs(j-2)+1, abs(j-2)+1)]+μ[BlockIndex(abs(m-j-N+1)+abs(j-2)+1, abs(j-2)+1)])/4
+        end
+        for k in 2:N
+            for j in 1:m
+                GB[j, k] = -(μ[BlockIndex(m+N, j+k)]+μ[BlockIndex(abs(m-j-N+k)+j+k, j+k)]+μ[BlockIndex(m-j+N-k+abs(j-k-1)+1, abs(j-k-1)+1)]+μ[BlockIndex(abs(m-j-N+k)+abs(j-k-1)+1, abs(j-k-1)+1)])/8
+            end
+        end
+        G.blocks[m, 2] = GB
+    end
+    GB = zeros(T, N, N)
+    @inbounds for j in 1:N
+        if abs(1-j)+j+1 < 2N
+            GB[j, 1] -= μ[BlockIndex(abs(1-j)+j+1, j+1)]
+        end
+        if 2N-j-1+abs(j-2)+1 < 2N
+            GB[j, 1] -= μ[BlockIndex(2N-j-1+abs(j-2)+1, abs(j-2)+1)]
+        end
+        if abs(1-j)+abs(j-2)+1 < 2N
+            GB[j, 1] -= μ[BlockIndex(abs(1-j)+abs(j-2)+1, abs(j-2)+1)]
+        end
+        GB[j, 1] /= 4
+    end
+    @inbounds for k in 2:N
+        for j in 1:N
+            if abs(k-j)+j+k < 2N
+                GB[j, k] -= μ[BlockIndex(abs(k-j)+j+k, j+k)]
+            end
+            if 2N-j-k+abs(j-k-1)+1 < 2N
+                GB[j, k] -= μ[BlockIndex(2N-j-k+abs(j-k-1)+1, abs(j-k-1)+1)]
+            end
+            if abs(k-j)+abs(j-k-1)+1 < 2N
+                GB[j, k] -= μ[BlockIndex(abs(k-j)+abs(j-k-1)+1, abs(j-k-1)+1)]
+            end
+            GB[j, k] /= 8
+        end
+    end
+    @inbounds for k in 1:N
+        for j in 1:k
+            GB[j, k] -= GB[k, j]
+            GB[k, j] = zero(T)
+        end
+    end
+    G.blocks[N, 2] = GB
+
+    G
+end
+
+
+
+## Move to tests?
 
 function _chebyshev_x(::Type{T}, n::Integer) where T
     X = BandedBlockBandedMatrix{T}(undef, 1:n, 1:n, (1, 1), (0, 0))
@@ -439,127 +562,4 @@ function _chebyshev_y(::Type{T}, n::Integer) where T
     end
 
     return Y
-end
-
-#
-# The computation of the skew-symmetric generators for the bivariate Chebyshev--Gram matrix equation:
-# Z'W-WZ = GJGᵀ,
-# where Z = X or Y is a bivariate Chebyshev Jacobi matrix that is block tridiagonal.
-# Since the bivariate Chebyhsev-Gram matrix is special, these formulas compute G
-# without the use of X or Y (thus without matrix multiplication).
-#
-function compute_skew_generators(::Val{1}, W::BivariateChebyshevGramMatrix{T}) where T
-    N = blocksize(W, 1)
-    G = BlockMatrix{T}(undef_blocks, 1:N, SVector(N, N))
-    for j in 1:N-1
-        G.blocks[j, 1] = zeros(T, j, N)
-    end
-    G.blocks[N, 1] = Matrix{T}(I, N, N)
-    μ = W.μ
-    @inbounds for m in 1:N-1
-        GB = zeros(T, m, N)
-        for k in 1:N-1
-            for j in 1:m
-                GB[j, k] = -(μ.blocks[m+N][j+k-1]+μ.blocks[abs(m-j-N-1+k)+j+k-1][j+k-1]+μ.blocks[m-j+N+1-k+abs(j-k)+1][abs(j-k)+1]+μ.blocks[abs(m-j-N-1+k)+abs(j-k)+1][abs(j-k)+1])/8
-            end
-        end
-        for j in 1:m
-            GB[j, N] = -(μ.blocks[m+N][j+N-1]+μ.blocks[abs(m-j-1)+j+N-1][j+N-1]+μ.blocks[m-j+1+abs(j-N)+1][abs(j-N)+1]+μ.blocks[abs(m-j-1)+abs(j-N)+1][abs(j-N)+1])/4
-        end
-        G.blocks[m, 2] = GB
-    end
-    GB = zeros(T, N, N)
-    @inbounds for k in 1:N-1
-        for j in 1:N
-            if abs(k-j-1)+j+k-1 < 2N
-                GB[j, k] -= μ.blocks[abs(k-j-1)+j+k-1][j+k-1]
-            end
-            if 2N-j+1-k+abs(j-k)+1 < 2N
-                GB[j, k] -= μ.blocks[2N-j+1-k+abs(j-k)+1][abs(j-k)+1]
-            end
-            if abs(k-j-1)+abs(j-k)+1 < 2N
-                GB[j, k] -= μ.blocks[abs(k-j-1)+abs(j-k)+1][abs(j-k)+1]
-            end
-            GB[j, k] /= 8
-        end
-    end
-    @inbounds for j in 1:N
-        if abs(N-j-1)+j+N-1 < 2N
-            GB[j, N] -= μ.blocks[abs(N-j-1)+j+N-1][j+N-1]
-        end
-        if N-j+1+abs(j-N)+1 < 2N
-            GB[j, N] -= μ.blocks[N-j+1+abs(j-N)+1][abs(j-N)+1]
-        end
-        if abs(N-j-1)+abs(j-N)+1 < 2N
-            GB[j, N] -= μ.blocks[abs(N-j-1)+abs(j-N)+1][abs(j-N)+1]
-        end
-        GB[j, N] /= 4
-    end
-    @inbounds for k in 1:N
-        for j in 1:k
-            GB[j, k] -= GB[k, j]
-            GB[k, j] = zero(T)
-        end
-    end
-    G.blocks[N, 2] = GB
-
-    G
-end
-
-function compute_skew_generators(::Val{2}, W::BivariateChebyshevGramMatrix{T}) where T
-    N = blocksize(W, 1)
-    G = BlockMatrix{T}(undef_blocks, 1:N, SVector(N, N))
-    for j in 1:N-1
-        G.blocks[j, 1] = zeros(T, j, N)
-    end
-    G.blocks[N, 1] = Matrix{T}(I, N, N)
-    μ = W.μ
-    @inbounds for m in 1:N-1
-        GB = zeros(T, m, N)
-        for j in 1:m
-            GB[j, 1] = -(μ.blocks[m+N][j+1]+μ.blocks[abs(m-j-N+1)+j+1][j+1]+μ.blocks[m-j+N-1+abs(j-2)+1][abs(j-2)+1]+μ.blocks[abs(m-j-N+1)+abs(j-2)+1][abs(j-2)+1])/4
-        end
-        for k in 2:N
-            for j in 1:m
-                GB[j, k] = -(μ.blocks[m+N][j+k]+μ.blocks[abs(m-j-N+k)+j+k][j+k]+μ.blocks[m-j+N-k+abs(j-k-1)+1][abs(j-k-1)+1]+μ.blocks[abs(m-j-N+k)+abs(j-k-1)+1][abs(j-k-1)+1])/8
-            end
-        end
-        G.blocks[m, 2] = GB
-    end
-    GB = zeros(T, N, N)
-    @inbounds for j in 1:N
-        if abs(1-j)+j+1 < 2N
-            GB[j, 1] -= μ.blocks[abs(1-j)+j+1][j+1]
-        end
-        if 2N-j-1+abs(j-2)+1 < 2N
-            GB[j, 1] -= μ.blocks[2N-j-1+abs(j-2)+1][abs(j-2)+1]
-        end
-        if abs(1-j)+abs(j-2)+1 < 2N
-            GB[j, 1] -= μ.blocks[abs(1-j)+abs(j-2)+1][abs(j-2)+1]
-        end
-        GB[j, 1] /= 4
-    end
-    @inbounds for k in 2:N
-        for j in 1:N
-            if abs(k-j)+j+k < 2N
-                GB[j, k] -= μ.blocks[abs(k-j)+j+k][j+k]
-            end
-            if 2N-j-k+abs(j-k-1)+1 < 2N
-                GB[j, k] -= μ.blocks[2N-j-k+abs(j-k-1)+1][abs(j-k-1)+1]
-            end
-            if abs(k-j)+abs(j-k-1)+1 < 2N
-                GB[j, k] -= μ.blocks[abs(k-j)+abs(j-k-1)+1][abs(j-k-1)+1]
-            end
-            GB[j, k] /= 8
-        end
-    end
-    @inbounds for k in 1:N
-        for j in 1:k
-            GB[j, k] -= GB[k, j]
-            GB[k, j] = zero(T)
-        end
-    end
-    G.blocks[N, 2] = GB
-
-    G
 end

@@ -8,7 +8,7 @@ using AbstractFFTs
 using FFTW
 using GenericFFT
 
-import Base: axes, convert, unsafe_convert, eltype, ndims, adjoint, transpose, show, showerror,
+import Base: axes, convert, unsafe_convert, eltype, ndims, adjoint, transpose, show,
              *, \, inv, length, size, view, getindex, tail, OneTo
 
 import Base.GMP: Limb
@@ -26,7 +26,7 @@ import BandedMatrices: bandwidths, BandedLayout
 
 import BlockArrays: _blockindex_getindex, blockrowsupport, blockcolsupport
 
-import BlockBandedMatrices: blockbandwidths, subblockbandwidths, blockcolrange
+import BlockBandedMatrices: blockbandwidths, subblockbandwidths, blockcolrange, BandedBlockBandedLayout
 
 import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
              plan_dct, plan_idct, fftwNumber

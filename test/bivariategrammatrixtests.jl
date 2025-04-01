@@ -22,4 +22,16 @@ import FastTransforms: chebyshevmoments1, chebyshevabsmoments1, bivariatemoments
     RC = cholesky(WC).U
 
     @test R ≈ RC
+
+    Gx = FastTransforms.compute_skew_generators(Val(1), W)
+    GxC = FastTransforms.compute_skew_generators(Val(1), WC)
+    @test Gx ≈ GxC
+
+    Gy = FastTransforms.compute_skew_generators(Val(2), W)
+    GyC = FastTransforms.compute_skew_generators(Val(2), WC)
+    @test Gy ≈ GyC
+
+    J = [zeros(n, n) Matrix{Float64}(I, n, n); Matrix{Float64}(-I, n, n) zeros(n, n)]
+    @test W.X'W-W*W.X ≈ Gx*J*Gx'
+    @test W.Y'W-W*W.Y ≈ Gy*J*Gy'
 end
