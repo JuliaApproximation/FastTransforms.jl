@@ -90,6 +90,8 @@ BivariateGramMatrix(W::WT, X::XT, Y::YT) where {T, WT <: AbstractMatrix{T}, XT <
 @inline blockbandwidths(G::BivariateGramMatrix) = blockbandwidths(G.W)
 @inline subblockbandwidths(G::BivariateGramMatrix) = subblockbandwidths(G.W)
 @inline MemoryLayout(G::BivariateGramMatrix) = MemoryLayout(G.W)
+@inline symmetricdata(G::BivariateGramMatrix) = symmetricdata(G.W)
+@inline symmetricuplo(G::BivariateGramMatrix) = symmetricuplo(G.W)
 @inline blockrowsupport(G::BivariateGramMatrix, j) = blockrowsupport(MemoryLayout(G), G.W, j)
 @inline blockcolsupport(G::BivariateGramMatrix, j) = blockcolsupport(MemoryLayout(G), G.W, j)
 
@@ -101,7 +103,7 @@ function BivariateGramMatrix(μ::AbstractBlockVector{T}, X::XT, Y::YT, p0::T) wh
     @assert blockbandwidths(X) == blockbandwidths(Y) == (1, 1)
     @assert subblockbandwidths(X) == (0, 0)
     @assert subblockbandwidths(Y) == (1, 1)
-    W = BlockMatrix{T}(undef, 1:N, 1:N)
+    W = BlockedMatrix{T}(undef, 1:N, 1:N)
     if n > 0
         for m in 1:N
             W[Block(m, 1)] = p0*μ[Block(m, 1)]
@@ -119,7 +121,7 @@ function BivariateGramMatrix(μ::AbstractBlockVector{T}, X::XT, Y::YT, p0::T) wh
         end
         symmetrize_block!(view(W, Block(n, n)))
     end
-    WN = BlockMatrix{T}(undef, 1:n, 1:n)
+    WN = BlockedMatrix{T}(undef, 1:n, 1:n)
     for j in 1:n
         for k in j:n
             WN[Block(k, j)] = viewblock(W, Block(k, j))
