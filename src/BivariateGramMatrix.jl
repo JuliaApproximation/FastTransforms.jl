@@ -167,6 +167,7 @@ function BivariateGramMatrix(μ::BlockedVector{T, <: PaddedVector{T}}, X::XT, Y:
     end
     for n in 3:n
         for m in n:min(N-n+1, b+n)
+            #println("m = $m, n = $n")
             recurse!(W, X, Y, m, n)
         end
         symmetrize_block!(view(W, Block(n, n)))
@@ -214,7 +215,7 @@ function recurse!(W, X, Y, m)
     Wa = view(W, Block(m-1, 1))
     Wb = view(W, Block(m, 1))
     Wc = view(W, Block(m+1, 1))
-    We = view(viewblock(W, Block(m, 2)), 1:m, 1:1)
+    We = viewblock(W, Block(m, 2))
 
     Xa = view(X.data, Block(1, m))
     Xb = view(X.data, Block(2, m))
@@ -250,15 +251,37 @@ function recurse!(W, X, Y, m)
     Yb = viewblock(Y, Block(m, m))
     Yc = viewblock(Y, Block(m+1, m))
     Yd = viewblock(Y, Block(1, 1))
-
-    We = view(viewblock(W, Block(m, 2)), 1:m, 2)
-    mul!(We, Ya', view(Wa, :, 1))
-    mul!(We, Yb', view(Wb, :, 1), 1, 1)
-    mul!(We, Yc', view(Wc, :, 1), 1, 1)
-    mul!(We, Wb, view(Yd, :, 1), -1, 1)
     Yn = viewblock(Y, Block(2, 1))
-    We .-= Yn[1, 1].*view(viewblock(W, Block(m, 2)), 1:m, 1)
-    rdiv!(We, Yn[2, 1])
+    for j in colrange(We, 2)
+        if j == 1
+            if j == size(Ya, 2)-1
+                We[j, 2] = Ya[j, j]*Wa[j, 1]
+            else
+                We[j, 2] = Ya[j, j]*Wa[j, 1] + Ya[j+1, j]*Wa[j+1, 1]
+            end
+        elseif j == size(Ya, 2)
+            We[j, 2] = Ya[j-1, j]*Wa[j-1, 1]
+        elseif j == size(Ya, 2)-1
+            We[j, 2] = Ya[j-1, j]*Wa[j-1, 1] + Ya[j, j]*Wa[j, 1]
+        else
+            We[j, 2] = Ya[j-1, j]*Wa[j-1, 1] + Ya[j, j]*Wa[j, 1] + Ya[j+1, j]*Wa[j+1, 1]
+        end
+        if j == 1
+            We[j, 2] += Yb[j, j]*Wb[j, 1] + Yb[j+1, j]*Wb[j+1, 1]
+        elseif j == size(Yb, 2)
+            We[j, 2] += Yb[j-1, j]*Wb[j-1, 1] + Yb[j, j]*Wb[j, 1]
+        else
+            We[j, 2] += Yb[j-1, j]*Wb[j-1, 1] + Yb[j, j]*Wb[j, 1] + Yb[j+1, j]*Wb[j+1, 1]
+        end
+        if j == 1
+            We[j, 2] += Yc[j, j]*Wc[j, 1] + Yc[j+1, j]*Wc[j+1, 1]
+        else
+            We[j, 2] += Yc[j-1, j]*Wc[j-1, 1] + Yc[j, j]*Wc[j, 1] + Yc[j+1, j]*Wc[j+1, 1]
+        end
+        We[j, 2] -= Wb[j, 1]*Yd[1, 1]
+        We[j, 2] -= Yn[1, 1]*We[j, 1]
+        We[j, 2] /= Yn[2, 1]
+    end
 end
 
 function recurse!(W, X, Y, m, n)
@@ -270,7 +293,7 @@ function recurse!(W, X, Y, m, n)
     Wb = view(W, Block(m, n-1))
     Wc = view(W, Block(m+1, n-1))
     Wd = view(W, Block(m, n-2))
-    We = view(viewblock(W, Block(m, n)), 1:m, 1:n-1)
+    We = viewblock(W, Block(m, n))
 
     Xa = view(X.data, Block(1, m))
     Xb = view(X.data, Block(2, m))
@@ -323,16 +346,35 @@ function recurse!(W, X, Y, m, n)
     Yc = viewblock(Y, Block(m+1, m))
     Yd = viewblock(Y, Block(n-1, n-1))
     Ye = viewblock(Y, Block(n-2, n-1))
-
-    We = view(viewblock(W, Block(m, n)), 1:m, n)
-    mul!(We, Ya', view(Wa, :, n-1))
-    mul!(We, Yb', view(Wb, :, n-1), 1, 1)
-    mul!(We, Yc', view(Wc, :, n-1), 1, 1)
-    mul!(We, Wb, view(Yd, :, n-1), -1, 1)
-    mul!(We, Wd, view(Ye, :, n-1), -1, 1)
     Yn = viewblock(Y, Block(n, n-1))
-    We .-= Yn[n-2, n-1].*view(viewblock(W, Block(m, n)), 1:m, n-2) .+ Yn[n-1, n-1].*view(viewblock(W, Block(m, n)), 1:m, n-1)
-    rdiv!(We, Yn[n, n-1])
+
+    for j in colrange(We, n)
+        if j == 1
+            We[j, n] = Ya[j, j]*Wa[j, n-1] + Ya[j+1, j]*Wa[j+1, n-1]
+        elseif j == size(Ya, 2)
+            We[j, n] = Ya[j-1, j]*Wa[j-1, n-1]
+        elseif j == size(Ya, 2)-1
+            We[j, n] = Ya[j-1, j]*Wa[j-1, n-1] + Ya[j, j]*Wa[j, n-1]
+        else
+            We[j, n] = Ya[j-1, j]*Wa[j-1, n-1] + Ya[j, j]*Wa[j, n-1] + Ya[j+1, j]*Wa[j+1, n-1]
+        end
+        if j == 1
+            We[j, n] += Yb[j, j]*Wb[j, n-1] + Yb[j+1, j]*Wb[j+1, n-1]
+        elseif j == size(Yb, 2)
+            We[j, n] += Yb[j-1, j]*Wb[j-1, n-1] + Yb[j, j]*Wb[j, n-1]
+        else
+            We[j, n] += Yb[j-1, j]*Wb[j-1, n-1] + Yb[j, j]*Wb[j, n-1] + Yb[j+1, j]*Wb[j+1, n-1]
+        end
+        if j == 1
+            We[j, n] += Yc[j, j]*Wc[j, n-1] + Yc[j+1, j]*Wc[j+1, n-1]
+        else
+            We[j, n] += Yc[j-1, j]*Wc[j-1, n-1] + Yc[j, j]*Wc[j, n-1] + Yc[j+1, j]*Wc[j+1, n-1]
+        end
+        We[j, n] -= Wb[j, n-2]*Yd[n-2, n-1] + Wb[j, n-1]*Yd[n-1, n-1]
+        We[j, n] -= Wd[j, n-2]*Ye[n-2, n-1]
+        We[j, n] -= Yn[n-2, n-1]*We[j, n-2] + Yn[n-1, n-1]*We[j, n-1]
+        We[j, n] /= Yn[n, n-1]
+    end
 end
 
 
