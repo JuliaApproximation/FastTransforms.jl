@@ -167,7 +167,6 @@ function BivariateGramMatrix(μ::BlockedVector{T, <: PaddedVector{T}}, X::XT, Y:
     end
     for n in 3:n
         for m in n:min(N-n+1, b+n)
-            #println("m = $m, n = $n")
             recurse!(W, X, Y, m, n)
         end
         symmetrize_block!(view(W, Block(n, n)))
@@ -621,4 +620,317 @@ function _chebyshev_y(::Type{T}, n::Integer) where T
     end
 
     return Y
+end
+
+
+## Fast Cholesky algorithm using the displacement equations: XᵀW - WX = Gx J Gxᵀ and YᵀW - WY = Gy J Gyᵀ
+
+function cholesky(W::BivariateChebyshevGramMatrix{T}) where T
+    n = blocksize(W, 1)
+    N = n*(n+1)÷2
+    X = _chebyshev_x(T, n)
+    Y = _chebyshev_y(T, n)
+    @assert blockbandwidths(X) == blockbandwidths(Y) == (1, 1)
+    @assert subblockbandwidths(X) == (0, 0)
+    @assert subblockbandwidths(Y) == (1, 1)
+    Xt = BandedBlockBandedMatrix(X')
+    Yt = BandedBlockBandedMatrix(Y')
+    Gx = Matrix(compute_skew_generators(Val(1), W))
+    Gy = Matrix(compute_skew_generators(Val(2), W))
+    L = BlockedMatrix{T}(I, 1:n, 1:n)
+    c = zeros(T, N, n)
+    ĉ = zeros(T, N, n)
+    vc = view(c, 1:N, 1:1)
+    vc .= W[1:N, 1:1]
+    ĉ_xd = zeros(T, N, n)
+    ĉ_yd = zeros(T, N, n)
+    l = zeros(T, N, n)
+    linvd = zeros(T, N, n)
+    d = zeros(T, n, n)
+    Xrow1 = zeros(T, N, n)
+    Yrow1 = zeros(T, N, n)
+    vx = zeros(T, N, n)
+    vy = zeros(T, N, n)
+    @inbounds for k in 1:n-1
+        K = k*(k-1)÷2
+        # d = cholesky(Symmetric(c[Block(1, 1)], :L)).L
+        # L[Block(k, k)] .= d
+        vd = view(d, 1:k, 1:k)
+        vd .= view(c, 1:k, 1:k)
+        cholesky!(Symmetric(vd, :L))
+        # l = BlockedMatrix(Matrix(c[Block.(2:n-k+1), Block(1)])/d', k+1:n, [k])
+        # L[Block.(k+1:n), Block(k)] .= l
+        vl = view(l, k+1:N-K, 1:k)
+        vl .= view(c, k+1:N-K, 1:k)
+        rdiv!(vl, LowerTriangular(vd)')
+        view(L, Block(k, k)) .= vd
+        #view(L, Block.(k+1:n), Block(k)) .= vl
+        J = 1
+        for j in k+1:n
+            view(L, Block(j, k)) .= view(vl, J:J-1+j, 1:k)
+            J += j
+        end
+        # vx = Gx[:, 1:n]*Gx[1:k, n+1:2n]' - Gx[:, n+1:2n]*Gx[1:k, 1:n]'
+        # vy = Gy[:, 1:n]*Gy[1:k, n+1:2n]' - Gy[:, n+1:2n]*Gy[1:k, 1:n]'
+        compute_v!(vx, Gx, n, k)
+        compute_v!(vy, Gy, n, k)
+        #ĉ_xd = X[Block.(k:n), Block.(k:n)]'c + Xrow1*c[1:k, 1:k]-c*Xrow1[1:k, 1:k]'-vx
+        #ĉ_yd = Y[Block.(k:n), Block.(k:n)]'c + Yrow1*c[1:k, 1:k]-c*Yrow1[1:k, 1:k]'-vy
+        compute_ĉd!(ĉ_xd, Xt, Xrow1, vx, c, n, k)
+        compute_ĉd!(ĉ_yd, Yt, Yrow1, vy, c, n, k)
+        #ĉ = BlockedMatrix([Matrix(ĉ_xd) / Diagonal(X[Block(2, 1)]) Matrix(ĉ_yd)[:, end]/Y[BlockIndex((2, 1), (k+1, k))]], k:n, [k+1])
+        vĉ1 = view(ĉ, 1:N-K, 1:k)
+        vĉ1 .= view(ĉ_xd, 1:N-K, 1:k)./view(X.data, Block(3, k))
+        #vĉ1 .= view(ĉ_xd, 1:N-K, 1:k)
+        #rdiv!(vĉ1, Diagonal(X[Block(k+1, k)]))
+        vĉ2 = view(ĉ, 1:N-K, k+1)
+        vĉ2 .= view(ĉ_yd, 1:N-K, k)./viewblock(Y, Block(k+1, k))[k+1, k]
+        vĉ = view(ĉ, k+1:N-K, 1:k+1)
+        # c = ĉ[Block.(2:n-k+1), :] - l * (d \ c[Block(2, 1)]')
+        #linvd = vl/LowerTriangular(vd)
+        vlinvd = view(linvd, 1:N-K-k, 1:k)
+        vlinvd .= vl
+        rdiv!(vlinvd, LowerTriangular(vd))
+        vc = view(c, 1:N-K-k, 1:k+1)
+        #vc .= vĉ .- vlinvd*vc[k+1:2k+1, 1:k]'
+        vd = view(d, 1:k+1, 1:k)
+        vd .= view(c, k+1:2k+1, 1:k)
+        vc .= vĉ
+        mul!(vc, vlinvd, vd', -1, 1)
+        # c[Block(1, 1)] .= Symmetric(c[Block(1, 1)], :L)
+        vc[1:k+1, 1:k+1] .= Symmetric(view(c, 1:k+1, 1:k+1), :L)
+        # Xrow1 = -linvd*Matrix(X[Block(k+1, k)]')
+        # Yrow1 = -linvd*Matrix(Y[Block(k+1, k)]')
+        mul!(view(Xrow1, 1:N-K-k, 1:k+1), vlinvd, viewblock(X, Block(k+1, k))', -1, 0)
+        mul!(view(Yrow1, 1:N-K-k, 1:k+1), vlinvd, viewblock(Y, Block(k+1, k))', -1, 0)
+        # Gx = Gx[k+1:end, :] - linvd * Gx[1:k, :]
+        # Gy = Gy[k+1:end, :] - linvd * Gy[1:k, :]
+        update_generators!(Gx, linvd, n, k)
+        update_generators!(Gy, linvd, n, k)
+    end
+    L[Block(n, n)] = cholesky(Symmetric(c[1:n, 1:n], :L)).L
+    return Cholesky(L, 'L', 0)
+end
+
+function compute_v!(v, G, n, k)
+    N = n*(n+1)÷2
+    K = k*(k-1)÷2
+    vv = view(v, 1:N-K, 1:k)
+    vG1 = view(G, K+1:N, 1:n)
+    vG2 = view(G, K+1:k+K, n+1:2n)
+    vG3 = view(G, K+1:N, n+1:2n)
+    vG4 = view(G, K+1:k+K, 1:n)
+    mul!(vv, vG1, vG2')
+    mul!(vv, vG3, vG4', -1, 1)
+end
+
+function update_generators!(G, linvd, n, k)
+    N = n*(n+1)÷2
+    K = k*(k+1)÷2
+    vG1 = view(G, K+1:N, 1:2n)
+    vG2 = view(G, K-k+1:K, 1:2n)
+    vlinvd = view(linvd, 1:N-K, 1:k)
+    mul!(vG1, vlinvd, vG2, -1, 1)
+end
+
+#ĉd = Z[Block.(k:n), Block.(k:n)]'c + Zrow1*c[1:k, 1:k]-c*Zrow1[1:k, 1:k]'-v
+function compute_ĉd!(ĉd, Zt, Zrow1, v, c, n, k)
+    N = n*(n+1)÷2
+    K = k*(k-1)÷2
+    jacobi_mul!(ĉd, Zt, c, n, k)
+    vĉd = view(ĉd, 1:N-K, 1:k)
+    mul!(vĉd, view(Zrow1, 1:N-K, 1:k), view(c, 1:k, 1:k), 1, 1)
+    mul!(vĉd, view(c, 1:N-K, 1:k), view(Zrow1, 1:k, 1:k)', -1, 1)
+    vĉd .-= view(v, 1:N-K, 1:k)
+end
+
+# y[:, 1:k] = Z[Block.(k:n), Block.(k:n)]*x[:, 1:k]
+function jacobi_mul!(y, Z, x, n, k)
+    @assert 1 ≤ k ≤ n
+    if subblockbandwidths(Z) == (0, 0)
+        return jacobi_mul00!(y, Z, x, n, k)
+    elseif subblockbandwidths(Z) == (1, 1)
+        return jacobi_mul11!(y, Z, x, n, k)
+    else
+        return jacobi_mul_default!(y, Z, x, n, k)
+    end
+end
+
+function jacobi_mul00!(y, Z, x, n, k)
+    @inbounds for col in 1:k
+        Jshift = 0
+        if n == 1
+            ZBj = view(Z.data, Block(2, k))
+            for i in 1:size(ZBj, 2)
+                y[i+Jshift, col] = ZBj[1, i]*x[i+Jshift, col]
+            end
+        else
+            if k == n
+                ZBj = view(Z.data, Block(2, k))
+                for i in 1:size(ZBj, 2)
+                    y[i+Jshift, col] = ZBj[1, i]*x[i+Jshift, col]
+                end
+            else
+                ZBj = view(Z.data, Block(2, k))
+                ZBjp1 = view(Z.data, Block(1, k+1))
+                for i in 1:size(ZBj, 2)
+                    y[i+Jshift, col] = ZBj[1, i]*x[i+Jshift, col] + ZBjp1[1, i]*x[i+size(ZBj, 2)+Jshift, col]
+                end
+                Jshift += size(ZBj, 2)
+                for j in k+1:n-1
+                    ZBjm1 = view(Z.data, Block(3, j-1))
+                    ZBj = view(Z.data, Block(2, j))
+                    ZBjp1 = view(Z.data, Block(1, j+1))
+                    for i in 1:size(ZBj, 2)-1
+                        y[i+Jshift, col] = ZBjm1[1, i]*x[i+Jshift-size(ZBjm1, 2), col] + ZBj[1, i]*x[i+Jshift, col] + ZBjp1[1, i]*x[i+size(ZBj, 2)+Jshift, col]
+                    end
+                    i = size(ZBj, 2)
+                    y[i+Jshift, col] = ZBj[1, i]*x[i+Jshift, col] + ZBjp1[1, i]*x[i+size(ZBj, 2)+Jshift, col]
+                    Jshift += size(ZBj, 2)
+                end
+                ZBjm1 = view(Z.data, Block(3, n-1))
+                ZBj = view(Z.data, Block(2, n))
+                for i in 1:size(ZBj, 2)-1
+                    y[i+Jshift, col] = ZBjm1[1, i]*x[i+Jshift-size(ZBjm1, 2), col] + ZBj[1, i]*x[i+Jshift, col]
+                end
+                i = size(ZBj, 2)
+                y[i+Jshift, col] = ZBj[1, i]*x[i+Jshift, col]
+            end
+        end
+    end
+    return y
+end
+
+function jacobi_mul11!(y, Z, x, n, k)
+    @inbounds for col in 1:k
+        Jshift = 0
+        if n == 1
+            ZBj = view(Z.data, Block(2, k))
+            for i in 1:size(ZBj, 2)
+                y[i+Jshift, col] = ZBj[2, i]*x[i+Jshift, col]
+            end
+        else
+            if k == n
+                ZBj = view(Z.data, Block(2, k))
+                for i in 1:size(ZBj, 2)
+                    y[i+Jshift, col] = ZBj[2, i]*x[i+Jshift, col]
+                end
+                for i in 2:size(ZBj, 2)
+                    y[i-1+Jshift, col] += ZBj[1, i]*x[i+Jshift, col]
+                end
+                for i in 1:size(ZBj, 2)-1
+                    y[i+1+Jshift, col] += ZBj[3, i]*x[i+Jshift, col]
+                end
+            else
+                ZBj = view(Z.data, Block(2, k))
+                for i in 1:size(ZBj, 2)
+                    y[i+Jshift, col] = ZBj[2, i]*x[i+Jshift, col]
+                end
+                for i in 2:size(ZBj, 2)
+                    y[i-1+Jshift, col] += ZBj[1, i]*x[i+Jshift, col]
+                end
+                for i in 1:size(ZBj, 2)-1
+                    y[i+1+Jshift, col] += ZBj[3, i]*x[i+Jshift, col]
+                end
+
+                ZBjp1 = view(Z.data, Block(1, k+1))
+                for i in 2:size(ZBj, 2)+1
+                    y[i-1+Jshift, col] += ZBjp1[1, i]*x[i+size(ZBj, 2)+Jshift, col]
+                end
+                for i in 1:size(ZBj, 2)
+                    y[i+Jshift, col] += ZBjp1[2, i]*x[i+size(ZBj, 2)+Jshift, col]
+                end
+                for i in 1:size(ZBj, 2)-1
+                    y[i+1+Jshift, col] += ZBjp1[3, i]*x[i+size(ZBj, 2)+Jshift, col]
+                end
+
+                Jshift += size(ZBj, 2)
+                for j in k+1:n-1
+                    ZBj = view(Z.data, Block(2, j))
+                    for i in 1:size(ZBj, 2)
+                        y[i+Jshift, col] = ZBj[2, i]*x[i+Jshift, col]
+                    end
+                    for i in 2:size(ZBj, 2)
+                        y[i-1+Jshift, col] += ZBj[1, i]*x[i+Jshift, col]
+                    end
+                    for i in 1:size(ZBj, 2)-1
+                        y[i+1+Jshift, col] += ZBj[3, i]*x[i+Jshift, col]
+                    end
+
+                    ZBjm1 = view(Z.data, Block(3, j-1))
+                    for i in 2:size(ZBjm1, 2)
+                        y[i-1+Jshift, col] += ZBjm1[1, i]*x[i-size(ZBjm1, 2)+Jshift, col]
+                    end
+                    for i in 1:size(ZBjm1, 2)
+                        y[i+Jshift, col] += ZBjm1[2, i]*x[i-size(ZBjm1, 2)+Jshift, col]
+                    end
+                    for i in 1:size(ZBjm1, 2)
+                        y[i+1+Jshift, col] += ZBjm1[3, i]*x[i-size(ZBjm1, 2)+Jshift, col]
+                    end
+
+                    ZBjp1 = view(Z.data, Block(1, j+1))
+                    for i in 2:size(ZBj, 2)+1
+                        y[i-1+Jshift, col] += ZBjp1[1, i]*x[i+size(ZBj, 2)+Jshift, col]
+                    end
+                    for i in 1:size(ZBj, 2)
+                        y[i+Jshift, col] += ZBjp1[2, i]*x[i+size(ZBj, 2)+Jshift, col]
+                    end
+                    for i in 1:size(ZBj, 2)-1
+                        y[i+1+Jshift, col] += ZBjp1[3, i]*x[i+size(ZBj, 2)+Jshift, col]
+                    end
+
+                    Jshift += size(ZBj, 2)
+                end
+                ZBj = view(Z.data, Block(2, n))
+                for i in 1:size(ZBj, 2)
+                    y[i+Jshift, col] = ZBj[2, i]*x[i+Jshift, col]
+                end
+                for i in 2:size(ZBj, 2)
+                    y[i-1+Jshift, col] += ZBj[1, i]*x[i+Jshift, col]
+                end
+                for i in 1:size(ZBj, 2)-1
+                    y[i+1+Jshift, col] += ZBj[3, i]*x[i+Jshift, col]
+                end
+
+                ZBjm1 = view(Z.data, Block(3, n-1))
+                for i in 2:size(ZBjm1, 2)
+                    y[i-1+Jshift, col] += ZBjm1[1, i]*x[i-size(ZBjm1, 2)+Jshift, col]
+                end
+                for i in 1:size(ZBjm1, 2)
+                    y[i+Jshift, col] += ZBjm1[2, i]*x[i-size(ZBjm1, 2)+Jshift, col]
+                end
+                for i in 1:size(ZBjm1, 2)
+                    y[i+1+Jshift, col] += ZBjm1[3, i]*x[i-size(ZBjm1, 2)+Jshift, col]
+                end
+            end
+        end
+    end
+    return y
+end
+
+function jacobi_mul_default!(y, Z, x, n, k)
+    if n == 1
+        vy = view(y, 1:k, 1:k)
+        mul!(vy, Z[Block(k, k)], view(x, 1:k, 1:k))
+    else
+        vy = view(y, 1:k, 1:k)
+        Jstart = 1
+        Jstop = k
+        mul!(vy, Z[Block(k, k)], view(x, Jstart:Jstop, 1:k))
+        mul!(vy, Z[Block(k, k+1)], view(x, (Jstop+1):(Jstop+k+1), 1:k), 1, 1)
+        for j in k+1:n-1
+            vy = view(y, (Jstop+1):(Jstop+j), 1:k)
+            mul!(vy, Z[Block(j, j-1)], view(x, Jstart:Jstop, 1:k))
+            Jstart = Jstop+1
+            Jstop = Jstop+j
+            mul!(vy, Z[Block(j, j)], view(x, Jstart:Jstop, 1:k), 1, 1)
+            mul!(vy, Z[Block(j, j+1)], view(x, (Jstop+1):(Jstop+j+1), 1:k), 1, 1)
+        end
+        vy = view(y, (Jstop+1):(Jstop+n), 1:k)
+        mul!(vy, Z[Block(n, n-1)], view(x, Jstart:Jstop, 1:k))
+        Jstart = Jstop+1
+        Jstop = Jstop+n
+        mul!(vy, Z[Block(n, n)], view(x, Jstart:Jstop, 1:k), 1, 1)
+    end
+    return y
 end
