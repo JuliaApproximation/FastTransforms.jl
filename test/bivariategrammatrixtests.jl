@@ -49,25 +49,3 @@ import FastTransforms: chebyshevmoments1, chebyshevabsmoments1, bivariatemoments
     μ = BlockedVector(PaddedVector(inv.(1:21), (2n-1)*(2n)÷2), 1:2n-1)
     W = BivariateGramMatrix(μ, X, Y) # works with Chebyshev X & Y, but blocks are not extracted as banded matrices
 end
-
-
-using ClassicalOrthogonalPolynomials, MultivariateOrthogonalPolynomials, FastTransforms, LinearAlgebra, Plots
-
-using LazyArrays, BlockArrays, BlockBandedMatrices
-
-n = 50
-
-μ = BlockedVector(PaddedVector([10; zeros(20)] + inv.(1:21), (2n-1)*(2n)÷2), 1:2n-1)
-#W = BivariateGramMatrix(μ, X, Y) # works with Chebyshev X & Y, but blocks are not extracted as banded matrices
-
-P = JacobiTriangle(0, 0, 0)
-#P = RectPolynomial(Legendre(), Legendre())
-X = jacobimatrix(Val(1), P)
-Y = jacobimatrix(Val(2), P)
-x, y = coordinates(P);
-
-X = BandedBlockBandedMatrix(X[Block.(1:2n-1), Block.(1:2n-1)])
-Y = BandedBlockBandedMatrix(Y[Block.(1:2n-1), Block.(1:2n-1)])
-#Y = FastTransforms._chebyshev_y(Float64, 2n-1)
-W = BivariateGramMatrix(μ, X, Y) # works with Chebyshev X & Y, but blocks are not extracted as banded matrices
-eigvals(W)
