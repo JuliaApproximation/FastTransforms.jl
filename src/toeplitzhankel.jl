@@ -128,6 +128,7 @@ end
 
 function *(P::ChebyshevToLegendrePlanTH, v::AbstractVector{S}) where S
     n = length(v)
+    iszero(n) && return v
     ret = zero(S)
     @inbounds for k = 1:2:n
         ret += -v[k]/(k*(k-2))
@@ -178,7 +179,9 @@ function _leg2chebTH_TLC(::Type{S}, mn, d) where S
     C = hankel_partialchol(λ)
     T = plan_uppertoeplitz!(t, (mn..., size(C,2)), d)
     L = copy(C)
-    L[1,:] ./= 2
+    if n > 0
+        L[1,:] ./= 2
+    end
     T,L,C
 end
 
@@ -215,7 +218,7 @@ _sub_dim_by_one(d, m, n...) = (isone(d) ? m-1 : m, _sub_dim_by_one(d-1, n...)...
 
 function _cheb2legTH_TLC(::Type{S}, mn, d) where S
     n = mn[d]
-    t = zeros(S,n-1)
+    t = zeros(S,max(0,n-1))
     S̃ = real(S)
     if n > 1
         t[1:2:end] = Λ.(0:one(S̃):div(n-2,2), -half(S̃), one(S̃))
