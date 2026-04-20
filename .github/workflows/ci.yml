@@ -4,7 +4,7 @@ on:
   - pull_request
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -14,13 +14,7 @@ jobs:
           - '1'
         os:
           - ubuntu-latest
-#          - macOS-latest
-        arch:
-          - x86
-          - x64
-        exclude:
-          - os: macOS-latest
-            arch: x86
+          - macOS-latest
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
