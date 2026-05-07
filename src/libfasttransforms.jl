@@ -1257,3 +1257,5 @@ function modified_jacobi_matrix(R, XP)
     end
     return XQ
 end
+
+inv(P::FTPlan{T,2,DISKANALYSIS}) where T = plan_disk_synthesis(T, P.n, P.m)
