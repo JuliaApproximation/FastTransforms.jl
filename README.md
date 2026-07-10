@@ -1,6 +1,7 @@
 # FastTransforms.jl
 
 [![Build Status](https://github.com/JuliaApproximation/FastTransforms.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/FastTransforms.jl/actions?query=workflow%3ACI) [![codecov](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl/branch/master/graph/badge.svg?token=BxTvSNgmLL)](https://codecov.io/gh/JuliaApproximation/FastTransforms.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/stable) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaApproximation.github.io/FastTransforms.jl/dev)
+[![pkgeval](https://juliahub.com/docs/General/FastTransforms/stable/pkgeval.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html)
 
 `FastTransforms.jl` allows the user to conveniently work with orthogonal polynomials with degrees well into the millions.
 
@@ -157,12 +158,16 @@ julia> @time norm(ipaduatransform(paduatransform(v)) - v)/norm(v)
 
 ```
 
-# References:
+# References
 
-   [1]  D. Ruiz—Antolín and A. Townsend. <a href="https://doi.org/10.1137/17M1134822">A nonuniform fast Fourier transform based on low rank approximation</a>, *SIAM J. Sci. Comput.*, **40**:A529–A547, 2018.
+[1]  D. Ruiz—Antolín and A. Townsend, [A nonuniform fast Fourier transform based on low rank approximation](https://doi.org/10.1137/17M1134822), *SIAM J. Sci. Comput.*, **40**:A529–A547, 2018.
 
-   [2] S. Olver, R. M. Slevinsky, and A. Townsend. <a href="https://doi.org/10.1017/S0962492920000045">Fast algorithms using orthogonal polynomials</a>, *Acta Numerica*, **29**:573—699, 2020.
+[2] K. Gumerov, S. Rigg, and R. M. Slevinsky, [Fast measure modification of orthogonal polynomials via matrices with displacement structure](https://arxiv.org/abs/2412.17663), arXiv:2412.17663, 2024.
 
-   [3]  R. M. Slevinsky. <a href="https://doi.org/10.1016/j.acha.2017.11.001">Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series</a>, *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
+[3] T. S. Gutleb, S. Olver and R. M. Slevinsky, [Polynomial and rational measure modifications of orthogonal polynomials via infinite-dimensional banded matrix factorizations](https://arxiv.org/abs/2302.08448), arXiv:2302.08448, 2023.
 
-   [4]  R. M. Slevinsky, <a href="https://arxiv.org/abs/1711.07866">Conquering the pre-computation in two-dimensional harmonic polynomial transforms</a>, arXiv:1711.07866, 2017.
+[4] S. Olver, R. M. Slevinsky, and A. Townsend, [Fast algorithms using orthogonal polynomials](https://doi.org/10.1017/S0962492920000045), *Acta Numerica*, **29**:573—699, 2020.
+
+[5]  R. M. Slevinsky, [Fast and backward stable transforms between spherical harmonic expansions and bivariate Fourier series](https://doi.org/10.1016/j.acha.2017.11.001), *Appl. Comput. Harmon. Anal.*, **47**:585—606, 2019.
+
+[6]  R. M. Slevinsky, [Conquering the pre-computation in two-dimensional harmonic polynomial transforms](https://arxiv.org/abs/1711.07866), arXiv:1711.07866, 2017.

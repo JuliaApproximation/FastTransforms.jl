@@ -1,25 +1,26 @@
-name: CI
+name: CI Windows
 on:
   - push
   - pull_request
 jobs:
-  test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
+  testwindows:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         version:
-          - 'lts'
           - '1'
         os:
-          - ubuntu-latest
-          - macOS-latest
+          - windows-latest
+        arch:
+          - x86
+          - x64
     steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v3
+      - uses: actions/checkout@v3
+      - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
           show-versioninfo: true
       - uses: actions/cache@v3
         env:
@@ -31,10 +32,9 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           file: lcov.info

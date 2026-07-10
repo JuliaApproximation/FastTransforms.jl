@@ -1,6 +1,6 @@
 # Development Documentation
 
-The core of `FastTransforms.jl` is developed in parallel with the [C library](https://github.com/MikaelSlevinsky/FastTransforms) of the same name. Julia and C interoperability is enhanced by the [BinaryBuilder](https://github.com/JuliaPackaging/BinaryBuilder.jl) infrastructure, which provides the user a safe and seamless experience using a package in a different language.
+The core of [`FastTransforms.jl`](https://github.com/JuliaApproximation/FastTransforms.jl) is developed in parallel with the [C library](https://github.com/MikaelSlevinsky/FastTransforms) of the same name. Julia and C interoperability is enhanced by the [BinaryBuilder](https://github.com/JuliaPackaging/BinaryBuilder.jl) infrastructure, which provides the user a safe and seamless experience using a package in a different language.
 
 ## Why two packages?
 

@@ -49,22 +49,28 @@ function renew!(x::AbstractArray{BigFloat})
     return x
 end
 
-function horner!(c::StridedVector{Float64}, x::Vector{Float64}, f::Vector{Float64})
+# Obtain a raw C pointer to the mpfr_t struct underlying a BigFloat.
+# In Julia < 1.12, BigFloat was a mutable struct whose fields matched mpfr_t directly,
+# so pointer_from_objref gives us the mpfr_t*.
+# In Julia >= 1.12, BigFloat is an immutable struct wrapping Memory{Limb}, and the
+# mpfr_t struct is stored at the start of that Memory.
+@static if VERSION >= v"1.12"
+    _mpfr_ptr(b::BigFloat) = Ptr{mpfr_t}(pointer(getfield(b, :d)))
+else
+    _mpfr_ptr(b::BigFloat) = Ptr{mpfr_t}(pointer_from_objref(b))
+end
+
+
+function horner!(f::Vector{Float64}, c::StridedVector{Float64}, x::Vector{Float64})
     @assert length(x) == length(f)
     ccall((:ft_horner, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
-function horner!(c::StridedVector{Float32}, x::Vector{Float32}, f::Vector{Float32})
+function horner!(f::Vector{Float32}, c::StridedVector{Float32}, x::Vector{Float32})
     @assert length(x) == length(f)
     ccall((:ft_hornerf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c, 1), length(x), x, f)
     f
-end
-
-function check_clenshaw_recurrences(N, A, B, C)
-    if length(A) < N || length(B) < N || length(C) < N+1
-        throw(ArgumentError("A, B must contain at least $N entries and C must contain at least $(N+1) entrie"))
-    end
 end
 
 function check_clenshaw_points(x, ϕ₀, f)
@@ -75,19 +81,19 @@ function check_clenshaw_points(x, f)
     length(x) == length(f) || throw(ArgumentError("Dimensions must match"))
 end
 
-function clenshaw!(c::StridedVector{Float64}, x::Vector{Float64}, f::Vector{Float64})
+function clenshaw!(f::Vector{Float64}, c::StridedVector{Float64}, x::Vector{Float64})
     @boundscheck check_clenshaw_points(x, f)
     ccall((:ft_clenshaw, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
-function clenshaw!(c::StridedVector{Float32}, x::Vector{Float32}, f::Vector{Float32})
+function clenshaw!(f::Vector{Float32}, c::StridedVector{Float32}, x::Vector{Float32})
     @boundscheck check_clenshaw_points(x, f)
     ccall((:ft_clenshawf, libfasttransforms), Cvoid, (Cint, Ptr{Float32}, Cint, Cint, Ptr{Float32}, Ptr{Float32}), length(c), c, stride(c, 1), length(x), x, f)
     f
 end
 
-function clenshaw!(c::StridedVector{Float64}, A::Vector{Float64}, B::Vector{Float64}, C::Vector{Float64}, x::Vector{Float64}, ϕ₀::Vector{Float64}, f::Vector{Float64})
+function clenshaw!(f::Vector{Float64}, c::StridedVector{Float64}, A::Vector{Float64}, B::Vector{Float64}, C::Vector{Float64}, x::Vector{Float64}, ϕ₀::Vector{Float64})
     N = length(c)
     @boundscheck check_clenshaw_recurrences(N, A, B, C)
     @boundscheck check_clenshaw_points(x, ϕ₀, f)
@@ -95,7 +101,7 @@ function clenshaw!(c::StridedVector{Float64}, A::Vector{Float64}, B::Vector{Floa
     f
 end
 
-function clenshaw!(c::StridedVector{Float32}, A::Vector{Float32}, B::Vector{Float32}, C::Vector{Float32}, x::Vector{Float32}, ϕ₀::Vector{Float32}, f::Vector{Float32})
+function clenshaw!(f::Vector{Float32}, c::StridedVector{Float32}, A::Vector{Float32}, B::Vector{Float32}, C::Vector{Float32}, x::Vector{Float32}, ϕ₀::Vector{Float32})
     N = length(c)
     @boundscheck check_clenshaw_recurrences(N, A, B, C)
     @boundscheck check_clenshaw_points(x, ϕ₀, f)
@@ -989,19 +995,31 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
         function $fJ(p::FTPlan{BigFloat, 1}, x::StridedVector{BigFloat})
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'N', p.n, p, p.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'N', p.n, p, p.n, ptrs, Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
         function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedVector{BigFloat}) where K
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
         function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedVector{BigFloat}) where K
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
     end
@@ -1089,19 +1107,31 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm_ptr),
         function $fJ(p::FTPlan{BigFloat, 1}, x::StridedMatrix{BigFloat})
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'N', p.n, p, p.n, renew!(x), stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'N', p.n, p, p.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
         function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedMatrix{BigFloat}) where K
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
         function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedMatrix{BigFloat}) where K
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
     end
@@ -1250,3 +1280,18 @@ for (fC, T) in ((:execute_jacobi_similarityf, Float32), (:execute_jacobi_similar
         end
     end
 end
+
+function modified_jacobi_matrix(R, XP)
+    n = size(R, 1) - 1
+    XQ = SymTridiagonal(zeros(n), zeros(n-1))
+    XQ.dv[1] = (R[1, 1]*XP[1, 1] + R[1, 2]*XP[2, 1])/R[1, 1]
+    for i in 1:n-1
+        XQ.ev[i] = R[i+1, i+1]*XP[i+1, i]/R[i, i]
+    end
+    for i in 2:n
+        XQ.dv[i] = (R[i, i]*XP[i,i] + R[i, i+1]*XP[i+1, i] - XQ[i, i-1]*R[i-1, i])/R[i, i]
+    end
+    return XQ
+end
+
+inv(P::FTPlan{T,2,DISKANALYSIS}) where T = plan_disk_synthesis(T, P.n, P.m)

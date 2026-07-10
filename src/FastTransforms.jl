@@ -1,14 +1,14 @@
 module FastTransforms
 
-using FastGaussQuadrature, FillArrays, LinearAlgebra,
-      Reexport, SpecialFunctions, ToeplitzMatrices
+using ArrayLayouts, BandedMatrices, FastGaussQuadrature, FillArrays, LazyArrays, LinearAlgebra,
+      SpecialFunctions, ToeplitzMatrices, RecurrenceRelationships
 
-@reexport using AbstractFFTs
-@reexport using FFTW
-@reexport using GenericFFT
+using AbstractFFTs
+using FFTW
+using GenericFFT
 
 import Base: convert, unsafe_convert, eltype, ndims, adjoint, transpose, show,
-             *, \, inv, length, size, view, getindex
+             *, \, inv, length, size, view, getindex, tail, OneTo
 
 import Base.GMP: Limb
 
@@ -19,6 +19,10 @@ import AbstractFFTs: Plan, ScaledPlan,
                      fftshift, ifftshift, rfft_output_size, brfft_output_size,
                      normalization
 
+import ArrayLayouts: rowsupport, colsupport, LayoutMatrix, MemoryLayout, AbstractBandedLayout
+
+import BandedMatrices: bandwidths, BandedLayout
+
 import FFTW: dct, dct!, idct, idct!, plan_dct!, plan_idct!,
              plan_dct, plan_idct, fftwNumber
 
@@ -26,9 +30,12 @@ import FastGaussQuadrature: unweightedgausshermite
 
 import FillArrays: AbstractFill, getindex_value
 
-import LinearAlgebra: mul!, lmul!, ldiv!
+import LinearAlgebra: cholesky, issymmetric, isposdef, mul!, lmul!, ldiv!
 
 import GenericFFT: interlace # imported in downstream packages
+
+import RecurrenceRelationships: check_clenshaw_recurrences
+
 
 export leg2cheb, cheb2leg, ultra2ultra, jac2jac,
        lag2lag, jac2ultra, ultra2jac, jac2cheb,
@@ -51,7 +58,6 @@ export plan_leg2cheb, plan_cheb2leg, plan_ultra2ultra, plan_jac2jac,
        plan_tet2cheb, plan_tet_synthesis, plan_tet_analysis,
        plan_spinsph2fourier, plan_spinsph_synthesis, plan_spinsph_analysis
 
-include("clenshaw.jl")
 
 include("libfasttransforms.jl")
 include("elliptic.jl")
@@ -91,13 +97,17 @@ export plan_clenshawcurtis, plan_fejer1, plan_fejer2
 include("clenshawcurtis.jl")
 include("fejer.jl")
 
-export weightedhermitetransform, iweightedhermitetransform
-
-include("hermite.jl")
-
 export gaunt
 
 include("gaunt.jl")
+
+export GramMatrix, ChebyshevGramMatrix
+
+include("GramMatrix.jl")
+
+export weightedhermitetransform, iweightedhermitetransform
+
+include("hermite.jl")
 
 export sphones, sphzeros, sphrand, sphrandn, sphevaluate,
        sphvones, sphvzeros, sphvrand, sphvrandn,
@@ -112,6 +122,10 @@ include("specialfunctions.jl")
 include("toeplitzplans.jl")
 include("toeplitzhankel.jl")
 
+export ToeplitzPlusHankel
+
+include("ToeplitzPlusHankel.jl")
+
 # following use libfasttransforms by default
 for f in (:jac2jac,
     :lag2lag, :jac2ultra, :ultra2jac, :jac2cheb,
@@ -124,6 +138,7 @@ for f in (:jac2jac,
     @eval $f(x::AbstractArray, y...; z...) = $lib_f(x, y...; z...)
 end
 
+include("arrays.jl")
 # following use Toeplitz-Hankel to avoid expensive plans
 # for f in (:leg2cheb, :cheb2leg, :ultra2ultra)
 #     th_f = Symbol("th_", f)
@@ -134,5 +149,6 @@ end
 #     end
 # end
 
+include("docstrings.jl")
 
 end # module
