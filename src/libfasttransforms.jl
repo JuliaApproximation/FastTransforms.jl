@@ -60,22 +60,6 @@ else
     _mpfr_ptr(b::BigFloat) = Ptr{mpfr_t}(pointer_from_objref(b))
 end
 
-function _mpfr_ptrs(x::StridedVector{BigFloat})
-    return [_mpfr_ptr(xi) for xi in x]
-end
-
-function _mpfr_ptrs(x::StridedMatrix{BigFloat})
-    m, n = size(x)
-    s = stride(x, 2)
-    len = n > 0 ? s * (n - 1) + m : 0
-    ptrs = Vector{Ptr{mpfr_t}}(undef, len)
-    for j in 0:n-1
-        for i in 0:m-1
-            @inbounds ptrs[i + j*s + 1] = _mpfr_ptr(x[i+1, j+1])
-        end
-    end
-    return ptrs
-end
 
 function horner!(f::Vector{Float64}, c::StridedVector{Float64}, x::Vector{Float64})
     @assert length(x) == length(f)
@@ -1013,7 +997,7 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
             checkstride(p, x)
             renew!(x)
             GC.@preserve x begin
-                ptrs = _mpfr_ptrs(x)
+                ptrs = map(_mpfr_ptr, x)
                 ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'N', p.n, p, p.n, ptrs, Base.MPFR.ROUNDING_MODE[])
             end
             return x
@@ -1023,7 +1007,7 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
             checkstride(p, x)
             renew!(x)
             GC.@preserve x begin
-                ptrs = _mpfr_ptrs(x)
+                ptrs = map(_mpfr_ptr, x)
                 ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, Base.MPFR.ROUNDING_MODE[])
             end
             return x
@@ -1033,7 +1017,7 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
             checkstride(p, x)
             renew!(x)
             GC.@preserve x begin
-                ptrs = _mpfr_ptrs(x)
+                ptrs = map(_mpfr_ptr, x)
                 ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, Base.MPFR.ROUNDING_MODE[])
             end
             return x
@@ -1125,7 +1109,7 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm_ptr),
             checkstride(p, x)
             renew!(x)
             GC.@preserve x begin
-                ptrs = _mpfr_ptrs(x)
+                ptrs = map(_mpfr_ptr, x)
                 ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'N', p.n, p, p.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             end
             return x
@@ -1135,7 +1119,7 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm_ptr),
             checkstride(p, x)
             renew!(x)
             GC.@preserve x begin
-                ptrs = _mpfr_ptrs(x)
+                ptrs = map(_mpfr_ptr, x)
                 ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             end
             return x
@@ -1145,7 +1129,7 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm_ptr),
             checkstride(p, x)
             renew!(x)
             GC.@preserve x begin
-                ptrs = _mpfr_ptrs(x)
+                ptrs = map(_mpfr_ptr, x)
                 ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
             end
             return x
