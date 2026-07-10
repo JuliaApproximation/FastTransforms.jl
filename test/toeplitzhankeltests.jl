@@ -183,4 +183,13 @@ Random.seed!(0)
             @test pl\(pl*copy(X)) ≈ X
         end
     end
+
+    @testset "empty" begin
+        @test isempty(FastTransforms.th_cheb2leg(Float64[]))
+        @test isempty(FastTransforms.th_leg2cheb(Float64[]))
+        @test isempty(FastTransforms.th_leg2chebu(Float64[]))
+        @test isempty(FastTransforms.th_cheb2jac(Float64[], 0.1, 0.2))
+        @test isempty(FastTransforms.th_jac2cheb(Float64[], 0.1, 0.2))
+        @test isempty(FastTransforms.th_ultra2ultra(Float64[], 0.1, 0.2))
+    end
 end

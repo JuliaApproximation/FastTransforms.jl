@@ -49,6 +49,18 @@ function renew!(x::AbstractArray{BigFloat})
     return x
 end
 
+# Obtain a raw C pointer to the mpfr_t struct underlying a BigFloat.
+# In Julia < 1.12, BigFloat was a mutable struct whose fields matched mpfr_t directly,
+# so pointer_from_objref gives us the mpfr_t*.
+# In Julia >= 1.12, BigFloat is an immutable struct wrapping Memory{Limb}, and the
+# mpfr_t struct is stored at the start of that Memory.
+@static if VERSION >= v"1.12"
+    _mpfr_ptr(b::BigFloat) = Ptr{mpfr_t}(pointer(getfield(b, :d)))
+else
+    _mpfr_ptr(b::BigFloat) = Ptr{mpfr_t}(pointer_from_objref(b))
+end
+
+
 function horner!(f::Vector{Float64}, c::StridedVector{Float64}, x::Vector{Float64})
     @assert length(x) == length(f)
     ccall((:ft_horner, libfasttransforms), Cvoid, (Cint, Ptr{Float64}, Cint, Cint, Ptr{Float64}, Ptr{Float64}), length(c), c, stride(c, 1), length(x), x, f)
@@ -983,19 +995,31 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmv_ptr),
         function $fJ(p::FTPlan{BigFloat, 1}, x::StridedVector{BigFloat})
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'N', p.n, p, p.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'N', p.n, p, p.n, ptrs, Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
         function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedVector{BigFloat}) where K
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
         function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedVector{BigFloat}) where K
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
     end
@@ -1083,19 +1107,31 @@ for (fJ, fC) in ((:lmul!, :ft_mpfr_trmm_ptr),
         function $fJ(p::FTPlan{BigFloat, 1}, x::StridedMatrix{BigFloat})
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'N', p.n, p, p.n, renew!(x), stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'N', p.n, p, p.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
         function $fJ(p::AdjointFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedMatrix{BigFloat}) where K
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
         function $fJ(p::TransposeFTPlan{BigFloat, FTPlan{BigFloat, 1, K}}, x::StridedMatrix{BigFloat}) where K
             checksize(p, x)
             checkstride(p, x)
-            ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{BigFloat}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, renew!(x), stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            renew!(x)
+            GC.@preserve x begin
+                ptrs = map(_mpfr_ptr, x)
+                ccall(($(string(fC)), libfasttransforms), Cvoid, (Cint, Cint, Ptr{mpfr_t}, Cint, Ptr{Ptr{mpfr_t}}, Cint, Cint, Int32), 'T', p.parent.n, p, p.parent.n, ptrs, stride(x, 2), size(x, 2), Base.MPFR.ROUNDING_MODE[])
+            end
             return x
         end
     end
