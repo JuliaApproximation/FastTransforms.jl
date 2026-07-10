@@ -16,16 +16,16 @@ d = K .* z .^(0:N)</code></pre><pre><code class="language-none">21-element Vecto
  -2.563773875152638e-6
   4.3987405526054037e-7
  -7.547045641060418e-8
-  1.2948683203084688e-8
+  1.2948683203084691e-8
  -2.221642807903953e-9
-  3.8117364433902886e-10
+  3.811736443390289e-10
  -6.53990581302203e-11
   1.122070444229295e-11
  -1.925168523537399e-12
   3.303066989314436e-13
- -5.6671670051262317e-14
+ -5.6671670051262304e-14
   9.723321376130305e-15
- -1.6682582055195078e-15
+ -1.6682582055195076e-15
   2.862278569867433e-16</code></pre><p>Then, we convert this representation to the expansion in Jacobi polynomials <span>$P_n^{(-\frac{1}{2}, 0)}(y)$</span>:</p><pre><code class="language-julia">u = jac2jac(d, 0.0, 0.0, -0.5, 0.0; norm1 = false, norm2 = true)</code></pre><pre><code class="language-none">21-element Vector{Float64}:
   0.9340010840223151
  -0.09412895357801879
@@ -37,18 +37,18 @@ d = K .* z .^(0:N)</code></pre><pre><code class="language-none">21-element Vecto
  -1.0393137552650633e-6
   1.673019401749671e-7
  -2.7126077156467505e-8
-  4.423525597533419e-9
+  4.423525597533421e-9
  -7.247452797834485e-10
-  1.1920483520702293e-10
+  1.1920483520702296e-10
  -1.9671182646957104e-11
   3.2552876283504113e-12
  -5.400110170678753e-13
   8.977555063800248e-14
- -1.4948797757615094e-14
+ -1.494879775761509e-14
   2.4980123321513196e-15
- -4.125155260660654e-16
+ -4.125155260660653e-16
   7.540496818753807e-17</code></pre><p>Our working polynomial degree will be:</p><pre><code class="language-julia">n = 100</code></pre><pre><code class="language-none">100</code></pre><p>We compute the connection coefficients between the modified orthogonal polynomials and the Jacobi polynomials:</p><pre><code class="language-julia">P = plan_modifiedjac2jac(Float64, n+1, -0.5, 0.0, u)</code></pre><pre><code class="language-none">FastTransforms Modified Jacobi--Jacobi plan for 101-element array of Float64</code></pre><p>We store the connection to first kind Chebyshev polynomials:</p><pre><code class="language-julia">P1 = plan_jac2cheb(Float64, n+1, -0.5, 0.0; normjac = true)</code></pre><pre><code class="language-none">FastTransforms Jacobi--Chebyshev plan for 101-element array of Float64</code></pre><p>We compute the Chebyshev series for the degree-<span>$k\le n$</span> modified polynomial and its values at the Chebyshev points:</p><pre><code class="language-julia">q = k -&gt; lmul!(P1, lmul!(P, [zeros(k); 1.0; zeros(n-k)]))
-qvals = k-&gt; ichebyshevtransform(q(k))</code></pre><pre><code class="language-none">#3 (generic function with 1 method)</code></pre><p>With the symmetric Jacobi matrix for <span>$P_n^{(-\frac{1}{2}, 0)}(y)$</span> and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):</p><pre><code class="language-julia">XP = SymTridiagonal([-inv((4n-1)*(4n-5)) for n in 1:n+1], [4n*(2n-1)/(4n-1)/sqrt((4n-3)*(4n+1)) for n in 1:n])
+qvals = k-&gt; ichebyshevtransform(q(k))</code></pre><pre><code class="language-none">#5 (generic function with 1 method)</code></pre><p>With the symmetric Jacobi matrix for <span>$P_n^{(-\frac{1}{2}, 0)}(y)$</span> and the modified plan, we may compute the modified Jacobi matrix and the corresponding roots (as eigenvalues):</p><pre><code class="language-julia">XP = SymTridiagonal([-inv((4n-1)*(4n-5)) for n in 1:n+1], [4n*(2n-1)/(4n-1)/sqrt((4n-3)*(4n+1)) for n in 1:n])
 XQ = FastTransforms.modified_jacobi_matrix(P, XP)
 SymTridiagonal(XQ.dv[1:10], XQ.ev[1:9])</code></pre><pre><code class="language-none">10×10 LinearAlgebra.SymTridiagonal{Float64, Vector{Float64}}:
  0.27324    0.615517     ⋅           ⋅            ⋅            ⋅            ⋅            ⋅            ⋅             ⋅ 
@@ -91,4 +91,4 @@ UpperTriangular(DQ[1:10,1:10])</code></pre><pre><code class="language-none">10×
   ⋅    ⋅        ⋅         ⋅         ⋅        ⋅        0.0      12.3723    2.26542   0.0
   ⋅    ⋅        ⋅         ⋅         ⋅        ⋅         ⋅        0.0      14.0799    2.55888
   ⋅    ⋅        ⋅         ⋅         ⋅        ⋅         ⋅         ⋅        0.0      15.7874
-  ⋅    ⋅        ⋅         ⋅         ⋅        ⋅         ⋅         ⋅         ⋅        0.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../disk/">« Holomorphic integration on the unit disk</a><a class="docs-footer-nextpage" href="../nonlocaldiffusion/">Nonlocal diffusion on <span>$\mathbb{S}^2$</span> »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 31 January 2025 19:04">Friday 31 January 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  ⋅    ⋅        ⋅         ⋅         ⋅        ⋅         ⋅         ⋅         ⋅        0.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../disk/">« Holomorphic integration on the unit disk</a><a class="docs-footer-nextpage" href="../nonlocaldiffusion/">Nonlocal diffusion on <span>$\mathbb{S}^2$</span> »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 10 July 2026 12:41">Friday 10 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
