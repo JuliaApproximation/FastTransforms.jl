@@ -447,13 +447,20 @@ function alternatesign!(v)
     v
 end
 
+# (2k+λ)*Λ(k,λ,μ), using λ*Γ(λ) = Γ(λ+1) for k = 0 to avoid 0*Inf when λ = 0, e.g. when converting to Chebyshev
+function _jac2jac_DL(jk, λ, μ)
+    DL = (2jk .+ λ).*Λ.(jk,λ,μ)
+    isempty(DL) || (DL[1] = Λ(0,λ+1,μ))
+    DL
+end
+
 function _jac2jacTH_TLC(::Type{S}, mn, α, β, γ, δ, d) where {S}
     n = mn[d]
     @assert α+β > -1
     if β == δ
         @assert abs(α-γ) < 1
         jk = 0:n-1
-        DL = (2jk .+ γ .+ β .+ 1).*Λ.(jk,γ+β+1,β+1)
+        DL = _jac2jac_DL(jk,γ+β+1,β+1)
         t = convert(AbstractVector{S}, Λ.(jk, α-γ,1))
         h = Λ.(0:2n-2,α+β+1,γ+β+2)
         DR = Λ.(jk,β+1,α+β+1)./gamma(α-γ)
@@ -462,7 +469,7 @@ function _jac2jacTH_TLC(::Type{S}, mn, α, β, γ, δ, d) where {S}
     elseif α == γ
         @assert abs(β-δ) < 1
         jk = 0:n-1
-        DL = (2jk .+ δ .+ α .+ 1).*Λ.(jk,δ+α+1,α+1)
+        DL = _jac2jac_DL(jk,δ+α+1,α+1)
         h = Λ.(0:2n-2,α+β+1,δ+α+2)
         DR = Λ.(jk,α+1,α+β+1)./gamma(β-δ)
         t = alternatesign!(convert(AbstractVector{S}, Λ.(jk,β-δ,1)))
