@@ -13,7 +13,7 @@ ft_set_num_threads(n::Integer) = ccall((:ft_set_num_threads, libfasttransforms),
 ft_fftw_plan_with_nthreads(n::Integer) = ccall((:ft_fftw_plan_with_nthreads, libfasttransforms), Cvoid, (Cint, ), n)
 
 function __init__()
-    n = ceil(Int, Sys.CPU_THREADS/2)
+    n = Threads.nthreads()
     ft_set_num_threads(n)
     ccall((:ft_fftw_init_threads, libfasttransforms), Cint, ())
     ft_fftw_plan_with_nthreads(n)
