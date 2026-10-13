@@ -277,7 +277,7 @@ See also [`GramMatrix`](@ref) for the general case.
 """
 function ChebyshevGramMatrix(μ::V) where {T, V <: AbstractVector{T}}
     n = (length(μ)+1)÷2
-    ChebyshevGramMatrix{T, V}(μ, n)
+    ChebyshevGramMatrix(μ, n)
 end
 
 @inline size(G::ChebyshevGramMatrix) = (G.n, G.n)
