@@ -408,7 +408,11 @@ end
 function *(P::ChebyshevUTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
     length(x) ≤ 1 && return x
     _chebu1_prescale!(P.plan.region, x)
-    P.plan * x
+    x = P.plan * x
+    for d in P.plan.region
+        ldiv_dim_end!(2, d, x)
+    end
+    x
 end
 
 function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::AbstractArray{T}) where {T,K}
@@ -418,7 +422,7 @@ function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::A
     _plan_mul!(y, P.plan, x)
     _chebu1_postscale!(P.plan.region, x)
     for d in P.plan.region
-        size(y,d) == 1 && ldiv!(2, y) # fix doubling
+        ldiv_dim_end!(2, d, y)
     end
     y
 end
@@ -527,6 +531,9 @@ end
 
 function *(P::IChebyshevUTransformPlan{T,1,K,true}, x::AbstractArray{T}) where {T<:fftwNumber,K}
     length(x) ≤ 1 && return x
+    for d in P.plan.region
+        lmul_dim_end!(2, d, x)
+    end
     x = P.plan * x
     _ichebu1_postscale!(P.plan.region, x)
 end
@@ -534,11 +541,14 @@ end
 function mul!(y::AbstractArray{T}, P::IChebyshevUTransformPlan{T,1,K,false}, x::AbstractArray{T}) where {T<:fftwNumber,K}
     size(y) == size(x) || throw(DimensionMismatch("output must match dimension"))
     isempty(x) && return y
-    _plan_mul!(y, P.plan, x)
-    _ichebu1_postscale!(P.plan.region, y)
     for d in P.plan.region
-        size(y,d) == 1 && lmul!(2, y) # fix doubling
+        lmul_dim_end!(2, d, x)
     end
+    _plan_mul!(y, P.plan, x)
+    for d in P.plan.region
+        ldiv_dim_end!(2, d, x)
+    end
+    _ichebu1_postscale!(P.plan.region, y)
     y
 end
 
