@@ -213,6 +213,16 @@ using FastTransforms, Test
             @test ichebyshevutransform!(v) === v
         end
     end
+    @testset "Chebyshev U highest coefficient" begin
+        for T in (Float32, Float64, ComplexF32, ComplexF64)
+            f = T[2,-1,2]
+            g = T[0,0,1]
+            @test chebyshevutransform(f) ≈ g
+            @test chebyshevutransform!(copy(f)) ≈ g
+            @test ichebyshevutransform(g) ≈ f
+            @test ichebyshevutransform!(copy(g)) ≈ f
+        end
+    end
     @testset "Chebyshev second kind points <-> second kind coefficients" begin
         for T in (Float32, Float64, ComplexF32, ComplexF64)
             n = 20
