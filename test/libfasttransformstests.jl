@@ -174,11 +174,18 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
     @test inv(pa) isa typeof(ps)
     @test inv(pa)*(p*A) ≈ ps*(p*A)
     @test p\(pa*(inv(pa)*(p*A))) ≈ A
+    @test inv(ps) isa typeof(pa)
+    @test inv(ps)*(ps*(p*A)) ≈ pa*(ps*(p*A)) ≈ p*A
+    @test p\(inv(ps)*(ps*(p*A))) ≈ A
+    @test inv(inv(ps)) isa typeof(ps)
+    @test inv(inv(pa)) isa typeof(pa)
     A = diskones(Float64, n, 4n-3) + im*diskones(Float64, n, 4n-3)
     p = plan_disk2cxf(A, α, β)
     ps = plan_disk_synthesis(A)
     pa = plan_disk_analysis(A)
     test_nd_plans(p, ps, pa, A)
+    @test inv(pa)*(p*A) ≈ ps*(p*A)
+    @test inv(ps)*(ps*(p*A)) ≈ p*A
 
     A = diskones(Float64, n, 4n-3)
     p = plan_ann2cxf(A, α, β, 0, ρ)
