@@ -10,6 +10,8 @@ This package provides a Julia wrapper for the [C library](https://github.com/Mik
 
 For this documentation, please see the documentation for [FastTransforms](https://github.com/MikaelSlevinsky/FastTransforms). Most transforms have separate forward and inverse plans. In some instances, however, the inverse is in the sense of least-squares, and therefore only the forward transform is planned.
 
+The transforms on the sphere, disk, annulus, triangle, and tetrahedron, and the layout of their arrays of coefficients in Julia, are described in [Harmonic polynomial transforms](@ref).
+
 ### Modified orthogonal polynomials via fast Cholesky factorization of the Gram matrix
 
 ```@docs
