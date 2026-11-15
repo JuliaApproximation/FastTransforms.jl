@@ -38,6 +38,7 @@ makedocs(
             authors = "Richard Mikael Slevinsky",
             pages = Any[
                     "Home" => "index.md",
+                    "Harmonic polynomial transforms" => "harmonic.md",
                     "Development" => "dev.md",
                     "Examples" => [
                         "generated/annulus.md",
