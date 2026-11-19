@@ -130,7 +130,7 @@ function mul_col_J!(F::Matrix{T}, P::NUFFTPlan{1,T}, C::Matrix{T}, J::Int) where
     F
 end
 
-function mul!(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{T}) where {T}
+function mul!(f::AbstractVector{T}, P::NUFFTPlan{2,T}, c::AbstractVector{S}) where {T, S}
     U, V, p, t, temp, temp2, Ones = P.U, P.V, P.p, P.t, P.temp, P.temp2, P.Ones
 
     broadcast!(*, temp, c, V)
