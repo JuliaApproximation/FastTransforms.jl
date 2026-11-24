@@ -178,6 +178,77 @@ import FastTransforms: ArrayPlan, NDimsPlan
             @test ps*(pa*A) ≈ A
             @test inv(pa)*B ≈ A
         end
+
+        @testset "all transforms" begin
+            n, K = 5, 3
+            α, β, γ, δ, ρ, s = -0.1, -0.2, -0.3, -0.4, 2/3, 2
+
+            # compare plan_f(A, params..., dims) with applying plan_f(slice, params...) slice by slice
+            function test_slices(plan_f, params, A, dims, slice; inverse)
+                P = plan_f(A, params..., dims)
+                F = plan_f(A[slice(1)...], params...)
+                @test P isa NDimsPlan
+                for (Q, G) in ((P, F), (P', F'), (transpose(P), transpose(F)))
+                    B = similar(A)
+                    for k in axes(A, findfirst(i -> i ∉ only(dims), 1:ndims(A)))
+                        B[slice(k)...] = G*A[slice(k)...]
+                    end
+                    @test Q*A ≈ B
+                    if inverse
+                        C = similar(A)
+                        for k in axes(A, findfirst(i -> i ∉ only(dims), 1:ndims(A)))
+                            C[slice(k)...] = G\B[slice(k)...]
+                        end
+                        @test Q\B ≈ C
+                    end
+                end
+            end
+
+            # (plan, parameters, number of columns, element type, whether the plan supports \)
+            for (plan_f, params, m, S, inverse) in ((plan_sph2fourier, (), 2n-1, Float64, true),
+                                                    (plan_sphv2fourier, (), 2n-1, Float64, true),
+                                                    (plan_disk2cxf, (α, β), 4n-3, Float64, true),
+                                                    (plan_ann2cxf, (α, β, 0, ρ), 4n-3, Float64, true),
+                                                    (plan_rectdisk2cheb, (β,), n, Float64, true),
+                                                    (plan_tri2cheb, (α, β, γ), n, Float64, true),
+                                                    (plan_spinsph2fourier, (s,), 2n-1, ComplexF64, true),
+                                                    (plan_sph_synthesis, (), 2n-1, Float64, false),
+                                                    (plan_sph_analysis, (), 2n-1, Float64, false),
+                                                    (plan_sphv_synthesis, (), 2n-1, Float64, false),
+                                                    (plan_sphv_analysis, (), 2n-1, Float64, false),
+                                                    (plan_disk_synthesis, (), 4n-3, Float64, false),
+                                                    (plan_disk_analysis, (), 4n-3, Float64, false),
+                                                    (plan_annulus_synthesis, (ρ,), 4n-3, Float64, false),
+                                                    (plan_annulus_analysis, (ρ,), 4n-3, Float64, false),
+                                                    (plan_rectdisk_synthesis, (), n, Float64, false),
+                                                    (plan_rectdisk_analysis, (), n, Float64, false),
+                                                    (plan_tri_synthesis, (), n, Float64, false),
+                                                    (plan_tri_analysis, (), n, Float64, false),
+                                                    (plan_spinsph_synthesis, (s,), 2n-1, ComplexF64, false),
+                                                    (plan_spinsph_analysis, (s,), 2n-1, ComplexF64, false))
+                @testset "$plan_f" begin
+                    test_slices(plan_f, params, randn(S, n, K, m), ((1,3),), k -> (:, k, :); inverse)
+                    @test_throws ArgumentError plan_f(randn(S, n, K, m), params..., ((1,2,3),))
+                end
+            end
+
+            for (plan_f, params, inverse) in ((plan_tet2cheb, (α, β, γ, δ), true),
+                                              (plan_tet_synthesis, (), false),
+                                              (plan_tet_analysis, (), false))
+                @testset "$plan_f" begin
+                    test_slices(plan_f, params, randn(n, n, K, n), ((1,2,4),), k -> (:, :, k, :); inverse)
+                    @test_throws ArgumentError plan_f(randn(n, n, K, n), params..., ((1,2),))
+                end
+            end
+
+            # the inverse transforms accept dims too
+            A = randn(n, K, n)
+            P = plan_tri2cheb(A, α, β, γ, ((1,3),))
+            @test cheb2tri(P*A, α, β, γ, ((1,3),)) ≈ A
+            @test tri2cheb(A, α, β, γ, ((1,3),)) ≈ P*A
+            A = randn(n, K, 2n-1)
+            @test fourier2sph(sph2fourier(A, ((1,3),)), ((1,3),)) ≈ plan_sph2fourier(A, ((1,3),))\(plan_sph2fourier(A, ((1,3),))*A)
+        end
     end
 end
 

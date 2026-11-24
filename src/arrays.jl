@@ -188,44 +188,71 @@ adjoint(P::SliceNDimsPlan) = NDimsPlan(adjoint(P.F), P.szs, reverse(P.dims))
 transpose(P::SliceNDimsPlan) = NDimsPlan(transpose(P.F), P.szs, reverse(P.dims))
 
 
-# Transforms acting on matrices: dims is a non-empty tuple of pairs, e.g. ((1,3),) or ((1,3),(2,4)).
-# Returns the size of the matrix slices.
-function _matrixslicesize(A::AbstractArray, dims::Tuple)
-    if !(dims isa Tuple{NTuple{2,Int},Vararg{NTuple{2,Int}}})
-        throw(ArgumentError("dims must be a tuple of pairs of dimensions, e.g. ((1,3),) or ((1,3),(2,4)), got $dims"))
+# dims for a transform acting on M-dimensional slices is a non-empty tuple of M-tuples,
+# e.g. ((1,3),) or ((1,3),(2,4)) for M = 2. Returns the size of the slices.
+function _slicesize(A::AbstractArray, dims::Tuple, M::Int)
+    if !(dims isa Tuple{NTuple{M,Int},Vararg{NTuple{M,Int}}})
+        throw(ArgumentError("dims must be a non-empty tuple of $M-tuples of dimensions such as $((ntuple(k -> 2k-1, M),)), got $dims"))
     end
     _checkslicedims(size(A), dims)
-    i, j = first(dims)
-    return (size(A, i), size(A, j))
+    return map(i -> size(A, i), first(dims))
 end
 
-"""
-    plan_disk2cxf(A, [α, β,] dims)
-
-Plan the Zernike--Chebyshev×Fourier transform on the matrix slices of `A` spanned by each
-pair of dimensions in `dims`, applied in order. For example, `dims = ((1,3),)` transforms
-`A[:,k,:]` for every `k`, and `dims = ((1,3), (2,4))` transforms `A[:,k,:,l]` for every `k`
-and `l`, then `A[k,:,l,:]`. All slices must have the same size. See [`NDimsPlan`](@ref).
-"""
-plan_disk2cxf(A::AbstractArray, dims::Tuple) = plan_disk2cxf(A, 0, 0, dims)
-plan_disk2cxf(A::AbstractArray, α, dims::Tuple) = plan_disk2cxf(A, α, 0, dims)
-function plan_disk2cxf(A::AbstractArray{T}, α, β, dims::Tuple) where T
-    n, _ = _matrixslicesize(A, dims)
-    NDimsPlan(plan_disk2cxf(T, n, α, β), size(A), dims)
-end
-
-for (plan_f, kind) in ((:plan_disk_analysis, "analysis"), (:plan_disk_synthesis, "synthesis"))
-    doc = """
-        $plan_f(A, dims; flags=FFTW.ESTIMATE)
-
-    Plan the FFTW Chebyshev×Fourier $kind on the disk on the matrix slices of `A` spanned by
-    each pair of dimensions in `dims`, applied in order. For example, `dims = ((1,3),)` acts on
-    `A[:,k,:]` for every `k`, and `dims = ((1,3), (2,4))` acts on `A[:,k,:,l]` for every `k`
-    and `l`, then on `A[k,:,l,:]`. All slices must have the same size. See [`NDimsPlan`](@ref).
+function _dimsdoc(signature, description, M)
+    example = M == 2 ? "`dims = ((1,3),)` acts on `A[:,k,:]` for every `k`, and `dims = ((1,3), (2,4))` acts on `A[:,k,:,l]` for every `k` and `l`, then on `A[k,:,l,:]`" :
+                       "`dims = ((1,2,4),)` acts on `A[:,:,k,:]` for every `k`"
     """
-    @eval begin
-        @doc $doc function $plan_f(A::AbstractArray{T}, dims::Tuple; kws...) where T
-            NDimsPlan($plan_f(T, _matrixslicesize(A, dims)...; kws...), size(A), dims)
+        $signature
+
+    Plan the $description on the slices of `A` spanned by each entry of `dims`, applied in
+    order. For example, $example. All slices must have the same size. See [`NDimsPlan`](@ref).
+    """
+end
+
+# Coefficient transforms: (plan, kind, dimension M of the slices, required parameters, optional parameters).
+# The plan only depends on the leading size of the slices.
+for (plan_f, K, M, req, opt) in ((:plan_sph2fourier, SPHERE, 2, (), ()),
+                                 (:plan_sphv2fourier, SPHEREV, 2, (), ()),
+                                 (:plan_disk2cxf, DISK, 2, (), (:α, :β)),
+                                 (:plan_ann2cxf, ANNULUS, 2, (), (:α, :β, :γ, :ρ)),
+                                 (:plan_rectdisk2cheb, RECTDISK, 2, (), (:β,)),
+                                 (:plan_tri2cheb, TRIANGLE, 2, (), (:α, :β, :γ)),
+                                 (:plan_tet2cheb, TETRAHEDRON, 3, (), (:α, :β, :γ, :δ)),
+                                 (:plan_spinsph2fourier, SPINSPHERE, 2, (:s,), ()))
+    for k in 0:length(opt)
+        params = (req..., opt[1:k]...)
+        ex = :($plan_f(A::AbstractArray{T}, $(params...), dims::Tuple) where T =
+                   NDimsPlan($plan_f(T, first(_slicesize(A, dims, $M)), $(params...)), size(A), dims))
+        if k == length(opt)
+            args = "A, " * join(map(p -> "$p, ", req)) * (isempty(opt) ? "" : "[" * join(opt, ", ") * ",] ") * "dims"
+            doc = _dimsdoc("$plan_f($args)", kind2string(K) * " transform", M)
+            @eval @doc $doc $ex
+        else
+            @eval $ex
         end
     end
+end
+
+# FFTW synthesis and analysis: (plan, kind, dimension M of the slices, parameters).
+# The plan depends on the full size of the slices.
+for (plan_f, K, M, params) in ((:plan_sph_synthesis, SPHERESYNTHESIS, 2, ()),
+                               (:plan_sph_analysis, SPHEREANALYSIS, 2, ()),
+                               (:plan_sphv_synthesis, SPHEREVSYNTHESIS, 2, ()),
+                               (:plan_sphv_analysis, SPHEREVANALYSIS, 2, ()),
+                               (:plan_disk_synthesis, DISKSYNTHESIS, 2, ()),
+                               (:plan_disk_analysis, DISKANALYSIS, 2, ()),
+                               (:plan_annulus_synthesis, ANNULUSSYNTHESIS, 2, (:ρ,)),
+                               (:plan_annulus_analysis, ANNULUSANALYSIS, 2, (:ρ,)),
+                               (:plan_rectdisk_synthesis, RECTDISKSYNTHESIS, 2, ()),
+                               (:plan_rectdisk_analysis, RECTDISKANALYSIS, 2, ()),
+                               (:plan_tri_synthesis, TRIANGLESYNTHESIS, 2, ()),
+                               (:plan_tri_analysis, TRIANGLEANALYSIS, 2, ()),
+                               (:plan_tet_synthesis, TETRAHEDRONSYNTHESIS, 3, ()),
+                               (:plan_tet_analysis, TETRAHEDRONANALYSIS, 3, ()),
+                               (:plan_spinsph_synthesis, SPINSPHERESYNTHESIS, 2, (:s,)),
+                               (:plan_spinsph_analysis, SPINSPHEREANALYSIS, 2, (:s,)))
+    args = "A, " * join(map(p -> "$p, ", params)) * "dims; flags=FFTW.ESTIMATE"
+    doc = _dimsdoc("$plan_f($args)", kind2string(K), M)
+    @eval @doc $doc $plan_f(A::AbstractArray{T}, $(params...), dims::Tuple; kws...) where T =
+        NDimsPlan($plan_f(T, _slicesize(A, dims, $M)..., $(params...); kws...), size(A), dims)
 end
