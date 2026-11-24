@@ -189,10 +189,16 @@ transpose(P::SliceNDimsPlan) = NDimsPlan(transpose(P.F), P.szs, reverse(P.dims))
 
 
 # dims for a transform acting on M-dimensional slices is a non-empty tuple of M-tuples,
-# e.g. ((1,3),) or ((1,3),(2,4)) for M = 2. Returns the size of the slices.
+# e.g. ((1,3),) or ((1,3),(2,4)) for M = 2, or a single M-tuple such as (1,3), which is
+# shorthand for ((1,3),). The plans do not use NDimsPlan(F, szs, (1,3)) directly, since
+# there a tuple of integers means applying a vector transform along each dimension.
+_slicedims(dims::NTuple{M,Int}, ::Val{M}) where M = (dims,)
+_slicedims(dims::Tuple, ::Val) = dims
+
+# Returns the size of the slices for dims normalized by _slicedims.
 function _slicesize(A::AbstractArray, dims::Tuple, M::Int)
     if !(dims isa Tuple{NTuple{M,Int},Vararg{NTuple{M,Int}}})
-        throw(ArgumentError("dims must be a non-empty tuple of $M-tuples of dimensions such as $((ntuple(k -> 2k-1, M),)), got $dims"))
+        throw(ArgumentError("dims must be a $M-tuple of dimensions such as $(ntuple(k -> 2k-1, M)), or a non-empty tuple of them such as $((ntuple(k -> 2k-1, M),)), got $dims"))
     end
     _checkslicedims(size(A), dims)
     return map(i -> size(A, i), first(dims))
@@ -201,11 +207,13 @@ end
 function _dimsdoc(signature, description, M)
     example = M == 2 ? "`dims = ((1,3),)` acts on `A[:,k,:]` for every `k`, and `dims = ((1,3), (2,4))` acts on `A[:,k,:,l]` for every `k` and `l`, then on `A[k,:,l,:]`" :
                        "`dims = ((1,2,4),)` acts on `A[:,:,k,:]` for every `k`"
+    single = M == 2 ? "`dims = (1,3)` is the same as `dims = ((1,3),)`" : "`dims = (1,2,4)` is the same as `dims = ((1,2,4),)`"
     """
         $signature
 
     Plan the $description on the slices of `A` spanned by each entry of `dims`, applied in
-    order. For example, $example. All slices must have the same size. See [`NDimsPlan`](@ref).
+    order. For example, $example. When the transform is applied once, the entry can be given
+    on its own, so $single. All slices must have the same size. See [`NDimsPlan`](@ref).
     """
 end
 
@@ -221,8 +229,10 @@ for (plan_f, K, M, req, opt) in ((:plan_sph2fourier, SPHERE, 2, (), ()),
                                  (:plan_spinsph2fourier, SPINSPHERE, 2, (:s,), ()))
     for k in 0:length(opt)
         params = (req..., opt[1:k]...)
-        ex = :($plan_f(A::AbstractArray{T}, $(params...), dims::Tuple) where T =
-                   NDimsPlan($plan_f(T, first(_slicesize(A, dims, $M)), $(params...)), size(A), dims))
+        ex = :(function $plan_f(A::AbstractArray{T}, $(params...), dims::Tuple) where T
+                   slicedims = _slicedims(dims, Val($M))
+                   NDimsPlan($plan_f(T, first(_slicesize(A, slicedims, $M)), $(params...)), size(A), slicedims)
+               end)
         if k == length(opt)
             args = "A, " * join(map(p -> "$p, ", req)) * (isempty(opt) ? "" : "[" * join(opt, ", ") * ",] ") * "dims"
             doc = _dimsdoc("$plan_f($args)", kind2string(K) * " transform", M)
@@ -253,6 +263,8 @@ for (plan_f, K, M, params) in ((:plan_sph_synthesis, SPHERESYNTHESIS, 2, ()),
                                (:plan_spinsph_analysis, SPINSPHEREANALYSIS, 2, (:s,)))
     args = "A, " * join(map(p -> "$p, ", params)) * "dims; flags=FFTW.ESTIMATE"
     doc = _dimsdoc("$plan_f($args)", kind2string(K), M)
-    @eval @doc $doc $plan_f(A::AbstractArray{T}, $(params...), dims::Tuple; kws...) where T =
-        NDimsPlan($plan_f(T, _slicesize(A, dims, $M)..., $(params...); kws...), size(A), dims)
+    @eval @doc $doc function $plan_f(A::AbstractArray{T}, $(params...), dims::Tuple; kws...) where T
+        slicedims = _slicedims(dims, Val($M))
+        NDimsPlan($plan_f(T, _slicesize(A, slicedims, $M)..., $(params...); kws...), size(A), slicedims)
+    end
 end
