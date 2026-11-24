@@ -133,8 +133,22 @@ import FastTransforms: ArrayPlan, NDimsPlan
             @test P\B ≈ A
             @test dot(P'*C, A) ≈ dot(C, P*A)
 
+            # a single entry is shorthand for a tuple containing it
             A = randn(n, 3, m)
-            @test_throws ArgumentError plan_disk2cxf(A, (1,3))
+            P = plan_disk2cxf(A, α, β, (1,3))
+            @test P isa NDimsPlan
+            @test P.dims == ((1,3),)
+            @test P*A ≈ plan_disk2cxf(A, α, β, ((1,3),))*A
+            @test P\(P*A) ≈ A
+            @test plan_disk2cxf(A, (1,3))*A ≈ plan_disk2cxf(A, ((1,3),))*A
+            @test disk2cxf(A, α, β, (1,3)) ≈ P*A
+            @test cxf2disk(P*A, α, β, (1,3)) ≈ A
+            @test plan_disk2cxf(A[:,1,:], α, β, (1,2))*A[:,1,:] ≈ F*A[:,1,:]
+
+            @test_throws ArgumentError plan_disk2cxf(A, (1,))
+            @test_throws ArgumentError plan_disk2cxf(A, (1,2,3))
+            @test_throws ArgumentError plan_disk2cxf(A, (1,4))
+            @test_throws ArgumentError plan_disk2cxf(A, (1,1))
             @test_throws ArgumentError plan_disk2cxf(A, ((1,4),))
             @test_throws ArgumentError plan_disk2cxf(A, ((1,1),))
             @test_throws ErrorException plan_disk2cxf(randn(n, n+1, m, m+4), ((1,3), (2,4)))
@@ -159,6 +173,9 @@ import FastTransforms: ArrayPlan, NDimsPlan
             @test inv(pa)*A ≈ ps*A
             @test inv(ps)*A ≈ pa*A
             @test pa*complex.(A, A) ≈ complex.(Ba, Ba)
+            @test plan_disk_analysis(A, (1,3))*A ≈ Ba
+            @test plan_disk_synthesis(A, (1,3))*A ≈ Bs
+            @test plan_disk_analysis(A, (1,3); flags=FastTransforms.FFTW.MEASURE)*A ≈ Ba
             for k in axes(A,2)
                 Ba[:,k,:] = Fa'*A[:,k,:]
             end
@@ -188,6 +205,8 @@ import FastTransforms: ArrayPlan, NDimsPlan
                 P = plan_f(A, params..., dims)
                 F = plan_f(A[slice(1)...], params...)
                 @test P isa NDimsPlan
+                # a single entry is shorthand for a tuple containing it
+                @test plan_f(A, params..., only(dims))*A ≈ P*A
                 for (Q, G) in ((P, F), (P', F'), (transpose(P), transpose(F)))
                     B = similar(A)
                     for k in axes(A, findfirst(i -> i ∉ only(dims), 1:ndims(A)))
@@ -229,6 +248,7 @@ import FastTransforms: ArrayPlan, NDimsPlan
                 @testset "$plan_f" begin
                     test_slices(plan_f, params, randn(S, n, K, m), ((1,3),), k -> (:, k, :); inverse)
                     @test_throws ArgumentError plan_f(randn(S, n, K, m), params..., ((1,2,3),))
+                    @test_throws ArgumentError plan_f(randn(S, n, K, m), params..., (1,2,3))
                 end
             end
 
@@ -238,6 +258,7 @@ import FastTransforms: ArrayPlan, NDimsPlan
                 @testset "$plan_f" begin
                     test_slices(plan_f, params, randn(n, n, K, n), ((1,2,4),), k -> (:, :, k, :); inverse)
                     @test_throws ArgumentError plan_f(randn(n, n, K, n), params..., ((1,2),))
+                    @test_throws ArgumentError plan_f(randn(n, n, K, n), params..., (1,2))
                 end
             end
 
