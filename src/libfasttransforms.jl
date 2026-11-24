@@ -774,6 +774,7 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_sph_synthesis, :plan_sph_analysis, :ft_plan
         end
         adjoint(p::FTPlan{T, 2, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.m))
         transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m))
+        inv(p::FTPlan{T, 2, $K}) where T = $fadJ(T, p.n, p.m)
         function lmul!(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
             checksize(p, x)
             ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
@@ -806,6 +807,7 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_annulus_synthesis, :plan_annulus_analysis, 
         end
         adjoint(p::FTPlan{T, 2, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.m, ft_get_rho_annulus_fftw_plan(p)))
         transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m, ft_get_rho_annulus_fftw_plan(p)))
+        inv(p::FTPlan{T, 2, $K}) where T = $fadJ(T, p.n, p.m, ft_get_rho_annulus_fftw_plan(p))
         function lmul!(p::FTPlan{Float64, 2, $K}, x::Matrix{Float64})
             checksize(p, x)
             ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
@@ -835,6 +837,7 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_tet_synthesis, :plan_tet_analysis, :ft_plan
         end
         adjoint(p::FTPlan{T, 3, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.l, p.m))
         transpose(p::FTPlan{T, 3, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.l, p.m))
+        inv(p::FTPlan{T, 3, $K}) where T = $fadJ(T, p.n, p.l, p.m)
         function lmul!(p::FTPlan{Float64, 3, $K}, x::Array{Float64, 3})
             checksize(p, x)
             ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2), size(x, 3))
@@ -864,6 +867,7 @@ for (fJ, fadJ, fC, fE, K) in ((:plan_spinsph_synthesis, :plan_spinsph_analysis, 
         get_spin(p::FTPlan{T, 2, $K}) where T = ccall((:ft_get_spin_spinsphere_fftw_plan, libfasttransforms), Cint, (Ptr{ft_plan_struct},), p)
         adjoint(p::FTPlan{T, 2, $K}) where T = AdjointFTPlan(p, $fadJ(T, p.n, p.m, get_spin(p)))
         transpose(p::FTPlan{T, 2, $K}) where T = TransposeFTPlan(p, $fadJ(T, p.n, p.m, get_spin(p)))
+        inv(p::FTPlan{T, 2, $K}) where T = $fadJ(T, p.n, p.m, get_spin(p))
         function lmul!(p::FTPlan{Complex{Float64}, 2, $K}, x::Matrix{Complex{Float64}})
             checksize(p, x)
             ccall(($(string(fE)), libfasttransforms), Cvoid, (Cint, Ptr{ft_plan_struct}, Ptr{Float64}, Cint, Cint), 'N', p, x, size(x, 1), size(x, 2))
@@ -1293,6 +1297,3 @@ function modified_jacobi_matrix(R, XP)
     end
     return XQ
 end
-
-inv(P::FTPlan{T,2,DISKANALYSIS}) where T = plan_disk_synthesis(T, P.n, P.m)
-inv(P::FTPlan{T,2,DISKSYNTHESIS}) where T = plan_disk_analysis(T, P.n, P.m)

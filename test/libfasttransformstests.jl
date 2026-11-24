@@ -142,6 +142,12 @@ FastTransforms.ft_set_num_threads(ceil(Int, Base.Sys.CPU_THREADS/2))
         C = transpose(ps)*(transpose(p)*A)
         A = transpose(p)\(transpose(pa)*C)
         @test A ≈ B
+        @test inv(ps) isa typeof(pa)
+        @test inv(pa) isa typeof(ps)
+        C = ps*(p*B)
+        @test inv(ps)*C ≈ pa*C ≈ p*B
+        @test inv(pa)*(p*B) ≈ C
+        @test p\(inv(ps)*C) ≈ B
     end
 
     A = sphones(Float64, n, 2n-1)
