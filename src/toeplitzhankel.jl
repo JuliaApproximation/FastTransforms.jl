@@ -261,6 +261,20 @@ _nearest_jacobi_par(α::T, ::T) where T<:Integer = α
 _nearest_jacobi_par(α, γ) = _nearest_jacobi_par(promote(α,γ)...)
 
 
+# The Toeplitz-Hankel conversion requires a positive parameter
+# so a negative parameter is first raised by one.
+_ultra_th_start(λ) = λ < 0 ? λ + 1 : λ
+
+"""
+  _nearest_ultra_par(λ, μ)
+
+returns a positive number that is an integer different than μ but less than 1 away from λ > 0.
+"""
+function _nearest_ultra_par(λ, μ)
+    c = _nearest_jacobi_par(λ, μ)
+    c < 1 && isapproxinteger(c) ? c + 1 : c # avoid 0, for which the conversion is singular
+end
+
 struct Ultra2UltraPlanTH{T, Plans, Dims} <: Plan{T}
     plans::Plans
     λ₁::T
@@ -268,15 +282,19 @@ struct Ultra2UltraPlanTH{T, Plans, Dims} <: Plan{T}
     dims::Dims
 end
 
+Ultra2UltraPlanTH(plans, λ₁, λ₂, dims) = Ultra2UltraPlanTH(plans, promote(λ₁, λ₂)..., dims)
+
 function *(P::Ultra2UltraPlanTH, A::AbstractArray)
     ret = A
     if isapproxinteger(P.λ₂ - P.λ₁)
         _ultra2ultra_integerinc!(ret, P.λ₁, P.λ₂, P.dims)
     else
+        λ = _ultra_th_start(P.λ₁)
+        _ultra2ultra_integerinc!(ret, P.λ₁, λ, P.dims)
         for p in P.plans
             ret = p*ret
         end
-        c = _nearest_jacobi_par(P.λ₁, P.λ₂)
+        c = _nearest_ultra_par(λ, P.λ₂)
 
         _ultra2ultra_integerinc!(ret, c, P.λ₂, P.dims)
     end
@@ -308,13 +326,12 @@ end
 
 
 function plan_th_ultra2ultra!(::Type{S}, mn, λ₁, λ₂, dims) where {S}
-    c = _nearest_jacobi_par(λ₁, λ₂)
-
     if isapproxinteger(λ₂ - λ₁)
         # TODO: don't make extra plan
         plans = typeof(_good_plan_th_ultra2ultra!(S, mn, λ₂+0.1, λ₂, dims))[]
     else
-        plans = [_good_plan_th_ultra2ultra!(S, mn, λ₁, c, dims)]
+        λ = _ultra_th_start(λ₁)
+        plans = [_good_plan_th_ultra2ultra!(S, mn, λ, _nearest_ultra_par(λ, λ₂), dims)]
     end
 
     Ultra2UltraPlanTH(plans, λ₁, λ₂, dims)

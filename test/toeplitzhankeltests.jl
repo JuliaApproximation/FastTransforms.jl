@@ -16,6 +16,13 @@ Random.seed!(0)
         @test th_ultra2ultra(x,0.1, 2.2) ≈ lib_ultra2ultra(x, 0.1, 2.2)
         @test th_ultra2ultra(x, 2.2, 0.1) ≈ lib_ultra2ultra(x, 2.2, 0.1)
         @test th_ultra2ultra(x, 1, 3) ≈ lib_ultra2ultra(x, 1, 3)
+        # converting via λ == 0 gave NaN, and negative starting parameters were inaccurate
+        @test th_ultra2ultra(x, 0.3, 1.0) ≈ lib_ultra2ultra(x, 0.3, 1.0)
+        @test th_ultra2ultra(x, 0.5, 2.0) ≈ lib_ultra2ultra(x, 0.5, 2.0)
+        @test th_ultra2ultra(x, -0.3, 1.0) ≈ lib_ultra2ultra(x, -0.3, 1.0)
+        @test th_ultra2ultra(x, -0.3, 0.5) ≈ lib_ultra2ultra(x, -0.3, 0.5)
+        @test th_ultra2ultra(x, -0.4, -0.3) ≈ lib_ultra2ultra(x, -0.4, -0.3)
+        @test th_ultra2ultra(x, 0.3, 1) ≈ th_ultra2ultra(x, 0.3, 1.0) # mixed parameter types
         @test @inferred(th_jac2jac(x,0.1, 0.2,0.1,0.4)) ≈ lib_jac2jac(x, 0.1, 0.2,0.1,0.4)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.2) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.2)
         @test th_jac2jac(x,0.1, 0.2,0.3,0.4) ≈ lib_jac2jac(x, 0.1, 0.2,0.3,0.4)
@@ -47,6 +54,7 @@ Random.seed!(0)
         @test th_cheb2leg(th_leg2cheb(x)) ≈ x
         @test th_leg2cheb(th_cheb2leg(x)) ≈ x
         @test th_ultra2ultra(th_ultra2ultra(x, 0.1, 0.6), 0.6, 0.1) ≈ x
+        @test th_ultra2ultra(th_ultra2ultra(x, 1.0, 0.3), 0.3, 1.0) ≈ x
         @test th_jac2jac(th_jac2jac(x, 0.1, 0.6, 0.1, 0.8), 0.1, 0.8, 0.1, 0.6) ≈ x
         @test th_jac2jac(th_jac2jac(x, 0.1, 0.6, 0.2, 0.8), 0.2, 0.8, 0.1, 0.6) ≈ x
     end
@@ -90,6 +98,12 @@ Random.seed!(0)
         @test th_ultra2ultra(X, 0.1, 0.6) == plan_th_ultra2ultra!(X, 0.1, 0.6, 1:2)*copy(X)
 
         @test th_ultra2ultra(th_ultra2ultra(X, 0.1, 0.6), 0.6, 0.1) ≈ X
+
+        for (λ, μ) in ((0.3, 1.0), (-0.3, 0.5))
+            @test th_ultra2ultra(X, λ, μ, 1) ≈ hcat([ultra2ultra(X[:,j], λ, μ) for j=1:size(X,2)]...)
+            @test th_ultra2ultra(X, λ, μ, 2) ≈ vcat([permutedims(ultra2ultra(X[k,:], λ, μ)) for k=1:size(X,1)]...)
+            @test th_ultra2ultra(X, λ, μ) ≈ th_ultra2ultra(th_ultra2ultra(X, λ, μ, 1), λ, μ, 2)
+        end
 
         @test th_jac2jac(X, 0.1, 0.6, 0.1, 0.8, 1) ≈ hcat([jac2jac(X[:,j], 0.1, 0.6, 0.1, 0.8) for j=1:size(X,2)]...)
         @test th_jac2jac(X, 0.1, 0.6, 0.1, 0.8, 2) ≈ vcat([permutedims(jac2jac(X[k,:], 0.1, 0.6, 0.1, 0.8)) for k=1:size(X,1)]...)

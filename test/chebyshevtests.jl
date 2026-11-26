@@ -164,11 +164,11 @@ using FastTransforms, Test
             gcopy = copy(g)
             P = @inferred(plan_chebyshevutransform(f))
             @test P*f ≈ g
-            @test f ≈ fcopy
+            @test f == fcopy # the input is not modified
             @test_throws ArgumentError P * T[1,2]
             P = @inferred(plan_chebyshevutransform(f, 1:1))
             @test P*f ≈ g
-            @test f ≈ fcopy
+            @test f == fcopy
             @test_throws ArgumentError P * T[1,2]
 
             P = @inferred(plan_chebyshevutransform!(f))
@@ -238,11 +238,11 @@ using FastTransforms, Test
             gcopy = copy(g)
             P = @inferred(plan_chebyshevutransform(f, Val(2)))
             @test @inferred(P*f) ≈ g
-            @test f ≈ fcopy
+            @test f == fcopy # the input is not modified
             @test_throws ArgumentError P * T[1,2]
             P = @inferred(plan_chebyshevutransform(f, Val(2), 1:1))
             @test @inferred(P*f) ≈ g
-            @test f ≈ fcopy
+            @test f == fcopy
             @test_throws ArgumentError P * T[1,2]
 
             P = @inferred(plan_chebyshevutransform!(f, Val(2)))
@@ -310,6 +310,10 @@ using FastTransforms, Test
 
             @test @inferred(chebyshevutransform(X)) ≈ @inferred(chebyshevutransform!(copy(X))) ≈ chebyshevutransform(chebyshevutransform(X,1),2)
             @test @inferred(chebyshevutransform(X,Val(2))) ≈ @inferred(chebyshevutransform!(copy(X),Val(2))) ≈ chebyshevutransform(chebyshevutransform(X,Val(2),1),Val(2),2)
+
+            X₀ = copy(X)
+            chebyshevutransform(X); chebyshevutransform(X,2); chebyshevutransform(X,Val(2)); chebyshevutransform(X,Val(2),1)
+            @test X == X₀ # the input is not modified
         end
 
         @testset "ichebyshevutransform" begin
@@ -393,6 +397,10 @@ using FastTransforms, Test
 
                 @test @inferred(chebyshevutransform(X)) ≈ @inferred(chebyshevutransform!(copy(X))) ≈ chebyshevutransform(chebyshevutransform(chebyshevutransform(X,1),2),3)
                 @test @inferred(chebyshevutransform(X,Val(2))) ≈ @inferred(chebyshevutransform!(copy(X),Val(2))) ≈ chebyshevutransform(chebyshevutransform(chebyshevutransform(X,Val(2),1),Val(2),2),Val(2),3)
+
+                X₀ = copy(X)
+                chebyshevutransform(X); chebyshevutransform(X,3); chebyshevutransform(X,Val(2)); chebyshevutransform(X,Val(2),2)
+                @test X == X₀ # the input is not modified
             end
 
             @testset "ichebyshevutransform" begin

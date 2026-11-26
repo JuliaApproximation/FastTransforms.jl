@@ -375,7 +375,7 @@ function plan_chebyshevutransform(x::AbstractArray{T,N}, ::Val{2}, dims...; kws.
     ChebyshevUTransformPlan{T,2}(FFTW.plan_r2r(x, USECONDKIND, dims...; kws...))
 end
 
-for f in [:_chebu1_prescale!, :_chebu1_postscale!, :_chebu2_prescale!, :_chebu2_postscale!,
+for f in [:_chebu1_prescale!, :_chebu2_prescale!, :_chebu2_postscale!,
             :_ichebu1_postscale!]
     _f = Symbol(:_, f)
     @eval begin
@@ -399,12 +399,6 @@ function __chebu1_prescale!(d::Number, X::AbstractArray{T}) where {T}
     applydim!(v -> v .*= sinpi.(r) ./ m, X, d, :)
 end
 
-@inline function __chebu1_postscale!(d::Number, X::AbstractArray{T}) where {T}
-    m = size(X,d)
-    r = one(T)/(2m) .+ ((1:m) .- one(T))./m
-    applydim!(v -> v ./= sinpi.(r) ./ m, X, d, :)
-end
-
 function *(P::ChebyshevUTransformPlan{T,1,K,true,N}, x::AbstractArray{T,N}) where {T,K,N}
     length(x) ≤ 1 && return x
     _chebu1_prescale!(P.plan.region, x)
@@ -418,9 +412,8 @@ end
 function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,1,K,false}, x::AbstractArray{T}) where {T,K}
     size(y) == size(x) || throw(DimensionMismatch("output must match dimension"))
     isempty(x) && return y
-    _chebu1_prescale!(P.plan.region, x) # Todo don't mutate x
-    _plan_mul!(y, P.plan, x)
-    _chebu1_postscale!(P.plan.region, x)
+    # rescale a copy: rescaling x and then undoing it would not restore x exactly
+    _plan_mul!(y, P.plan, _chebu1_prescale!(P.plan.region, Array{T}(x)))
     for d in P.plan.region
         ldiv_dim_end!(2, d, y)
     end
@@ -456,9 +449,8 @@ function mul!(y::AbstractArray{T}, P::ChebyshevUTransformPlan{T,2,K,false}, x::A
     for d in P.plan.region
         sc *= one(T)/(size(x,d)+1)
     end
-    _chebu2_prescale!(P.plan.region, x) # TODO don't mutate x
-    _plan_mul!(y, P.plan, x)
-    _chebu2_postscale!(P.plan.region, x)
+    # rescale a copy: rescaling x and then undoing it would not restore x exactly
+    _plan_mul!(y, P.plan, _chebu2_prescale!(P.plan.region, Array{T}(x)))
     lmul!(sc, y)
 end
 
